@@ -2,4 +2,7 @@
 <resources>
     <string name="app_name">Photo Vault</string>
     <string name="home_placeholder">W1 · Local vault (shell)</string>
+    <string name="splash_title">VaultSafe</string>
+    <string name="splash_tagline">Private · Encrypted · Yours</string>
+    <string name="splash_footer">v%1$s  •  AES-256 Encrypted</string>
 </resources>

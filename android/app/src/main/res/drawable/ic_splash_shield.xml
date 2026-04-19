@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 高保真矢量：盾牌 + 对勾，与设计稿主色 #4A9EFF 一致，任意 dpi 清晰 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#4A9EFF"
+        android:pathData="M12,1L3,5v6c0,5.55,3.84,10.74,9,12c5.16,-1.26,9,-6.45,9,-12V5L12,1z" />
+    <path
+        android:fillColor="#E8F4FF"
+        android:pathData="M9,16.17L4.83,12l-1.42,1.41L9,19l12,-12l-1.41,-1.41L9,16.17z" />
+</vector>
