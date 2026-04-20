@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.photovault.app.ui.HomeScreen
 import com.photovault.app.ui.SplashScreen
+import com.photovault.app.ui.lock.LockScreen
 import com.photovault.app.ui.theme.PhotoVaultTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -35,8 +36,18 @@ class MainActivity : ComponentActivity() {
                         composable(ROUTE_SPLASH) {
                             SplashScreen(
                                 onFinished = {
-                                    navController.navigate(ROUTE_HOME) {
+                                    navController.navigate(ROUTE_LOCK) {
                                         popUpTo(ROUTE_SPLASH) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                            )
+                        }
+                        composable(ROUTE_LOCK) {
+                            LockScreen(
+                                onUnlockSuccess = {
+                                    navController.navigate(ROUTE_HOME) {
+                                        popUpTo(ROUTE_LOCK) { inclusive = true }
                                         launchSingleTop = true
                                     }
                                 },
@@ -53,6 +64,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         private const val ROUTE_SPLASH = "splash"
+        private const val ROUTE_LOCK = "lock"
         private const val ROUTE_HOME = "home"
     }
 }
