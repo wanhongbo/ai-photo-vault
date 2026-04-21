@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,15 +64,17 @@ fun LockScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .safeDrawingPadding()
                     .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
                 state.stepLabel?.let {
                     Text(
                         text = "安全设置  $it",
                         color = TextSub,
                         fontSize = 16.sp,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
+                        modifier = Modifier.padding(bottom = 24.dp),
                     )
                 }
                 Text(
@@ -79,7 +82,6 @@ fun LockScreen(
                     color = if (state.stage == LockStage.SETUP_CONFIRM_ERROR) Error else TextMain,
                     fontSize = 38.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 20.dp),
                 )
                 Text(
                     text = state.subtitle,
@@ -142,12 +144,13 @@ private fun LockSuccessContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .safeDrawingPadding()
             .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
-                .padding(top = 80.dp)
                 .size(112.dp)
                 .background(Color(0x3321C277), CircleShape),
             contentAlignment = Alignment.Center,
