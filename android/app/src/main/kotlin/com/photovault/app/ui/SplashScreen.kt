@@ -114,7 +114,7 @@ fun SplashScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
-                    painter = painterResource(R.drawable.ic_splash_shield),
+                    painter = painterResource(R.drawable.shield_check),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp),
                     contentScale = ContentScale.Fit,

@@ -9,7 +9,7 @@ alwaysApply: true
 
 ## 原则
 
-1. **优先来源**：设计稿（Pixso / Figma 等）**按倍率导出**的 PNG / WebP，或经确认的 **矢量**（`vector` / SVG 转 Vector Drawable），禁止使用不明来源的小图硬拉大。
+1. **优先来源**：设计稿（Pixso / Figma 等）**按倍率导出**的 WebP，或经确认的 **矢量**（`vector` / SVG 转 Vector Drawable），禁止使用不明来源的小图硬拉大。
 2. **位图**：至少覆盖常用密度；推荐由设计导出 **2x / 3x**（或提供 `xxhdpi` / `xxxhdpi` 成套切片）。单张精修主视觉可放在 `drawable-nodpi` 避免系统误缩放。
 3. **矢量**：图标类优先 `vector`；路径需清晰，与设计主色一致，避免粗糙简化形。
 4. **Compose**：`Image` / `painterResource` 引用上述资源；网络大图用 Coil 等并保持与设计分辨率策略一致。
