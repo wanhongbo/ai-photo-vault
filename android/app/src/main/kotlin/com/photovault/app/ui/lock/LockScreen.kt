@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,6 +28,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.photovault.app.ui.components.AppButton
+import com.photovault.app.ui.components.AppButtonVariant
+import com.photovault.app.ui.feedback.pressFeedback
+import com.photovault.app.ui.feedback.rememberFeedbackInteractionSource
 
 private val Bg = Color(0xFF05080D)
 private val KeypadSurface = Color(0xFF131C29)
@@ -116,16 +118,17 @@ fun LockScreen(
                 )
 
                 if (state.stage == LockStage.SETUP_CONFIRM_ERROR) {
-                    Button(
+                    val resetInteraction = rememberFeedbackInteractionSource()
+                    AppButton(
+                        text = "重新设置 PIN 码",
                         onClick = viewModel::resetSetup,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 18.dp)
-                            .height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A202C)),
-                    ) {
-                        Text("重新设置 PIN 码", color = Error)
-                    }
+                            .height(52.dp)
+                            .pressFeedback(resetInteraction),
+                        variant = AppButtonVariant.DANGER,
+                    )
                 }
             }
         }
@@ -173,16 +176,17 @@ private fun LockSuccessContent(
             Text("• 忘记 PIN 码时，可通过主密码重置", color = TextSub, modifier = Modifier.padding(top = 8.dp))
             Text("• 连续 5 次错误后账户将临时锁定", color = TextSub, modifier = Modifier.padding(top = 8.dp))
         }
-        Button(
+        val continueInteraction = rememberFeedbackInteractionSource()
+        AppButton(
+            text = "开始使用 VaultSafe",
             onClick = onContinue,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 24.dp)
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Blue),
-        ) {
-            Text("开始使用 VaultSafe", color = Color.White, fontSize = 20.sp)
-        }
+                .height(56.dp)
+                .pressFeedback(continueInteraction),
+            variant = AppButtonVariant.PRIMARY,
+        )
     }
 }
 
@@ -227,18 +231,22 @@ private fun NumberPad(
         ).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 row.forEach { n ->
-                    KeypadKey(label = n.toString(), onClick = { onNumber(n) })
+                    KeypadKey(
+                        label = n.toString(),
+                        extraHighlight = true,
+                        onClick = { onNumber(n) },
+                    )
                 }
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (showBiometric) {
-                KeypadKey(label = "🆔", onClick = {})
+                KeypadKey(label = "🆔", extraHighlight = true, onClick = {})
             } else {
                 Box(modifier = Modifier.size(86.dp))
             }
-            KeypadKey(label = "0", onClick = { onNumber(0) })
-            KeypadKey(label = "⌫", onClick = onDelete)
+            KeypadKey(label = "0", extraHighlight = true, onClick = { onNumber(0) })
+            KeypadKey(label = "⌫", extraHighlight = true, onClick = onDelete)
         }
     }
 }
@@ -246,14 +254,28 @@ private fun NumberPad(
 @Composable
 private fun KeypadKey(
     label: String,
+    extraHighlight: Boolean = false,
     onClick: () -> Unit,
 ) {
+    val interactionSource = rememberFeedbackInteractionSource()
     Box(
         modifier = Modifier
             .size(86.dp)
+            .pressFeedback(
+                interactionSource = interactionSource,
+                extraHighlight = extraHighlight,
+            )
             .background(KeypadSurface, CircleShape)
-            .border(1.dp, KeypadStroke, CircleShape)
-            .clickable(onClick = onClick),
+            .border(
+                width = if (extraHighlight) 1.5.dp else 1.dp,
+                color = if (extraHighlight) Blue else KeypadStroke,
+                shape = CircleShape,
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, color = TextMain, fontSize = 34.sp)

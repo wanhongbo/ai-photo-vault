@@ -1,0 +1,24 @@
+---
+description: Android UI 开发默认遵循 Pixso 设计规范（设计基线、弹窗、按钮）
+alwaysApply: true
+---
+
+# Android UI 设计基线（Pixso）
+
+本工程后续所有 Android UI（页面、组件、弹窗、按钮）开发，默认以以下 Pixso 规范为准：
+
+- 设计基线：`https://pixso.cn/app/design/CG1WCBz9LzfzMukAplQObw?item-id=4:969`
+- 弹窗规范：`https://pixso.cn/app/design/CG1WCBz9LzfzMukAplQObw?item-id=14:3`
+- 按钮规范：`https://pixso.cn/app/design/CG1WCBz9LzfzMukAplQObw?item-id=33:1`
+
+## 执行要求
+
+1. **先对齐规范再实现**：开始 UI 开发前，先核对对应规范中的布局、圆角、间距、字体层级、颜色、状态与交互。
+2. **弹窗统一**：涉及确认框、提示框、危险操作弹窗时，优先复用统一弹窗样式与交互，不得每个页面自定义一套。
+3. **按钮统一**：主按钮、次按钮、危险按钮、禁用态、加载态保持一致，尺寸/内边距/文字样式按按钮规范实现。
+4. **状态完整**：任何可点击组件至少覆盖 normal/pressed/disabled；必要时补充 loading/focused。
+5. **设计变更可追溯**：若实现与规范存在差异，需在 PR 或提交说明中写明差异原因，并附对应规范链接。
+
+## 与现有素材规则的关系
+
+本规则定义“视觉与交互规范”，`.cursor/rules/android-image-assets.mdc` 定义“图片素材清晰度与资源放置规范”；两者需同时满足。
