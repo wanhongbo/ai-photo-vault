@@ -1,15 +1,19 @@
 package com.photovault.app
 
 import android.app.Application
-import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 @HiltAndroidApp
 class PhotoVaultApp : Application() {
+    @Inject
+    lateinit var appLockManager: AppLockManager
+
     override fun onCreate() {
         super.onCreate()
         AppLogger.install()
         installGlobalExceptionBoundary()
+        appLockManager.start()
     }
 
     private fun installGlobalExceptionBoundary() {
