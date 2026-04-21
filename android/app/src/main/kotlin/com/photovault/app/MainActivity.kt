@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
                     LaunchedEffect(requireUnlock, currentRoute) {
                         if (!requireUnlock) return@LaunchedEffect
-                        if (currentRoute == ROUTE_HOME) {
+                        if (currentRoute != null && currentRoute != ROUTE_LOCK) {
                             navController.navigate(ROUTE_LOCK) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = false

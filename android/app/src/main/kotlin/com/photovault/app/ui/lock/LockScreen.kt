@@ -67,13 +67,17 @@ fun LockScreen(
         BiometricManager.Authenticators.BIOMETRIC_STRONG or
             BiometricManager.Authenticators.BIOMETRIC_WEAK or
             BiometricManager.Authenticators.DEVICE_CREDENTIAL
-    val biometricAvailable = remember(context) {
-        BiometricManager.from(context).canAuthenticate(biometricAuthenticator) ==
-            BiometricManager.BIOMETRIC_SUCCESS
+    val biometricAvailability = remember(context) {
+        resolveBiometricAvailability(context, biometricAuthenticator)
     }
+    val biometricAvailable = biometricAvailability.isAvailable
     var biometricAutoPromptConsumed by remember { mutableStateOf(false) }
 
     fun launchBiometricPrompt() {
+        if (!biometricAvailable) {
+            viewModel.onBiometricUnlockFailed(biometricAvailability.unavailableMessage)
+            return
+        }
         val activity = hostActivity ?: run {
             viewModel.onBiometricUnlockFailed("当前页面无法启动生物识别认证，请使用 PIN 解锁")
             return
@@ -218,7 +222,7 @@ fun LockScreen(
         dismissText = "暂不开启",
         onConfirm = {
             viewModel.setBiometricEnabled(true)
-            viewModel.onBiometricUnlockSuccess()
+            launchBiometricPrompt()
         },
         onDismiss = {
             viewModel.dismissBiometricSetupPrompt()
@@ -349,6 +353,30 @@ private tailrec fun Context.findFragmentActivity(): FragmentActivity? = when (th
     is FragmentActivity -> this
     is ContextWrapper -> baseContext.findFragmentActivity()
     else -> null
+}
+
+private data class BiometricAvailability(
+    val isAvailable: Boolean,
+    val unavailableMessage: String,
+)
+
+private fun resolveBiometricAvailability(
+    context: Context,
+    authenticators: Int,
+): BiometricAvailability {
+    return when (BiometricManager.from(context).canAuthenticate(authenticators)) {
+        BiometricManager.BIOMETRIC_SUCCESS -> BiometricAvailability(true, "")
+        BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+            BiometricAvailability(false, "系统未录入生物识别，请先在系统设置中录入后再试")
+        }
+        BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
+            BiometricAvailability(false, "当前设备生物识别硬件暂不可用，请稍后重试")
+        }
+        BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
+            BiometricAvailability(false, "当前设备不支持生物识别，请使用 PIN 解锁")
+        }
+        else -> BiometricAvailability(false, "当前系统不支持生物识别，请使用 PIN 解锁")
+    }
 }
 
 @Composable

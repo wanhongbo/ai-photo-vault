@@ -16,7 +16,7 @@ private enum class BackgroundLockPolicy {
 
 @Singleton
 class AppLockManager @Inject constructor() : DefaultLifecycleObserver {
-    private val backgroundLockPolicy = BackgroundLockPolicy.ON_STOP
+    private val backgroundLockPolicy = BackgroundLockPolicy.ON_PAUSE
 
     private val _requireUnlock = MutableStateFlow(true)
     val requireUnlock: StateFlow<Boolean> = _requireUnlock.asStateFlow()
