@@ -1,5 +1,7 @@
 package com.photovault.app.ui.lock
 
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,20 +21,30 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppButtonVariant
+import com.photovault.app.ui.components.AppDialog
 import com.photovault.app.ui.feedback.pressFeedback
 import com.photovault.app.ui.feedback.rememberFeedbackInteractionSource
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
 
 private val Bg = Color(0xFF05080D)
 private val KeypadSurface = Color(0xFF131C29)
@@ -49,6 +61,67 @@ fun LockScreen(
     viewModel: LockViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val hostActivity = remember(context) { context.findFragmentActivity() }
+    val biometricAuthenticator =
+        BiometricManager.Authenticators.BIOMETRIC_STRONG or
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+    val biometricAvailable = remember(context) {
+        BiometricManager.from(context).canAuthenticate(biometricAuthenticator) ==
+            BiometricManager.BIOMETRIC_SUCCESS
+    }
+    var biometricAutoPromptConsumed by remember { mutableStateOf(false) }
+
+    fun launchBiometricPrompt() {
+        val activity = hostActivity ?: run {
+            viewModel.onBiometricUnlockFailed("当前页面无法启动生物识别认证，请使用 PIN 解锁")
+            return
+        }
+        val executor = ContextCompat.getMainExecutor(activity)
+        val callback = object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                viewModel.onBiometricUnlockSuccess()
+            }
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                if (errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
+                    errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
+                    errorCode != BiometricPrompt.ERROR_CANCELED
+                ) {
+                    viewModel.onBiometricUnlockFailed("生物识别失败：$errString")
+                }
+            }
+
+            override fun onAuthenticationFailed() {
+                viewModel.onBiometricUnlockFailed("生物识别未通过，请重试或改用 PIN 解锁")
+            }
+        }
+        val prompt = BiometricPrompt(activity, executor, callback)
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("生物识别解锁")
+            .setSubtitle("验证后可快速进入私密相册")
+            .setAllowedAuthenticators(biometricAuthenticator)
+            .build()
+        prompt.authenticate(promptInfo)
+    }
+
+    LaunchedEffect(state.stage) {
+        if (state.stage != LockStage.UNLOCK) {
+            biometricAutoPromptConsumed = false
+        }
+    }
+
+    LaunchedEffect(state.stage, state.biometricEnabled, biometricAvailable) {
+        if (state.stage == LockStage.UNLOCK &&
+            state.biometricEnabled &&
+            biometricAvailable &&
+            !biometricAutoPromptConsumed
+        ) {
+            biometricAutoPromptConsumed = true
+            launchBiometricPrompt()
+        }
+    }
     if (state.unlockSuccess) {
         viewModel.consumeUnlockEvent()
         onUnlockSuccess()
@@ -114,9 +187,10 @@ fun LockScreen(
 
                 NumberPad(
                     modifier = Modifier.padding(top = 20.dp),
-                    showBiometric = !state.isSetup,
+                    showBiometric = !state.isSetup && biometricAvailable,
                     onNumber = viewModel::onNumber,
                     onDelete = viewModel::deleteLast,
+                    onBiometric = { launchBiometricPrompt() },
                 )
 
                 if (state.stage == LockStage.SETUP_CONFIRM_ERROR) {
@@ -135,6 +209,22 @@ fun LockScreen(
             }
         }
     }
+
+    AppDialog(
+        show = state.success && state.biometricPromptAfterSetup && biometricAvailable,
+        title = "开启生物识别解锁",
+        message = "开启后可通过指纹或面容快速解锁；失败时仍可使用 PIN。",
+        confirmText = "立即开启",
+        dismissText = "暂不开启",
+        onConfirm = {
+            viewModel.setBiometricEnabled(true)
+            viewModel.onBiometricUnlockSuccess()
+        },
+        onDismiss = {
+            viewModel.dismissBiometricSetupPrompt()
+            viewModel.onBiometricUnlockSuccess()
+        },
+    )
 }
 
 @Composable
@@ -225,6 +315,7 @@ private fun NumberPad(
     showBiometric: Boolean,
     onNumber: (Int) -> Unit,
     onDelete: () -> Unit,
+    onBiometric: () -> Unit,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         listOf(
@@ -244,7 +335,7 @@ private fun NumberPad(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (showBiometric) {
-                KeypadKey(label = "🆔", extraHighlight = true, onClick = {})
+                KeypadKey(label = "🆔", extraHighlight = true, onClick = onBiometric)
             } else {
                 Box(modifier = Modifier.size(86.dp))
             }
@@ -252,6 +343,12 @@ private fun NumberPad(
             KeypadKey(label = "⌫", extraHighlight = true, onClick = onDelete)
         }
     }
+}
+
+private tailrec fun Context.findFragmentActivity(): FragmentActivity? = when (this) {
+    is FragmentActivity -> this
+    is ContextWrapper -> baseContext.findFragmentActivity()
+    else -> null
 }
 
 @Composable

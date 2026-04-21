@@ -67,6 +67,7 @@ class LockViewModel @Inject constructor(
                             subtitle = "您的 PIN 码已安全加密存储在本设备",
                             enteredPin = "",
                             error = null,
+                            biometricPromptAfterSetup = true,
                         )
                     })
                 } else {
@@ -113,6 +114,42 @@ class LockViewModel @Inject constructor(
         }
     }
 
+    fun onBiometricUnlockSuccess() {
+        viewModelScope.launch {
+            val setting = dao.getById() ?: return@launch
+            dao.upsert(setting.copy(failCount = 0))
+            _state.value = _state.value.copy(
+                unlockSuccess = true,
+                enteredPin = "",
+                error = null,
+            )
+        }
+    }
+
+    fun onBiometricUnlockFailed(errorMessage: String) {
+        val s = _state.value
+        _state.value = s.copy(error = errorMessage)
+    }
+
+    fun setBiometricEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            val setting = dao.getById() ?: return@launch
+            dao.upsert(setting.copy(biometricEnabled = enabled))
+            _state.value = _state.value.copy(
+                biometricEnabled = enabled,
+                biometricPromptAfterSetup = false,
+                error = null,
+            )
+        }
+    }
+
+    fun dismissBiometricSetupPrompt() {
+        val s = _state.value
+        if (s.biometricPromptAfterSetup) {
+            _state.value = s.copy(biometricPromptAfterSetup = false)
+        }
+    }
+
     private fun persistSetting(lockType: String, rawValue: String, onSaved: () -> Unit) {
         viewModelScope.launch {
             val hashed = PasswordHasher.sha256HexOfUtf8(rawValue)
@@ -151,6 +188,7 @@ class LockViewModel @Inject constructor(
             stage = LockStage.UNLOCK,
             loading = false,
             isSetup = false,
+            biometricEnabled = setting.biometricEnabled,
             title = "输入 PIN 解锁",
             subtitle = "请输入 6 位 PIN 码解锁",
             stepLabel = null,
@@ -171,6 +209,8 @@ data class LockUiState(
     val isSetup: Boolean = true,
     val success: Boolean = false,
     val unlockSuccess: Boolean = false,
+    val biometricEnabled: Boolean = false,
+    val biometricPromptAfterSetup: Boolean = false,
     val title: String = "",
     val subtitle: String = "",
     val stepLabel: String? = null,
