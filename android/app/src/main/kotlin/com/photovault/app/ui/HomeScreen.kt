@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -82,6 +83,8 @@ fun HomeScreen() {
     var vaultItems by remember { mutableStateOf(emptyList<VaultItem>()) }
     var importing by remember { mutableStateOf(false) }
     var importTip by remember { mutableStateOf<ImportTip?>(null) }
+    var searchMode by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         vaultItems = loadVaultItems(context)
@@ -157,6 +160,26 @@ fun HomeScreen() {
         )
     }
     val currentTab = tabs.getOrNull(selectedTab) ?: tabs.first()
+    val filteredVaultItems = remember(vaultItems, searchQuery) {
+        if (searchQuery.isBlank()) {
+            vaultItems
+        } else {
+            vaultItems.filter { item ->
+                item.name.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+    val triggerImportFromLibrary = {
+        selectedTab = HomeTab.VAULT.ordinal
+        if (hasAlbumPermission && !importing) {
+            importTip = null
+            pickerLauncher.launch(
+                PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    .build(),
+            )
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -169,18 +192,50 @@ fun HomeScreen() {
             .safeDrawingPadding()
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
-        Text(
-            text = stringResource(R.string.home_title),
-            color = UiColors.Home.title,
-            fontSize = UiTextSize.homeTitle,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            text = stringResource(R.string.home_subtitle),
-            color = UiColors.Home.subtitle,
-            fontSize = UiTextSize.homeSubtitle,
-            modifier = Modifier.padding(top = 6.dp),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.home_title),
+                    color = UiColors.Home.title,
+                    fontSize = UiTextSize.homeTitle,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = stringResource(R.string.home_subtitle),
+                    color = UiColors.Home.subtitle,
+                    fontSize = UiTextSize.homeSubtitle,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+            HeaderActionButton(
+                iconRes = R.drawable.ic_home_action_search,
+                contentDesc = stringResource(R.string.home_action_search),
+                onClick = {
+                    searchMode = !searchMode
+                    if (!searchMode) searchQuery = ""
+                },
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            HeaderActionButton(
+                iconRes = R.drawable.ic_home_action_add,
+                contentDesc = stringResource(R.string.home_action_add),
+                onClick = triggerImportFromLibrary,
+            )
+        }
+        if (searchMode) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+                singleLine = true,
+                label = { Text(stringResource(R.string.home_search_hint)) },
+            )
+        }
         importTip?.let { tip ->
             Text(
                 text = tip.message,
@@ -202,23 +257,15 @@ fun HomeScreen() {
                     onOpenSettings = { openAppSettings(context) },
                     permanentlyDenied = permanentlyDenied,
                 )
-            } else if (currentTab.tab == HomeTab.VAULT && vaultItems.isNotEmpty()) {
-                VaultAlbumList(vaultItems = vaultItems)
+            } else if (currentTab.tab == HomeTab.VAULT && filteredVaultItems.isNotEmpty()) {
+                VaultAlbumList(vaultItems = filteredVaultItems)
             } else {
                 HomeEmptyState(
                     tab = currentTab,
                     isLoading = importing,
                     onAction = {
                         when (currentTab.tab) {
-                            HomeTab.VAULT -> {
-                                if (importing) return@HomeEmptyState
-                                importTip = null
-                                pickerLauncher.launch(
-                                    PickVisualMediaRequest.Builder()
-                                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                        .build(),
-                                )
-                            }
+                            HomeTab.VAULT -> triggerImportFromLibrary()
                             else -> Unit
                         }
                     },
@@ -230,6 +277,36 @@ fun HomeScreen() {
             tabs = tabs,
             selectedIndex = selectedTab,
             onSelect = { selectedTab = it },
+        )
+    }
+}
+
+@Composable
+private fun HeaderActionButton(
+    iconRes: Int,
+    contentDesc: String,
+    onClick: () -> Unit,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(UiColors.Home.navBarBg)
+            .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(12.dp))
+            .pressFeedback(interaction)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = contentDesc,
+            tint = UiColors.Home.navItemActive,
+            modifier = Modifier.size(20.dp),
         )
     }
 }
