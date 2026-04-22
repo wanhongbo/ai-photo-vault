@@ -10,18 +10,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
-private val PrimaryContainer = Color(0xFF4A9EFF)
-private val PrimaryContent = Color.White
-private val SecondaryContainer = Color(0xFF1A202C)
-private val SecondaryContent = Color(0xFFEAF1FF)
-private val DangerContainer = Color(0xFF2A1820)
-private val DangerContent = Color(0xFFFF6B8F)
-private val DisabledContainer = Color(0xFF2A3240)
-private val DisabledContent = Color(0xFF7788A1)
+import com.photovault.app.ui.theme.UiColors
+import com.photovault.app.ui.theme.UiSize
+import com.photovault.app.ui.theme.UiTextSize
 
 enum class AppButtonVariant {
     PRIMARY,
@@ -39,31 +30,31 @@ fun AppButton(
     loading: Boolean = false,
 ) {
     val (containerColor, contentColor) = when {
-        !enabled || loading -> DisabledContainer to DisabledContent
-        variant == AppButtonVariant.PRIMARY -> PrimaryContainer to PrimaryContent
-        variant == AppButtonVariant.SECONDARY -> SecondaryContainer to SecondaryContent
-        else -> DangerContainer to DangerContent
+        !enabled || loading -> UiColors.Button.disabledContainer to UiColors.Button.disabledContent
+        variant == AppButtonVariant.PRIMARY -> UiColors.Button.primaryContainer to UiColors.Button.primaryContent
+        variant == AppButtonVariant.SECONDARY -> UiColors.Button.secondaryContainer to UiColors.Button.secondaryContent
+        else -> UiColors.Button.dangerContainer to UiColors.Button.dangerContent
     }
     Button(
         onClick = onClick,
         enabled = enabled && !loading,
-        modifier = modifier.height(56.dp),
+        modifier = modifier.height(UiSize.buttonHeight),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
-            disabledContainerColor = DisabledContainer,
-            disabledContentColor = DisabledContent,
+            disabledContainerColor = UiColors.Button.disabledContainer,
+            disabledContentColor = UiColors.Button.disabledContent,
         ),
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (loading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(UiSize.loadingIndicator),
+                    strokeWidth = UiSize.loadingIndicator / 10,
                     color = contentColor,
                 )
             } else {
-                Text(text = text, fontSize = 18.sp)
+                Text(text = text, fontSize = UiTextSize.button)
             }
         }
     }

@@ -15,11 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
-private val DialogBg = Color(0xFF101722)
-private val DialogTitle = Color(0xFFEAF1FF)
-private val DialogBody = Color(0xFF97A8C0)
+import com.photovault.app.ui.theme.UiColors
+import com.photovault.app.ui.theme.UiRadius
+import com.photovault.app.ui.theme.UiTextSize
 
 @Composable
 fun AppDialog(
@@ -41,19 +39,19 @@ fun AppDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(DialogBg, RoundedCornerShape(20.dp))
+                    .background(UiColors.Dialog.bg, RoundedCornerShape(UiRadius.dialog))
                     .padding(20.dp),
             ) {
                 Text(
                     text = title,
-                    color = DialogTitle,
-                    fontSize = 22.sp,
+                    color = UiColors.Dialog.title,
+                    fontSize = UiTextSize.dialogTitle,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
                     text = message,
-                    color = DialogBody,
-                    fontSize = 15.sp,
+                    color = UiColors.Dialog.body,
+                    fontSize = UiTextSize.dialogBody,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.padding(top = 10.dp),
                 )

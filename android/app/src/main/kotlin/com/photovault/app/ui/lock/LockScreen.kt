@@ -43,17 +43,10 @@ import com.photovault.app.ui.components.AppButtonVariant
 import com.photovault.app.ui.components.AppDialog
 import com.photovault.app.ui.feedback.pressFeedback
 import com.photovault.app.ui.feedback.rememberFeedbackInteractionSource
+import com.photovault.app.ui.theme.UiColors
+import com.photovault.app.ui.theme.UiRadius
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
-
-private val Bg = Color(0xFF05080D)
-private val KeypadSurface = Color(0xFF131C29)
-private val KeypadStroke = Color(0xFF243348)
-private val Blue = Color(0xFF4A9EFF)
-private val TextMain = Color(0xFFEAF1FF)
-private val TextSub = Color(0xFF7E90AB)
-private val Error = Color(0xFFFF4372)
-private val Success = Color(0xFF21C277)
 
 @Composable
 fun LockScreen(
@@ -130,10 +123,10 @@ fun LockScreen(
         viewModel.consumeUnlockEvent()
         onUnlockSuccess()
     }
-    Surface(modifier = Modifier.fillMaxSize(), color = Bg) {
+    Surface(modifier = Modifier.fillMaxSize(), color = UiColors.Lock.bg) {
         if (state.loading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("加载中...", color = TextSub)
+                Text("加载中...", color = UiColors.Lock.textSub)
             }
         } else if (state.success) {
             LockSuccessContent(onContinue = onUnlockSuccess)
@@ -149,20 +142,20 @@ fun LockScreen(
                 state.stepLabel?.let {
                     Text(
                         text = "安全设置  $it",
-                        color = TextSub,
+                        color = UiColors.Lock.textSub,
                         fontSize = 16.sp,
                         modifier = Modifier.padding(bottom = 24.dp),
                     )
                 }
                 Text(
                     text = state.title,
-                    color = if (state.stage == LockStage.SETUP_CONFIRM_ERROR) Error else TextMain,
+                    color = if (state.stage == LockStage.SETUP_CONFIRM_ERROR) UiColors.Lock.error else UiColors.Lock.textMain,
                     fontSize = 38.sp,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
                     text = state.subtitle,
-                    color = TextSub,
+                    color = UiColors.Lock.textSub,
                     textAlign = TextAlign.Center,
                     fontSize = 16.sp,
                     modifier = Modifier.padding(top = 12.dp),
@@ -174,18 +167,18 @@ fun LockScreen(
                 )
 
                 state.helper?.let {
-                    Text(text = it, color = Success, modifier = Modifier.padding(top = 12.dp))
+                    Text(text = it, color = UiColors.Lock.success, modifier = Modifier.padding(top = 12.dp))
                 }
                 state.error?.let {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 12.dp)
-                            .border(1.dp, Error, RoundedCornerShape(12.dp))
-                            .background(Color(0x33FF4372), RoundedCornerShape(12.dp))
+                            .border(1.dp, UiColors.Lock.error, RoundedCornerShape(UiRadius.errorBanner))
+                            .background(UiColors.Lock.errorBg, RoundedCornerShape(UiRadius.errorBanner))
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                     ) {
-                        Text(text = it, color = Error)
+                        Text(text = it, color = UiColors.Lock.error)
                     }
                 }
 
@@ -246,32 +239,32 @@ private fun LockSuccessContent(
         Box(
             modifier = Modifier
                 .size(112.dp)
-                .background(Color(0x3321C277), CircleShape),
+                .background(UiColors.Lock.successHalo, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text("✓", color = Success, fontSize = 40.sp, fontWeight = FontWeight.Bold)
+            Text("✓", color = UiColors.Lock.success, fontSize = 40.sp, fontWeight = FontWeight.Bold)
         }
         Text(
             "PIN 码设置成功",
-            color = TextMain,
+            color = UiColors.Lock.textMain,
             fontSize = 38.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 24.dp),
         )
-        Text("您的 PIN 码已安全加密存储在本设备", color = TextSub, modifier = Modifier.padding(top = 10.dp))
+        Text("您的 PIN 码已安全加密存储在本设备", color = UiColors.Lock.textSub, modifier = Modifier.padding(top = 10.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 26.dp)
-                .border(1.dp, KeypadStroke, RoundedCornerShape(16.dp))
-                .background(Color(0xFF0E1622), RoundedCornerShape(16.dp))
+                .border(1.dp, UiColors.Lock.keypadStroke, RoundedCornerShape(UiRadius.hintCard))
+                .background(UiColors.Lock.hintPanel, RoundedCornerShape(UiRadius.hintCard))
                 .padding(16.dp),
         ) {
-            Text("PIN 安全须知", color = TextMain, fontWeight = FontWeight.SemiBold)
-            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = KeypadStroke)
-            Text("• PIN 码仅存储在您的设备本地，不会上传至云端", color = TextSub)
-            Text("• 忘记 PIN 码时，可通过主密码重置", color = TextSub, modifier = Modifier.padding(top = 8.dp))
-            Text("• 连续 5 次错误后账户将临时锁定", color = TextSub, modifier = Modifier.padding(top = 8.dp))
+            Text("PIN 安全须知", color = UiColors.Lock.textMain, fontWeight = FontWeight.SemiBold)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = UiColors.Lock.keypadStroke)
+            Text("• PIN 码仅存储在您的设备本地，不会上传至云端", color = UiColors.Lock.textSub)
+            Text("• 忘记 PIN 码时，可通过主密码重置", color = UiColors.Lock.textSub, modifier = Modifier.padding(top = 8.dp))
+            Text("• 连续 5 次错误后账户将临时锁定", color = UiColors.Lock.textSub, modifier = Modifier.padding(top = 8.dp))
         }
         val continueInteraction = rememberFeedbackInteractionSource()
         AppButton(
@@ -299,10 +292,10 @@ private fun PinDots(
             Box(
                 modifier = Modifier
                     .size(14.dp)
-                    .border(2.dp, if (error) Error else Blue, CircleShape)
+                    .border(2.dp, if (error) UiColors.Lock.error else UiColors.Lock.brandBlue, CircleShape)
                     .background(
                         color = if (active) {
-                            if (error) Error else Blue
+                            if (error) UiColors.Lock.error else UiColors.Lock.brandBlue
                         } else {
                             Color.Transparent
                         },
@@ -393,10 +386,10 @@ private fun KeypadKey(
                 interactionSource = interactionSource,
                 extraHighlight = extraHighlight,
             )
-            .background(KeypadSurface, CircleShape)
+            .background(UiColors.Lock.keypadSurface, CircleShape)
             .border(
                 width = if (extraHighlight) 1.5.dp else 1.dp,
-                color = if (extraHighlight) Blue else KeypadStroke,
+                color = if (extraHighlight) UiColors.Lock.brandBlue else UiColors.Lock.keypadStroke,
                 shape = CircleShape,
             )
             .clickable(
@@ -406,6 +399,6 @@ private fun KeypadKey(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = TextMain, fontSize = 34.sp)
+        Text(label, color = UiColors.Lock.textMain, fontSize = 34.sp)
     }
 }

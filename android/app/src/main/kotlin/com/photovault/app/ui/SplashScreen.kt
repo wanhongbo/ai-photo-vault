@@ -36,19 +36,9 @@ import androidx.compose.ui.unit.sp
 import com.photovault.app.BuildConfig
 import com.photovault.app.R
 import com.photovault.app.ui.theme.PhotoVaultTheme
+import com.photovault.app.ui.theme.UiColors
+import com.photovault.app.ui.theme.UiRadius
 import kotlinx.coroutines.delay
-
-private val SplashBgLeft = Color(0xFF0D1A2E)
-private val SplashBgRight = Color(0xFF0D0D0D)
-private val GlowInner = Color(0x451A3A6B)
-private val GlowOuter = Color(0x114A9EFF)
-private val IconSurface = Color(0xFF111418)
-private val IconStroke = Color(0xFF2A3848)
-private val TitleColor = Color(0xFFF0F4FF)
-private val TaglineColor = Color(0xFF8A9BB0)
-private val ProgressTrack = Color(0xFF1E2A38)
-private val ProgressFill = Color(0xFF4A9EFF)
-private val FooterColor = Color(0xFF3A4555)
 
 private const val SplashHoldMs = 1_600L
 private const val ProgressAnimMs = 1_200
@@ -79,9 +69,9 @@ fun SplashScreen(
             .background(
                 Brush.horizontalGradient(
                     colorStops = arrayOf(
-                        0f to SplashBgLeft,
-                        0.6f to SplashBgRight,
-                        1f to SplashBgRight,
+                        0f to UiColors.Splash.bgLeft,
+                        0.6f to UiColors.Splash.bgRight,
+                        1f to UiColors.Splash.bgRight,
                     ),
                 ),
             ),
@@ -93,7 +83,7 @@ fun SplashScreen(
                 .size(280.dp)
                 .background(
                     brush = Brush.radialGradient(
-                        colors = listOf(GlowInner, GlowOuter, Color.Transparent),
+                        colors = listOf(UiColors.Splash.glowInner, UiColors.Splash.glowOuter, Color.Transparent),
                         radius = glowRadiusPx,
                     ),
                 ),
@@ -108,9 +98,9 @@ fun SplashScreen(
             Box(
                 modifier = Modifier
                     .size(88.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(IconSurface)
-                    .border(1.dp, IconStroke, RoundedCornerShape(22.dp)),
+                    .clip(RoundedCornerShape(UiRadius.splashIcon))
+                    .background(UiColors.Splash.iconSurface)
+                    .border(1.dp, UiColors.Splash.iconStroke, RoundedCornerShape(UiRadius.splashIcon)),
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
@@ -123,7 +113,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = stringResource(R.string.splash_title),
-                color = TitleColor,
+                color = UiColors.Splash.title,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp,
@@ -131,7 +121,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.splash_tagline),
-                color = TaglineColor,
+                color = UiColors.Splash.tagline,
                 fontSize = 14.sp,
                 letterSpacing = 2.sp,
                 textAlign = TextAlign.Center,
@@ -148,7 +138,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = stringResource(R.string.splash_footer, BuildConfig.VERSION_NAME),
-                color = FooterColor,
+                color = UiColors.Splash.footer,
                 fontSize = 11.sp,
             )
         }
@@ -166,14 +156,14 @@ private fun SplashProgressBar(
         modifier = modifier
             .size(width = trackWidth, height = height)
             .clip(RoundedCornerShape(2.dp))
-            .background(ProgressTrack),
+            .background(UiColors.Splash.progressTrack),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(progress.coerceIn(0f, 1f))
                 .height(height)
                 .clip(RoundedCornerShape(2.dp))
-                .background(ProgressFill),
+                .background(UiColors.Splash.progressFill),
         )
     }
 }
