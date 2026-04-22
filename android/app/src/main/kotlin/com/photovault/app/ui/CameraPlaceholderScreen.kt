@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,6 +59,7 @@ fun CameraPlaceholderScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
+    var previewViewRef by remember { mutableStateOf<PreviewView?>(null) }
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
@@ -65,6 +67,8 @@ fun CameraPlaceholderScreen(
         )
     }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+    var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
+    var flashEnabled by remember { mutableStateOf(false) }
     var capturing by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
 
@@ -77,6 +81,19 @@ fun CameraPlaceholderScreen(
 
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    LaunchedEffect(hasCameraPermission, previewViewRef, lensFacing, flashEnabled, lifecycleOwner) {
+        val previewView = previewViewRef ?: return@LaunchedEffect
+        if (!hasCameraPermission) return@LaunchedEffect
+        bindCameraUseCases(
+            context = context,
+            lifecycleOwner = lifecycleOwner,
+            previewView = previewView,
+            lensFacing = lensFacing,
+            flashEnabled = flashEnabled,
+            onReady = { capture -> imageCapture = capture },
+        )
     }
 
     Column(
@@ -108,12 +125,7 @@ fun CameraPlaceholderScreen(
                         PreviewView(viewContext).apply {
                             scaleType = PreviewView.ScaleType.FILL_CENTER
                             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-                            bindCameraUseCases(
-                                context = viewContext,
-                                lifecycleOwner = lifecycleOwner,
-                                previewView = this,
-                                onReady = { capture -> imageCapture = capture },
-                            )
+                            previewViewRef = this
                         }
                     },
                 )
@@ -145,6 +157,33 @@ fun CameraPlaceholderScreen(
                 color = UiColors.Home.subtitle,
                 fontSize = UiTextSize.homeNavLabel,
                 modifier = Modifier.padding(top = 10.dp),
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            AppButton(
+                text = if (flashEnabled) "闪光灯：开" else "闪光灯：关",
+                onClick = { flashEnabled = !flashEnabled },
+                variant = AppButtonVariant.SECONDARY,
+                modifier = Modifier.weight(1f),
+                enabled = hasCameraPermission,
+            )
+            AppButton(
+                text = if (lensFacing == CameraSelector.LENS_FACING_BACK) "切到前摄" else "切到后摄",
+                onClick = {
+                    lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                        CameraSelector.LENS_FACING_FRONT
+                    } else {
+                        CameraSelector.LENS_FACING_BACK
+                    }
+                },
+                variant = AppButtonVariant.SECONDARY,
+                modifier = Modifier.weight(1f),
+                enabled = hasCameraPermission,
             )
         }
         AppButton(
@@ -179,6 +218,8 @@ private fun bindCameraUseCases(
     context: Context,
     lifecycleOwner: androidx.lifecycle.LifecycleOwner,
     previewView: PreviewView,
+    lensFacing: Int,
+    flashEnabled: Boolean,
     onReady: (ImageCapture) -> Unit,
 ) {
     val providerFuture = ProcessCameraProvider.getInstance(context)
@@ -188,11 +229,14 @@ private fun bindCameraUseCases(
             val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
             val imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setFlashMode(
+                    if (flashEnabled) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF,
+                )
                 .build()
             provider.unbindAll()
             provider.bindToLifecycle(
                 lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
+                CameraSelector.Builder().requireLensFacing(lensFacing).build(),
                 preview,
                 imageCapture,
             )
