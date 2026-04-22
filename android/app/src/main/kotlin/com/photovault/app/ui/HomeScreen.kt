@@ -43,15 +43,44 @@ import com.photovault.app.ui.theme.UiTextSize
 
 @Composable
 fun HomeScreen() {
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(HomeTab.VAULT.ordinal) }
     val tabs = remember {
         listOf(
-            HomeNavTab(R.drawable.ic_home_nav_album, R.string.home_nav_album),
-            HomeNavTab(R.drawable.ic_home_nav_import, R.string.home_nav_import),
-            HomeNavTab(R.drawable.ic_home_nav_vault, R.string.home_nav_vault),
-            HomeNavTab(R.drawable.ic_home_nav_settings, R.string.home_nav_settings),
+            HomeNavTab(
+                tab = HomeTab.VAULT,
+                iconRes = R.drawable.ic_home_nav_vault,
+                labelRes = R.string.home_nav_vault,
+                emptyTitleRes = R.string.home_vault_empty_title,
+                emptyDescRes = R.string.home_vault_empty_desc,
+                emptyActionRes = R.string.home_vault_empty_action,
+            ),
+            HomeNavTab(
+                tab = HomeTab.CAMERA,
+                iconRes = R.drawable.ic_home_nav_camera,
+                labelRes = R.string.home_nav_camera,
+                emptyTitleRes = R.string.home_camera_empty_title,
+                emptyDescRes = R.string.home_camera_empty_desc,
+                emptyActionRes = R.string.home_camera_empty_action,
+            ),
+            HomeNavTab(
+                tab = HomeTab.AI,
+                iconRes = R.drawable.ic_home_nav_ai,
+                labelRes = R.string.home_nav_ai,
+                emptyTitleRes = R.string.home_ai_empty_title,
+                emptyDescRes = R.string.home_ai_empty_desc,
+                emptyActionRes = R.string.home_ai_empty_action,
+            ),
+            HomeNavTab(
+                tab = HomeTab.SETTINGS,
+                iconRes = R.drawable.ic_home_nav_settings,
+                labelRes = R.string.home_nav_settings,
+                emptyTitleRes = R.string.home_settings_empty_title,
+                emptyDescRes = R.string.home_settings_empty_desc,
+                emptyActionRes = R.string.home_settings_empty_action,
+            ),
         )
     }
+    val currentTab = tabs.getOrNull(selectedTab) ?: tabs.first()
 
     Column(
         modifier = Modifier
@@ -83,7 +112,7 @@ fun HomeScreen() {
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
-            HomeEmptyState()
+            HomeEmptyState(currentTab)
         }
 
         HomeBottomNav(
@@ -95,7 +124,7 @@ fun HomeScreen() {
 }
 
 @Composable
-private fun HomeEmptyState() {
+private fun HomeEmptyState(tab: HomeNavTab) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -119,20 +148,20 @@ private fun HomeEmptyState() {
             )
         }
         Text(
-            text = stringResource(R.string.home_empty_title),
+            text = stringResource(tab.emptyTitleRes),
             color = UiColors.Home.emptyTitle,
             fontSize = UiTextSize.homeEmptyTitle,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 14.dp),
         )
         Text(
-            text = stringResource(R.string.home_empty_desc),
+            text = stringResource(tab.emptyDescRes),
             color = UiColors.Home.emptyBody,
             fontSize = UiTextSize.homeEmptyBody,
             modifier = Modifier.padding(top = 10.dp),
         )
         AppButton(
-            text = stringResource(R.string.home_empty_action),
+            text = stringResource(tab.emptyActionRes),
             onClick = {},
             modifier = Modifier
                 .fillMaxWidth()
@@ -198,6 +227,17 @@ private fun HomeBottomNav(
 }
 
 private data class HomeNavTab(
+    val tab: HomeTab,
     val iconRes: Int,
     val labelRes: Int,
+    val emptyTitleRes: Int,
+    val emptyDescRes: Int,
+    val emptyActionRes: Int,
 )
+
+private enum class HomeTab {
+    VAULT,
+    CAMERA,
+    AI,
+    SETTINGS,
+}

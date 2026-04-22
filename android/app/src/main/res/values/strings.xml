@@ -10,8 +10,20 @@
     <string name="home_empty_title">暂无加密内容</string>
     <string name="home_empty_desc">导入照片或视频后，它们会在本地加密存储并受锁屏保护。</string>
     <string name="home_empty_action">立即导入</string>
-    <string name="home_nav_album">相册</string>
-    <string name="home_nav_import">导入</string>
+    <string name="home_vault_empty_title">保险箱暂无项目</string>
+    <string name="home_vault_empty_desc">你收藏到保险箱的内容会显示在这里，并受到锁屏保护。</string>
+    <string name="home_vault_empty_action">去添加</string>
+    <string name="home_camera_empty_title">相机拍摄入口</string>
+    <string name="home_camera_empty_desc">拍摄完成后可直接进入加密流程，避免内容暴露在公开相册中。</string>
+    <string name="home_camera_empty_action">打开相机</string>
+    <string name="home_ai_empty_title">AI 工具暂未启动</string>
+    <string name="home_ai_empty_desc">后续可在这里进行智能分类、检索和隐私内容管理建议。</string>
+    <string name="home_ai_empty_action">进入 AI</string>
+    <string name="home_settings_empty_title">设置面板建设中</string>
+    <string name="home_settings_empty_desc">安全策略、主题切换和备份相关配置将统一放在这里。</string>
+    <string name="home_settings_empty_action">查看安全策略</string>
     <string name="home_nav_vault">保险箱</string>
+    <string name="home_nav_camera">相机</string>
+    <string name="home_nav_ai">AI</string>
     <string name="home_nav_settings">设置</string>
 </resources>
