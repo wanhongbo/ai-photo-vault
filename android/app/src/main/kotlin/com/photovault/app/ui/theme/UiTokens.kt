@@ -51,6 +51,24 @@ object UiColors {
         val title = Color(0xFFEAF1FF)
         val body = Color(0xFF97A8C0)
     }
+
+    object Home {
+        val bgTop = Color(0xFF0B1324)
+        val bgBottom = Color(0xFF05080D)
+        val title = Color(0xFFEAF1FF)
+        val subtitle = Color(0xFF8EA2C0)
+        val emptyCardBg = Color(0xFF0E1624)
+        val emptyCardStroke = Color(0xFF223247)
+        val emptyIconBg = Color(0x1F4A9EFF)
+        val emptyTitle = Color(0xFFEAF1FF)
+        val emptyBody = Color(0xFF8EA2C0)
+        val navBarBg = Color(0xCC0E1726)
+        val navBarStroke = Color(0xFF243348)
+        val navItemActiveBg = Color(0x1F4A9EFF)
+        val navItemActiveStroke = Color(0xFF4A9EFF)
+        val navItemIdle = Color(0xFF7E90AB)
+        val navItemActive = Color(0xFFB7D7FF)
+    }
 }
 
 object UiRadius {
@@ -58,15 +76,27 @@ object UiRadius {
     val errorBanner: Dp = 12.dp
     val hintCard: Dp = 16.dp
     val dialog: Dp = 20.dp
+    val homeCard: Dp = 20.dp
+    val homeNavBar: Dp = 24.dp
+    val homeNavItem: Dp = 16.dp
 }
 
 object UiSize {
     val buttonHeight: Dp = 56.dp
     val loadingIndicator: Dp = 20.dp
+    val homeNavBarHeight: Dp = 88.dp
+    val homeNavIcon: Dp = 22.dp
+    val homeEmptyIconWrap: Dp = 72.dp
+    val homeEmptyIcon: Dp = 32.dp
 }
 
 object UiTextSize {
     val button: TextUnit = 18.sp
     val dialogTitle: TextUnit = 22.sp
     val dialogBody: TextUnit = 15.sp
+    val homeTitle: TextUnit = 24.sp
+    val homeSubtitle: TextUnit = 14.sp
+    val homeEmptyTitle: TextUnit = 20.sp
+    val homeEmptyBody: TextUnit = 14.sp
+    val homeNavLabel: TextUnit = 12.sp
 }

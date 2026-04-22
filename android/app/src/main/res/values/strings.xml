@@ -5,4 +5,13 @@
     <string name="splash_title">VaultSafe</string>
     <string name="splash_tagline">Private · Encrypted · Yours</string>
     <string name="splash_footer">v%1$s  •  AES-256 Encrypted</string>
+    <string name="home_title">我的保险库</string>
+    <string name="home_subtitle">本地加密，仅你可见</string>
+    <string name="home_empty_title">暂无加密内容</string>
+    <string name="home_empty_desc">导入照片或视频后，它们会在本地加密存储并受锁屏保护。</string>
+    <string name="home_empty_action">立即导入</string>
+    <string name="home_nav_album">相册</string>
+    <string name="home_nav_import">导入</string>
+    <string name="home_nav_vault">保险箱</string>
+    <string name="home_nav_settings">设置</string>
 </resources>
