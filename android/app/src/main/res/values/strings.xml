@@ -12,7 +12,7 @@
     <string name="home_empty_action">立即导入</string>
     <string name="home_vault_empty_title">保险箱暂无项目</string>
     <string name="home_vault_empty_desc">你收藏到保险箱的内容会显示在这里，并受到锁屏保护。</string>
-    <string name="home_vault_empty_action">去添加</string>
+    <string name="home_vault_empty_action">Import form Library</string>
     <string name="home_camera_empty_title">相机拍摄入口</string>
     <string name="home_camera_empty_desc">拍摄完成后可直接进入加密流程，避免内容暴露在公开相册中。</string>
     <string name="home_camera_empty_action">打开相机</string>
@@ -26,4 +26,10 @@
     <string name="home_nav_camera">相机</string>
     <string name="home_nav_ai">AI</string>
     <string name="home_nav_settings">设置</string>
+    <string name="home_permission_title">允许访问相册</string>
+    <string name="home_permission_desc">为了导入并加密你的照片和视频，需要授予“读取媒体”权限。数据仅在本地处理，不会上传。</string>
+    <string name="home_permission_denied_desc">你已拒绝相册读取权限。请前往系统设置手动开启后，再导入内容到保险箱。</string>
+    <string name="home_permission_grant">授权访问相册</string>
+    <string name="home_permission_settings">去设置开启权限</string>
+    <string name="home_permission_later">稍后再说</string>
 </resources>
