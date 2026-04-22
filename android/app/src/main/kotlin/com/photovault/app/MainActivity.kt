@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.photovault.app.ui.CameraPlaceholderScreen
 import com.photovault.app.ui.HomeScreen
 import com.photovault.app.ui.SplashScreen
 import com.photovault.app.ui.lock.LockScreen
@@ -81,7 +82,18 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(ROUTE_HOME) {
-                            HomeScreen()
+                            HomeScreen(
+                                onOpenPrivateCamera = {
+                                    navController.navigate(ROUTE_CAMERA_PLACEHOLDER) {
+                                        launchSingleTop = true
+                                    }
+                                },
+                            )
+                        }
+                        composable(ROUTE_CAMERA_PLACEHOLDER) {
+                            CameraPlaceholderScreen(
+                                onBack = { navController.popBackStack() },
+                            )
                         }
                     }
                 }
@@ -93,5 +105,6 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_SPLASH = "splash"
         private const val ROUTE_LOCK = "lock"
         private const val ROUTE_HOME = "home"
+        private const val ROUTE_CAMERA_PLACEHOLDER = "camera_placeholder"
     }
 }

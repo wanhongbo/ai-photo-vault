@@ -71,7 +71,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onOpenPrivateCamera: () -> Unit = {},
+) {
     var selectedTab by remember { mutableIntStateOf(HomeTab.VAULT.ordinal) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val hostActivity = remember(context) { context.findActivity() }
@@ -269,6 +271,9 @@ fun HomeScreen() {
                             else -> Unit
                         }
                     },
+                    onSecondaryAction = {
+                        if (currentTab.tab == HomeTab.VAULT) onOpenPrivateCamera()
+                    },
                 )
             }
         }
@@ -385,6 +390,7 @@ private fun HomeEmptyState(
     tab: HomeNavTab,
     isLoading: Boolean,
     onAction: () -> Unit,
+    onSecondaryAction: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -429,6 +435,16 @@ private fun HomeEmptyState(
                 .fillMaxWidth()
                 .padding(top = 20.dp),
         )
+        if (tab.tab == HomeTab.VAULT) {
+            AppButton(
+                text = stringResource(R.string.home_vault_take_private_photo),
+                onClick = onSecondaryAction,
+                variant = AppButtonVariant.SECONDARY,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+            )
+        }
     }
 }
 
