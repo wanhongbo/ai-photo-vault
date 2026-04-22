@@ -32,4 +32,8 @@
     <string name="home_permission_grant">授权访问相册</string>
     <string name="home_permission_settings">去设置开启权限</string>
     <string name="home_permission_later">稍后再说</string>
+    <string name="home_import_loading">正在导入到保险箱…</string>
+    <string name="home_import_success">已成功导入到本地保险箱</string>
+    <string name="home_import_duplicate">该图片已在保险箱中，已跳过重复导入</string>
+    <string name="home_import_failed">导入失败，请重试</string>
 </resources>
