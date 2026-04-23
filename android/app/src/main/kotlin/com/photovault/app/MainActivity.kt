@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -77,6 +79,30 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = ROUTE_SPLASH,
+                        enterTransition = {
+                            slideIntoContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(NAV_ANIMATION_DURATION_MS),
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(NAV_ANIMATION_DURATION_MS),
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(NAV_ANIMATION_DURATION_MS),
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(NAV_ANIMATION_DURATION_MS),
+                            )
+                        },
                     ) {
                         composable(ROUTE_SPLASH) {
                             SplashScreen(
@@ -241,6 +267,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
+        private const val NAV_ANIMATION_DURATION_MS = 280
         private const val ROUTE_SPLASH = "splash"
         private const val ROUTE_LOCK = "lock"
         private const val ROUTE_HOME_VAULT = "home_vault"
