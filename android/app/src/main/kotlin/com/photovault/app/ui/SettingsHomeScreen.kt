@@ -40,6 +40,8 @@ import com.photovault.app.ui.theme.UiTextSize
 @Composable
 fun SettingsHomeScreen(
     onOpenTab: (HomeTab) -> Unit,
+    onOpenBackupRestore: () -> Unit,
+    onOpenTrashBin: () -> Unit,
 ) {
     val tabs = remember { homeTabs() }
     var biometricEnabled by remember { mutableStateOf(true) }
@@ -49,6 +51,7 @@ fun SettingsHomeScreen(
             title = stringResource(R.string.settings_item_change_pin),
             desc = stringResource(R.string.settings_item_change_pin_desc),
             trailing = SettingsTrailing.CHEVRON,
+            onClick = {},
         ),
     )
     val generalItems = listOf(
@@ -56,11 +59,25 @@ fun SettingsHomeScreen(
             title = stringResource(R.string.settings_item_language),
             desc = stringResource(R.string.settings_item_language_desc),
             trailing = SettingsTrailing.CHEVRON,
+            onClick = {},
         ),
         SettingsRowModel(
             title = stringResource(R.string.settings_item_storage),
             desc = stringResource(R.string.settings_item_storage_desc),
             trailing = SettingsTrailing.CHEVRON,
+            onClick = {},
+        ),
+        SettingsRowModel(
+            title = stringResource(R.string.settings_item_backup_restore),
+            desc = stringResource(R.string.settings_item_backup_restore_desc),
+            trailing = SettingsTrailing.CHEVRON,
+            onClick = onOpenBackupRestore,
+        ),
+        SettingsRowModel(
+            title = stringResource(R.string.settings_item_trash),
+            desc = stringResource(R.string.settings_item_trash_desc),
+            trailing = SettingsTrailing.CHEVRON,
+            onClick = onOpenTrashBin,
         ),
     )
     val aboutItems = listOf(
@@ -68,6 +85,7 @@ fun SettingsHomeScreen(
             title = stringResource(R.string.settings_item_version),
             desc = stringResource(R.string.settings_item_version_desc),
             trailing = SettingsTrailing.TEXT,
+            onClick = {},
         ),
     )
 
@@ -244,7 +262,7 @@ private fun SettingsSimpleRow(model: SettingsRowModel) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(UiRadius.settingsRow))
             .background(UiColors.Home.emptyCardBg)
-            .clickable { }
+            .clickable(onClick = model.onClick)
             .padding(
                 horizontal = UiSize.settingsRowPaddingHorizontal,
                 vertical = UiSize.settingsRowPaddingVertical,
@@ -299,6 +317,7 @@ private data class SettingsRowModel(
     val title: String,
     val desc: String,
     val trailing: SettingsTrailing,
+    val onClick: () -> Unit,
 )
 
 private enum class SettingsTrailing {

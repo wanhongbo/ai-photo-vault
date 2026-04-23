@@ -21,14 +21,18 @@ import androidx.navigation.compose.rememberNavController
 import com.photovault.app.ui.AiHomeScreen
 import com.photovault.app.ui.AlbumScreen
 import com.photovault.app.ui.AlbumListScreen
+import com.photovault.app.ui.BackupRestoreScreen
+import com.photovault.app.ui.BackupResultScreen
 import com.photovault.app.ui.CameraPlaceholderScreen
 import com.photovault.app.ui.CameraHomeScreen
 import com.photovault.app.ui.HomeTab
 import com.photovault.app.ui.HomeScreen
 import com.photovault.app.ui.PhotoViewerPlaceholderScreen
 import com.photovault.app.ui.RecentPhotosScreen
+import com.photovault.app.ui.RestoreResultScreen
 import com.photovault.app.ui.SettingsHomeScreen
 import com.photovault.app.ui.SplashScreen
+import com.photovault.app.ui.TrashBinScreen
 import com.photovault.app.ui.VaultSearchScreen
 import com.photovault.app.ui.lock.LockScreen
 import com.photovault.app.ui.theme.PhotoVaultTheme
@@ -148,7 +152,41 @@ class MainActivity : ComponentActivity() {
                                 onOpenTab = { tab ->
                                     navController.navigate(tab.toRoute()) { launchSingleTop = true }
                                 },
+                                onOpenBackupRestore = {
+                                    navController.navigate(ROUTE_BACKUP_RESTORE) { launchSingleTop = true }
+                                },
+                                onOpenTrashBin = {
+                                    navController.navigate(ROUTE_TRASH_BIN) { launchSingleTop = true }
+                                },
                             )
+                        }
+                        composable(ROUTE_BACKUP_RESTORE) {
+                            BackupRestoreScreen(
+                                onOpenBackupResult = {
+                                    navController.navigate(ROUTE_BACKUP_RESULT) { launchSingleTop = true }
+                                },
+                                onOpenRestoreResult = {
+                                    navController.navigate(ROUTE_RESTORE_RESULT) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_BACKUP_RESULT) {
+                            BackupResultScreen(
+                                onDone = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_RESTORE_RESULT) {
+                            RestoreResultScreen(
+                                onDone = {
+                                    navController.navigate(ROUTE_HOME_SETTINGS) {
+                                        popUpTo(ROUTE_HOME_SETTINGS) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                            )
+                        }
+                        composable(ROUTE_TRASH_BIN) {
+                            TrashBinScreen()
                         }
                         composable(ROUTE_CAMERA_PLACEHOLDER) {
                             CameraPlaceholderScreen(
@@ -213,6 +251,10 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_VAULT_SEARCH = "vault_search"
         private const val ROUTE_ALBUM_LIST = "album_list"
         private const val ROUTE_RECENT_LIST = "recent_list"
+        private const val ROUTE_BACKUP_RESTORE = "backup_restore"
+        private const val ROUTE_BACKUP_RESULT = "backup_result"
+        private const val ROUTE_RESTORE_RESULT = "restore_result"
+        private const val ROUTE_TRASH_BIN = "trash_bin"
     }
 }
 

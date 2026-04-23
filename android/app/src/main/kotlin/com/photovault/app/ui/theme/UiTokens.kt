@@ -132,6 +132,17 @@ object UiSize {
     val settingsRowPaddingHorizontal: Dp = 12.dp
     val settingsRowPaddingVertical: Dp = 10.dp
     val settingsDangerDescTopGap: Dp = 2.dp
+    val backupScreenPadding: Dp = 16.dp
+    val backupSectionGap: Dp = 12.dp
+    val backupCardPadding: Dp = 16.dp
+    val backupCardInnerGap: Dp = 10.dp
+    val backupHeaderGap: Dp = 10.dp
+    val backupSubtitleTopGap: Dp = 6.dp
+    val backupCardTopGap: Dp = 14.dp
+    val backupActionTopGap: Dp = 14.dp
+    val trashRowGap: Dp = 8.dp
+    val trashItemPadding: Dp = 12.dp
+    val trashActionGap: Dp = 8.dp
 }
 
 object UiTextSize {
