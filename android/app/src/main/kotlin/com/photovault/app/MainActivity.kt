@@ -1,6 +1,7 @@
 package com.photovault.app
 
 import android.os.Bundle
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,17 +13,23 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.photovault.app.ui.AiHomeScreen
+import com.photovault.app.ui.AlbumScreen
+import com.photovault.app.ui.AlbumListScreen
 import com.photovault.app.ui.CameraPlaceholderScreen
 import com.photovault.app.ui.CameraHomeScreen
 import com.photovault.app.ui.HomeTab
 import com.photovault.app.ui.HomeScreen
+import com.photovault.app.ui.PhotoViewerPlaceholderScreen
+import com.photovault.app.ui.RecentPhotosScreen
 import com.photovault.app.ui.SettingsHomeScreen
 import com.photovault.app.ui.SplashScreen
+import com.photovault.app.ui.VaultSearchScreen
 import com.photovault.app.ui.lock.LockScreen
 import com.photovault.app.ui.theme.PhotoVaultTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -97,6 +104,21 @@ class MainActivity : ComponentActivity() {
                                         launchSingleTop = true
                                     }
                                 },
+                                onOpenSearch = {
+                                    navController.navigate(ROUTE_VAULT_SEARCH) { launchSingleTop = true }
+                                },
+                                onOpenAlbum = { albumName ->
+                                    navController.navigate("album/${Uri.encode(albumName)}") { launchSingleTop = true }
+                                },
+                                onOpenPhotoViewer = { path ->
+                                    navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
+                                },
+                                onOpenAlbumList = {
+                                    navController.navigate(ROUTE_ALBUM_LIST) { launchSingleTop = true }
+                                },
+                                onOpenRecentList = {
+                                    navController.navigate(ROUTE_RECENT_LIST) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_HOME_CAMERA) {
@@ -125,6 +147,47 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() },
                             )
                         }
+                        composable(ROUTE_VAULT_SEARCH) {
+                            VaultSearchScreen(
+                                onOpenPhoto = { path ->
+                                    navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_ALBUM_LIST) {
+                            AlbumListScreen(
+                                onOpenAlbum = { albumName ->
+                                    navController.navigate("album/${Uri.encode(albumName)}") { launchSingleTop = true }
+                                },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_RECENT_LIST) {
+                            RecentPhotosScreen(
+                                onOpenPhoto = { path ->
+                                    navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
+                                },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(
+                            route = "album/{albumName}",
+                            arguments = listOf(navArgument("albumName") { defaultValue = "Default" }),
+                        ) { entry ->
+                            val album = Uri.decode(entry.arguments?.getString("albumName") ?: "Default")
+                            AlbumScreen(
+                                albumName = album,
+                                onOpenPhoto = { path ->
+                                    navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(
+                            route = "photo_viewer/{path}",
+                            arguments = listOf(navArgument("path") { defaultValue = "" }),
+                        ) { entry ->
+                            PhotoViewerPlaceholderScreen(path = Uri.decode(entry.arguments?.getString("path") ?: ""))
+                        }
                     }
                 }
             }
@@ -139,6 +202,9 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_HOME_AI = "home_ai"
         private const val ROUTE_HOME_SETTINGS = "home_settings"
         private const val ROUTE_CAMERA_PLACEHOLDER = "camera_placeholder"
+        private const val ROUTE_VAULT_SEARCH = "vault_search"
+        private const val ROUTE_ALBUM_LIST = "album_list"
+        private const val ROUTE_RECENT_LIST = "recent_list"
     }
 }
 

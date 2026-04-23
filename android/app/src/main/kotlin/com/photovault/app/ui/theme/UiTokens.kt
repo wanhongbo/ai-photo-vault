@@ -55,6 +55,7 @@ object UiColors {
     object Home {
         val bgTop = Color(0xFF0B1324)
         val bgBottom = Color(0xFF05080D)
+        val sectionBg = Color(0xFF0C1523)
         val title = Color(0xFFEAF1FF)
         val subtitle = Color(0xFF8EA2C0)
         val emptyCardBg = Color(0xFF0E1624)
@@ -77,6 +78,8 @@ object UiRadius {
     val hintCard: Dp = 16.dp
     val dialog: Dp = 20.dp
     val homeCard: Dp = 20.dp
+    val homeThumb: Dp = 12.dp
+    val homeAlbumCard: Dp = 14.dp
     val homeNavBar: Dp = 24.dp
     val homeNavItem: Dp = 16.dp
 }
@@ -88,6 +91,12 @@ object UiSize {
     val homeNavIcon: Dp = 22.dp
     val homeEmptyIconWrap: Dp = 72.dp
     val homeEmptyIcon: Dp = 32.dp
+    val homeSectionGap: Dp = 16.dp
+    val homeCardPadding: Dp = 16.dp
+    val homeGridGap: Dp = 8.dp
+    val homeAlbumCardWidth: Dp = 124.dp
+    val homeAlbumCoverHeight: Dp = 92.dp
+    val homeThumbSize: Dp = 108.dp
 }
 
 object UiTextSize {
