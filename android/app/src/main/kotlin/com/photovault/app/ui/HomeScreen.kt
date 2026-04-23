@@ -39,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,8 +76,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun HomeScreen(
     onOpenPrivateCamera: () -> Unit = {},
+    onOpenTab: (HomeTab) -> Unit = {},
 ) {
-    var selectedTab by remember { mutableIntStateOf(HomeTab.VAULT.ordinal) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val hostActivity = remember(context) { context.findActivity() }
@@ -140,43 +139,7 @@ fun HomeScreen(
         hasAlbumPermission = checkAlbumReadPermission(context)
         permanentlyDenied = !hasAlbumPermission && isPermanentlyDenied(hostActivity)
     }
-    val tabs = remember {
-        listOf(
-            HomeNavTab(
-                tab = HomeTab.VAULT,
-                iconRes = R.drawable.ic_home_nav_vault,
-                labelRes = R.string.home_nav_vault,
-                emptyTitleRes = R.string.home_vault_empty_title,
-                emptyDescRes = R.string.home_vault_empty_desc,
-                emptyActionRes = R.string.home_vault_empty_action,
-            ),
-            HomeNavTab(
-                tab = HomeTab.CAMERA,
-                iconRes = R.drawable.ic_home_nav_camera,
-                labelRes = R.string.home_nav_camera,
-                emptyTitleRes = R.string.home_camera_empty_title,
-                emptyDescRes = R.string.home_camera_empty_desc,
-                emptyActionRes = R.string.home_camera_empty_action,
-            ),
-            HomeNavTab(
-                tab = HomeTab.AI,
-                iconRes = R.drawable.ic_home_nav_ai,
-                labelRes = R.string.home_nav_ai,
-                emptyTitleRes = R.string.home_ai_empty_title,
-                emptyDescRes = R.string.home_ai_empty_desc,
-                emptyActionRes = R.string.home_ai_empty_action,
-            ),
-            HomeNavTab(
-                tab = HomeTab.SETTINGS,
-                iconRes = R.drawable.ic_home_nav_settings,
-                labelRes = R.string.home_nav_settings,
-                emptyTitleRes = R.string.home_settings_empty_title,
-                emptyDescRes = R.string.home_settings_empty_desc,
-                emptyActionRes = R.string.home_settings_empty_action,
-            ),
-        )
-    }
-    val currentTab = tabs.getOrNull(selectedTab) ?: tabs.first()
+    val tabs = remember { homeTabs() }
     val filteredVaultItems = remember(vaultItems, searchQuery) {
         if (searchQuery.isBlank()) {
             vaultItems
@@ -187,7 +150,6 @@ fun HomeScreen(
         }
     }
     val triggerImportFromLibrary = {
-        selectedTab = HomeTab.VAULT.ordinal
         if (hasAlbumPermission && !importing) {
             importTip = null
             pickerLauncher.launch(
@@ -268,35 +230,28 @@ fun HomeScreen(
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
-            if (currentTab.tab == HomeTab.VAULT && !hasAlbumPermission) {
+            if (!hasAlbumPermission) {
                 HomeAlbumPermissionState(
                     onGrant = { permissionLauncher.launch(requiredAlbumPermissions()) },
                     onOpenSettings = { openAppSettings(context) },
                     permanentlyDenied = permanentlyDenied,
                 )
-            } else if (currentTab.tab == HomeTab.VAULT && filteredVaultItems.isNotEmpty()) {
+            } else if (filteredVaultItems.isNotEmpty()) {
                 VaultAlbumList(vaultItems = filteredVaultItems)
             } else {
                 HomeEmptyState(
-                    tab = currentTab,
+                    tab = tabs.first(),
                     isLoading = importing,
-                    onAction = {
-                        when (currentTab.tab) {
-                            HomeTab.VAULT -> triggerImportFromLibrary()
-                            else -> Unit
-                        }
-                    },
-                    onSecondaryAction = {
-                        if (currentTab.tab == HomeTab.VAULT) onOpenPrivateCamera()
-                    },
+                    onAction = triggerImportFromLibrary,
+                    onSecondaryAction = onOpenPrivateCamera,
                 )
             }
         }
 
         HomeBottomNav(
             tabs = tabs,
-            selectedIndex = selectedTab,
-            onSelect = { selectedTab = it },
+            selectedIndex = HomeTab.VAULT.ordinal,
+            onSelect = { idx -> onOpenTab(tabs[idx].tab) },
         )
     }
 }
@@ -523,7 +478,7 @@ private fun VaultAlbumList(
 }
 
 @Composable
-private fun HomeBottomNav(
+fun HomeBottomNav(
     tabs: List<HomeNavTab>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
@@ -578,7 +533,7 @@ private fun HomeBottomNav(
     }
 }
 
-private data class HomeNavTab(
+data class HomeNavTab(
     val tab: HomeTab,
     val iconRes: Int,
     val labelRes: Int,
@@ -587,12 +542,47 @@ private data class HomeNavTab(
     val emptyActionRes: Int,
 )
 
-private enum class HomeTab {
+enum class HomeTab {
     VAULT,
     CAMERA,
     AI,
     SETTINGS,
 }
+
+fun homeTabs(): List<HomeNavTab> = listOf(
+    HomeNavTab(
+        tab = HomeTab.VAULT,
+        iconRes = R.drawable.ic_home_nav_vault,
+        labelRes = R.string.home_nav_vault,
+        emptyTitleRes = R.string.home_vault_empty_title,
+        emptyDescRes = R.string.home_vault_empty_desc,
+        emptyActionRes = R.string.home_vault_empty_action,
+    ),
+    HomeNavTab(
+        tab = HomeTab.CAMERA,
+        iconRes = R.drawable.ic_home_nav_camera,
+        labelRes = R.string.home_nav_camera,
+        emptyTitleRes = R.string.home_camera_empty_title,
+        emptyDescRes = R.string.home_camera_empty_desc,
+        emptyActionRes = R.string.home_camera_empty_action,
+    ),
+    HomeNavTab(
+        tab = HomeTab.AI,
+        iconRes = R.drawable.ic_home_nav_ai,
+        labelRes = R.string.home_nav_ai,
+        emptyTitleRes = R.string.home_ai_empty_title,
+        emptyDescRes = R.string.home_ai_empty_desc,
+        emptyActionRes = R.string.home_ai_empty_action,
+    ),
+    HomeNavTab(
+        tab = HomeTab.SETTINGS,
+        iconRes = R.drawable.ic_home_nav_settings,
+        labelRes = R.string.home_nav_settings,
+        emptyTitleRes = R.string.home_settings_empty_title,
+        emptyDescRes = R.string.home_settings_empty_desc,
+        emptyActionRes = R.string.home_settings_empty_action,
+    ),
+)
 
 private data class VaultItem(
     val name: String,
