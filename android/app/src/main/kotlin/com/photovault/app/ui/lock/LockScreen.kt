@@ -51,6 +51,7 @@ import androidx.biometric.BiometricPrompt
 @Composable
 fun LockScreen(
     onUnlockSuccess: () -> Unit,
+    onQuickCapture: () -> Unit = {},
     viewModel: LockViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -188,6 +189,7 @@ fun LockScreen(
                     onNumber = viewModel::onNumber,
                     onDelete = viewModel::deleteLast,
                     onBiometric = { launchBiometricPrompt() },
+                    onQuickCapture = onQuickCapture,
                 )
 
                 if (state.stage == LockStage.SETUP_CONFIRM_ERROR) {
@@ -313,6 +315,7 @@ private fun NumberPad(
     onNumber: (Int) -> Unit,
     onDelete: () -> Unit,
     onBiometric: () -> Unit,
+    onQuickCapture: () -> Unit,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         listOf(
@@ -329,6 +332,11 @@ private fun NumberPad(
                     )
                 }
             }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            KeypadKey(label = "📷", extraHighlight = true, onClick = onQuickCapture)
+            Box(modifier = Modifier.size(86.dp))
+            Box(modifier = Modifier.size(86.dp))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (showBiometric) {

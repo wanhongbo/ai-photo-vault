@@ -56,7 +56,10 @@ class MainActivity : ComponentActivity() {
 
                     LaunchedEffect(requireUnlock, currentRoute) {
                         if (!requireUnlock) return@LaunchedEffect
-                        if (currentRoute != null && currentRoute != ROUTE_LOCK) {
+                        if (currentRoute != null &&
+                            currentRoute != ROUTE_LOCK &&
+                            currentRoute != ROUTE_CAMERA_PLACEHOLDER
+                        ) {
                             navController.navigate(ROUTE_LOCK) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = false
@@ -87,6 +90,11 @@ class MainActivity : ComponentActivity() {
                                     appLockManager.onUnlockSucceeded()
                                     navController.navigate(ROUTE_HOME_VAULT) {
                                         popUpTo(ROUTE_LOCK) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onQuickCapture = {
+                                    navController.navigate(ROUTE_CAMERA_PLACEHOLDER) {
                                         launchSingleTop = true
                                     }
                                 },
