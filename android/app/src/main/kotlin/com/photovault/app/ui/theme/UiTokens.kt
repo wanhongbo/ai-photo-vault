@@ -83,6 +83,8 @@ object UiRadius {
     val homeNavBar: Dp = 24.dp
     val homeNavItem: Dp = 16.dp
     val vaultEmptyIconWrap: Dp = 28.dp
+    val settingsRow: Dp = 12.dp
+    val settingsAvatar: Dp = 14.dp
 }
 
 object UiSize {
@@ -116,6 +118,20 @@ object UiSize {
     val permissionPrimaryTopGap: Dp = 24.dp
     val permissionSecondaryTopGap: Dp = 10.dp
     val permissionButtonHeight: Dp = 54.dp
+    val settingsScreenHorizontalPad: Dp = 16.dp
+    val settingsScreenVerticalPad: Dp = 16.dp
+    val settingsSubtitleTopGap: Dp = 6.dp
+    val settingsListTopGap: Dp = 14.dp
+    val settingsSectionGap: Dp = 12.dp
+    val settingsCardPadding: Dp = 16.dp
+    val settingsAvatarSize: Dp = 48.dp
+    val settingsAvatarGap: Dp = 12.dp
+    val settingsProfileDescTopGap: Dp = 2.dp
+    val settingsGroupTitleToRowsGap: Dp = 10.dp
+    val settingsRowGap: Dp = 8.dp
+    val settingsRowPaddingHorizontal: Dp = 12.dp
+    val settingsRowPaddingVertical: Dp = 10.dp
+    val settingsDangerDescTopGap: Dp = 2.dp
 }
 
 object UiTextSize {
@@ -131,4 +147,8 @@ object UiTextSize {
     val vaultEmptyBody: TextUnit = 15.sp
     val permissionTitle: TextUnit = 22.sp
     val permissionBody: TextUnit = 15.sp
+    val settingsProfileDesc: TextUnit = 12.sp
+    val settingsRowDesc: TextUnit = 12.sp
+    val settingsDangerDesc: TextUnit = 12.sp
+    val settingsAvatar: TextUnit = 16.sp
 }

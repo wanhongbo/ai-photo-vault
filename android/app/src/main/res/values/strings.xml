@@ -70,4 +70,25 @@
     <string name="recent_list_filter_date">拍摄日期</string>
     <string name="recent_list_filter_album">按相册</string>
     <string name="recent_list_empty">暂无最近照片</string>
+    <string name="settings_title">设置</string>
+    <string name="settings_subtitle">隐私与安全</string>
+    <string name="settings_profile_name">VaultSafe 用户</string>
+    <string name="settings_profile_desc">本地加密保护已开启</string>
+    <string name="settings_group_security">安全</string>
+    <string name="settings_item_biometric">生物识别解锁</string>
+    <string name="settings_item_biometric_desc">优先使用指纹或面容快速解锁</string>
+    <string name="settings_item_auto_lock">自动锁定</string>
+    <string name="settings_item_auto_lock_desc">切后台后立即锁定</string>
+    <string name="settings_item_change_pin">修改 PIN</string>
+    <string name="settings_item_change_pin_desc">更新当前 PIN 解锁密码</string>
+    <string name="settings_group_general">通用</string>
+    <string name="settings_item_language">语言</string>
+    <string name="settings_item_language_desc">简体中文</string>
+    <string name="settings_item_storage">存储管理</string>
+    <string name="settings_item_storage_desc">查看私有相册空间占用</string>
+    <string name="settings_group_about">关于</string>
+    <string name="settings_item_version">当前版本</string>
+    <string name="settings_item_version_desc">v1.0.0</string>
+    <string name="settings_danger_reset">清空私有相册</string>
+    <string name="settings_danger_reset_desc">删除后无法恢复，请谨慎操作</string>
 </resources>
