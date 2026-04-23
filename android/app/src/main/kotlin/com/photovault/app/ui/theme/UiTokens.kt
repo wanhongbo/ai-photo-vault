@@ -107,6 +107,15 @@ object UiSize {
     val vaultEmptyPrimaryTopGap: Dp = 24.dp
     val vaultEmptySecondaryTopGap: Dp = 12.dp
     val vaultEmptyButtonHeight: Dp = 54.dp
+    val permissionCardTopPad: Dp = 36.dp
+    val permissionCardBottomPad: Dp = 28.dp
+    val permissionIconWrap: Dp = 92.dp
+    val permissionIcon: Dp = 42.dp
+    val permissionTitleTopGap: Dp = 18.dp
+    val permissionBodyTopGap: Dp = 12.dp
+    val permissionPrimaryTopGap: Dp = 24.dp
+    val permissionSecondaryTopGap: Dp = 10.dp
+    val permissionButtonHeight: Dp = 54.dp
 }
 
 object UiTextSize {
@@ -120,4 +129,6 @@ object UiTextSize {
     val homeNavLabel: TextUnit = 12.sp
     val vaultEmptyTitle: TextUnit = 22.sp
     val vaultEmptyBody: TextUnit = 15.sp
+    val permissionTitle: TextUnit = 22.sp
+    val permissionBody: TextUnit = 15.sp
 }

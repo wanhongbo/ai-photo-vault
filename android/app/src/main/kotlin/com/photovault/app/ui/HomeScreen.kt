@@ -544,44 +544,64 @@ private fun HomeAlbumPermissionState(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.emptyCardBg)
+            .background(UiColors.Home.sectionBg)
             .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
-            .padding(horizontal = 20.dp, vertical = 24.dp),
+            .padding(
+                start = 20.dp,
+                end = 20.dp,
+                top = UiSize.permissionCardTopPad,
+                bottom = UiSize.permissionCardBottomPad,
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
-                .size(UiSize.homeEmptyIconWrap)
-                .background(UiColors.Home.emptyIconBg, CircleShape),
+                .size(UiSize.permissionIconWrap)
+                .background(UiColors.Home.emptyIconBg, CircleShape)
+                .border(1.dp, UiColors.Home.navItemActiveStroke, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_home_album_permission),
                 contentDescription = null,
                 tint = Color.Unspecified,
-                modifier = Modifier.size(UiSize.homeEmptyIcon),
+                modifier = Modifier.size(UiSize.permissionIcon),
             )
         }
         Text(
             text = stringResource(R.string.home_permission_title),
             color = UiColors.Home.emptyTitle,
-            fontSize = UiTextSize.homeEmptyTitle,
+            fontSize = UiTextSize.permissionTitle,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 14.dp),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = UiSize.permissionTitleTopGap),
         )
         Text(
             text = if (permanentlyDenied) stringResource(R.string.home_permission_denied_desc) else stringResource(R.string.home_permission_desc),
             color = UiColors.Home.emptyBody,
-            fontSize = UiTextSize.homeEmptyBody,
-            modifier = Modifier.padding(top = 10.dp),
+            fontSize = UiTextSize.permissionBody,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = UiSize.permissionBodyTopGap),
         )
         AppButton(
             text = if (permanentlyDenied) stringResource(R.string.home_permission_settings) else stringResource(R.string.home_permission_grant),
             onClick = if (permanentlyDenied) onOpenSettings else onGrant,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 20.dp),
+                .height(UiSize.permissionButtonHeight)
+                .padding(top = UiSize.permissionPrimaryTopGap),
         )
+        if (permanentlyDenied) {
+            AppButton(
+                text = stringResource(R.string.home_permission_later),
+                onClick = {},
+                variant = AppButtonVariant.SECONDARY,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(UiSize.permissionButtonHeight)
+                    .padding(top = UiSize.permissionSecondaryTopGap),
+            )
+        }
     }
 }
 
