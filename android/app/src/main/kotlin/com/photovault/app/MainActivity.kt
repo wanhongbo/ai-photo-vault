@@ -210,7 +210,7 @@ class MainActivity : ComponentActivity() {
 
 private fun HomeTab.toRoute(): String = when (this) {
     HomeTab.VAULT -> "home_vault"
-    HomeTab.CAMERA -> "home_camera"
+    HomeTab.CAMERA -> "camera_placeholder"
     HomeTab.AI -> "home_ai"
     HomeTab.SETTINGS -> "home_settings"
 }
