@@ -82,6 +82,7 @@ object UiRadius {
     val homeAlbumCard: Dp = 14.dp
     val homeNavBar: Dp = 24.dp
     val homeNavItem: Dp = 16.dp
+    val vaultEmptyIconWrap: Dp = 28.dp
 }
 
 object UiSize {
@@ -97,6 +98,15 @@ object UiSize {
     val homeAlbumCardWidth: Dp = 124.dp
     val homeAlbumCoverHeight: Dp = 92.dp
     val homeThumbSize: Dp = 108.dp
+    val vaultEmptyCardTopPad: Dp = 40.dp
+    val vaultEmptyCardBottomPad: Dp = 28.dp
+    val vaultEmptyIconWrap: Dp = 96.dp
+    val vaultEmptyIcon: Dp = 42.dp
+    val vaultEmptyTitleTopGap: Dp = 20.dp
+    val vaultEmptyBodyTopGap: Dp = 12.dp
+    val vaultEmptyPrimaryTopGap: Dp = 24.dp
+    val vaultEmptySecondaryTopGap: Dp = 12.dp
+    val vaultEmptyButtonHeight: Dp = 54.dp
 }
 
 object UiTextSize {
@@ -108,4 +118,6 @@ object UiTextSize {
     val homeEmptyTitle: TextUnit = 20.sp
     val homeEmptyBody: TextUnit = 14.sp
     val homeNavLabel: TextUnit = 12.sp
+    val vaultEmptyTitle: TextUnit = 22.sp
+    val vaultEmptyBody: TextUnit = 15.sp
 }

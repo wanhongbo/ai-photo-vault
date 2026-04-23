@@ -59,6 +59,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -103,6 +104,9 @@ fun HomeScreen(
     var importing by remember { mutableStateOf(false) }
     var importTip by remember { mutableStateOf<ImportTip?>(null) }
     val tabs = remember { homeTabs() }
+    val isVaultEmpty = remember(albums, recentPhotos) {
+        recentPhotos.isEmpty() && albums.sumOf { it.photoCount } == 0
+    }
 
     suspend fun refreshVault() {
         VaultStore.ensureInit(context)
@@ -198,6 +202,19 @@ fun HomeScreen(
                     permanentlyDenied = permanentlyDenied,
                 )
             }
+        } else if (isVaultEmpty) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                VaultEmptyState(
+                    isLoading = importing,
+                    onImport = triggerImportFromLibrary,
+                    onTakePrivatePhoto = onOpenPrivateCamera,
+                )
+            }
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -219,16 +236,6 @@ fun HomeScreen(
                         onOpenPhoto = { onOpenPhotoViewer(it.path) },
                         onViewMore = onOpenRecentList,
                     )
-                }
-                if (recentPhotos.isEmpty()) {
-                    item {
-                        HomeEmptyState(
-                            tab = tabs.first(),
-                            isLoading = importing,
-                            onAction = triggerImportFromLibrary,
-                            onSecondaryAction = onOpenPrivateCamera,
-                        )
-                    }
                 }
             }
         }
@@ -579,61 +586,73 @@ private fun HomeAlbumPermissionState(
 }
 
 @Composable
-private fun HomeEmptyState(
-    tab: HomeNavTab,
+private fun VaultEmptyState(
     isLoading: Boolean,
-    onAction: () -> Unit,
-    onSecondaryAction: () -> Unit = {},
+    onImport: () -> Unit,
+    onTakePrivatePhoto: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.emptyCardBg)
+            .background(UiColors.Home.sectionBg)
             .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
-            .padding(horizontal = 20.dp, vertical = 24.dp),
+            .padding(
+                start = 20.dp,
+                end = 20.dp,
+                top = UiSize.vaultEmptyCardTopPad,
+                bottom = UiSize.vaultEmptyCardBottomPad,
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
-                .size(UiSize.homeEmptyIconWrap)
-                .background(UiColors.Home.emptyIconBg, CircleShape),
+                .size(UiSize.vaultEmptyIconWrap)
+                .background(UiColors.Home.emptyIconBg, CircleShape)
+                .border(1.dp, UiColors.Home.navItemActiveStroke, CircleShape)
+                .clip(RoundedCornerShape(UiRadius.vaultEmptyIconWrap)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(R.drawable.shield_check),
                 contentDescription = null,
                 tint = Color.Unspecified,
-                modifier = Modifier.size(UiSize.homeEmptyIcon),
+                modifier = Modifier.size(UiSize.vaultEmptyIcon),
             )
         }
         Text(
-            text = stringResource(tab.emptyTitleRes),
+            text = stringResource(R.string.home_vault_empty_title),
             color = UiColors.Home.emptyTitle,
-            fontSize = UiTextSize.homeEmptyTitle,
+            fontSize = UiTextSize.vaultEmptyTitle,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 14.dp),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = UiSize.vaultEmptyTitleTopGap),
         )
         Text(
-            text = stringResource(tab.emptyDescRes),
+            text = stringResource(R.string.home_vault_empty_desc),
             color = UiColors.Home.emptyBody,
-            fontSize = UiTextSize.homeEmptyBody,
-            modifier = Modifier.padding(top = 10.dp),
+            fontSize = UiTextSize.vaultEmptyBody,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = UiSize.vaultEmptyBodyTopGap),
         )
         AppButton(
-            text = stringResource(tab.emptyActionRes),
-            onClick = onAction,
+            text = stringResource(R.string.home_vault_empty_action),
+            onClick = onImport,
             loading = isLoading,
-            modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(UiSize.vaultEmptyButtonHeight)
+                .padding(top = UiSize.vaultEmptyPrimaryTopGap),
         )
-        if (tab.tab == HomeTab.VAULT) {
-            AppButton(
-                text = stringResource(R.string.home_vault_take_private_photo),
-                onClick = onSecondaryAction,
-                variant = AppButtonVariant.SECONDARY,
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-            )
-        }
+        AppButton(
+            text = stringResource(R.string.home_vault_take_private_photo),
+            onClick = onTakePrivatePhoto,
+            variant = AppButtonVariant.SECONDARY,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(UiSize.vaultEmptyButtonHeight)
+                .padding(top = UiSize.vaultEmptySecondaryTopGap),
+        )
     }
 }
 
