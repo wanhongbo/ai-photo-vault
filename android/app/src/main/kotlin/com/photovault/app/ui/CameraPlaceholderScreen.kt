@@ -45,7 +45,8 @@ import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppButtonVariant
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiTextSize
-import java.io.File
+import com.photovault.app.ui.vault.DEFAULT_ALBUM_NAME
+import com.photovault.app.ui.vault.VaultStore
 import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -250,9 +251,7 @@ private suspend fun captureToVault(
     context: Context,
     imageCapture: ImageCapture,
 ): Boolean = withContext(Dispatchers.IO) {
-    val targetDir = File(context.filesDir, "vault_album")
-    if (!targetDir.exists()) targetDir.mkdirs()
-    val file = File(targetDir, "camera_${System.currentTimeMillis()}.jpg")
+    val file = VaultStore.reserveCameraTarget(context, DEFAULT_ALBUM_NAME)
     val outputOptions = ImageCapture.OutputFileOptions.Builder(file).build()
     suspendImageCapture(context, imageCapture, outputOptions)
 }
