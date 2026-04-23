@@ -16,7 +16,8 @@ private enum class BackgroundLockPolicy {
 
 @Singleton
 class AppLockManager @Inject constructor() : DefaultLifecycleObserver {
-    private val backgroundLockPolicy = BackgroundLockPolicy.ON_PAUSE
+    // Only lock when app becomes not visible (process onStop), not during in-app page switches.
+    private val backgroundLockPolicy = BackgroundLockPolicy.ON_STOP
 
     private val _requireUnlock = MutableStateFlow(true)
     val requireUnlock: StateFlow<Boolean> = _requireUnlock.asStateFlow()
