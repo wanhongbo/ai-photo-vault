@@ -85,6 +85,9 @@ object UiRadius {
     val vaultEmptyIconWrap: Dp = 28.dp
     val settingsRow: Dp = 12.dp
     val settingsAvatar: Dp = 14.dp
+    val backupResultBadge: Dp = 28.dp
+    val backupMetaCard: Dp = 14.dp
+    val trashThumb: Dp = 10.dp
 }
 
 object UiSize {
@@ -140,6 +143,19 @@ object UiSize {
     val backupSubtitleTopGap: Dp = 6.dp
     val backupCardTopGap: Dp = 14.dp
     val backupActionTopGap: Dp = 14.dp
+    val backupCardBadgeWrap: Dp = 72.dp
+    val backupCardBadgeGlyph: Dp = 24.dp
+    val backupResultBadgeSize: Dp = 72.dp
+    val backupResultBadgeGlyph: Dp = 28.dp
+    val backupResultBadgeTopGap: Dp = 8.dp
+    val backupResultInfoTopGap: Dp = 10.dp
+    val backupResultMetaTopGap: Dp = 4.dp
+    val backupMetaRowPadHorizontal: Dp = 12.dp
+    val backupMetaRowPadVertical: Dp = 10.dp
+    val trashThumbSize: Dp = 56.dp
+    val trashThumbGlyph: Dp = 24.dp
+    val trashInfoGap: Dp = 12.dp
+    val trashMetaTopGap: Dp = 2.dp
     val trashRowGap: Dp = 8.dp
     val trashItemPadding: Dp = 12.dp
     val trashActionGap: Dp = 8.dp
@@ -162,4 +178,7 @@ object UiTextSize {
     val settingsRowDesc: TextUnit = 12.sp
     val settingsDangerDesc: TextUnit = 12.sp
     val settingsAvatar: TextUnit = 16.sp
+    val backupMetaLabel: TextUnit = 12.sp
+    val backupMetaValue: TextUnit = 14.sp
+    val trashFileName: TextUnit = 15.sp
 }

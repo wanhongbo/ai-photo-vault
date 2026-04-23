@@ -2,20 +2,25 @@ package com.photovault.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,7 +33,7 @@ import com.photovault.app.ui.theme.UiSize
 import com.photovault.app.ui.theme.UiTextSize
 
 @Composable
-fun TrashBinScreen() {
+fun TrashBinScreen(onBack: () -> Unit) {
     val items = listOf(
         TrashItem("IMG_2198.jpg", "4.2 MB", "剩余 29 天"),
         TrashItem("IMG_1042.jpg", "3.1 MB", "剩余 18 天"),
@@ -42,20 +47,44 @@ fun TrashBinScreen() {
             .padding(UiSize.backupScreenPadding),
         verticalArrangement = Arrangement.spacedBy(UiSize.backupSectionGap),
     ) {
-        Text(
-            text = stringResource(R.string.trash_title),
-            color = UiColors.Home.title,
-            fontSize = UiTextSize.homeTitle,
-            fontWeight = FontWeight.Bold,
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(UiSize.backupHeaderGap)) {
+            Text(
+                text = stringResource(R.string.common_back),
+                color = UiColors.Home.navItemActive,
+                modifier = Modifier.clickable(onClick = onBack),
+            )
+            Text(
+                text = stringResource(R.string.trash_title),
+                color = UiColors.Home.title,
+                fontSize = UiTextSize.homeTitle,
+                fontWeight = FontWeight.Bold,
+            )
+        }
         Text(
             text = stringResource(R.string.trash_subtitle),
             color = UiColors.Home.subtitle,
             fontSize = UiTextSize.homeSubtitle,
+            modifier = Modifier.padding(top = UiSize.backupSubtitleTopGap),
         )
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(UiSize.trashRowGap)) {
-            items(items) { item ->
-                TrashRow(item = item)
+        if (items.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.trash_empty),
+                    color = UiColors.Home.subtitle,
+                    fontSize = UiTextSize.homeEmptyBody,
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.padding(top = UiSize.backupCardTopGap),
+                verticalArrangement = Arrangement.spacedBy(UiSize.trashRowGap),
+            ) {
+                items(items) { item ->
+                    TrashRow(item = item)
+                }
             }
         }
     }
@@ -71,15 +100,42 @@ private fun TrashRow(item: TrashItem) {
             .padding(UiSize.trashItemPadding),
         verticalArrangement = Arrangement.spacedBy(UiSize.trashRowGap),
     ) {
-        Text(text = item.name, color = UiColors.Home.title, fontWeight = FontWeight.Medium)
-        Text(
-            text = stringResource(R.string.trash_item_meta, item.size, item.remainTime),
-            color = UiColors.Home.emptyBody,
-            fontSize = UiTextSize.homeEmptyBody,
-        )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(UiSize.trashInfoGap),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(UiSize.trashThumbSize)
+                    .background(UiColors.Home.emptyIconBg, RoundedCornerShape(UiRadius.trashThumb)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_trash_thumb_placeholder),
+                    contentDescription = null,
+                    tint = UiColors.Home.navItemActive,
+                    modifier = Modifier.size(UiSize.trashThumbGlyph),
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.name,
+                    color = UiColors.Home.title,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = UiTextSize.trashFileName,
+                )
+                Text(
+                    text = stringResource(R.string.trash_item_meta, item.size, item.remainTime),
+                    color = UiColors.Home.emptyBody,
+                    fontSize = UiTextSize.homeEmptyBody,
+                    modifier = Modifier.padding(top = UiSize.trashMetaTopGap),
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(UiSize.trashActionGap),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AppButton(

@@ -106,12 +106,15 @@
     <string name="backup_result_title">备份结果</string>
     <string name="backup_result_success">备份成功</string>
     <string name="backup_result_success_desc">已生成加密备份文件，可用于迁移或恢复。</string>
-    <string name="backup_result_file">文件名：vault_backup_2026_04_21.enc</string>
-    <string name="backup_result_size">文件大小：36.4 MB</string>
+    <string name="backup_result_file">vault_backup_2026_04_21.enc</string>
+    <string name="backup_result_size">36.4 MB</string>
+    <string name="backup_result_file_label">备份文件</string>
+    <string name="backup_result_size_label">备份大小</string>
     <string name="backup_result_done">完成</string>
     <string name="restore_result_title">恢复结果</string>
     <string name="restore_result_success">恢复成功</string>
     <string name="restore_result_success_desc">备份内容已恢复到当前私有相册。</string>
+    <string name="restore_result_stats_label">恢复统计</string>
     <string name="restore_result_stats">共恢复 128 张照片 / 6 个相册</string>
     <string name="restore_result_done">返回设置</string>
     <string name="trash_title">临时垃圾桶</string>
@@ -119,4 +122,5 @@
     <string name="trash_item_meta">%1$s · %2$s</string>
     <string name="trash_recover">恢复</string>
     <string name="trash_delete">彻底删除</string>
+    <string name="trash_empty">暂时没有可恢复的项目</string>
 </resources>

@@ -194,6 +194,7 @@ class MainActivity : ComponentActivity() {
                                 onOpenRestoreResult = {
                                     navController.navigate(ROUTE_RESTORE_RESULT) { launchSingleTop = true }
                                 },
+                                onBack = { navController.popBackStack() },
                             )
                         }
                         composable(ROUTE_BACKUP_RESULT) {
@@ -212,7 +213,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(ROUTE_TRASH_BIN) {
-                            TrashBinScreen()
+                            TrashBinScreen(
+                                onBack = { navController.popBackStack() },
+                            )
                         }
                         composable(ROUTE_CAMERA_PLACEHOLDER) {
                             CameraPlaceholderScreen(

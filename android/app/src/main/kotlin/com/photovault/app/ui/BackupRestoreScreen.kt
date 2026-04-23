@@ -4,16 +4,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -63,6 +68,7 @@ fun BackupRestoreScreen(
             desc = stringResource(R.string.backup_card_desc),
             action = stringResource(R.string.backup_card_action),
             onAction = onOpenBackupResult,
+            badgeRes = R.drawable.ic_backup_upload,
             modifier = Modifier.padding(top = UiSize.backupCardTopGap),
         )
         BackupRestoreCard(
@@ -70,6 +76,7 @@ fun BackupRestoreScreen(
             desc = stringResource(R.string.restore_card_desc),
             action = stringResource(R.string.restore_card_action),
             onAction = onOpenRestoreResult,
+            badgeRes = R.drawable.ic_backup_restore,
             secondary = true,
         )
     }
@@ -81,6 +88,7 @@ private fun BackupRestoreCard(
     desc: String,
     action: String,
     onAction: () -> Unit,
+    badgeRes: Int,
     secondary: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -92,6 +100,19 @@ private fun BackupRestoreCard(
             .padding(UiSize.backupCardPadding),
         verticalArrangement = Arrangement.spacedBy(UiSize.backupCardInnerGap),
     ) {
+        Box(
+            modifier = Modifier
+                .size(UiSize.backupCardBadgeWrap)
+                .background(UiColors.Home.emptyIconBg, RoundedCornerShape(UiRadius.backupMetaCard)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(id = badgeRes),
+                contentDescription = null,
+                tint = UiColors.Home.navItemActive,
+                modifier = Modifier.size(UiSize.backupCardBadgeGlyph),
+            )
+        }
         Text(text = title, color = UiColors.Home.title, fontWeight = FontWeight.SemiBold)
         Text(text = desc, color = UiColors.Home.emptyBody, fontSize = UiTextSize.homeEmptyBody)
         Row(modifier = Modifier.fillMaxWidth()) {
