@@ -12,10 +12,8 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,8 +51,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -67,6 +63,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.photovault.app.R
 import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppButtonVariant
+import com.photovault.app.ui.components.VaultProgressiveImage
 import com.photovault.app.ui.feedback.pressFeedback
 import com.photovault.app.ui.feedback.rememberFeedbackInteractionSource
 import com.photovault.app.ui.feedback.throttledClickable
@@ -437,9 +434,13 @@ private fun AlbumCard(
                 .background(UiColors.Home.emptyIconBg),
             contentAlignment = Alignment.Center,
         ) {
-            val bitmap = remember(album.coverPath) { album.coverPath?.let { path -> android.graphics.BitmapFactory.decodeFile(path) } }
-            if (bitmap != null) {
-                Image(bitmap = bitmap.asImageBitmap(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            if (album.coverPath != null) {
+                VaultProgressiveImage(
+                    path = album.coverPath,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    thumbnailMaxPx = 420,
+                )
             } else {
                 Icon(
                     painter = painterResource(R.drawable.ic_home_nav_vault),
@@ -526,15 +527,12 @@ private fun PhotoThumb(
             .pressFeedback(interaction)
             .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
     ) {
-        val bitmap = remember(path) { android.graphics.BitmapFactory.decodeFile(path) }
-        if (bitmap != null) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-        }
+        VaultProgressiveImage(
+            path = path,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            thumbnailMaxPx = 320,
+        )
     }
 }
 

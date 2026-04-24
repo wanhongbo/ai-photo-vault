@@ -3,7 +3,6 @@ package com.photovault.app.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,8 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -43,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.photovault.app.R
+import com.photovault.app.ui.components.VaultProgressiveImage
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
@@ -195,22 +193,15 @@ fun AlbumScreen(
                         }
                     }
                     items(photos, key = { it.path }) { photo ->
-                        Box(
+                        VaultProgressiveImage(
+                            path = photo.path,
                             modifier = Modifier
                                 .size(UiSize.homeThumbSize)
                                 .clip(RoundedCornerShape(UiRadius.homeThumb))
                                 .throttledClickable { onOpenPhoto(photo.path) },
-                        ) {
-                            val bmp = remember(photo.path) { android.graphics.BitmapFactory.decodeFile(photo.path) }
-                            if (bmp != null) {
-                                Image(
-                                    bitmap = bmp.asImageBitmap(),
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            }
-                        }
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            thumbnailMaxPx = 360,
+                        )
                     }
                 }
             }

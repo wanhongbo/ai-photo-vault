@@ -1,6 +1,5 @@
 package com.photovault.app.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -26,8 +25,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -36,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.photovault.app.R
+import com.photovault.app.ui.components.VaultProgressiveImage
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
@@ -141,13 +139,12 @@ fun AlbumListScreen(
                                 .clip(RoundedCornerShape(UiRadius.homeThumb))
                                 .background(UiColors.Home.emptyIconBg),
                         ) {
-                            val bitmap = remember(album.coverPath) { album.coverPath?.let { android.graphics.BitmapFactory.decodeFile(it) } }
-                            if (bitmap != null) {
-                                Image(
-                                    bitmap = bitmap.asImageBitmap(),
-                                    contentDescription = null,
+                            album.coverPath?.let { coverPath ->
+                                VaultProgressiveImage(
+                                    path = coverPath,
                                     modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                    thumbnailMaxPx = 480,
                                 )
                             }
                         }
