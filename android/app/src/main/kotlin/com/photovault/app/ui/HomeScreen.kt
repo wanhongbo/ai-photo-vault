@@ -359,13 +359,7 @@ private fun VaultHeader(
             ) {
                 HeaderInfoTag(stringResource(R.string.home_header_stat_photos, totalCount))
                 HeaderInfoTag(stringResource(R.string.home_header_stat_videos))
-            }
-            Row(
-                modifier = Modifier.padding(top = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
                 HeaderInfoTag(stringResource(R.string.home_header_stat_files))
-                HeaderInfoTag(stringResource(R.string.home_header_stat_encryption))
             }
         }
         HeaderActionButton(
