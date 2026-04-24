@@ -335,17 +335,17 @@ private fun NumberPad(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             KeypadKey(label = "📷", extraHighlight = true, onClick = onQuickCapture)
-            Box(modifier = Modifier.size(86.dp))
-            Box(modifier = Modifier.size(86.dp))
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            if (showBiometric) {
-                KeypadKey(label = "🆔", extraHighlight = true, onClick = onBiometric)
-            } else {
-                Box(modifier = Modifier.size(86.dp))
-            }
             KeypadKey(label = "0", extraHighlight = true, onClick = { onNumber(0) })
             KeypadKey(label = "⌫", extraHighlight = true, onClick = onDelete)
+        }
+        if (showBiometric) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Text(
+                    text = "使用生物识别重试",
+                    color = UiColors.Lock.brandBlue,
+                    modifier = Modifier.clickable(onClick = onBiometric).padding(top = 2.dp),
+                )
+            }
         }
     }
 }
