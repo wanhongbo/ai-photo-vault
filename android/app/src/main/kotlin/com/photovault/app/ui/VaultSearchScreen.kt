@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,9 +31,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
+import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
@@ -66,23 +65,7 @@ fun VaultSearchScreen(
             .safeDrawingPadding()
             .padding(16.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = "<",
-                color = UiColors.Home.navItemActive,
-                modifier = Modifier.throttledClickable(onClick = onBack),
-            )
-            Text(
-                text = stringResource(R.string.vault_search_title),
-                color = UiColors.Home.title,
-                fontSize = UiTextSize.homeTitle,
-                fontWeight = FontWeight.Bold,
-            )
-            Box(modifier = Modifier.padding(end = 10.dp)) {}
-        }
+        AppTopBar(title = stringResource(R.string.vault_search_title), onBack = onBack)
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },

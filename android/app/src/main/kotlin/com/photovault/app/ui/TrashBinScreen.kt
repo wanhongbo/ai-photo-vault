@@ -2,7 +2,6 @@ package com.photovault.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.photovault.app.R
 import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppButtonVariant
+import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import com.photovault.app.ui.theme.UiSize
@@ -47,19 +47,7 @@ fun TrashBinScreen(onBack: () -> Unit) {
             .padding(UiSize.backupScreenPadding),
         verticalArrangement = Arrangement.spacedBy(UiSize.backupSectionGap),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(UiSize.backupHeaderGap)) {
-            Text(
-                text = stringResource(R.string.common_back),
-                color = UiColors.Home.navItemActive,
-                modifier = Modifier.clickable(onClick = onBack),
-            )
-            Text(
-                text = stringResource(R.string.trash_title),
-                color = UiColors.Home.title,
-                fontSize = UiTextSize.homeTitle,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        AppTopBar(title = stringResource(R.string.trash_title), onBack = onBack)
         Text(
             text = stringResource(R.string.trash_subtitle),
             color = UiColors.Home.subtitle,

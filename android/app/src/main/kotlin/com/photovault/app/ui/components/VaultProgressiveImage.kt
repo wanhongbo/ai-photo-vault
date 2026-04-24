@@ -28,14 +28,19 @@ fun VaultProgressiveImage(
     contentScale: ContentScale = ContentScale.Crop,
     thumbnailMaxPx: Int = 360,
     loadHighQuality: Boolean = false,
+    highQualityMaxPx: Int? = null,
 ) {
     var thumbnail by remember(path, thumbnailMaxPx) { mutableStateOf<Bitmap?>(null) }
-    var highQuality by remember(path, loadHighQuality) { mutableStateOf<Bitmap?>(null) }
+    var highQuality by remember(path, loadHighQuality, highQualityMaxPx) { mutableStateOf<Bitmap?>(null) }
 
-    LaunchedEffect(path, thumbnailMaxPx, loadHighQuality) {
+    LaunchedEffect(path, thumbnailMaxPx, loadHighQuality, highQualityMaxPx) {
         thumbnail = decodeSampled(path, max(128, thumbnailMaxPx))
         if (loadHighQuality) {
-            highQuality = decodeOriginal(path)
+            highQuality = if (highQualityMaxPx != null) {
+                decodeSampled(path, max(thumbnailMaxPx, highQualityMaxPx))
+            } else {
+                decodeOriginal(path)
+            }
         } else {
             highQuality = null
         }

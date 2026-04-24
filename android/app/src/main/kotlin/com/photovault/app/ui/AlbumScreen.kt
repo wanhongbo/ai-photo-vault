@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -40,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.photovault.app.R
+import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.ui.components.VaultProgressiveImage
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
@@ -99,14 +99,7 @@ fun AlbumScreen(
             .safeDrawingPadding()
             .padding(16.dp),
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                text = "<",
-                color = UiColors.Home.navItemActive,
-                modifier = Modifier.throttledClickable(onClick = onBack),
-            )
-            Text(text = albumName, color = UiColors.Home.title, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
-        }
+        AppTopBar(title = albumName, onBack = onBack)
         if (!loaded) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "加载中...", color = UiColors.Home.subtitle)

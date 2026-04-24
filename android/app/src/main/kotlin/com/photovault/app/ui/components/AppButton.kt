@@ -3,6 +3,7 @@ package com.photovault.app.ui.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -12,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.photovault.app.ui.feedback.rememberThrottledClick
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiSize
@@ -50,6 +52,7 @@ fun AppButton(
             disabledContainerColor = UiColors.Button.disabledContainer,
             disabledContentColor = UiColors.Button.disabledContent,
         ),
+        shape = RoundedCornerShape(999.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (loading) {

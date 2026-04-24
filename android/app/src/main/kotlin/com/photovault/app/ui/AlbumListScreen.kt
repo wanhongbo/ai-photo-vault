@@ -28,10 +28,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.R
 import com.photovault.app.ui.components.VaultProgressiveImage
 import com.photovault.app.ui.feedback.throttledClickable
@@ -79,19 +79,7 @@ fun AlbumListScreen(
             .safeDrawingPadding()
             .padding(16.dp),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                text = stringResource(R.string.common_back),
-                color = UiColors.Home.navItemActive,
-                modifier = Modifier.throttledClickable(onClick = onBack),
-            )
-            Text(
-                text = stringResource(R.string.album_list_title),
-                color = UiColors.Home.title,
-                fontSize = UiTextSize.homeTitle,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        AppTopBar(title = stringResource(R.string.album_list_title), onBack = onBack)
         Row(
             modifier = Modifier
                 .fillMaxWidth()

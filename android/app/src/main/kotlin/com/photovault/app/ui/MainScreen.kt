@@ -26,7 +26,13 @@ fun MainScreen(
     onOpenStorageUsage: () -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(HomeTab.VAULT) }
-    val onSelectTab: (HomeTab) -> Unit = { selectedTab = it }
+    val onSelectTab: (HomeTab) -> Unit = { tab ->
+        if (tab == HomeTab.CAMERA) {
+            onOpenPrivateCamera()
+        } else {
+            selectedTab = tab
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         HomeScreen(

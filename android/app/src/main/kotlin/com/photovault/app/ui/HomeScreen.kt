@@ -35,6 +35,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -57,6 +58,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -683,24 +685,73 @@ private fun VaultEmptyState(
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = UiSize.vaultEmptyBodyTopGap),
         )
-        AppButton(
+        VaultEmptyActionButton(
             text = stringResource(R.string.home_vault_empty_action),
             onClick = onImport,
+            isPrimary = true,
             loading = isLoading,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(UiSize.vaultEmptyButtonHeight)
                 .padding(top = UiSize.vaultEmptyPrimaryTopGap),
         )
-        AppButton(
+        VaultEmptyActionButton(
             text = stringResource(R.string.home_vault_take_private_photo),
             onClick = onTakePrivatePhoto,
-            variant = AppButtonVariant.SECONDARY,
+            isPrimary = false,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(UiSize.vaultEmptyButtonHeight)
                 .padding(top = UiSize.vaultEmptySecondaryTopGap),
         )
+    }
+}
+
+@Composable
+private fun VaultEmptyActionButton(
+    text: String,
+    onClick: () -> Unit,
+    isPrimary: Boolean,
+    modifier: Modifier = Modifier,
+    loading: Boolean = false,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    Row(
+        modifier = modifier
+            .height(52.dp)
+            .clip(RoundedCornerShape(26.dp))
+            .background(if (isPrimary) UiColors.Button.primaryContainer else UiColors.Button.secondaryContainer)
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = !loading,
+                onClick = onClick,
+            ),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (isPrimary && !loading) {
+            Icon(
+                painter = painterResource(R.drawable.ic_home_nav_import),
+                contentDescription = null,
+                tint = UiColors.Button.primaryContent,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.dp,
+                color = if (isPrimary) UiColors.Button.primaryContent else UiColors.Button.secondaryContent,
+            )
+        } else {
+            Text(
+                text = text,
+                color = if (isPrimary) UiColors.Button.primaryContent else UiColors.Button.secondaryContent,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
 

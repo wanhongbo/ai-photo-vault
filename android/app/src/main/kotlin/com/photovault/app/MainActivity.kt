@@ -234,7 +234,10 @@ class MainActivity : ComponentActivity() {
                             route = "photo_viewer/{path}",
                             arguments = listOf(navArgument("path") { defaultValue = "" }),
                         ) { entry ->
-                            PhotoViewerPlaceholderScreen(path = Uri.decode(entry.arguments?.getString("path") ?: ""))
+                            PhotoViewerPlaceholderScreen(
+                                path = Uri.decode(entry.arguments?.getString("path") ?: ""),
+                                onBack = { navController.popBackStack() },
+                            )
                         }
                     }
                 }

@@ -2,11 +2,9 @@ package com.photovault.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -24,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
 import com.photovault.app.ui.components.AppButton
+import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import com.photovault.app.ui.theme.UiSize
@@ -39,19 +38,7 @@ fun RestoreResultScreen(onDone: () -> Unit) {
             .padding(UiSize.backupScreenPadding),
         verticalArrangement = Arrangement.spacedBy(UiSize.backupSectionGap),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(UiSize.backupHeaderGap)) {
-            Text(
-                text = stringResource(R.string.common_back),
-                color = UiColors.Home.navItemActive,
-                modifier = Modifier.clickable(onClick = onDone),
-            )
-            Text(
-                text = stringResource(R.string.restore_result_title),
-                color = UiColors.Home.title,
-                fontSize = UiTextSize.homeTitle,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        AppTopBar(title = stringResource(R.string.restore_result_title), onBack = onDone)
         Column(
             modifier = Modifier
                 .padding(top = UiSize.backupCardTopGap)
