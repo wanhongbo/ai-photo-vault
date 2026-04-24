@@ -25,10 +25,13 @@ import com.photovault.app.ui.theme.UiTextSize
 @Composable
 fun CameraHomeScreen(
     onOpenTab: (HomeTab) -> Unit,
+    selectedTab: HomeTab = HomeTab.CAMERA,
+    showBottomNav: Boolean = true,
+    modifier: Modifier = Modifier,
 ) {
     val tabs = remember { homeTabs() }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding()
@@ -46,7 +49,9 @@ fun CameraHomeScreen(
         ) {
             Text("相机页空状态", color = UiColors.Home.emptyBody)
         }
-        HomeBottomNav(tabs = tabs, selectedIndex = HomeTab.CAMERA.ordinal, onSelect = { onOpenTab(tabs[it].tab) })
+        if (showBottomNav) {
+            HomeBottomNav(tabs = tabs, selectedIndex = selectedTab.ordinal, onSelect = { onOpenTab(tabs[it].tab) })
+        }
     }
 }
 

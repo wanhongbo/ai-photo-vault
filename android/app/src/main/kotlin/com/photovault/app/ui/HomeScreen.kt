@@ -69,6 +69,7 @@ import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppButtonVariant
 import com.photovault.app.ui.feedback.pressFeedback
 import com.photovault.app.ui.feedback.rememberFeedbackInteractionSource
+import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import com.photovault.app.ui.theme.UiSize
@@ -84,11 +85,14 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     onOpenPrivateCamera: () -> Unit = {},
     onOpenTab: (HomeTab) -> Unit = {},
+    selectedTab: HomeTab = HomeTab.VAULT,
+    showBottomNav: Boolean = true,
     onOpenSearch: () -> Unit = {},
     onOpenAlbum: (String) -> Unit = {},
     onOpenPhotoViewer: (String) -> Unit = {},
     onOpenAlbumList: () -> Unit = {},
     onOpenRecentList: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -98,9 +102,11 @@ fun HomeScreen(
     var permanentlyDenied by remember { mutableStateOf(false) }
     var creatingAlbum by remember { mutableStateOf(false) }
     var newAlbumName by remember { mutableStateOf("") }
-    var albums by remember { mutableStateOf(emptyList<VaultAlbum>()) }
-    var recentPhotos by remember { mutableStateOf(emptyList<VaultPhoto>()) }
-    var totalCount by remember { mutableStateOf(0) }
+    val cachedSnapshot = remember { VaultStore.peekCachedSnapshot() }
+    var albums by remember { mutableStateOf(cachedSnapshot?.albums.orEmpty()) }
+    var recentPhotos by remember { mutableStateOf(cachedSnapshot?.recentPhotos.orEmpty()) }
+    var totalCount by remember { mutableStateOf(cachedSnapshot?.totalCount ?: 0) }
+    var vaultLoaded by remember { mutableStateOf(cachedSnapshot != null) }
     var importing by remember { mutableStateOf(false) }
     var importTip by remember { mutableStateOf<ImportTip?>(null) }
     val tabs = remember { homeTabs() }
@@ -109,10 +115,11 @@ fun HomeScreen(
     }
 
     suspend fun refreshVault() {
-        VaultStore.ensureInit(context)
-        albums = VaultStore.listAlbums(context)
-        recentPhotos = VaultStore.listRecentPhotos(context, limit = 60)
-        totalCount = VaultStore.totalPhotos(context)
+        val snapshot = VaultStore.loadSnapshot(context, recentLimit = 60)
+        if (albums != snapshot.albums) albums = snapshot.albums
+        if (recentPhotos != snapshot.recentPhotos) recentPhotos = snapshot.recentPhotos
+        if (totalCount != snapshot.totalCount) totalCount = snapshot.totalCount
+        vaultLoaded = true
     }
 
     LaunchedEffect(Unit) { refreshVault() }
@@ -127,25 +134,32 @@ fun HomeScreen(
     }
 
     val pickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-    ) { uri ->
-        if (uri != null) {
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 30),
+    ) { uris ->
+        if (uris.isNotEmpty()) {
             scope.launch {
                 importing = true
-                val result = VaultStore.importFromPicker(context, uri, DEFAULT_ALBUM_NAME)
+                var added = 0
+                var duplicate = 0
+                var failed = 0
+                uris.forEach { uri ->
+                    when (VaultStore.importFromPicker(context, uri, DEFAULT_ALBUM_NAME)) {
+                        VaultImportResult.ADDED -> added += 1
+                        VaultImportResult.DUPLICATE -> duplicate += 1
+                        VaultImportResult.FAILED -> failed += 1
+                    }
+                }
                 refreshVault()
-                importTip = when (result) {
-                    VaultImportResult.ADDED -> ImportTip(
-                        context.getString(R.string.home_import_success_default_album),
-                        false,
-                    )
-                    VaultImportResult.DUPLICATE -> ImportTip(
-                        context.getString(R.string.home_import_duplicate_default_album),
-                        false,
-                    )
-                    VaultImportResult.FAILED -> ImportTip(
-                        context.getString(R.string.home_import_failed),
-                        true,
+                importTip = if (uris.size == 1) {
+                    when {
+                        added == 1 -> ImportTip(context.getString(R.string.home_import_success_default_album), false)
+                        duplicate == 1 -> ImportTip(context.getString(R.string.home_import_duplicate_default_album), false)
+                        else -> ImportTip(context.getString(R.string.home_import_failed), true)
+                    }
+                } else {
+                    ImportTip(
+                        context.getString(R.string.home_import_multi_result, added, duplicate, failed),
+                        failed > 0 && added == 0,
                     )
                 }
                 importing = false
@@ -174,7 +188,7 @@ fun HomeScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(colors = listOf(UiColors.Home.bgTop, UiColors.Home.bgBottom)))
             .safeDrawingPadding()
@@ -201,6 +215,15 @@ fun HomeScreen(
                     onOpenSettings = { openAppSettings(context) },
                     permanentlyDenied = permanentlyDenied,
                 )
+            }
+        } else if (!vaultLoaded) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(text = "加载中...", color = UiColors.Home.subtitle)
             }
         } else if (isVaultEmpty) {
             Box(
@@ -240,11 +263,13 @@ fun HomeScreen(
             }
         }
 
-        HomeBottomNav(
-            tabs = tabs,
-            selectedIndex = HomeTab.VAULT.ordinal,
-            onSelect = { idx -> onOpenTab(tabs[idx].tab) },
-        )
+        if (showBottomNav) {
+            HomeBottomNav(
+                tabs = tabs,
+                selectedIndex = selectedTab.ordinal,
+                onSelect = { idx -> onOpenTab(tabs[idx].tab) },
+            )
+        }
     }
 
     if (creatingAlbum) {
@@ -380,7 +405,7 @@ private fun AlbumsSection(
             Text(
                 text = stringResource(R.string.home_albums_view_all),
                 color = UiColors.Home.navItemActive,
-                modifier = Modifier.clickable(onClick = onViewAll),
+                modifier = Modifier.throttledClickable(onClick = onViewAll),
             )
         }
         LazyRow(
@@ -407,7 +432,7 @@ private fun AlbumCard(
             .background(UiColors.Home.bgBottom)
             .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeAlbumCard))
             .pressFeedback(interaction)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
             .padding(10.dp),
     ) {
         Box(
@@ -462,7 +487,7 @@ private fun RecentSection(
             Text(
                 text = stringResource(R.string.home_recent_view_more),
                 color = UiColors.Home.navItemActive,
-                modifier = Modifier.clickable(onClick = onViewMore),
+                modifier = Modifier.throttledClickable(onClick = onViewMore),
             )
         }
         LazyVerticalGrid(
@@ -505,7 +530,7 @@ private fun PhotoThumb(
             .clip(RoundedCornerShape(UiRadius.homeThumb))
             .background(UiColors.Home.emptyIconBg)
             .pressFeedback(interaction)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick),
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
     ) {
         val bitmap = remember(path) { android.graphics.BitmapFactory.decodeFile(path) }
         if (bitmap != null) {
@@ -533,7 +558,7 @@ private fun HeaderActionButton(
             .background(UiColors.Home.navBarBg)
             .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(12.dp))
             .pressFeedback(interaction)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick),
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -718,7 +743,7 @@ fun HomeBottomNav(
                         shape = RoundedCornerShape(UiRadius.homeNavItem),
                     )
                     .pressFeedback(interaction)
-                    .clickable(interactionSource = interaction, indication = null, onClick = { onSelect(idx) }),
+                    .throttledClickable(interactionSource = interaction, indication = null, onClick = { onSelect(idx) }),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {

@@ -23,10 +23,13 @@ import com.photovault.app.ui.theme.UiTextSize
 @Composable
 fun AiHomeScreen(
     onOpenTab: (HomeTab) -> Unit,
+    selectedTab: HomeTab = HomeTab.AI,
+    showBottomNav: Boolean = true,
+    modifier: Modifier = Modifier,
 ) {
     val tabs = remember { homeTabs() }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding()
@@ -44,7 +47,9 @@ fun AiHomeScreen(
         ) {
             Text("AI 页空状态", color = UiColors.Home.emptyBody)
         }
-        HomeBottomNav(tabs = tabs, selectedIndex = HomeTab.AI.ordinal, onSelect = { onOpenTab(tabs[it].tab) })
+        if (showBottomNav) {
+            HomeBottomNav(tabs = tabs, selectedIndex = selectedTab.ordinal, onSelect = { onOpenTab(tabs[it].tab) })
+        }
     }
 }
 

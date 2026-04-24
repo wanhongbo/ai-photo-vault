@@ -18,21 +18,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.photovault.app.ui.AiHomeScreen
 import com.photovault.app.ui.AlbumScreen
 import com.photovault.app.ui.AlbumListScreen
 import com.photovault.app.ui.BackupRestoreScreen
 import com.photovault.app.ui.BackupResultScreen
 import com.photovault.app.ui.CameraPlaceholderScreen
-import com.photovault.app.ui.CameraHomeScreen
-import com.photovault.app.ui.HomeTab
-import com.photovault.app.ui.HomeScreen
+import com.photovault.app.ui.ChangePinPlaceholderScreen
+import com.photovault.app.ui.MainScreen
 import com.photovault.app.ui.PaywallScreen
 import com.photovault.app.ui.PhotoViewerPlaceholderScreen
 import com.photovault.app.ui.RecentPhotosScreen
 import com.photovault.app.ui.RestoreResultScreen
-import com.photovault.app.ui.SettingsHomeScreen
 import com.photovault.app.ui.SplashScreen
+import com.photovault.app.ui.StorageUsagePlaceholderScreen
 import com.photovault.app.ui.TrashBinScreen
 import com.photovault.app.ui.VaultSearchScreen
 import com.photovault.app.ui.lock.LockScreen
@@ -93,7 +91,7 @@ class MainActivity : ComponentActivity() {
                             LockScreen(
                                 onUnlockSuccess = {
                                     appLockManager.onUnlockSucceeded()
-                                    navController.navigate(ROUTE_HOME_VAULT) {
+                                    navController.navigate(ROUTE_MAIN) {
                                         popUpTo(ROUTE_LOCK) { inclusive = true }
                                         launchSingleTop = true
                                     }
@@ -105,15 +103,10 @@ class MainActivity : ComponentActivity() {
                                 },
                             )
                         }
-                        composable(ROUTE_HOME_VAULT) {
-                            HomeScreen(
+                        composable(ROUTE_MAIN) {
+                            MainScreen(
                                 onOpenPrivateCamera = {
                                     navController.navigate(ROUTE_CAMERA_PLACEHOLDER) {
-                                        launchSingleTop = true
-                                    }
-                                },
-                                onOpenTab = { tab ->
-                                    navController.navigate(tab.toRoute()) {
                                         launchSingleTop = true
                                     }
                                 },
@@ -132,27 +125,6 @@ class MainActivity : ComponentActivity() {
                                 onOpenRecentList = {
                                     navController.navigate(ROUTE_RECENT_LIST) { launchSingleTop = true }
                                 },
-                            )
-                        }
-                        composable(ROUTE_HOME_CAMERA) {
-                            CameraHomeScreen(
-                                onOpenTab = { tab ->
-                                    navController.navigate(tab.toRoute()) { launchSingleTop = true }
-                                },
-                            )
-                        }
-                        composable(ROUTE_HOME_AI) {
-                            AiHomeScreen(
-                                onOpenTab = { tab ->
-                                    navController.navigate(tab.toRoute()) { launchSingleTop = true }
-                                },
-                            )
-                        }
-                        composable(ROUTE_HOME_SETTINGS) {
-                            SettingsHomeScreen(
-                                onOpenTab = { tab ->
-                                    navController.navigate(tab.toRoute()) { launchSingleTop = true }
-                                },
                                 onOpenBackupRestore = {
                                     navController.navigate(ROUTE_BACKUP_RESTORE) { launchSingleTop = true }
                                 },
@@ -161,6 +133,12 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onOpenPaywall = {
                                     navController.navigate(ROUTE_PAYWALL) { launchSingleTop = true }
+                                },
+                                onOpenChangePin = {
+                                    navController.navigate(ROUTE_CHANGE_PIN) { launchSingleTop = true }
+                                },
+                                onOpenStorageUsage = {
+                                    navController.navigate(ROUTE_STORAGE_USAGE) { launchSingleTop = true }
                                 },
                             )
                         }
@@ -183,8 +161,8 @@ class MainActivity : ComponentActivity() {
                         composable(ROUTE_RESTORE_RESULT) {
                             RestoreResultScreen(
                                 onDone = {
-                                    navController.navigate(ROUTE_HOME_SETTINGS) {
-                                        popUpTo(ROUTE_HOME_SETTINGS) { inclusive = true }
+                                    navController.navigate(ROUTE_MAIN) {
+                                        popUpTo(ROUTE_MAIN) { inclusive = true }
                                         launchSingleTop = true
                                     }
                                 },
@@ -197,6 +175,16 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(ROUTE_PAYWALL) {
                             PaywallScreen(
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_CHANGE_PIN) {
+                            ChangePinPlaceholderScreen(
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_STORAGE_USAGE) {
+                            StorageUsagePlaceholderScreen(
                                 onBack = { navController.popBackStack() },
                             )
                         }
@@ -257,10 +245,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val ROUTE_SPLASH = "splash"
         private const val ROUTE_LOCK = "lock"
-        private const val ROUTE_HOME_VAULT = "home_vault"
-        private const val ROUTE_HOME_CAMERA = "home_camera"
-        private const val ROUTE_HOME_AI = "home_ai"
-        private const val ROUTE_HOME_SETTINGS = "home_settings"
+        private const val ROUTE_MAIN = "main"
         private const val ROUTE_CAMERA_PLACEHOLDER = "camera_placeholder"
         private const val ROUTE_VAULT_SEARCH = "vault_search"
         private const val ROUTE_ALBUM_LIST = "album_list"
@@ -270,12 +255,7 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_RESTORE_RESULT = "restore_result"
         private const val ROUTE_TRASH_BIN = "trash_bin"
         private const val ROUTE_PAYWALL = "paywall"
+        private const val ROUTE_CHANGE_PIN = "change_pin"
+        private const val ROUTE_STORAGE_USAGE = "storage_usage"
     }
-}
-
-private fun HomeTab.toRoute(): String = when (this) {
-    HomeTab.VAULT -> "home_vault"
-    HomeTab.CAMERA -> "camera_placeholder"
-    HomeTab.AI -> "home_ai"
-    HomeTab.SETTINGS -> "home_settings"
 }

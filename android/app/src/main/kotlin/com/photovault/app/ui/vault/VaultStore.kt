@@ -24,6 +24,12 @@ data class VaultAlbum(
     val photoCount: Int,
 )
 
+data class VaultSnapshot(
+    val albums: List<VaultAlbum>,
+    val recentPhotos: List<VaultPhoto>,
+    val totalCount: Int,
+)
+
 enum class VaultImportResult {
     ADDED,
     DUPLICATE,
@@ -31,6 +37,24 @@ enum class VaultImportResult {
 }
 
 object VaultStore {
+    @Volatile
+    private var cachedSnapshot: VaultSnapshot? = null
+
+    fun peekCachedSnapshot(): VaultSnapshot? = cachedSnapshot
+
+    suspend fun loadSnapshot(context: Context, recentLimit: Int = 60): VaultSnapshot = withContext(Dispatchers.IO) {
+        ensureInit(context)
+        val albums = listAlbumsInternal(context)
+        val recentPhotos = listAllPhotos(context).sortedByDescending { it.modifiedAtMs }.take(recentLimit)
+        val snapshot = VaultSnapshot(
+            albums = albums,
+            recentPhotos = recentPhotos,
+            totalCount = albums.sumOf { it.photoCount },
+        )
+        cachedSnapshot = snapshot
+        snapshot
+    }
+
     suspend fun ensureInit(context: Context) = withContext(Dispatchers.IO) {
         val root = rootDir(context)
         if (!root.exists()) root.mkdirs()
@@ -49,23 +73,7 @@ object VaultStore {
 
     suspend fun listAlbums(context: Context): List<VaultAlbum> = withContext(Dispatchers.IO) {
         ensureInit(context)
-        val root = rootDir(context)
-        val albums = root.listFiles()
-            ?.filter { it.isDirectory }
-            ?.map { folder ->
-                val photos = folder.listFiles()
-                    ?.filter { it.isFile }
-                    ?.sortedByDescending { it.lastModified() }
-                    .orEmpty()
-                VaultAlbum(
-                    name = folder.name,
-                    coverPath = photos.firstOrNull()?.absolutePath,
-                    photoCount = photos.size,
-                )
-            }
-            .orEmpty()
-            .sortedWith(compareBy<VaultAlbum> { it.name != DEFAULT_ALBUM_NAME }.thenBy { it.name.lowercase() })
-        albums
+        listAlbumsInternal(context)
     }
 
     suspend fun listRecentPhotos(context: Context, limit: Int = 60): List<VaultPhoto> = withContext(Dispatchers.IO) {
@@ -166,6 +174,25 @@ object VaultStore {
                     .orEmpty()
             }
             .orEmpty()
+    }
+
+    private fun listAlbumsInternal(context: Context): List<VaultAlbum> {
+        val root = rootDir(context)
+        return root.listFiles()
+            ?.filter { it.isDirectory }
+            ?.map { folder ->
+                val photos = folder.listFiles()
+                    ?.filter { it.isFile }
+                    ?.sortedByDescending { it.lastModified() }
+                    .orEmpty()
+                VaultAlbum(
+                    name = folder.name,
+                    coverPath = photos.firstOrNull()?.absolutePath,
+                    photoCount = photos.size,
+                )
+            }
+            .orEmpty()
+            .sortedWith(compareBy<VaultAlbum> { it.name != DEFAULT_ALBUM_NAME }.thenBy { it.name.lowercase() })
     }
 
     private fun rootDir(context: Context): File = File(context.filesDir, ROOT_DIR)

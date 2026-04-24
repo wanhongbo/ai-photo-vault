@@ -40,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
+import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import com.photovault.app.ui.theme.UiSize
@@ -64,11 +65,13 @@ fun AlbumScreen(
     LaunchedEffect(albumName) { reload() }
 
     val pickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-    ) { uri ->
-        if (uri != null) {
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 30),
+    ) { uris ->
+        if (uris.isNotEmpty()) {
             scope.launch {
-                VaultStore.importFromPicker(context, uri, albumName)
+                uris.forEach { uri ->
+                    VaultStore.importFromPicker(context, uri, albumName)
+                }
                 reload()
             }
         }
@@ -85,7 +88,7 @@ fun AlbumScreen(
             Text(
                 text = "<",
                 color = UiColors.Home.navItemActive,
-                modifier = Modifier.clickable(onClick = onBack),
+                modifier = Modifier.throttledClickable(onClick = onBack),
             )
             Text(text = albumName, color = UiColors.Home.title, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
         }
@@ -122,7 +125,7 @@ fun AlbumScreen(
                         .padding(top = 16.dp)
                         .clip(RoundedCornerShape(UiRadius.homeThumb))
                         .background(UiColors.Home.navItemActiveBg)
-                        .clickable {
+                        .throttledClickable {
                             pickerLauncher.launch(
                                 PickVisualMediaRequest.Builder()
                                     .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -154,7 +157,7 @@ fun AlbumScreen(
                                 .size(UiSize.homeThumbSize)
                                 .clip(RoundedCornerShape(UiRadius.homeThumb))
                                 .background(UiColors.Home.emptyIconBg)
-                                .clickable {
+                                .throttledClickable {
                                     pickerLauncher.launch(
                                         PickVisualMediaRequest.Builder()
                                             .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -175,7 +178,7 @@ fun AlbumScreen(
                             modifier = Modifier
                                 .size(UiSize.homeThumbSize)
                                 .clip(RoundedCornerShape(UiRadius.homeThumb))
-                                .clickable { onOpenPhoto(photo.path) },
+                                .throttledClickable { onOpenPhoto(photo.path) },
                         ) {
                             val bmp = remember(photo.path) { android.graphics.BitmapFactory.decodeFile(photo.path) }
                             if (bmp != null) {

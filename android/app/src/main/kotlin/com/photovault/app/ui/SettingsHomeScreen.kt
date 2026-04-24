@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
+import com.photovault.app.ui.components.AppDialog
+import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import com.photovault.app.ui.theme.UiSize
@@ -43,16 +45,22 @@ fun SettingsHomeScreen(
     onOpenBackupRestore: () -> Unit,
     onOpenTrashBin: () -> Unit,
     onOpenPaywall: () -> Unit,
+    onOpenChangePin: () -> Unit,
+    onOpenStorageUsage: () -> Unit,
+    selectedTab: HomeTab = HomeTab.SETTINGS,
+    showBottomNav: Boolean = true,
+    modifier: Modifier = Modifier,
 ) {
     val tabs = remember { homeTabs() }
     var biometricEnabled by remember { mutableStateOf(true) }
     var autoLockEnabled by remember { mutableStateOf(true) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
     val securityItems = listOf(
         SettingsRowModel(
             title = stringResource(R.string.settings_item_change_pin),
             desc = stringResource(R.string.settings_item_change_pin_desc),
             trailing = SettingsTrailing.CHEVRON,
-            onClick = {},
+            onClick = onOpenChangePin,
         ),
     )
     val generalItems = listOf(
@@ -60,13 +68,13 @@ fun SettingsHomeScreen(
             title = stringResource(R.string.settings_item_language),
             desc = stringResource(R.string.settings_item_language_desc),
             trailing = SettingsTrailing.CHEVRON,
-            onClick = {},
+            onClick = { showLanguageDialog = true },
         ),
         SettingsRowModel(
             title = stringResource(R.string.settings_item_storage),
             desc = stringResource(R.string.settings_item_storage_desc),
             trailing = SettingsTrailing.CHEVRON,
-            onClick = {},
+            onClick = onOpenStorageUsage,
         ),
         SettingsRowModel(
             title = stringResource(R.string.settings_item_backup_restore),
@@ -97,7 +105,7 @@ fun SettingsHomeScreen(
     )
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding()
@@ -154,12 +162,23 @@ fun SettingsHomeScreen(
             item { SettingsGroup(title = stringResource(R.string.settings_group_about), items = aboutItems) }
             item { SettingsDangerCard() }
         }
-        HomeBottomNav(
-            tabs = tabs,
-            selectedIndex = HomeTab.SETTINGS.ordinal,
-            onSelect = { onOpenTab(tabs[it].tab) },
-        )
+        if (showBottomNav) {
+            HomeBottomNav(
+                tabs = tabs,
+                selectedIndex = selectedTab.ordinal,
+                onSelect = { onOpenTab(tabs[it].tab) },
+            )
+        }
     }
+    AppDialog(
+        show = showLanguageDialog,
+        title = stringResource(R.string.settings_language_dialog_title),
+        message = stringResource(R.string.settings_language_dialog_desc),
+        confirmText = stringResource(R.string.settings_language_dialog_confirm),
+        onConfirm = { showLanguageDialog = false },
+        dismissText = stringResource(R.string.common_cancel),
+        onDismiss = { showLanguageDialog = false },
+    )
 }
 
 @Composable
@@ -269,7 +288,7 @@ private fun SettingsSimpleRow(model: SettingsRowModel) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(UiRadius.settingsRow))
             .background(UiColors.Home.emptyCardBg)
-            .clickable(onClick = model.onClick)
+            .throttledClickable(onClick = model.onClick)
             .padding(
                 horizontal = UiSize.settingsRowPaddingHorizontal,
                 vertical = UiSize.settingsRowPaddingVertical,
