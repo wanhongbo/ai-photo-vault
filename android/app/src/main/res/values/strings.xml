@@ -47,7 +47,7 @@
     <string name="home_import_multi_result">导入完成：新增 %1$d，重复 %2$d，失败 %3$d</string>
     <string name="home_album_create_title">新建相册</string>
     <string name="home_album_create_input_hint">输入相册名称</string>
-    <string name="home_album_create_confirm">创建并进入</string>
+    <string name="home_album_create_confirm">新建</string>
     <string name="common_cancel">取消</string>
     <string name="home_albums_title">相册</string>
     <string name="home_albums_view_all">显示全部</string>

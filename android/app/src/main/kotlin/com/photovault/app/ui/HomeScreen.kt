@@ -37,8 +37,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -282,29 +283,50 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(UiRadius.dialog))
                         .background(UiColors.Dialog.bg)
-                        .padding(20.dp),
+                        .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.dialog))
+                        .padding(horizontal = 20.dp, vertical = 18.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.home_album_create_title),
                         color = UiColors.Dialog.title,
                         fontSize = UiTextSize.dialogTitle,
                         fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
                     )
-                    OutlinedTextField(
+                    TextField(
                         value = newAlbumName,
                         onValueChange = { newAlbumName = it },
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 10.dp),
-                        textStyle = androidx.compose.ui.text.TextStyle(color = UiColors.Dialog.title),
-                        label = { Text(stringResource(R.string.home_album_create_input_hint)) },
+                            .padding(top = 14.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(14.dp)),
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = UiColors.Dialog.title,
+                            fontSize = UiTextSize.homeEmptyBody,
+                        ),
+                        placeholder = {
+                            Text(
+                                text = stringResource(R.string.home_album_create_input_hint),
+                                color = UiColors.Home.subtitle,
+                                fontSize = UiTextSize.homeEmptyBody,
+                            )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = UiColors.Home.emptyCardBg,
+                            unfocusedContainerColor = UiColors.Home.emptyCardBg,
+                            disabledContainerColor = UiColors.Home.emptyCardBg,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = UiColors.Home.navItemActive,
+                        ),
                     )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         AppButton(
                             text = stringResource(R.string.common_cancel),

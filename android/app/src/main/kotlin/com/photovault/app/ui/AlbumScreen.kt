@@ -3,7 +3,13 @@ package com.photovault.app.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,10 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -41,6 +50,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.photovault.app.R
 import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.ui.components.VaultProgressiveImage
+import com.photovault.app.ui.feedback.pressFeedback
+import com.photovault.app.ui.feedback.rememberFeedbackInteractionSource
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
@@ -105,6 +116,8 @@ fun AlbumScreen(
                 Text(text = "加载中...", color = UiColors.Home.subtitle)
             }
         } else if (photos.isEmpty()) {
+            val emptyAddInteraction = rememberFeedbackInteractionSource()
+            val emptyPressed = emptyAddInteraction.collectIsPressedAsState()
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -113,8 +126,21 @@ fun AlbumScreen(
                 Box(
                     modifier = Modifier
                         .size(UiSize.homeEmptyIconWrap)
+                        .plusPressFeedback(emptyAddInteraction, CircleShape)
                         .clip(CircleShape)
-                        .background(UiColors.Home.emptyIconBg),
+                        .background(UiColors.Home.emptyIconBg)
+                        .border(
+                            width = if (emptyPressed.value) 1.8.dp else 1.2.dp,
+                            color = if (emptyPressed.value) UiColors.Home.navItemActive else UiColors.Home.navItemActiveStroke.copy(alpha = 0.55f),
+                            shape = CircleShape,
+                        )
+                        .throttledClickable(interactionSource = emptyAddInteraction, indication = null) {
+                            pickerLauncher.launch(
+                                PickVisualMediaRequest.Builder()
+                                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    .build(),
+                            )
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(painter = painterResource(R.drawable.ic_home_action_add), contentDescription = null, tint = UiColors.Home.navItemActive)
@@ -132,22 +158,6 @@ fun AlbumScreen(
                     fontSize = UiTextSize.homeEmptyBody,
                     modifier = Modifier.padding(top = 8.dp),
                 )
-                Box(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .clip(RoundedCornerShape(UiRadius.homeThumb))
-                        .background(UiColors.Home.navItemActiveBg)
-                        .throttledClickable {
-                            pickerLauncher.launch(
-                                PickVisualMediaRequest.Builder()
-                                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                    .build(),
-                            )
-                        }
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                ) {
-                    Text(text = stringResource(R.string.home_vault_empty_action), color = UiColors.Home.navItemActive)
-                }
             }
         } else {
             Box(
@@ -164,12 +174,20 @@ fun AlbumScreen(
                     verticalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
                 ) {
                     item {
+                        val addInteraction = rememberFeedbackInteractionSource()
+                        val addPressed = addInteraction.collectIsPressedAsState()
                         Box(
                             modifier = Modifier
                                 .size(UiSize.homeThumbSize)
+                                .plusPressFeedback(addInteraction, RoundedCornerShape(UiRadius.homeThumb))
                                 .clip(RoundedCornerShape(UiRadius.homeThumb))
                                 .background(UiColors.Home.emptyIconBg)
-                                .throttledClickable {
+                                .border(
+                                    width = if (addPressed.value) 1.8.dp else 1.2.dp,
+                                    color = if (addPressed.value) UiColors.Home.navItemActive else UiColors.Home.navItemActiveStroke.copy(alpha = 0.45f),
+                                    shape = RoundedCornerShape(UiRadius.homeThumb),
+                                )
+                                .throttledClickable(interactionSource = addInteraction, indication = null) {
                                     pickerLauncher.launch(
                                         PickVisualMediaRequest.Builder()
                                             .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -200,5 +218,27 @@ fun AlbumScreen(
             }
         }
     }
+}
+
+@Composable
+private fun Modifier.plusPressFeedback(
+    interactionSource: MutableInteractionSource,
+    shape: Shape,
+): Modifier {
+    val pressed = interactionSource.collectIsPressedAsState()
+    val scale = animateFloatAsState(
+        targetValue = if (pressed.value) 0.86f else 1f,
+        animationSpec = tween(durationMillis = if (pressed.value) 60 else 220),
+        label = "plusPressScale",
+    )
+    val elevation = animateDpAsState(
+        targetValue = if (pressed.value) 0.dp else 10.dp,
+        animationSpec = tween(durationMillis = if (pressed.value) 60 else 220),
+        label = "plusPressElevation",
+    )
+    return this
+        .shadow(elevation = elevation.value, shape = shape, clip = false)
+        .then(Modifier.pressFeedback(interactionSource, extraHighlight = true))
+        .then(Modifier.graphicsLayer(scaleX = scale.value, scaleY = scale.value))
 }
 

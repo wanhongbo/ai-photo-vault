@@ -106,7 +106,7 @@ fun CameraPlaceholderScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Take a private Photo",
+            text = "隐私相机",
             color = UiColors.Home.title,
             fontSize = UiTextSize.homeTitle,
             fontWeight = FontWeight.Bold,
