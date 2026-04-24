@@ -250,13 +250,20 @@ fun HomeScreen(
     if (creatingAlbum) {
         AlertDialog(
             onDismissRequest = { creatingAlbum = false },
+            containerColor = Color.Transparent,
             confirmButton = {},
             text = {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(UiRadius.dialog))
+                        .background(UiColors.Dialog.bg)
+                        .padding(20.dp),
+                ) {
                     Text(
                         text = stringResource(R.string.home_album_create_title),
-                        color = UiColors.Home.title,
-                        fontSize = UiTextSize.homeEmptyTitle,
+                        color = UiColors.Dialog.title,
+                        fontSize = UiTextSize.dialogTitle,
                         fontWeight = FontWeight.Bold,
                     )
                     OutlinedTextField(
@@ -266,31 +273,35 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 10.dp),
+                        textStyle = androidx.compose.ui.text.TextStyle(color = UiColors.Dialog.title),
                         label = { Text(stringResource(R.string.home_album_create_input_hint)) },
                     )
-                    AppButton(
-                        text = stringResource(R.string.home_album_create_confirm),
-                        onClick = {
-                            scope.launch {
-                                val name = VaultStore.createAlbum(context, newAlbumName)
-                                newAlbumName = ""
-                                creatingAlbum = false
-                                refreshVault()
-                                onOpenAlbum(name)
-                            }
-                        },
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 14.dp),
-                    )
-                    AppButton(
-                        text = stringResource(R.string.common_cancel),
-                        onClick = { creatingAlbum = false },
-                        variant = AppButtonVariant.SECONDARY,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                    )
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        AppButton(
+                            text = stringResource(R.string.common_cancel),
+                            onClick = { creatingAlbum = false },
+                            variant = AppButtonVariant.SECONDARY,
+                            modifier = Modifier.weight(1f),
+                        )
+                        AppButton(
+                            text = stringResource(R.string.home_album_create_confirm),
+                            onClick = {
+                                scope.launch {
+                                    val name = VaultStore.createAlbum(context, newAlbumName)
+                                    newAlbumName = ""
+                                    creatingAlbum = false
+                                    refreshVault()
+                                    onOpenAlbum(name)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             },
         )

@@ -42,6 +42,7 @@ fun SettingsHomeScreen(
     onOpenTab: (HomeTab) -> Unit,
     onOpenBackupRestore: () -> Unit,
     onOpenTrashBin: () -> Unit,
+    onOpenPaywall: () -> Unit,
 ) {
     val tabs = remember { homeTabs() }
     var biometricEnabled by remember { mutableStateOf(true) }
@@ -78,6 +79,12 @@ fun SettingsHomeScreen(
             desc = stringResource(R.string.settings_item_trash_desc),
             trailing = SettingsTrailing.CHEVRON,
             onClick = onOpenTrashBin,
+        ),
+        SettingsRowModel(
+            title = stringResource(R.string.settings_item_paywall),
+            desc = stringResource(R.string.settings_item_paywall_desc),
+            trailing = SettingsTrailing.CHEVRON,
+            onClick = onOpenPaywall,
         ),
     )
     val aboutItems = listOf(

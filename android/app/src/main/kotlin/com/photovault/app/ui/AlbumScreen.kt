@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,6 +52,7 @@ import kotlinx.coroutines.launch
 fun AlbumScreen(
     albumName: String,
     onOpenPhoto: (String) -> Unit,
+    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -78,24 +81,57 @@ fun AlbumScreen(
             .safeDrawingPadding()
             .padding(16.dp),
     ) {
-        Text(text = albumName, color = UiColors.Home.title, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                text = "<",
+                color = UiColors.Home.navItemActive,
+                modifier = Modifier.clickable(onClick = onBack),
+            )
+            Text(text = albumName, color = UiColors.Home.title, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
+        }
         if (photos.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(UiSize.homeEmptyIconWrap)
                         .clip(CircleShape)
-                        .background(UiColors.Home.emptyIconBg)
+                        .background(UiColors.Home.emptyIconBg),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(painter = painterResource(R.drawable.ic_home_action_add), contentDescription = null, tint = UiColors.Home.navItemActive)
+                }
+                Text(
+                    text = stringResource(R.string.album_empty_title),
+                    color = UiColors.Home.emptyTitle,
+                    fontSize = UiTextSize.homeEmptyTitle,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                Text(
+                    text = stringResource(R.string.album_empty_desc),
+                    color = UiColors.Home.emptyBody,
+                    fontSize = UiTextSize.homeEmptyBody,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .clip(RoundedCornerShape(UiRadius.homeThumb))
+                        .background(UiColors.Home.navItemActiveBg)
                         .clickable {
                             pickerLauncher.launch(
                                 PickVisualMediaRequest.Builder()
                                     .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                     .build(),
                             )
-                        },
-                    contentAlignment = Alignment.Center,
+                        }
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                 ) {
-                    Icon(painter = painterResource(R.drawable.ic_home_action_add), contentDescription = null, tint = UiColors.Home.navItemActive)
+                    Text(text = stringResource(R.string.home_vault_empty_action), color = UiColors.Home.navItemActive)
                 }
             }
         } else {
@@ -112,6 +148,28 @@ fun AlbumScreen(
                     horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
                     verticalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
                 ) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .size(UiSize.homeThumbSize)
+                                .clip(RoundedCornerShape(UiRadius.homeThumb))
+                                .background(UiColors.Home.emptyIconBg)
+                                .clickable {
+                                    pickerLauncher.launch(
+                                        PickVisualMediaRequest.Builder()
+                                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                            .build(),
+                                    )
+                                },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_home_action_add),
+                                contentDescription = null,
+                                tint = UiColors.Home.navItemActive,
+                            )
+                        }
+                    }
                     items(photos, key = { it.path }) { photo ->
                         Box(
                             modifier = Modifier

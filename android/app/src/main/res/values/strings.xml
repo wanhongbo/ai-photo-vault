@@ -54,6 +54,7 @@
     <string name="home_recent_title">最近</string>
     <string name="home_recent_sort_by_date">按日期排序</string>
     <string name="vault_search_input_hint">搜索图片</string>
+    <string name="vault_search_title">搜索</string>
     <string name="photo_viewer_placeholder_title">图片浏览页（占位）</string>
     <string name="photo_viewer_load_failed">无法加载图片</string>
     <string name="home_header_stat_photos">图片 %1$d</string>
@@ -70,6 +71,8 @@
     <string name="recent_list_filter_date">拍摄日期</string>
     <string name="recent_list_filter_album">按相册</string>
     <string name="recent_list_empty">暂无最近照片</string>
+    <string name="album_empty_title">相册暂无内容</string>
+    <string name="album_empty_desc">从系统相册导入后会显示在这里</string>
     <string name="settings_title">设置</string>
     <string name="settings_subtitle">隐私与安全</string>
     <string name="settings_profile_name">VaultSafe 用户</string>
@@ -90,6 +93,8 @@
     <string name="settings_item_backup_restore_desc">加密备份到本地或从备份恢复</string>
     <string name="settings_item_trash">临时垃圾桶</string>
     <string name="settings_item_trash_desc">查看已删除项目并可恢复</string>
+    <string name="settings_item_paywall">升级 Premium</string>
+    <string name="settings_item_paywall_desc">解锁 AI 能力与无限容量</string>
     <string name="settings_group_about">关于</string>
     <string name="settings_item_version">当前版本</string>
     <string name="settings_item_version_desc">v1.0.0</string>
@@ -123,4 +128,10 @@
     <string name="trash_recover">恢复</string>
     <string name="trash_delete">彻底删除</string>
     <string name="trash_empty">暂时没有可恢复的项目</string>
+    <string name="paywall_title">Premium 会员</string>
+    <string name="paywall_subtitle">解锁全部隐私保护与 AI 功能</string>
+    <string name="paywall_feature_backup">无限加密备份</string>
+    <string name="paywall_feature_ai">AI 智能分类与检索</string>
+    <string name="paywall_feature_ads">无广告体验</string>
+    <string name="paywall_action_upgrade">立即升级</string>
 </resources>

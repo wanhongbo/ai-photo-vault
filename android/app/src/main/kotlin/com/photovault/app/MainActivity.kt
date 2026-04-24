@@ -5,8 +5,6 @@ import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +27,7 @@ import com.photovault.app.ui.CameraPlaceholderScreen
 import com.photovault.app.ui.CameraHomeScreen
 import com.photovault.app.ui.HomeTab
 import com.photovault.app.ui.HomeScreen
+import com.photovault.app.ui.PaywallScreen
 import com.photovault.app.ui.PhotoViewerPlaceholderScreen
 import com.photovault.app.ui.RecentPhotosScreen
 import com.photovault.app.ui.RestoreResultScreen
@@ -79,30 +78,6 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = ROUTE_SPLASH,
-                        enterTransition = {
-                            slideIntoContainer(
-                                AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(NAV_ANIMATION_DURATION_MS),
-                            )
-                        },
-                        exitTransition = {
-                            slideOutOfContainer(
-                                AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(NAV_ANIMATION_DURATION_MS),
-                            )
-                        },
-                        popEnterTransition = {
-                            slideIntoContainer(
-                                AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(NAV_ANIMATION_DURATION_MS),
-                            )
-                        },
-                        popExitTransition = {
-                            slideOutOfContainer(
-                                AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(NAV_ANIMATION_DURATION_MS),
-                            )
-                        },
                     ) {
                         composable(ROUTE_SPLASH) {
                             SplashScreen(
@@ -184,6 +159,9 @@ class MainActivity : ComponentActivity() {
                                 onOpenTrashBin = {
                                     navController.navigate(ROUTE_TRASH_BIN) { launchSingleTop = true }
                                 },
+                                onOpenPaywall = {
+                                    navController.navigate(ROUTE_PAYWALL) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_BACKUP_RESTORE) {
@@ -217,6 +195,11 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() },
                             )
                         }
+                        composable(ROUTE_PAYWALL) {
+                            PaywallScreen(
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
                         composable(ROUTE_CAMERA_PLACEHOLDER) {
                             CameraPlaceholderScreen(
                                 onBack = { navController.popBackStack() },
@@ -227,6 +210,7 @@ class MainActivity : ComponentActivity() {
                                 onOpenPhoto = { path ->
                                     navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
                                 },
+                                onBack = { navController.popBackStack() },
                             )
                         }
                         composable(ROUTE_ALBUM_LIST) {
@@ -255,6 +239,7 @@ class MainActivity : ComponentActivity() {
                                 onOpenPhoto = { path ->
                                     navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
                                 },
+                                onBack = { navController.popBackStack() },
                             )
                         }
                         composable(
@@ -270,7 +255,6 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        private const val NAV_ANIMATION_DURATION_MS = 280
         private const val ROUTE_SPLASH = "splash"
         private const val ROUTE_LOCK = "lock"
         private const val ROUTE_HOME_VAULT = "home_vault"
@@ -285,6 +269,7 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_BACKUP_RESULT = "backup_result"
         private const val ROUTE_RESTORE_RESULT = "restore_result"
         private const val ROUTE_TRASH_BIN = "trash_bin"
+        private const val ROUTE_PAYWALL = "paywall"
     }
 }
 

@@ -2,10 +2,12 @@ package com.photovault.app.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,11 +32,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import com.photovault.app.ui.theme.UiSize
+import com.photovault.app.ui.theme.UiTextSize
 import com.photovault.app.ui.vault.VaultPhoto
 import com.photovault.app.ui.vault.VaultStore
 import kotlinx.coroutines.launch
@@ -42,6 +46,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun VaultSearchScreen(
     onOpenPhoto: (String) -> Unit,
+    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -60,10 +65,30 @@ fun VaultSearchScreen(
             .safeDrawingPadding()
             .padding(16.dp),
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = "<",
+                color = UiColors.Home.navItemActive,
+                modifier = Modifier.clickable(onClick = onBack),
+            )
+            Text(
+                text = stringResource(R.string.vault_search_title),
+                color = UiColors.Home.title,
+                fontSize = UiTextSize.homeTitle,
+                fontWeight = FontWeight.Bold,
+            )
+            Box(modifier = Modifier.padding(end = 10.dp)) {}
+        }
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+                .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeThumb)),
             singleLine = true,
             label = { Text(stringResource(R.string.vault_search_input_hint)) },
         )

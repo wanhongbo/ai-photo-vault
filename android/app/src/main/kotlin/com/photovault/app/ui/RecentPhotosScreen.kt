@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -55,9 +56,12 @@ fun RecentPhotosScreen(
             .safeDrawingPadding()
             .padding(16.dp),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
             Text(
-                text = stringResource(R.string.common_back),
+                text = "<",
                 color = UiColors.Home.navItemActive,
                 modifier = Modifier.clickable(onClick = onBack),
             )
@@ -66,7 +70,10 @@ fun RecentPhotosScreen(
                 color = UiColors.Home.title,
                 fontSize = UiTextSize.homeTitle,
                 fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
+            Box(modifier = Modifier.size(20.dp))
         }
         Row(
             modifier = Modifier.padding(top = 10.dp),
