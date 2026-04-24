@@ -8,8 +8,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.photovault.app.ui.feedback.rememberThrottledClick
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiSize
 import com.photovault.app.ui.theme.UiTextSize
@@ -29,6 +32,8 @@ fun AppButton(
     enabled: Boolean = true,
     loading: Boolean = false,
 ) {
+    val latestOnClick by rememberUpdatedState(onClick)
+    val throttledOnClick = rememberThrottledClick { latestOnClick() }
     val (containerColor, contentColor) = when {
         !enabled || loading -> UiColors.Button.disabledContainer to UiColors.Button.disabledContent
         variant == AppButtonVariant.PRIMARY -> UiColors.Button.primaryContainer to UiColors.Button.primaryContent
@@ -36,7 +41,7 @@ fun AppButton(
         else -> UiColors.Button.dangerContainer to UiColors.Button.dangerContent
     }
     Button(
-        onClick = onClick,
+        onClick = throttledOnClick,
         enabled = enabled && !loading,
         modifier = modifier.height(UiSize.buttonHeight),
         colors = ButtonDefaults.buttonColors(

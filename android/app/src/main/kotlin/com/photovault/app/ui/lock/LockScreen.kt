@@ -43,6 +43,7 @@ import com.photovault.app.ui.components.AppButtonVariant
 import com.photovault.app.ui.components.AppDialog
 import com.photovault.app.ui.feedback.pressFeedback
 import com.photovault.app.ui.feedback.rememberFeedbackInteractionSource
+import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import androidx.biometric.BiometricManager
@@ -343,7 +344,7 @@ private fun NumberPad(
                 Text(
                     text = "使用生物识别重试",
                     color = UiColors.Lock.brandBlue,
-                    modifier = Modifier.clickable(onClick = onBiometric).padding(top = 2.dp),
+                    modifier = Modifier.throttledClickable(onClick = onBiometric).padding(top = 2.dp),
                 )
             }
         }
@@ -400,7 +401,7 @@ private fun KeypadKey(
                 color = if (extraHighlight) UiColors.Lock.brandBlue else UiColors.Lock.keypadStroke,
                 shape = CircleShape,
             )
-            .clickable(
+            .throttledClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,

@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
+import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import com.photovault.app.ui.theme.UiSize
@@ -59,7 +60,7 @@ fun AlbumListScreen(
             Text(
                 text = stringResource(R.string.common_back),
                 color = UiColors.Home.navItemActive,
-                modifier = Modifier.clickable(onClick = onBack),
+                modifier = Modifier.throttledClickable(onClick = onBack),
             )
             Text(
                 text = stringResource(R.string.album_list_title),
@@ -98,7 +99,7 @@ fun AlbumListScreen(
                             .clip(RoundedCornerShape(UiRadius.homeCard))
                             .background(UiColors.Home.sectionBg)
                             .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
-                            .clickable { onOpenAlbum(album.name) }
+                            .throttledClickable { onOpenAlbum(album.name) }
                             .padding(UiSize.homeCardPadding),
                     ) {
                         Box(

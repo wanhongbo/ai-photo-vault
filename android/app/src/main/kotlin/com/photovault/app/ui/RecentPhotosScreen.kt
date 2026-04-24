@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
+import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
 import com.photovault.app.ui.theme.UiSize
@@ -63,7 +64,7 @@ fun RecentPhotosScreen(
             Text(
                 text = "<",
                 color = UiColors.Home.navItemActive,
-                modifier = Modifier.clickable(onClick = onBack),
+                modifier = Modifier.throttledClickable(onClick = onBack),
             )
             Text(
                 text = stringResource(R.string.recent_list_title),
@@ -105,7 +106,7 @@ fun RecentPhotosScreen(
                             modifier = Modifier
                                 .size(UiSize.homeThumbSize)
                                 .clip(RoundedCornerShape(UiRadius.homeThumb))
-                                .clickable { onOpenPhoto(photo.path) },
+                                .throttledClickable { onOpenPhoto(photo.path) },
                         ) {
                             val bitmap = remember(photo.path) { android.graphics.BitmapFactory.decodeFile(photo.path) }
                             if (bitmap != null) {
