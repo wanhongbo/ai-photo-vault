@@ -3,7 +3,6 @@ package com.photovault.app.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,19 +17,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.photovault.app.R
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
@@ -39,6 +43,7 @@ import com.photovault.app.ui.theme.UiSize
 import com.photovault.app.ui.theme.UiTextSize
 import com.photovault.app.ui.vault.VaultAlbum
 import com.photovault.app.ui.vault.VaultStore
+import kotlinx.coroutines.launch
 
 @Composable
 fun AlbumListScreen(
@@ -46,8 +51,28 @@ fun AlbumListScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
-    var albums by remember { mutableStateOf(emptyList<VaultAlbum>()) }
-    LaunchedEffect(Unit) { albums = VaultStore.listAlbums(context) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    val cachedAlbums = remember { VaultStore.peekCachedSnapshot()?.albums.orEmpty() }
+    var albums by remember { mutableStateOf(cachedAlbums) }
+    var loaded by remember { mutableStateOf(cachedAlbums.isNotEmpty()) }
+
+    suspend fun refreshAlbums() {
+        val latest = VaultStore.listAlbums(context)
+        if (albums != latest) albums = latest
+        loaded = true
+    }
+
+    LaunchedEffect(Unit) { refreshAlbums() }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch { refreshAlbums() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Column(
         modifier = Modifier
@@ -78,7 +103,14 @@ fun AlbumListScreen(
             FilterTag(text = stringResource(R.string.album_list_filter_recent), selected = true)
             FilterTag(text = stringResource(R.string.album_list_filter_name), selected = false)
         }
-        if (albums.isEmpty()) {
+        if (!loaded) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Text(
+                    text = "加载中...",
+                    color = UiColors.Home.subtitle,
+                )
+            }
+        } else if (albums.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                 Text(
                     text = stringResource(R.string.album_list_empty),

@@ -5,7 +5,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,10 +35,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.photovault.app.R
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
@@ -56,13 +59,27 @@ fun AlbumScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
-    var photos by remember { mutableStateOf(emptyList<VaultPhoto>()) }
+    val cachedPhotos = remember(albumName) { VaultStore.peekCachedAlbumPhotos(albumName) }
+    var photos by remember(albumName) { mutableStateOf(cachedPhotos.orEmpty()) }
+    var loaded by remember(albumName) { mutableStateOf(cachedPhotos != null) }
 
     suspend fun reload() {
-        photos = VaultStore.listPhotosInAlbum(context, albumName)
+        val latest = VaultStore.listPhotosInAlbum(context, albumName)
+        if (photos != latest) photos = latest
+        loaded = true
     }
     LaunchedEffect(albumName) { reload() }
+    DisposableEffect(lifecycleOwner, albumName) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch { reload() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 30),
@@ -92,7 +109,11 @@ fun AlbumScreen(
             )
             Text(text = albumName, color = UiColors.Home.title, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
         }
-        if (photos.isEmpty()) {
+        if (!loaded) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "加载中...", color = UiColors.Home.subtitle)
+            }
+        } else if (photos.isEmpty()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,

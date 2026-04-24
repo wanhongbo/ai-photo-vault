@@ -39,8 +39,10 @@ enum class VaultImportResult {
 object VaultStore {
     @Volatile
     private var cachedSnapshot: VaultSnapshot? = null
+    private val cachedAlbumPhotos: MutableMap<String, List<VaultPhoto>> = mutableMapOf()
 
     fun peekCachedSnapshot(): VaultSnapshot? = cachedSnapshot
+    fun peekCachedAlbumPhotos(albumName: String): List<VaultPhoto>? = cachedAlbumPhotos[albumName]
 
     suspend fun loadSnapshot(context: Context, recentLimit: Int = 60): VaultSnapshot = withContext(Dispatchers.IO) {
         ensureInit(context)
@@ -84,8 +86,11 @@ object VaultStore {
     suspend fun listPhotosInAlbum(context: Context, albumName: String): List<VaultPhoto> = withContext(Dispatchers.IO) {
         ensureInit(context)
         val album = File(rootDir(context), sanitizeAlbumName(albumName))
-        if (!album.exists()) return@withContext emptyList()
-        album.listFiles()
+        if (!album.exists()) {
+            cachedAlbumPhotos[albumName] = emptyList()
+            return@withContext emptyList()
+        }
+        val photos = album.listFiles()
             ?.filter { it.isFile }
             ?.sortedByDescending { it.lastModified() }
             ?.map { file ->
@@ -97,6 +102,8 @@ object VaultStore {
                 )
             }
             .orEmpty()
+        cachedAlbumPhotos[albumName] = photos
+        photos
     }
 
     suspend fun searchPhotos(context: Context, query: String): List<VaultPhoto> = withContext(Dispatchers.IO) {
