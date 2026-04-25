@@ -22,7 +22,7 @@ import com.photovault.app.ui.AlbumScreen
 import com.photovault.app.ui.AlbumListScreen
 import com.photovault.app.ui.BackupRestoreScreen
 import com.photovault.app.ui.BackupResultScreen
-import com.photovault.app.ui.CameraPlaceholderScreen
+import com.photovault.app.ui.PrivateCameraScreen
 import com.photovault.app.ui.ChangePinPlaceholderScreen
 import com.photovault.app.ui.MainScreen
 import com.photovault.app.ui.PaywallScreen
@@ -32,6 +32,7 @@ import com.photovault.app.ui.RestoreResultScreen
 import com.photovault.app.ui.SplashScreen
 import com.photovault.app.ui.StorageUsagePlaceholderScreen
 import com.photovault.app.ui.TrashBinScreen
+import com.photovault.app.ui.VideoPlayerScreen
 import com.photovault.app.ui.VaultSearchScreen
 import com.photovault.app.ui.lock.LockScreen
 import com.photovault.app.ui.theme.PhotoVaultTheme
@@ -61,10 +62,11 @@ class MainActivity : ComponentActivity() {
                         if (!requireUnlock) return@LaunchedEffect
                         if (currentRoute != null &&
                             currentRoute != ROUTE_LOCK &&
-                            currentRoute != ROUTE_CAMERA_PLACEHOLDER
+                            currentRoute != ROUTE_PRIVATE_CAMERA
                         ) {
                             navController.navigate(ROUTE_LOCK) {
                                 popUpTo(navController.graph.findStartDestination().id) {
+                                    inclusive = true
                                     saveState = false
                                 }
                                 launchSingleTop = true
@@ -97,7 +99,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 onQuickCapture = {
-                                    navController.navigate(ROUTE_CAMERA_PLACEHOLDER) {
+                                    navController.navigate(ROUTE_PRIVATE_CAMERA) {
                                         launchSingleTop = true
                                     }
                                 },
@@ -106,7 +108,7 @@ class MainActivity : ComponentActivity() {
                         composable(ROUTE_MAIN) {
                             MainScreen(
                                 onOpenPrivateCamera = {
-                                    navController.navigate(ROUTE_CAMERA_PLACEHOLDER) {
+                                    navController.navigate(ROUTE_PRIVATE_CAMERA) {
                                         launchSingleTop = true
                                     }
                                 },
@@ -117,7 +119,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("album/${Uri.encode(albumName)}") { launchSingleTop = true }
                                 },
                                 onOpenPhotoViewer = { path ->
-                                    navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
+                                    navController.navigate(viewerRouteForPath(path)) { launchSingleTop = true }
                                 },
                                 onOpenAlbumList = {
                                     navController.navigate(ROUTE_ALBUM_LIST) { launchSingleTop = true }
@@ -188,15 +190,15 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() },
                             )
                         }
-                        composable(ROUTE_CAMERA_PLACEHOLDER) {
-                            CameraPlaceholderScreen(
+                        composable(ROUTE_PRIVATE_CAMERA) {
+                            PrivateCameraScreen(
                                 onBack = { navController.popBackStack() },
                             )
                         }
                         composable(ROUTE_VAULT_SEARCH) {
                             VaultSearchScreen(
                                 onOpenPhoto = { path ->
-                                    navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
+                                    navController.navigate(viewerRouteForPath(path)) { launchSingleTop = true }
                                 },
                                 onBack = { navController.popBackStack() },
                             )
@@ -212,7 +214,7 @@ class MainActivity : ComponentActivity() {
                         composable(ROUTE_RECENT_LIST) {
                             RecentPhotosScreen(
                                 onOpenPhoto = { path ->
-                                    navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
+                                    navController.navigate(viewerRouteForPath(path)) { launchSingleTop = true }
                                 },
                                 onBack = { navController.popBackStack() },
                             )
@@ -225,7 +227,7 @@ class MainActivity : ComponentActivity() {
                             AlbumScreen(
                                 albumName = album,
                                 onOpenPhoto = { path ->
-                                    navController.navigate("photo_viewer/${Uri.encode(path)}") { launchSingleTop = true }
+                                    navController.navigate(viewerRouteForPath(path)) { launchSingleTop = true }
                                 },
                                 onBack = { navController.popBackStack() },
                             )
@@ -239,17 +241,45 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() },
                             )
                         }
+                        composable(
+                            route = "video_player/{path}",
+                            arguments = listOf(navArgument("path") { defaultValue = "" }),
+                        ) { entry ->
+                            VideoPlayerScreen(
+                                path = Uri.decode(entry.arguments?.getString("path") ?: ""),
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
                     }
                 }
             }
         }
     }
 
+    private fun viewerRouteForPath(path: String): String {
+        val encoded = Uri.encode(path)
+        return if (isVideoPath(path)) {
+            "video_player/$encoded"
+        } else {
+            "photo_viewer/$encoded"
+        }
+    }
+
+    private fun isVideoPath(path: String): Boolean {
+        val lower = path.lowercase()
+        return lower.endsWith(".mp4") ||
+            lower.endsWith(".m4v") ||
+            lower.endsWith(".mov") ||
+            lower.endsWith(".3gp") ||
+            lower.endsWith(".webm") ||
+            lower.endsWith(".mkv")
+    }
+
     companion object {
         private const val ROUTE_SPLASH = "splash"
         private const val ROUTE_LOCK = "lock"
         private const val ROUTE_MAIN = "main"
-        private const val ROUTE_CAMERA_PLACEHOLDER = "camera_placeholder"
+        private const val ROUTE_PRIVATE_CAMERA = "private_camera"
         private const val ROUTE_VAULT_SEARCH = "vault_search"
         private const val ROUTE_ALBUM_LIST = "album_list"
         private const val ROUTE_RECENT_LIST = "recent_list"
