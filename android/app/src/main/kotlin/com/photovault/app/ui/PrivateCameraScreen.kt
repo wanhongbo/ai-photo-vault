@@ -3,8 +3,10 @@ package com.photovault.app.ui
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
@@ -41,6 +43,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +65,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.Observer
 import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppButtonVariant
 import com.photovault.app.ui.components.AppTopBar
@@ -78,12 +84,31 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 private enum class FlashUiMode {
     OFF,
     ON,
     AUTO,
 }
+
+private enum class CaptureErrorCode {
+    PERMISSION,
+    HARDWARE,
+    IO,
+    TIMEOUT,
+    UNKNOWN,
+}
+
+private data class CaptureTempResult(
+    val path: String? = null,
+    val errorCode: CaptureErrorCode? = null,
+)
+
+private data class CaptureShotResult(
+    val success: Boolean,
+    val errorCode: CaptureErrorCode? = null,
+)
 
 @Composable
 fun PrivateCameraScreen(
@@ -122,6 +147,14 @@ fun PrivateCameraScreen(
     var pendingCapturePath by remember { mutableStateOf<String?>(null) }
     var pendingPreview by remember { mutableStateOf<Bitmap?>(null) }
     var savingPending by remember { mutableStateOf(false) }
+    var rebindTick by remember { mutableStateOf(0) }
+    var bindRetryCount by remember { mutableStateOf(0) }
+    var bindStartMs by remember { mutableStateOf(0L) }
+    var firstFrameLogged by remember { mutableStateOf(false) }
+    var captureAttempts by remember { mutableStateOf(0) }
+    var captureSuccessCount by remember { mutableStateOf(0) }
+    var captureFailureCount by remember { mutableStateOf(0) }
+    var peakMemoryMb by remember { mutableStateOf(currentMemoryUsageMb()) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -134,9 +167,63 @@ fun PrivateCameraScreen(
         if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    LaunchedEffect(hasCameraPermission, previewViewRef, lensFacing, flashMode, lifecycleOwner) {
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && hasCameraPermission) {
+                rebindTick += 1
+                Log.i(CAMERA_DIAG_TAG, "event=open_resume_rebind")
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    DisposableEffect(previewViewRef) {
+        val previewView = previewViewRef ?: return@DisposableEffect onDispose {}
+        val streamObserver = Observer<PreviewView.StreamState> { state ->
+            if (state == PreviewView.StreamState.STREAMING && !firstFrameLogged && bindStartMs > 0L) {
+                firstFrameLogged = true
+                val elapsed = System.currentTimeMillis() - bindStartMs
+                peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
+                Log.i(
+                    CAMERA_DIAG_TAG,
+                    "event=preview_first_frame elapsed_ms=$elapsed peak_mem_mb=$peakMemoryMb",
+                )
+            }
+        }
+        previewView.previewStreamState.observe(lifecycleOwner, streamObserver)
+        onDispose { previewView.previewStreamState.removeObserver(streamObserver) }
+    }
+
+    DisposableEffect(cameraRef) {
+        val camera = cameraRef ?: return@DisposableEffect onDispose {}
+        val stateObserver = Observer<androidx.camera.core.CameraState> { cameraState ->
+            val error = cameraState.error ?: return@Observer
+            bindRetryCount += 1
+            message = "相机暂时不可用，正在自动恢复..."
+            Log.w(
+                CAMERA_DIAG_TAG,
+                "event=bind_camera_error code=${error.code} retry=$bindRetryCount",
+                error.cause,
+            )
+            if (bindRetryCount <= 3) {
+                rebindTick += 1
+            }
+        }
+        camera.cameraInfo.cameraState.observe(lifecycleOwner, stateObserver)
+        onDispose { camera.cameraInfo.cameraState.removeObserver(stateObserver) }
+    }
+
+    LaunchedEffect(hasCameraPermission, previewViewRef, lensFacing, flashMode, lifecycleOwner, rebindTick) {
         val previewView = previewViewRef ?: return@LaunchedEffect
         if (!hasCameraPermission) return@LaunchedEffect
+        bindStartMs = System.currentTimeMillis()
+        firstFrameLogged = false
+        peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
+        Log.i(
+            CAMERA_DIAG_TAG,
+            "event=bind_start lens=$lensFacing flash=$flashMode model=${maskedDeviceModel()}",
+        )
         bindCameraUseCases(
             context = context,
             lifecycleOwner = lifecycleOwner,
@@ -153,6 +240,22 @@ fun PrivateCameraScreen(
                 zoomRatio = zoomRatio.coerceIn(minZoom, maxZoom)
                 exposureRange = minExposure..maxExposure
                 exposureIndex = exposureIndex.coerceIn(minExposure, maxExposure)
+                bindRetryCount = 0
+                Log.i(
+                    CAMERA_DIAG_TAG,
+                    "event=bind_ready lens=$lensFacing flash=$flashAvailable zoom=[$minZoom,$maxZoom] exposure=[$minExposure,$maxExposure]",
+                )
+            },
+            onFallbackLens = { fallbackLens ->
+                lensFacing = fallbackLens
+                message = "当前镜头不可用，已切换到可用镜头"
+                Log.w(CAMERA_DIAG_TAG, "event=bind_lens_fallback to=$fallbackLens")
+            },
+            onBindFailed = { throwable ->
+                bindRetryCount += 1
+                message = "相机启动失败，正在尝试恢复..."
+                Log.e(CAMERA_DIAG_TAG, "event=bind_failed retry=$bindRetryCount", throwable)
+                if (bindRetryCount <= 3) rebindTick += 1
             },
         )
     }
@@ -201,8 +304,14 @@ fun PrivateCameraScreen(
                     if (savingPending) return@PendingCapturePreview
                     savingPending = true
                     scope.launch {
+                        val saveStart = System.currentTimeMillis()
                         val saved = savePendingToVault(context, path)
                         savingPending = false
+                        peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
+                        Log.i(
+                            CAMERA_DIAG_TAG,
+                            "event=save_result ok=$saved elapsed_ms=${System.currentTimeMillis() - saveStart} peak_mem_mb=$peakMemoryMb",
+                        )
                         if (saved) {
                             message = "已保存到保险箱"
                             pendingCapturePath = null
@@ -210,7 +319,7 @@ fun PrivateCameraScreen(
                             delay(220)
                             onBack()
                         } else {
-                            message = "保存失败，请重试"
+                            message = "保存失败（存储错误），请重试"
                         }
                     }
                 },
@@ -452,6 +561,9 @@ fun PrivateCameraScreen(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     message = null
                     scope.launch {
+                        captureAttempts += 1
+                        val captureStart = System.currentTimeMillis()
+                        Log.i(CAMERA_DIAG_TAG, "event=capture_start attempt=$captureAttempts")
                         if (timerSeconds > 0) {
                             for (second in timerSeconds downTo 1) {
                                 countdownRemaining = second
@@ -463,12 +575,26 @@ fun PrivateCameraScreen(
                         delay(90)
                         shutterOverlay = false
                         capturing = true
-                        val tempPath = captureToTempFile(context, capture)
+                        val result = captureToTempFile(context, capture)
                         capturing = false
-                        if (tempPath != null) {
-                            pendingCapturePath = tempPath
+                        val elapsed = System.currentTimeMillis() - captureStart
+                        peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
+                        if (result.path != null) {
+                            captureSuccessCount += 1
+                            pendingCapturePath = result.path
+                            Log.i(
+                                CAMERA_DIAG_TAG,
+                                "event=capture_success elapsed_ms=$elapsed success=$captureSuccessCount fail=$captureFailureCount peak_mem_mb=$peakMemoryMb",
+                            )
                         } else {
-                            message = "拍照失败，请重试"
+                            captureFailureCount += 1
+                            val failRate = (captureFailureCount * 100f / captureAttempts).roundToInt()
+                            val code = result.errorCode ?: CaptureErrorCode.UNKNOWN
+                            message = captureErrorMessage(code)
+                            Log.e(
+                                CAMERA_DIAG_TAG,
+                                "event=capture_failed code=$code elapsed_ms=$elapsed fail_rate_pct=$failRate success=$captureSuccessCount fail=$captureFailureCount",
+                            )
                         }
                     }
                 },
@@ -484,40 +610,57 @@ private fun bindCameraUseCases(
     lensFacing: Int,
     flashMode: FlashUiMode,
     onReady: (ImageCapture, Camera, Boolean, Float, Float, Int, Int) -> Unit,
+    onFallbackLens: (Int) -> Unit,
+    onBindFailed: (Throwable) -> Unit,
 ) {
     val providerFuture = ProcessCameraProvider.getInstance(context)
     providerFuture.addListener(
         {
-            val provider = providerFuture.get()
-            val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
-            val imageCapture = ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .setFlashMode(
-                    when (flashMode) {
-                        FlashUiMode.OFF -> ImageCapture.FLASH_MODE_OFF
-                        FlashUiMode.ON -> ImageCapture.FLASH_MODE_ON
-                        FlashUiMode.AUTO -> ImageCapture.FLASH_MODE_AUTO
-                    },
+            runCatching {
+                val provider = providerFuture.get()
+                val imageCapture = ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .setFlashMode(
+                        when (flashMode) {
+                            FlashUiMode.OFF -> ImageCapture.FLASH_MODE_OFF
+                            FlashUiMode.ON -> ImageCapture.FLASH_MODE_ON
+                            FlashUiMode.AUTO -> ImageCapture.FLASH_MODE_AUTO
+                        },
+                    )
+                    .build()
+                fun bindWithLens(targetLens: Int): Camera {
+                    val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
+                    provider.unbindAll()
+                    return provider.bindToLifecycle(
+                        lifecycleOwner,
+                        CameraSelector.Builder().requireLensFacing(targetLens).build(),
+                        preview,
+                        imageCapture,
+                    )
+                }
+                var usedLens = lensFacing
+                val camera = runCatching { bindWithLens(lensFacing) }.getOrElse {
+                    val fallback = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                        CameraSelector.LENS_FACING_FRONT
+                    } else {
+                        CameraSelector.LENS_FACING_BACK
+                    }
+                    usedLens = fallback
+                    bindWithLens(fallback)
+                }
+                if (usedLens != lensFacing) onFallbackLens(usedLens)
+                val zoomState = camera.cameraInfo.zoomState.value
+                val exposureState = camera.cameraInfo.exposureState
+                onReady(
+                    imageCapture,
+                    camera,
+                    camera.cameraInfo.hasFlashUnit(),
+                    zoomState?.minZoomRatio ?: 1f,
+                    zoomState?.maxZoomRatio ?: 1f,
+                    exposureState.exposureCompensationRange.lower,
+                    exposureState.exposureCompensationRange.upper,
                 )
-                .build()
-            provider.unbindAll()
-            val camera = provider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.Builder().requireLensFacing(lensFacing).build(),
-                preview,
-                imageCapture,
-            )
-            val zoomState = camera.cameraInfo.zoomState.value
-            val exposureState = camera.cameraInfo.exposureState
-            onReady(
-                imageCapture,
-                camera,
-                camera.cameraInfo.hasFlashUnit(),
-                zoomState?.minZoomRatio ?: 1f,
-                zoomState?.maxZoomRatio ?: 1f,
-                exposureState.exposureCompensationRange.lower,
-                exposureState.exposureCompensationRange.upper,
-            )
+            }.onFailure(onBindFailed)
         },
         ContextCompat.getMainExecutor(context),
     )
@@ -526,11 +669,17 @@ private fun bindCameraUseCases(
 private suspend fun captureToTempFile(
     context: Context,
     imageCapture: ImageCapture,
-): String? = withContext(Dispatchers.IO) {
+): CaptureTempResult = withContext(Dispatchers.IO) {
     val tempFile = File(context.cacheDir, "pv_capture_${System.currentTimeMillis()}.jpg")
     val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
-    val ok = suspendImageCapture(context, imageCapture, outputOptions)
-    if (ok) tempFile.absolutePath else null
+    val shotResult = withTimeoutOrNull(10_000) {
+        suspendImageCapture(context, imageCapture, outputOptions)
+    } ?: return@withContext CaptureTempResult(errorCode = CaptureErrorCode.TIMEOUT)
+    if (shotResult.success) {
+        CaptureTempResult(path = tempFile.absolutePath)
+    } else {
+        CaptureTempResult(errorCode = shotResult.errorCode ?: CaptureErrorCode.UNKNOWN)
+    }
 }
 
 private suspend fun savePendingToVault(
@@ -568,17 +717,28 @@ private suspend fun suspendImageCapture(
     context: Context,
     imageCapture: ImageCapture,
     outputOptions: ImageCapture.OutputFileOptions,
-): Boolean = suspendCancellableCoroutine { continuation ->
+): CaptureShotResult = suspendCancellableCoroutine { continuation ->
     imageCapture.takePicture(
         outputOptions,
         ContextCompat.getMainExecutor(context),
         object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                if (continuation.isActive) continuation.resume(true)
+                if (continuation.isActive) continuation.resume(CaptureShotResult(success = true))
             }
 
             override fun onError(exception: ImageCaptureException) {
-                if (continuation.isActive) continuation.resume(false)
+                if (continuation.isActive) {
+                    val code = when (exception.imageCaptureError) {
+                        ImageCapture.ERROR_FILE_IO -> CaptureErrorCode.IO
+                        ImageCapture.ERROR_CAMERA_CLOSED,
+                        ImageCapture.ERROR_CAPTURE_FAILED,
+                        ImageCapture.ERROR_INVALID_CAMERA,
+                        -> CaptureErrorCode.HARDWARE
+                        ImageCapture.ERROR_UNKNOWN -> CaptureErrorCode.UNKNOWN
+                        else -> CaptureErrorCode.UNKNOWN
+                    }
+                    continuation.resume(CaptureShotResult(success = false, errorCode = code))
+                }
             }
         },
     )
@@ -787,3 +947,28 @@ private fun formatZoom(value: Float): String {
     val rounded = ((value * 10f).roundToInt() / 10f)
     return if (rounded % 1f == 0f) rounded.toInt().toString() else rounded.toString()
 }
+
+private fun captureErrorMessage(code: CaptureErrorCode): String = when (code) {
+    CaptureErrorCode.PERMISSION -> "缺少相机权限，请重新授权"
+    CaptureErrorCode.HARDWARE -> "拍照失败（相机忙或被占用），请重试"
+    CaptureErrorCode.IO -> "拍照失败（存储异常），请重试"
+    CaptureErrorCode.TIMEOUT -> "拍照超时，请检查设备状态后重试"
+    CaptureErrorCode.UNKNOWN -> "拍照失败，请稍后重试"
+}
+
+private fun updatePeakMemoryMb(currentPeakMb: Long): Long = maxOf(currentPeakMb, currentMemoryUsageMb())
+
+private fun currentMemoryUsageMb(): Long {
+    val runtime = Runtime.getRuntime()
+    val used = runtime.totalMemory() - runtime.freeMemory()
+    return used / (1024L * 1024L)
+}
+
+private fun maskedDeviceModel(): String {
+    val model = Build.MODEL.orEmpty().trim()
+    if (model.isEmpty()) return "unknown"
+    val prefix = model.take(3)
+    return "$prefix***${model.length}"
+}
+
+private const val CAMERA_DIAG_TAG = "PrivateCameraDiag"
