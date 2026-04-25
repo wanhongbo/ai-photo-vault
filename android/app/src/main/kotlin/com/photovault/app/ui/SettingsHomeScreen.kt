@@ -120,12 +120,6 @@ fun SettingsHomeScreen(
             fontSize = UiTextSize.homeTitle,
             fontWeight = FontWeight.Bold,
         )
-        Text(
-            text = stringResource(R.string.settings_subtitle),
-            color = UiColors.Home.subtitle,
-            fontSize = UiTextSize.homeSubtitle,
-            modifier = Modifier.padding(top = UiSize.settingsSubtitleTopGap),
-        )
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
