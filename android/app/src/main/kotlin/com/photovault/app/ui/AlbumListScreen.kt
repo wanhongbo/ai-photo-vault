@@ -11,8 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -87,7 +91,6 @@ fun AlbumListScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             FilterTag(text = stringResource(R.string.album_list_filter_recent), selected = true)
-            FilterTag(text = stringResource(R.string.album_list_filter_name), selected = false)
         }
         if (!loaded) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
@@ -104,10 +107,12 @@ fun AlbumListScreen(
                 )
             }
         } else {
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(albums, key = { it.name }) { album ->
@@ -123,7 +128,7 @@ fun AlbumListScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(140.dp)
+                                .height(120.dp)
                                 .clip(RoundedCornerShape(UiRadius.homeThumb))
                                 .background(UiColors.Home.emptyIconBg),
                         ) {
