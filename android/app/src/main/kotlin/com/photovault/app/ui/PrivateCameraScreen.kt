@@ -62,6 +62,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.photovault.app.ui.components.AppButton
+import com.photovault.app.ui.components.AppButtonVariant
 import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiTextSize
@@ -382,15 +384,22 @@ fun PrivateCameraScreen(
                 prefix = "时",
                 label = if (timerSeconds == 0) "定时关" else "定时${timerSeconds}s",
             )
-            ZoomPresetChip(zoom = 0.6f, currentZoom = zoomRatio, enabled = hasCameraPermission && minZoomRatio <= 0.6f) {
-                zoomRatio = 0.6f.coerceIn(minZoomRatio, maxZoomRatio)
-            }
-            ZoomPresetChip(zoom = 1f, currentZoom = zoomRatio, enabled = hasCameraPermission) {
-                zoomRatio = 1f.coerceIn(minZoomRatio, maxZoomRatio)
-            }
-            ZoomPresetChip(zoom = 2f, currentZoom = zoomRatio, enabled = hasCameraPermission && maxZoomRatio >= 2f) {
-                zoomRatio = 2f.coerceIn(minZoomRatio, maxZoomRatio)
-            }
+            Text(
+                text = "${formatZoom(zoomRatio)}x",
+                color = Color(0xFFEAF1FF),
+                fontSize = UiTextSize.homeNavLabel,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+
+        if (hasCameraPermission) {
+            ZoomRail(
+                minZoom = minZoomRatio,
+                maxZoom = maxZoomRatio,
+                zoomRatio = zoomRatio,
+                onZoomRatioChanged = { zoomRatio = it.coerceIn(minZoomRatio, maxZoomRatio) },
+                onSelectPreset = { preset -> zoomRatio = preset.coerceIn(minZoomRatio, maxZoomRatio) },
+            )
         }
 
         if (exposureRange.first != exposureRange.last) {
@@ -399,11 +408,25 @@ fun PrivateCameraScreen(
                     .fillMaxWidth()
                     .padding(top = 8.dp),
             ) {
-                Text(
-                    text = "曝光 ${if (exposureIndex > 0) "+" else ""}$exposureIndex",
-                    color = UiColors.Home.subtitle,
-                    fontSize = UiTextSize.homeNavLabel,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "曝光 ${if (exposureIndex > 0) "+" else ""}$exposureIndex",
+                        color = UiColors.Home.subtitle,
+                        fontSize = UiTextSize.homeNavLabel,
+                    )
+                    if (exposureIndex != 0) {
+                        CameraActionChip(
+                            enabled = true,
+                            onClick = { exposureIndex = 0 },
+                            prefix = "A",
+                            label = "自动",
+                        )
+                    }
+                }
                 Slider(
                     value = exposureIndex.toFloat(),
                     onValueChange = { exposureIndex = it.roundToInt().coerceIn(exposureRange.first, exposureRange.last) },
@@ -595,30 +618,56 @@ private fun CameraActionChip(
 }
 
 @Composable
-private fun ZoomPresetChip(
-    zoom: Float,
-    currentZoom: Float,
+private fun ZoomRail(
+    minZoom: Float,
+    maxZoom: Float,
+    zoomRatio: Float,
+    onZoomRatioChanged: (Float) -> Unit,
+    onSelectPreset: (Float) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+    ) {
+        Slider(
+            value = zoomRatio.coerceIn(minZoom, maxZoom),
+            onValueChange = onZoomRatioChanged,
+            valueRange = minZoom..maxZoom,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ZoomPresetText(text = "0.6x", enabled = minZoom <= 0.6f, selected = kotlin.math.abs(zoomRatio - 0.6f) < 0.08f) {
+                onSelectPreset(0.6f)
+            }
+            ZoomPresetText(text = "1x", enabled = true, selected = kotlin.math.abs(zoomRatio - 1f) < 0.08f) {
+                onSelectPreset(1f)
+            }
+            ZoomPresetText(text = "2x", enabled = maxZoom >= 2f, selected = kotlin.math.abs(zoomRatio - 2f) < 0.08f) {
+                onSelectPreset(2f)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ZoomPresetText(
+    text: String,
     enabled: Boolean,
+    selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val selected = enabled && kotlin.math.abs(currentZoom - zoom) < 0.08f
-    val bg = if (selected) Color(0xFFEAF1FF) else Color(0x55223144)
-    val content = if (selected) Color(0xFF1A2A40) else Color(0xFFEAF1FF)
-    Box(
-        modifier = Modifier
-            .background(bg, RoundedCornerShape(16.dp))
-            .border(1.dp, Color(0x44EAF1FF), RoundedCornerShape(16.dp))
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "${zoom}x",
-            color = content,
-            fontSize = UiTextSize.homeNavLabel,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
+    Text(
+        text = text,
+        color = if (!enabled) Color(0x66EAF1FF) else if (selected) Color(0xFFEAF1FF) else Color(0x99EAF1FF),
+        fontSize = UiTextSize.homeNavLabel,
+        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+        modifier = Modifier.clickable(enabled = enabled, onClick = onClick),
+    )
 }
 
 @Composable
@@ -717,18 +766,24 @@ private fun PendingCapturePreview(
                 .padding(top = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            CameraActionChip(
-                enabled = !saving,
+            AppButton(
+                text = "重拍",
                 onClick = onRetake,
-                prefix = "重",
-                label = "重拍",
-            )
-            CameraActionChip(
+                variant = AppButtonVariant.SECONDARY,
                 enabled = !saving,
+                modifier = Modifier.weight(1f),
+            )
+            AppButton(
+                text = if (saving) "保存中…" else "保存到保险箱",
                 onClick = onSave,
-                prefix = if (saving) "…" else "存",
-                label = if (saving) "保存中" else "保存到保险箱",
+                enabled = !saving,
+                modifier = Modifier.weight(1f),
             )
         }
     }
+}
+
+private fun formatZoom(value: Float): String {
+    val rounded = ((value * 10f).roundToInt() / 10f)
+    return if (rounded % 1f == 0f) rounded.toInt().toString() else rounded.toString()
 }
