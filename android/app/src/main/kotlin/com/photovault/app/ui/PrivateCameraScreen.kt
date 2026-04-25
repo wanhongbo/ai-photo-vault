@@ -16,6 +16,15 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.FileOutputOptions
+import androidx.camera.video.FallbackStrategy
+import androidx.camera.video.PendingRecording
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -92,6 +101,11 @@ private enum class FlashUiMode {
     AUTO,
 }
 
+private enum class CameraCaptureMode {
+    PHOTO,
+    VIDEO,
+}
+
 private enum class CaptureErrorCode {
     PERMISSION,
     HARDWARE,
@@ -126,6 +140,11 @@ fun PrivateCameraScreen(
         )
     }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+    var videoCapture by remember { mutableStateOf<VideoCapture<Recorder>?>(null) }
+    var activeRecording by remember { mutableStateOf<Recording?>(null) }
+    var captureMode by remember { mutableStateOf(CameraCaptureMode.PHOTO) }
+    var isRecording by remember { mutableStateOf(false) }
+    var recordingDurationMs by remember { mutableStateOf(0L) }
     var cameraRef by remember { mutableStateOf<Camera?>(null) }
     var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
     var hasFlashUnit by remember { mutableStateOf(false) }
@@ -214,6 +233,14 @@ fun PrivateCameraScreen(
         onDispose { camera.cameraInfo.cameraState.removeObserver(stateObserver) }
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            activeRecording?.stop()
+            activeRecording?.close()
+            activeRecording = null
+        }
+    }
+
     LaunchedEffect(hasCameraPermission, previewViewRef, lensFacing, flashMode, lifecycleOwner, rebindTick) {
         val previewView = previewViewRef ?: return@LaunchedEffect
         if (!hasCameraPermission) return@LaunchedEffect
@@ -230,8 +257,9 @@ fun PrivateCameraScreen(
             previewView = previewView,
             lensFacing = lensFacing,
             flashMode = flashMode,
-            onReady = { capture, camera, flashAvailable, minZoom, maxZoom, minExposure, maxExposure ->
+            onReady = { capture, video, camera, flashAvailable, minZoom, maxZoom, minExposure, maxExposure ->
                 imageCapture = capture
+                videoCapture = video
                 cameraRef = camera
                 hasFlashUnit = flashAvailable
                 if (!flashAvailable) flashMode = FlashUiMode.OFF
@@ -276,6 +304,17 @@ fun PrivateCameraScreen(
             return@LaunchedEffect
         }
         pendingPreview = decodePreviewBitmap(path, 1600)
+    }
+
+    LaunchedEffect(isRecording) {
+        if (!isRecording) {
+            recordingDurationMs = 0L
+            return@LaunchedEffect
+        }
+        while (isRecording) {
+            delay(1000)
+            recordingDurationMs += 1000
+        }
     }
 
     Column(
@@ -482,6 +521,18 @@ fun PrivateCameraScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CameraActionChip(
+                enabled = hasCameraPermission && !isRecording,
+                onClick = {
+                    captureMode = if (captureMode == CameraCaptureMode.PHOTO) {
+                        CameraCaptureMode.VIDEO
+                    } else {
+                        CameraCaptureMode.PHOTO
+                    }
+                },
+                prefix = if (captureMode == CameraCaptureMode.PHOTO) "拍" else "录",
+                label = if (captureMode == CameraCaptureMode.PHOTO) "拍照模式" else "录像模式",
+            )
+            CameraActionChip(
                 enabled = hasCameraPermission,
                 onClick = {
                     timerSeconds = when (timerSeconds) {
@@ -494,8 +545,8 @@ fun PrivateCameraScreen(
                 label = if (timerSeconds == 0) "定时关" else "定时${timerSeconds}s",
             )
             Text(
-                text = "${formatZoom(zoomRatio)}x",
-                color = Color(0xFFEAF1FF),
+                text = if (isRecording) "REC ${formatRecordingDuration(recordingDurationMs)}" else "${formatZoom(zoomRatio)}x",
+                color = if (isRecording) Color(0xFFFF6B6B) else Color(0xFFEAF1FF),
                 fontSize = UiTextSize.homeNavLabel,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -554,10 +605,60 @@ fun PrivateCameraScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ShutterButton(
-                enabled = hasCameraPermission && imageCapture != null && !capturing,
+                enabled = hasCameraPermission &&
+                    !capturing &&
+                    if (captureMode == CameraCaptureMode.PHOTO) imageCapture != null else videoCapture != null,
+                recording = isRecording,
                 onClick = {
-                    val capture = imageCapture ?: return@ShutterButton
                     if (capturing) return@ShutterButton
+                    if (captureMode == CameraCaptureMode.VIDEO) {
+                        val video = videoCapture ?: return@ShutterButton
+                        if (isRecording) {
+                            activeRecording?.stop()
+                            return@ShutterButton
+                        }
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        scope.launch {
+                            if (timerSeconds > 0) {
+                                for (second in timerSeconds downTo 1) {
+                                    countdownRemaining = second
+                                    delay(1000)
+                                }
+                                countdownRemaining = null
+                            }
+                            val outputFile = VaultStore.reserveCameraTarget(
+                                context = context,
+                                albumName = DEFAULT_ALBUM_NAME,
+                                extension = "mp4",
+                            )
+                            val output = FileOutputOptions.Builder(outputFile).build()
+                            val pending: PendingRecording = video.output.prepareRecording(context, output)
+                            message = null
+                            isRecording = true
+                            recordingDurationMs = 0L
+                            Log.i(CAMERA_DIAG_TAG, "event=video_record_start path=${outputFile.name}")
+                            activeRecording = pending.start(ContextCompat.getMainExecutor(context)) { event ->
+                                when (event) {
+                                    is VideoRecordEvent.Finalize -> {
+                                        isRecording = false
+                                        activeRecording?.close()
+                                        activeRecording = null
+                                        if (!event.hasError()) {
+                                            message = "视频已保存到保险箱"
+                                            Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
+                                        } else {
+                                            outputFile.delete()
+                                            message = "录像失败，请重试"
+                                            Log.e(CAMERA_DIAG_TAG, "event=video_record_failed code=${event.error}")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return@ShutterButton
+                    }
+
+                    val capture = imageCapture ?: return@ShutterButton
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     message = null
                     scope.launch {
@@ -609,7 +710,7 @@ private fun bindCameraUseCases(
     previewView: PreviewView,
     lensFacing: Int,
     flashMode: FlashUiMode,
-    onReady: (ImageCapture, Camera, Boolean, Float, Float, Int, Int) -> Unit,
+    onReady: (ImageCapture, VideoCapture<Recorder>, Camera, Boolean, Float, Float, Int, Int) -> Unit,
     onFallbackLens: (Int) -> Unit,
     onBindFailed: (Throwable) -> Unit,
 ) {
@@ -628,6 +729,15 @@ private fun bindCameraUseCases(
                         },
                     )
                     .build()
+                val recorder = Recorder.Builder()
+                    .setQualitySelector(
+                        QualitySelector.from(
+                            Quality.HD,
+                            FallbackStrategy.lowerQualityOrHigherThan(Quality.SD),
+                        ),
+                    )
+                    .build()
+                val videoCapture = VideoCapture.withOutput(recorder)
                 fun bindWithLens(targetLens: Int): Camera {
                     val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
                     provider.unbindAll()
@@ -636,6 +746,7 @@ private fun bindCameraUseCases(
                         CameraSelector.Builder().requireLensFacing(targetLens).build(),
                         preview,
                         imageCapture,
+                        videoCapture,
                     )
                 }
                 var usedLens = lensFacing
@@ -653,6 +764,7 @@ private fun bindCameraUseCases(
                 val exposureState = camera.cameraInfo.exposureState
                 onReady(
                     imageCapture,
+                    videoCapture,
                     camera,
                     camera.cameraInfo.hasFlashUnit(),
                     zoomState?.minZoomRatio ?: 1f,
@@ -833,10 +945,11 @@ private fun ZoomPresetText(
 @Composable
 private fun ShutterButton(
     enabled: Boolean,
+    recording: Boolean,
     onClick: () -> Unit,
 ) {
     val innerSize by animateFloatAsState(
-        targetValue = if (enabled) 58f else 52f,
+        targetValue = if (recording) 42f else if (enabled) 58f else 52f,
         animationSpec = tween(220),
         label = "shutterInnerSize",
     )
@@ -851,7 +964,10 @@ private fun ShutterButton(
         Box(
             modifier = Modifier
                 .size(innerSize.dp)
-                .background(Color(0xFF1A2A40), RoundedCornerShape(30.dp)),
+                .background(
+                    if (recording) Color(0xFFE74C3C) else Color(0xFF1A2A40),
+                    RoundedCornerShape(if (recording) 10.dp else 30.dp),
+                ),
         )
     }
 }
@@ -946,6 +1062,13 @@ private fun PendingCapturePreview(
 private fun formatZoom(value: Float): String {
     val rounded = ((value * 10f).roundToInt() / 10f)
     return if (rounded % 1f == 0f) rounded.toInt().toString() else rounded.toString()
+}
+
+private fun formatRecordingDuration(durationMs: Long): String {
+    val totalSeconds = (durationMs / 1000).coerceAtLeast(0L)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format("%02d:%02d", minutes, seconds)
 }
 
 private fun captureErrorMessage(code: CaptureErrorCode): String = when (code) {

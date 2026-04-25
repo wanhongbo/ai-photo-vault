@@ -158,11 +158,13 @@ object VaultStore {
     suspend fun reserveCameraTarget(
         context: Context,
         albumName: String = DEFAULT_ALBUM_NAME,
+        extension: String = "jpg",
     ): File = withContext(Dispatchers.IO) {
         ensureInit(context)
         val album = File(rootDir(context), sanitizeAlbumName(albumName))
         if (!album.exists()) album.mkdirs()
-        File(album, "camera_${System.currentTimeMillis()}.jpg")
+        val safeExt = extension.trim().removePrefix(".").ifBlank { "bin" }
+        File(album, "camera_${System.currentTimeMillis()}.$safeExt")
     }
 
     private fun listAllPhotos(context: Context): List<VaultPhoto> {
