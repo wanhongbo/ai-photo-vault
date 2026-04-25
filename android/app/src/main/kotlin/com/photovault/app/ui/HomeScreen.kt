@@ -61,6 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -787,47 +788,54 @@ fun HomeBottomNav(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(UiSize.homeNavBarHeight)
-            .clip(RoundedCornerShape(UiRadius.homeNavBar))
-            .background(UiColors.Home.navBarBg)
-            .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(UiRadius.homeNavBar))
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(top = 10.dp),
     ) {
-        tabs.forEachIndexed { idx, tab ->
-            val selected = idx == selectedIndex
-            val interaction = rememberFeedbackInteractionSource()
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(UiRadius.homeNavItem))
-                    .background(if (selected) UiColors.Home.navItemActiveBg else Color.Transparent)
-                    .border(
-                        width = 1.dp,
-                        color = if (selected) UiColors.Home.navItemActiveStroke else Color.Transparent,
-                        shape = RoundedCornerShape(UiRadius.homeNavItem),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(UiSize.homeNavBarHeight)
+                .clip(RoundedCornerShape(UiRadius.homeNavBar))
+                .background(UiColors.Home.navBarBg)
+                .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(UiRadius.homeNavBar))
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            tabs.forEachIndexed { idx, tab ->
+                val selected = idx == selectedIndex
+                val interaction = rememberFeedbackInteractionSource()
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(UiRadius.homeNavItem))
+                        .background(if (selected) UiColors.Home.navItemActiveBg else Color.Transparent)
+                        .border(
+                            width = 1.dp,
+                            color = if (selected) UiColors.Home.navItemActiveStroke else Color.Transparent,
+                            shape = RoundedCornerShape(UiRadius.homeNavItem),
+                        )
+                        .pressFeedback(interaction)
+                        .throttledClickable(interactionSource = interaction, indication = null, onClick = { onSelect(idx) }),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(tab.iconRes),
+                        contentDescription = stringResource(tab.labelRes),
+                        tint = if (selected) UiColors.Home.navItemActive else UiColors.Home.navItemIdle,
+                        modifier = Modifier.size(UiSize.homeNavIcon),
                     )
-                    .pressFeedback(interaction)
-                    .throttledClickable(interactionSource = interaction, indication = null, onClick = { onSelect(idx) }),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Icon(
-                    painter = painterResource(tab.iconRes),
-                    contentDescription = stringResource(tab.labelRes),
-                    tint = if (selected) UiColors.Home.navItemActive else UiColors.Home.navItemIdle,
-                    modifier = Modifier.size(UiSize.homeNavIcon),
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(tab.labelRes),
-                    color = if (selected) UiColors.Home.navItemActive else UiColors.Home.navItemIdle,
-                    fontSize = UiTextSize.homeNavLabel,
-                )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(tab.labelRes),
+                        color = if (selected) UiColors.Home.navItemActive else UiColors.Home.navItemIdle,
+                        fontSize = 13.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                    )
+                }
             }
         }
     }

@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -12,6 +11,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
@@ -23,10 +25,10 @@ import com.photovault.app.ui.AlbumListScreen
 import com.photovault.app.ui.BackupRestoreScreen
 import com.photovault.app.ui.BackupResultScreen
 import com.photovault.app.ui.PrivateCameraScreen
-import com.photovault.app.ui.ChangePinPlaceholderScreen
+import com.photovault.app.ui.ChangePinScreen
 import com.photovault.app.ui.MainScreen
 import com.photovault.app.ui.PaywallScreen
-import com.photovault.app.ui.PhotoViewerPlaceholderScreen
+import com.photovault.app.ui.PhotoViewerScreen
 import com.photovault.app.ui.RecentPhotosScreen
 import com.photovault.app.ui.RestoreResultScreen
 import com.photovault.app.ui.SplashScreen
@@ -46,7 +48,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowInsetsControllerCompat(window, window.decorView).show(WindowInsetsCompat.Type.statusBars())
         setContent {
             PhotoVaultTheme {
                 Surface(
@@ -181,7 +184,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(ROUTE_CHANGE_PIN) {
-                            ChangePinPlaceholderScreen(
+                            ChangePinScreen(
                                 onBack = { navController.popBackStack() },
                             )
                         }
@@ -236,7 +239,7 @@ class MainActivity : ComponentActivity() {
                             route = "photo_viewer/{path}",
                             arguments = listOf(navArgument("path") { defaultValue = "" }),
                         ) { entry ->
-                            PhotoViewerPlaceholderScreen(
+                            PhotoViewerScreen(
                                 path = Uri.decode(entry.arguments?.getString("path") ?: ""),
                                 onBack = { navController.popBackStack() },
                             )
