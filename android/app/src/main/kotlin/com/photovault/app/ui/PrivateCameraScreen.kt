@@ -35,6 +35,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,14 +71,17 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.Observer
+import com.photovault.app.R
 import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppButtonVariant
 import com.photovault.app.ui.components.AppTopBar
@@ -473,51 +478,9 @@ fun PrivateCameraScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CameraActionChip(
-                enabled = hasCameraPermission && hasFlashUnit,
-                onClick = {
-                    flashMode = when (flashMode) {
-                        FlashUiMode.OFF -> FlashUiMode.ON
-                        FlashUiMode.ON -> FlashUiMode.AUTO
-                        FlashUiMode.AUTO -> FlashUiMode.OFF
-                    }
-                },
-                prefix = "闪",
-                label = when (flashMode) {
-                    FlashUiMode.OFF -> "闪光灯关"
-                    FlashUiMode.ON -> "闪光灯开"
-                    FlashUiMode.AUTO -> "闪光灯自动"
-                },
-            )
-            CameraActionChip(
-                enabled = hasCameraPermission,
-                onClick = { showGrid = !showGrid },
-                prefix = "宫",
-                label = if (showGrid) "网格开" else "网格关",
-            )
-            CameraActionChip(
-                enabled = hasCameraPermission,
-                onClick = {
-                    lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                        CameraSelector.LENS_FACING_FRONT
-                    } else {
-                        CameraSelector.LENS_FACING_BACK
-                    }
-                },
-                prefix = "切",
-                label = if (lensFacing == CameraSelector.LENS_FACING_BACK) "后摄" else "前摄",
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(top = 6.dp)
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CameraActionChip(
@@ -529,8 +492,11 @@ fun PrivateCameraScreen(
                         CameraCaptureMode.PHOTO
                     }
                 },
-                prefix = if (captureMode == CameraCaptureMode.PHOTO) "拍" else "录",
-                label = if (captureMode == CameraCaptureMode.PHOTO) "拍照模式" else "录像模式",
+                label = if (captureMode == CameraCaptureMode.PHOTO) {
+                    stringResource(R.string.camera_control_mode_photo)
+                } else {
+                    stringResource(R.string.camera_control_mode_video)
+                },
             )
             CameraActionChip(
                 enabled = hasCameraPermission,
@@ -541,14 +507,57 @@ fun PrivateCameraScreen(
                         else -> 0
                     }
                 },
-                prefix = "时",
-                label = if (timerSeconds == 0) "定时关" else "定时${timerSeconds}s",
+                label = if (timerSeconds == 0) {
+                    stringResource(R.string.camera_control_timer_off)
+                } else {
+                    stringResource(R.string.camera_control_timer_seconds, timerSeconds)
+                },
+            )
+            CameraActionChip(
+                enabled = hasCameraPermission && hasFlashUnit,
+                onClick = {
+                    flashMode = when (flashMode) {
+                        FlashUiMode.OFF -> FlashUiMode.ON
+                        FlashUiMode.ON -> FlashUiMode.AUTO
+                        FlashUiMode.AUTO -> FlashUiMode.OFF
+                    }
+                },
+                label = when (flashMode) {
+                    FlashUiMode.OFF -> stringResource(R.string.camera_control_flash_off)
+                    FlashUiMode.ON -> stringResource(R.string.camera_control_flash_on)
+                    FlashUiMode.AUTO -> stringResource(R.string.camera_control_flash_auto)
+                },
+            )
+            CameraActionChip(
+                enabled = hasCameraPermission,
+                onClick = { showGrid = !showGrid },
+                label = if (showGrid) {
+                    stringResource(R.string.camera_control_grid_on)
+                } else {
+                    stringResource(R.string.camera_control_grid_off)
+                },
+            )
+            CameraActionChip(
+                enabled = hasCameraPermission,
+                onClick = {
+                    lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                        CameraSelector.LENS_FACING_FRONT
+                    } else {
+                        CameraSelector.LENS_FACING_BACK
+                    }
+                },
+                label = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                    stringResource(R.string.camera_control_lens_rear)
+                } else {
+                    stringResource(R.string.camera_control_lens_front)
+                },
             )
             Text(
                 text = if (isRecording) "REC ${formatRecordingDuration(recordingDurationMs)}" else "${formatZoom(zoomRatio)}x",
                 color = if (isRecording) Color(0xFFFF6B6B) else Color(0xFFEAF1FF),
                 fontSize = UiTextSize.homeNavLabel,
                 fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 6.dp),
             )
         }
 
@@ -563,44 +572,45 @@ fun PrivateCameraScreen(
         }
 
         if (exposureRange.first != exposureRange.last) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "曝光 ${if (exposureIndex > 0) "+" else ""}$exposureIndex",
-                        color = UiColors.Home.subtitle,
-                        fontSize = UiTextSize.homeNavLabel,
-                    )
-                    if (exposureIndex != 0) {
-                        CameraActionChip(
-                            enabled = true,
-                            onClick = { exposureIndex = 0 },
-                            prefix = "A",
-                            label = "自动",
-                        )
-                    }
-                }
+                Text(
+                    text = stringResource(
+                        R.string.camera_control_exposure_value,
+                        if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
+                    ),
+                    color = UiColors.Home.subtitle,
+                    fontSize = 11.sp,
+                )
                 Slider(
                     value = exposureIndex.toFloat(),
                     onValueChange = { exposureIndex = it.roundToInt().coerceIn(exposureRange.first, exposureRange.last) },
                     valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
                     steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(20.dp),
                 )
+                if (exposureIndex != 0) {
+                    Text(
+                        text = stringResource(R.string.camera_control_exposure_auto),
+                        color = UiColors.Home.navItemActive,
+                        fontSize = 11.sp,
+                        modifier = Modifier.clickable { exposureIndex = 0 },
+                    )
+                }
             }
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp),
+                .padding(top = 4.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -860,7 +870,6 @@ private suspend fun suspendImageCapture(
 private fun CameraActionChip(
     enabled: Boolean,
     onClick: () -> Unit,
-    prefix: String,
     label: String,
 ) {
     val background = if (enabled) Color(0xB3223144) else Color(0x66223144)
@@ -869,22 +878,15 @@ private fun CameraActionChip(
             .background(background, RoundedCornerShape(18.dp))
             .border(1.dp, Color(0x33EAF1FF), RoundedCornerShape(18.dp))
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = prefix,
-            color = Color(0xFFEAF1FF),
-            fontSize = UiTextSize.homeNavLabel,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
             text = label,
             color = Color(0xFFEAF1FF),
             fontSize = UiTextSize.homeNavLabel,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
@@ -900,13 +902,15 @@ private fun ZoomRail(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp),
+            .padding(top = 0.dp),
     ) {
         Slider(
             value = zoomRatio.coerceIn(minZoom, maxZoom),
             onValueChange = onZoomRatioChanged,
             valueRange = minZoom..maxZoom,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp),
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -949,13 +953,13 @@ private fun ShutterButton(
     onClick: () -> Unit,
 ) {
     val innerSize by animateFloatAsState(
-        targetValue = if (recording) 42f else if (enabled) 58f else 52f,
+        targetValue = if (recording) 38f else if (enabled) 54f else 48f,
         animationSpec = tween(220),
         label = "shutterInnerSize",
     )
     Box(
         modifier = Modifier
-            .size(84.dp)
+            .size(78.dp)
             .background(if (enabled) Color(0xF2FFFFFF) else Color(0x66FFFFFF), RoundedCornerShape(42.dp))
             .border(2.dp, Color(0xFFB5C8EE), RoundedCornerShape(42.dp))
             .clickable(enabled = enabled, onClick = onClick),
