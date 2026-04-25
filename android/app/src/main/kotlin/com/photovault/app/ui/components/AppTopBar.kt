@@ -5,7 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -35,7 +37,8 @@ fun AppTopBar(
     ) {
         Row(
             modifier = Modifier
-                .size(36.dp)
+                .width(38.dp)
+                .height(36.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(UiColors.Home.navBarBg)
                 .throttledClickable(onClick = onBack),
@@ -46,7 +49,7 @@ fun AppTopBar(
                 painter = painterResource(R.drawable.ic_topbar_back),
                 contentDescription = null,
                 tint = Color.Unspecified,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(20.dp),
             )
         }
         Text(
@@ -57,6 +60,6 @@ fun AppTopBar(
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.size(36.dp))
+        Spacer(modifier = Modifier.width(38.dp).height(36.dp))
     }
 }
