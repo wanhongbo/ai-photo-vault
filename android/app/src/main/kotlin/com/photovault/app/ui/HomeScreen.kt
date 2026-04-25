@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -181,7 +182,7 @@ fun HomeScreen(
             importTip = null
             pickerLauncher.launch(
                 PickVisualMediaRequest.Builder()
-                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                     .build(),
             )
         }
@@ -281,15 +282,15 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(UiRadius.dialog))
+                        .clip(RoundedCornerShape(24.dp))
                         .background(UiColors.Dialog.bg)
-                        .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.dialog))
-                        .padding(horizontal = 20.dp, vertical = 18.dp),
+                        .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(24.dp))
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.home_album_create_title),
                         color = UiColors.Dialog.title,
-                        fontSize = UiTextSize.dialogTitle,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                     )
@@ -299,7 +300,8 @@ fun HomeScreen(
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 14.dp)
+                            .padding(top = 16.dp)
+                            .height(52.dp)
                             .clip(RoundedCornerShape(14.dp))
                             .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(14.dp)),
                         textStyle = androidx.compose.ui.text.TextStyle(
@@ -325,7 +327,7 @@ fun HomeScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp),
+                            .padding(top = 18.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         AppButton(
@@ -464,6 +466,7 @@ private fun AlbumCard(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                     thumbnailMaxPx = 420,
+                    showVideoIndicator = true,
                 )
             } else {
                 Icon(
@@ -556,6 +559,7 @@ private fun PhotoThumb(
             modifier = Modifier.fillMaxSize(),
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             thumbnailMaxPx = 320,
+            showVideoIndicator = true,
         )
     }
 }

@@ -62,7 +62,9 @@ fun PhotoViewerPlaceholderScreen(
 
     LaunchedEffect(path) {
         currentPath = path
-        val allPaths = VaultStore.listRecentPhotos(context, limit = 5000).map { it.path }
+        val allPaths = VaultStore.listRecentPhotos(context, limit = 5000)
+            .map { it.path }
+            .filterNot(::isVideoPath)
         orderedPaths = if (allPaths.contains(path)) {
             allPaths
         } else {
@@ -129,5 +131,15 @@ fun PhotoViewerPlaceholderScreen(
             )
         }
     }
+}
+
+private fun isVideoPath(path: String): Boolean {
+    val lower = path.lowercase()
+    return lower.endsWith(".mp4") ||
+        lower.endsWith(".m4v") ||
+        lower.endsWith(".mov") ||
+        lower.endsWith(".3gp") ||
+        lower.endsWith(".webm") ||
+        lower.endsWith(".mkv")
 }
 

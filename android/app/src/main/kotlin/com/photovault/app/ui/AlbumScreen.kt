@@ -137,7 +137,7 @@ fun AlbumScreen(
                         .throttledClickable(interactionSource = emptyAddInteraction, indication = null) {
                             pickerLauncher.launch(
                                 PickVisualMediaRequest.Builder()
-                                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                                     .build(),
                             )
                         },
@@ -190,7 +190,7 @@ fun AlbumScreen(
                                 .throttledClickable(interactionSource = addInteraction, indication = null) {
                                     pickerLauncher.launch(
                                         PickVisualMediaRequest.Builder()
-                                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
                                             .build(),
                                     )
                                 },
@@ -212,6 +212,7 @@ fun AlbumScreen(
                                 .throttledClickable { onOpenPhoto(photo.path) },
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                             thumbnailMaxPx = 360,
+                            showVideoIndicator = true,
                         )
                     }
                 }

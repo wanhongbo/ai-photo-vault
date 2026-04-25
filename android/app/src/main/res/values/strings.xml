@@ -34,7 +34,7 @@
     <string name="home_permission_later">稍后再说</string>
     <string name="home_import_loading">正在导入到保险箱…</string>
     <string name="home_import_success">已成功导入到本地保险箱</string>
-    <string name="home_import_duplicate">该图片已在保险箱中，已跳过重复导入</string>
+    <string name="home_import_duplicate">该内容已在保险箱中，已跳过重复导入</string>
     <string name="home_import_failed">导入失败，请重试</string>
     <string name="home_vault_take_private_photo">拍摄私密照片</string>
     <string name="home_search_hint">搜索保险箱内容</string>
@@ -43,7 +43,7 @@
     <string name="home_vault_title">我的保险箱</string>
     <string name="home_vault_security_info">%1$d 张图片 · AES-256 本地加密</string>
     <string name="home_import_success_default_album">已成功导入到 Default 相册</string>
-    <string name="home_import_duplicate_default_album">该图片已存在，已跳过重复导入</string>
+    <string name="home_import_duplicate_default_album">该内容已存在，已跳过重复导入</string>
     <string name="home_import_multi_result">导入完成：新增 %1$d，重复 %2$d，失败 %3$d</string>
     <string name="home_album_create_title">新建相册</string>
     <string name="home_album_create_input_hint">输入相册名称</string>
@@ -58,6 +58,11 @@
     <string name="vault_search_title">搜索</string>
     <string name="photo_viewer_placeholder_title">图片浏览页（占位）</string>
     <string name="photo_viewer_title">图片预览</string>
+    <string name="video_player_title">视频播放</string>
+    <string name="video_player_hint">默认静音自动播放，可手动切换声音</string>
+    <string name="video_player_mute">静音</string>
+    <string name="video_player_unmute">打开声音</string>
+    <string name="video_player_restart">重新播放</string>
     <string name="photo_viewer_prev">上一张</string>
     <string name="photo_viewer_next">下一张</string>
     <string name="photo_viewer_load_failed">无法加载图片</string>

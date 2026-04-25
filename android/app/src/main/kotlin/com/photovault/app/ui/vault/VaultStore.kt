@@ -2,6 +2,7 @@ package com.photovault.app.ui.vault
 
 import android.content.Context
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
@@ -125,7 +126,8 @@ object VaultStore {
         ensureInit(context)
         val album = File(rootDir(context), sanitizeAlbumName(albumName))
         if (!album.exists()) album.mkdirs()
-        val temp = File(album, "tmp_${System.currentTimeMillis()}.jpg")
+        val extension = resolveExtension(context, uri)
+        val temp = File(album, "tmp_${System.currentTimeMillis()}.$extension")
         val digest = MessageDigest.getInstance("SHA-256")
         val input = context.contentResolver.openInputStream(uri) ?: return@withContext VaultImportResult.FAILED
         input.use { stream ->
@@ -140,7 +142,7 @@ object VaultStore {
             }
         }
         val hash = digest.digest().joinToString("") { b -> "%02x".format(b) }
-        val finalFile = File(album, "asset_$hash.jpg")
+        val finalFile = File(album, "asset_$hash.$extension")
         if (finalFile.exists()) {
             temp.delete()
             return@withContext VaultImportResult.DUPLICATE
@@ -207,6 +209,19 @@ object VaultStore {
     private fun sanitizeAlbumName(raw: String): String {
         val trimmed = raw.trim().ifBlank { DEFAULT_ALBUM_NAME }
         return trimmed.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(40)
+    }
+
+    private fun resolveExtension(context: Context, uri: Uri): String {
+        val mimeType = context.contentResolver.getType(uri)
+        val fromMime = mimeType?.let { MimeTypeMap.getSingleton().getExtensionFromMimeType(it) }
+        if (!fromMime.isNullOrBlank()) return fromMime.lowercase()
+
+        val path = uri.lastPathSegment.orEmpty()
+        val fromPath = path.substringAfterLast('.', missingDelimiterValue = "").trim()
+        if (fromPath.isNotBlank() && fromPath.none { it == '/' || it == '\\' }) {
+            return fromPath.lowercase()
+        }
+        return "bin"
     }
 
     private fun migrateLegacyIfNeeded(context: Context, defaultAlbum: File) {
