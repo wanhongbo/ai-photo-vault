@@ -2,22 +2,42 @@ package com.photovault.app.ui.components
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.photovault.app.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @Composable
@@ -29,31 +49,123 @@ fun VaultProgressiveImage(
     thumbnailMaxPx: Int = 360,
     loadHighQuality: Boolean = false,
     highQualityMaxPx: Int? = null,
+    showVideoIndicator: Boolean = false,
 ) {
+    val isVideo = remember(path) { isVideoPath(path) }
     var thumbnail by remember(path, thumbnailMaxPx) { mutableStateOf<Bitmap?>(null) }
     var highQuality by remember(path, loadHighQuality, highQualityMaxPx) { mutableStateOf<Bitmap?>(null) }
+    var allowBreathing by remember(path, thumbnailMaxPx, loadHighQuality, highQualityMaxPx) { mutableStateOf(false) }
 
     LaunchedEffect(path, thumbnailMaxPx, loadHighQuality, highQualityMaxPx) {
-        thumbnail = decodeSampled(path, max(128, thumbnailMaxPx))
+        allowBreathing = false
+        // Start subtle breathing only when loading exceeds 300ms.
+        launch {
+            delay(300)
+            allowBreathing = true
+        }
+        thumbnail = if (isVideo) {
+            decodeVideoFrame(path, max(128, thumbnailMaxPx))
+        } else {
+            decodeSampled(path, max(128, thumbnailMaxPx))
+        }
         if (loadHighQuality) {
             highQuality = if (highQualityMaxPx != null) {
-                decodeSampled(path, max(thumbnailMaxPx, highQualityMaxPx))
+                if (isVideo) {
+                    decodeVideoFrame(path, max(thumbnailMaxPx, highQualityMaxPx))
+                } else {
+                    decodeSampled(path, max(thumbnailMaxPx, highQualityMaxPx))
+                }
             } else {
-                decodeOriginal(path)
+                if (isVideo) decodeVideoFrame(path, max(720, thumbnailMaxPx)) else decodeOriginal(path)
             }
         } else {
             highQuality = null
         }
     }
+    val bitmap = highQuality ?: thumbnail
+    val breathingEnabled = allowBreathing && bitmap == null
+    val breathingAlpha by if (breathingEnabled) {
+        val transition = rememberInfiniteTransition(label = "placeholderBreathing")
+        transition.animateFloat(
+            initialValue = 0.92f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1400, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "placeholderAlpha",
+        )
+    } else {
+        rememberUpdatedState(1f)
+    }
+    val breathingScale by if (breathingEnabled) {
+        val transition = rememberInfiniteTransition(label = "placeholderScaleBreathing")
+        transition.animateFloat(
+            initialValue = 1f,
+            targetValue = 1.015f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1400, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "placeholderScale",
+        )
+    } else {
+        rememberUpdatedState(1f)
+    }
 
     Box(
         modifier = modifier.background(
             brush = Brush.linearGradient(
-                colors = listOf(Color(0xFF1F2F47), Color(0xFF101C31)),
+                colors = if (isVideo) {
+                    listOf(Color(0xFF202030), Color(0xFF141820), Color(0xFF0E131C))
+                } else {
+                    listOf(Color(0xFF1E304B), Color(0xFF13233A), Color(0xFF0D1729))
+                },
             ),
         ),
     ) {
-        val bitmap = highQuality ?: thumbnail
+        // Rich placeholder graphics: soft glow circles + diagonal highlight + outline.
+        Canvas(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer(
+                    alpha = breathingAlpha,
+                    scaleX = breathingScale,
+                    scaleY = breathingScale,
+                ),
+        ) {
+            val w = size.width
+            val h = size.height
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = if (isVideo) listOf(Color(0x40A98BFF), Color.Transparent) else listOf(Color(0x4057A8FF), Color.Transparent),
+                    center = Offset(w * 0.25f, h * 0.3f),
+                    radius = max(w, h) * 0.45f,
+                ),
+                radius = max(w, h) * 0.45f,
+                center = Offset(w * 0.25f, h * 0.3f),
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = if (isVideo) listOf(Color(0x2A8B9DFF), Color.Transparent) else listOf(Color(0x2A78D0FF), Color.Transparent),
+                    center = Offset(w * 0.78f, h * 0.74f),
+                    radius = max(w, h) * 0.38f,
+                ),
+                radius = max(w, h) * 0.38f,
+                center = Offset(w * 0.78f, h * 0.74f),
+            )
+            drawRect(
+                brush = Brush.linearGradient(
+                    colors = listOf(Color.Transparent, Color(0x18FFFFFF), Color.Transparent),
+                    start = Offset(w * -0.25f, h * 0.25f),
+                    end = Offset(w * 0.85f, h * 0.95f),
+                ),
+            )
+            drawRect(
+                color = Color(0x33FFFFFF),
+                style = Stroke(width = 1.2f),
+            )
+        }
         if (bitmap != null) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
@@ -61,6 +173,18 @@ fun VaultProgressiveImage(
                 modifier = Modifier.matchParentSize(),
                 contentScale = contentScale,
             )
+        }
+        if (isVideo && showVideoIndicator) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_video_play_badge),
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.92f),
+                    modifier = Modifier
+                        .align(androidx.compose.ui.Alignment.Center)
+                        .size(28.dp),
+                )
+            }
         }
     }
 }
@@ -86,4 +210,33 @@ private suspend fun decodeOriginal(path: String): Bitmap? = withContext(Dispatch
     runCatching {
         BitmapFactory.decodeFile(path)
     }.getOrNull()
+}
+
+private suspend fun decodeVideoFrame(path: String, targetMaxPx: Int): Bitmap? = withContext(Dispatchers.IO) {
+    runCatching {
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(path)
+        val frame = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+        retriever.release()
+        if (frame == null) return@runCatching null
+        val maxSide = max(frame.width, frame.height)
+        if (maxSide <= targetMaxPx) frame else {
+            val scale = targetMaxPx.toFloat() / maxSide.toFloat()
+            val width = (frame.width * scale).toInt().coerceAtLeast(1)
+            val height = (frame.height * scale).toInt().coerceAtLeast(1)
+            Bitmap.createScaledBitmap(frame, width, height, true).also {
+                if (it !== frame) frame.recycle()
+            }
+        }
+    }.getOrNull()
+}
+
+private fun isVideoPath(path: String): Boolean {
+    val lower = path.lowercase()
+    return lower.endsWith(".mp4") ||
+        lower.endsWith(".m4v") ||
+        lower.endsWith(".mov") ||
+        lower.endsWith(".3gp") ||
+        lower.endsWith(".webm") ||
+        lower.endsWith(".mkv")
 }
