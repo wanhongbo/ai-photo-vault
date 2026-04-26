@@ -4,4 +4,4 @@
     android:dither="true"
     android:filter="true"
     android:gravity="center"
-    android:src="@drawable/app_icon_pixso_24_1" />
+    android:src="@mipmap/ic_launcher_v2" />
