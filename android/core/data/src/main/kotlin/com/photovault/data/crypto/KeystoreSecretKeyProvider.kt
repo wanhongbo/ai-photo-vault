@@ -17,8 +17,11 @@ class KeystoreSecretKeyProvider(
 
     fun getOrCreateAesSecretKey(): SecretKey {
         if (keyStore.containsAlias(keyAlias)) {
-            val entry = keyStore.getEntry(keyAlias, null) as KeyStore.SecretKeyEntry
-            return entry.secretKey
+            val existing = runCatching {
+                (keyStore.getEntry(keyAlias, null) as? KeyStore.SecretKeyEntry)?.secretKey
+            }.getOrNull()
+            if (existing != null) return existing
+            runCatching { keyStore.deleteEntry(keyAlias) }
         }
         val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
         val spec = KeyGenParameterSpec.Builder(

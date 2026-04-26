@@ -27,11 +27,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
+import com.photovault.app.ui.backup.AutoBackupScheduler
 import com.photovault.app.ui.components.AppDialog
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
@@ -52,8 +54,12 @@ fun SettingsHomeScreen(
     modifier: Modifier = Modifier,
 ) {
     val tabs = remember { homeTabs() }
+    val context = LocalContext.current
     var biometricEnabled by remember { mutableStateOf(true) }
     var autoLockEnabled by remember { mutableStateOf(true) }
+    var autoBackupEnabled by remember { mutableStateOf(AutoBackupScheduler.isEnabled(context)) }
+    var autoBackupRequireCharging by remember { mutableStateOf(AutoBackupScheduler.isRequireCharging(context)) }
+    var autoBackupRequireIdle by remember { mutableStateOf(AutoBackupScheduler.isRequireIdle(context)) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     val securityItems = listOf(
         SettingsRowModel(
@@ -62,6 +68,41 @@ fun SettingsHomeScreen(
             trailing = SettingsTrailing.CHEVRON,
             onClick = onOpenChangePin,
         ),
+    )
+    val backupPolicyRows = listOf<@Composable () -> Unit>(
+        {
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_item_auto_backup),
+                desc = stringResource(R.string.settings_item_auto_backup_desc),
+                checked = autoBackupEnabled,
+                onChange = {
+                    autoBackupEnabled = it
+                    AutoBackupScheduler.setEnabled(context, it)
+                },
+            )
+        },
+        {
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_item_auto_backup_charging),
+                desc = stringResource(R.string.settings_item_auto_backup_charging_desc),
+                checked = autoBackupRequireCharging,
+                onChange = {
+                    autoBackupRequireCharging = it
+                    AutoBackupScheduler.setRequireCharging(context, it)
+                },
+            )
+        },
+        {
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_item_auto_backup_idle),
+                desc = stringResource(R.string.settings_item_auto_backup_idle_desc),
+                checked = autoBackupRequireIdle,
+                onChange = {
+                    autoBackupRequireIdle = it
+                    AutoBackupScheduler.setRequireIdle(context, it)
+                },
+            )
+        },
     )
     val generalItems = listOf(
         SettingsRowModel(
@@ -150,6 +191,13 @@ fun SettingsHomeScreen(
                         },
                     ),
                     items = securityItems,
+                )
+            }
+            item {
+                SettingsGroup(
+                    title = stringResource(R.string.settings_group_backup_policy),
+                    customRows = backupPolicyRows,
+                    items = emptyList(),
                 )
             }
             item { SettingsGroup(title = stringResource(R.string.settings_group_general), items = generalItems) }

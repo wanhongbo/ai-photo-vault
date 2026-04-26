@@ -1,6 +1,7 @@
 package com.photovault.app
 
 import android.app.Application
+import com.photovault.app.ui.backup.AutoBackupScheduler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -14,6 +15,7 @@ class PhotoVaultApp : Application() {
         AppLogger.install()
         installGlobalExceptionBoundary()
         appLockManager.start()
+        AutoBackupScheduler.ensureScheduled(this)
     }
 
     private fun installGlobalExceptionBoundary() {

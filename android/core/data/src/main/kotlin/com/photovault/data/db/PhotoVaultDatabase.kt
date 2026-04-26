@@ -3,6 +3,7 @@ package com.photovault.data.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.photovault.data.db.dao.AlbumDao
+import com.photovault.data.db.dao.BackupRecordDao
 import com.photovault.data.db.dao.SecuritySettingDao
 import com.photovault.data.db.entity.AlbumEntity
 import com.photovault.data.db.entity.BackupRecordEntity
@@ -25,6 +26,7 @@ import com.photovault.data.db.entity.TrashItemEntity
 )
 abstract class PhotoVaultDatabase : RoomDatabase() {
     abstract fun albumDao(): AlbumDao
+    abstract fun backupRecordDao(): BackupRecordDao
     abstract fun securitySettingDao(): SecuritySettingDao
 
     companion object {
