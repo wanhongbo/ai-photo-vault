@@ -24,6 +24,7 @@ fun MainScreen(
     onOpenPaywall: () -> Unit,
     onOpenChangePin: () -> Unit,
     onOpenStorageUsage: () -> Unit,
+    onOpenLanguageSettings: () -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(HomeTab.VAULT) }
     val onSelectTab: (HomeTab) -> Unit = { tab ->
@@ -75,6 +76,7 @@ fun MainScreen(
             onOpenPaywall = onOpenPaywall,
             onOpenChangePin = onOpenChangePin,
             onOpenStorageUsage = onOpenStorageUsage,
+            onOpenLanguageSettings = onOpenLanguageSettings,
             selectedTab = selectedTab,
             showBottomNav = selectedTab == HomeTab.SETTINGS,
             modifier = Modifier

@@ -28,6 +28,7 @@ import com.photovault.app.ui.BackupResultScreen
 import com.photovault.app.ui.PrivateCameraScreen
 import com.photovault.app.ui.ChangePinScreen
 import com.photovault.app.ui.MainScreen
+import com.photovault.app.ui.LanguageSettingsScreen
 import com.photovault.app.ui.PaywallScreen
 import com.photovault.app.ui.PhotoViewerScreen
 import com.photovault.app.ui.RecentPhotosScreen
@@ -150,6 +151,9 @@ class MainActivity : ComponentActivity() {
                                 onOpenStorageUsage = {
                                     navController.navigate(ROUTE_STORAGE_USAGE) { launchSingleTop = true }
                                 },
+                                onOpenLanguageSettings = {
+                                    navController.navigate(ROUTE_LANGUAGE_SETTINGS) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_BACKUP_RESTORE) {
@@ -226,6 +230,11 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(ROUTE_STORAGE_USAGE) {
                             StorageUsagePlaceholderScreen(
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_LANGUAGE_SETTINGS) {
+                            LanguageSettingsScreen(
                                 onBack = { navController.popBackStack() },
                             )
                         }
@@ -340,5 +349,6 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_PAYWALL = "paywall"
         private const val ROUTE_CHANGE_PIN = "change_pin"
         private const val ROUTE_STORAGE_USAGE = "storage_usage"
+        private const val ROUTE_LANGUAGE_SETTINGS = "language_settings"
     }
 }

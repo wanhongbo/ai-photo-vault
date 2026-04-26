@@ -32,9 +32,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.os.ConfigurationCompat
 import com.photovault.app.R
 import com.photovault.app.ui.backup.AutoBackupScheduler
-import com.photovault.app.ui.components.AppDialog
 import com.photovault.app.ui.feedback.throttledClickable
 import com.photovault.app.ui.theme.UiColors
 import com.photovault.app.ui.theme.UiRadius
@@ -49,6 +49,7 @@ fun SettingsHomeScreen(
     onOpenPaywall: () -> Unit,
     onOpenChangePin: () -> Unit,
     onOpenStorageUsage: () -> Unit,
+    onOpenLanguageSettings: () -> Unit,
     selectedTab: HomeTab = HomeTab.SETTINGS,
     showBottomNav: Boolean = true,
     modifier: Modifier = Modifier,
@@ -60,7 +61,12 @@ fun SettingsHomeScreen(
     var autoBackupEnabled by remember { mutableStateOf(AutoBackupScheduler.isEnabled(context)) }
     var autoBackupRequireCharging by remember { mutableStateOf(AutoBackupScheduler.isRequireCharging(context)) }
     var autoBackupRequireIdle by remember { mutableStateOf(AutoBackupScheduler.isRequireIdle(context)) }
-    var showLanguageDialog by remember { mutableStateOf(false) }
+    val currentLanguageCode = ConfigurationCompat.getLocales(context.resources.configuration)[0]?.language ?: "en"
+    val languageDescRes = if (currentLanguageCode.startsWith("zh")) {
+        R.string.language_option_chinese
+    } else {
+        R.string.language_option_english
+    }
     val securityItems = listOf(
         SettingsRowModel(
             title = stringResource(R.string.settings_item_change_pin),
@@ -107,9 +113,9 @@ fun SettingsHomeScreen(
     val generalItems = listOf(
         SettingsRowModel(
             title = stringResource(R.string.settings_item_language),
-            desc = stringResource(R.string.settings_item_language_desc),
+            desc = stringResource(languageDescRes),
             trailing = SettingsTrailing.CHEVRON,
-            onClick = { showLanguageDialog = true },
+            onClick = onOpenLanguageSettings,
         ),
         SettingsRowModel(
             title = stringResource(R.string.settings_item_storage),
@@ -212,15 +218,6 @@ fun SettingsHomeScreen(
             )
         }
     }
-    AppDialog(
-        show = showLanguageDialog,
-        title = stringResource(R.string.settings_language_dialog_title),
-        message = stringResource(R.string.settings_language_dialog_desc),
-        confirmText = stringResource(R.string.settings_language_dialog_confirm),
-        onConfirm = { showLanguageDialog = false },
-        dismissText = stringResource(R.string.common_cancel),
-        onDismiss = { showLanguageDialog = false },
-    )
 }
 
 @Composable

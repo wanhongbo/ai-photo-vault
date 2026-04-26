@@ -12,6 +12,7 @@ class PhotoVaultApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        LanguageManager.initialize(this)
         AppLogger.install()
         installGlobalExceptionBoundary()
         appLockManager.start()
