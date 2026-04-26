@@ -34,7 +34,7 @@ import com.photovault.app.ui.theme.UiTextSize
 import com.photovault.app.ui.vault.VaultStore
 
 @Composable
-fun PhotoViewerPlaceholderScreen(
+fun PhotoViewerScreen(
     path: String,
     onBack: () -> Unit,
 ) {
@@ -142,4 +142,3 @@ private fun isVideoPath(path: String): Boolean {
         lower.endsWith(".webm") ||
         lower.endsWith(".mkv")
 }
-

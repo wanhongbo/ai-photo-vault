@@ -9,7 +9,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,7 +34,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.photovault.app.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,12 +58,14 @@ fun VaultProgressiveImage(
     showVideoIndicator: Boolean = false,
 ) {
     val isVideo = remember(path) { isVideoPath(path) }
+    var videoDurationMs by remember(path) { mutableStateOf(0L) }
     var thumbnail by remember(path, thumbnailMaxPx) { mutableStateOf<Bitmap?>(null) }
     var highQuality by remember(path, loadHighQuality, highQualityMaxPx) { mutableStateOf<Bitmap?>(null) }
     var allowBreathing by remember(path, thumbnailMaxPx, loadHighQuality, highQualityMaxPx) { mutableStateOf(false) }
 
     LaunchedEffect(path, thumbnailMaxPx, loadHighQuality, highQualityMaxPx) {
         allowBreathing = false
+        videoDurationMs = if (isVideo) readVideoDurationMs(path) else 0L
         // Start subtle breathing only when loading exceeds 300ms.
         launch {
             delay(300)
@@ -184,6 +192,19 @@ fun VaultProgressiveImage(
                         .align(androidx.compose.ui.Alignment.Center)
                         .size(28.dp),
                 )
+                if (videoDurationMs > 0L) {
+                    Text(
+                        text = formatDuration(videoDurationMs),
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 11.sp,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(6.dp)
+                            .background(Color(0x8A000000), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                }
             }
         }
     }
@@ -231,6 +252,16 @@ private suspend fun decodeVideoFrame(path: String, targetMaxPx: Int): Bitmap? = 
     }.getOrNull()
 }
 
+private suspend fun readVideoDurationMs(path: String): Long = withContext(Dispatchers.IO) {
+    runCatching {
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(path)
+        val value = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+        retriever.release()
+        value?.toLongOrNull() ?: 0L
+    }.getOrDefault(0L)
+}
+
 private fun isVideoPath(path: String): Boolean {
     val lower = path.lowercase()
     return lower.endsWith(".mp4") ||
@@ -239,4 +270,11 @@ private fun isVideoPath(path: String): Boolean {
         lower.endsWith(".3gp") ||
         lower.endsWith(".webm") ||
         lower.endsWith(".mkv")
+}
+
+private fun formatDuration(durationMs: Long): String {
+    val totalSeconds = (durationMs / 1000).coerceAtLeast(0)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format("%02d:%02d", minutes, seconds)
 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
+import com.photovault.app.ui.backup.BackupRuntimeState
 import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.ui.theme.UiColors
@@ -30,6 +31,7 @@ import com.photovault.app.ui.theme.UiTextSize
 
 @Composable
 fun RestoreResultScreen(onDone: () -> Unit) {
+    val result = BackupRuntimeState.lastRestoreResult
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -62,7 +64,10 @@ fun RestoreResultScreen(onDone: () -> Unit) {
                 fontSize = UiTextSize.homeEmptyBody,
                 modifier = Modifier.padding(top = UiSize.backupResultInfoTopGap),
             )
-            RestoreStatsRow()
+            RestoreStatsRow(
+                statsText = result?.let { "恢复 ${it.restored}，跳过 ${it.skipped}，失败 ${it.failed}" }
+                    ?: stringResource(R.string.restore_result_stats),
+            )
         }
         AppButton(
             text = stringResource(R.string.restore_result_done),
@@ -93,7 +98,7 @@ private fun RestoreResultBadge() {
 }
 
 @Composable
-private fun RestoreStatsRow() {
+private fun RestoreStatsRow(statsText: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -111,7 +116,7 @@ private fun RestoreStatsRow() {
             fontSize = UiTextSize.backupMetaLabel,
         )
         Text(
-            text = stringResource(R.string.restore_result_stats),
+            text = statsText,
             color = UiColors.Home.title,
             fontSize = UiTextSize.backupMetaValue,
             modifier = Modifier.padding(top = UiSize.trashMetaTopGap),

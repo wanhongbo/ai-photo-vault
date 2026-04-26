@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.photovault.app.R
+import com.photovault.app.ui.backup.BackupRuntimeState
 import com.photovault.app.ui.components.AppButton
 import com.photovault.app.ui.components.AppTopBar
 import com.photovault.app.ui.theme.UiColors
@@ -30,6 +31,9 @@ import com.photovault.app.ui.theme.UiTextSize
 
 @Composable
 fun BackupResultScreen(onDone: () -> Unit) {
+    val result = BackupRuntimeState.lastBackupResult
+    val fileLabel = result?.outputPath?.substringAfterLast('/') ?: stringResource(R.string.backup_result_file)
+    val sizeLabel = result?.outputSizeBytes?.let { formatSize(it) } ?: stringResource(R.string.backup_result_size)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -64,11 +68,11 @@ fun BackupResultScreen(onDone: () -> Unit) {
             )
             BackupMetaRow(
                 label = stringResource(R.string.backup_result_file_label),
-                value = stringResource(R.string.backup_result_file),
+                value = fileLabel,
             )
             BackupMetaRow(
                 label = stringResource(R.string.backup_result_size_label),
-                value = stringResource(R.string.backup_result_size),
+                value = sizeLabel,
             )
         }
         AppButton(
@@ -78,6 +82,19 @@ fun BackupResultScreen(onDone: () -> Unit) {
                 .fillMaxWidth()
                 .padding(top = UiSize.backupActionTopGap),
         )
+    }
+}
+
+private fun formatSize(bytes: Long): String {
+    if (bytes <= 0L) return "0 B"
+    val kb = 1024.0
+    val mb = kb * 1024.0
+    val gb = mb * 1024.0
+    return when {
+        bytes >= gb -> String.format("%.2f GB", bytes / gb)
+        bytes >= mb -> String.format("%.2f MB", bytes / mb)
+        bytes >= kb -> String.format("%.2f KB", bytes / kb)
+        else -> "$bytes B"
     }
 }
 
