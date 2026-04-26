@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.photovault.app.ui.AlbumScreen
 import com.photovault.app.ui.AlbumListScreen
 import com.photovault.app.ui.BackupRestoreScreen
+import com.photovault.app.ui.BackupProgressScreen
 import com.photovault.app.ui.BackupResultScreen
 import com.photovault.app.ui.PrivateCameraScreen
 import com.photovault.app.ui.ChangePinScreen
@@ -30,6 +31,7 @@ import com.photovault.app.ui.MainScreen
 import com.photovault.app.ui.PaywallScreen
 import com.photovault.app.ui.PhotoViewerScreen
 import com.photovault.app.ui.RecentPhotosScreen
+import com.photovault.app.ui.RestoreProgressScreen
 import com.photovault.app.ui.RestoreResultScreen
 import com.photovault.app.ui.SplashScreen
 import com.photovault.app.ui.StorageUsagePlaceholderScreen
@@ -60,12 +62,15 @@ class MainActivity : ComponentActivity() {
                     val requireUnlock by appLockManager.requireUnlock.collectAsState()
                     val backStackEntry by navController.currentBackStackEntryAsState()
                     val currentRoute = backStackEntry?.destination?.route
+                    val previousRoute = navController.previousBackStackEntry?.destination?.route
 
                     LaunchedEffect(requireUnlock, currentRoute) {
                         if (!requireUnlock) return@LaunchedEffect
+                        val shouldSkipLock = isBackupRestoreRoute(currentRoute) || isBackupRestoreRoute(previousRoute)
                         if (currentRoute != null &&
                             currentRoute != ROUTE_LOCK &&
-                            currentRoute != ROUTE_PRIVATE_CAMERA
+                            currentRoute != ROUTE_PRIVATE_CAMERA &&
+                            !shouldSkipLock
                         ) {
                             navController.navigate(ROUTE_LOCK) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -149,11 +154,41 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(ROUTE_BACKUP_RESTORE) {
                             BackupRestoreScreen(
-                                onOpenBackupResult = {
-                                    navController.navigate(ROUTE_BACKUP_RESULT) { launchSingleTop = true }
+                                onOpenBackupProgress = { outputUri ->
+                                    navController.navigate("$ROUTE_BACKUP_PROGRESS/$outputUri") { launchSingleTop = true }
                                 },
-                                onOpenRestoreResult = {
-                                    navController.navigate(ROUTE_RESTORE_RESULT) { launchSingleTop = true }
+                                onOpenRestoreProgress = { inputUri ->
+                                    navController.navigate("$ROUTE_RESTORE_PROGRESS/$inputUri") { launchSingleTop = true }
+                                },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(
+                            route = "$ROUTE_RESTORE_PROGRESS/{inputUri}",
+                            arguments = listOf(navArgument("inputUri") { defaultValue = "" }),
+                        ) { entry ->
+                            RestoreProgressScreen(
+                                inputUri = entry.arguments?.getString("inputUri") ?: "",
+                                onRestoreSuccess = {
+                                    navController.navigate(ROUTE_RESTORE_RESULT) {
+                                        popUpTo(ROUTE_BACKUP_RESTORE) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(
+                            route = "$ROUTE_BACKUP_PROGRESS/{outputUri}",
+                            arguments = listOf(navArgument("outputUri") { defaultValue = "" }),
+                        ) { entry ->
+                            BackupProgressScreen(
+                                outputUri = entry.arguments?.getString("outputUri") ?: "",
+                                onBackupSuccess = {
+                                    navController.navigate(ROUTE_BACKUP_RESULT) {
+                                        popUpTo(ROUTE_BACKUP_RESTORE) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
                                 },
                                 onBack = { navController.popBackStack() },
                             )
@@ -166,6 +201,7 @@ class MainActivity : ComponentActivity() {
                         composable(ROUTE_RESTORE_RESULT) {
                             RestoreResultScreen(
                                 onDone = {
+                                    appLockManager.onUnlockSucceeded()
                                     navController.navigate(ROUTE_MAIN) {
                                         popUpTo(ROUTE_MAIN) { inclusive = true }
                                         launchSingleTop = true
@@ -278,6 +314,15 @@ class MainActivity : ComponentActivity() {
             lower.endsWith(".mkv")
     }
 
+    private fun isBackupRestoreRoute(route: String?): Boolean {
+        if (route == null) return false
+        return route == ROUTE_BACKUP_RESTORE ||
+            route == ROUTE_BACKUP_RESULT ||
+            route == ROUTE_RESTORE_RESULT ||
+            route.startsWith(ROUTE_BACKUP_PROGRESS) ||
+            route.startsWith(ROUTE_RESTORE_PROGRESS)
+    }
+
     companion object {
         private const val ROUTE_SPLASH = "splash"
         private const val ROUTE_LOCK = "lock"
@@ -288,6 +333,8 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_RECENT_LIST = "recent_list"
         private const val ROUTE_BACKUP_RESTORE = "backup_restore"
         private const val ROUTE_BACKUP_RESULT = "backup_result"
+        private const val ROUTE_BACKUP_PROGRESS = "backup_progress"
+        private const val ROUTE_RESTORE_PROGRESS = "restore_progress"
         private const val ROUTE_RESTORE_RESULT = "restore_result"
         private const val ROUTE_TRASH_BIN = "trash_bin"
         private const val ROUTE_PAYWALL = "paywall"
