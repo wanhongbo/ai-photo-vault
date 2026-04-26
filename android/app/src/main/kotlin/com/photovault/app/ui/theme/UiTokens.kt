@@ -70,6 +70,41 @@ object UiColors {
         val navItemIdle = Color(0xFF7E90AB)
         val navItemActive = Color(0xFFB7D7FF)
     }
+
+    object Ai {
+        val suggestCardGradientStart = Color(0xFF1A3A6E)
+        val suggestCardGradientEnd = Color(0xFF0D1B2E)
+        val featureCardBg = Color(0xFF16161A)
+        val featureCardStroke = Color(0xFF2A2A2E)
+        val featureTitle = Color(0xFFF0F4FF)
+        val featureDesc = Color(0xFF6B6B70)
+        val headerBtnBg = Color(0xFF1E2530)
+        val headerBtnStroke = Color(0xFF2A2A2E)
+        val badgeBg = Color(0x254A9EFF)
+        val badgeText = Color(0xFF4A9EFF)
+        val suggestTitle = Color(0xFFF0F4FF)
+        val suggestDesc = Color(0xCCFFFFFF)
+        val execBtnBg = Color(0xFF4A9EFF)
+        val execBtnText = Color(0xFF0D0D0D)
+        val skipBtnBg = Color(0x10FFFFFF)
+        val skipBtnText = Color(0x99FFFFFF)
+        val skipBtnStroke = Color(0x30FFFFFF)
+        val iconBgWhite = Color(0x20FFFFFF)
+
+        val classifyBar = Color(0xFF4A9EFF)
+        val searchBar = Color(0xFF32D583)
+        val blurBar = Color(0xFFE85A4F)
+        val compressBar = Color(0xFFFFB547)
+        val encryptBar = Color(0xFF6366F1)
+        val dedupBar = Color(0xFFC850C0)
+
+        val classifyIconBg = Color(0x204A9EFF)
+        val searchIconBg = Color(0x2032D583)
+        val blurIconBg = Color(0x20E85A4F)
+        val compressIconBg = Color(0x20FFB547)
+        val encryptIconBg = Color(0x206366F1)
+        val dedupIconBg = Color(0x20C850C0)
+    }
 }
 
 object UiRadius {
