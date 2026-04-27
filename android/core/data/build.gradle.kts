@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.photovault.data"
+    namespace = "com.xpx.vault.data"
     compileSdk = 35
 
     defaultConfig {

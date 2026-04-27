@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.photovault.app"
+    namespace = "com.xpx.vault"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.photovault.app"
+        applicationId = "com.xpx.vault"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
