@@ -26,6 +26,9 @@ import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -35,8 +38,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,11 +47,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -84,7 +91,7 @@ import androidx.lifecycle.Observer
 import com.xpx.vault.R
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
-import com.xpx.vault.ui.components.AppTopBar
+import androidx.compose.foundation.layout.RowScope
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.DEFAULT_ALBUM_NAME
@@ -179,6 +186,9 @@ fun PrivateCameraScreen(
     var captureSuccessCount by remember { mutableStateOf(0) }
     var captureFailureCount by remember { mutableStateOf(0) }
     var peakMemoryMb by remember { mutableStateOf(currentMemoryUsageMb()) }
+    var showSettingsPanel by remember { mutableStateOf(false) }
+    var videoResolution by remember { mutableStateOf("FHD") }
+    var videoFps by remember { mutableStateOf("30") }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -322,28 +332,15 @@ fun PrivateCameraScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(UiColors.Home.bgBottom)
-            .safeDrawingPadding()
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        AppTopBar(title = "隐私相机", onBack = onBack)
-        Spacer(modifier = Modifier.height(12.dp))
-
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (pendingCapturePath != null) {
-            PendingCapturePreview(
-                bitmap = pendingPreview,
-                saving = savingPending,
-                onRetake = {
+            Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+                PendingCapturePreview(bitmap = pendingPreview, saving = savingPending, onRetake = {
                     pendingCapturePath?.let { File(it).delete() }
                     pendingCapturePath = null
                     pendingPreview = null
                     message = "已取消，返回取景"
-                },
-                onSave = {
+                }, onSave = {
                     val path = pendingCapturePath ?: return@PendingCapturePreview
                     if (savingPending) return@PendingCapturePreview
                     savingPending = true
@@ -352,10 +349,7 @@ fun PrivateCameraScreen(
                         val saved = savePendingToVault(context, path)
                         savingPending = false
                         peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
-                        Log.i(
-                            CAMERA_DIAG_TAG,
-                            "event=save_result ok=$saved elapsed_ms=${System.currentTimeMillis() - saveStart} peak_mem_mb=$peakMemoryMb",
-                        )
+                        Log.i(CAMERA_DIAG_TAG, "event=save_result ok=$saved elapsed_ms=${System.currentTimeMillis() - saveStart} peak_mem_mb=$peakMemoryMb")
                         if (saved) {
                             message = "已保存到保险箱"
                             pendingCapturePath = null
@@ -366,269 +360,125 @@ fun PrivateCameraScreen(
                             message = "保存失败（存储错误），请重试"
                         }
                     }
-                },
-            )
-            return@Column
+                })
+            }
+            return@Box
         }
 
         if (hasCameraPermission) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color.Black, RoundedCornerShape(18.dp))
-                    .pointerInput(previewViewRef, cameraRef) {
-                        detectTapGestures { offset ->
-                            val preview = previewViewRef ?: return@detectTapGestures
-                            val camera = cameraRef ?: return@detectTapGestures
-                            val point = preview.meteringPointFactory.createPoint(offset.x, offset.y)
-                            val action = FocusMeteringAction.Builder(
-                                point,
-                                FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE,
-                            )
-                                .setAutoCancelDuration(1500, TimeUnit.MILLISECONDS)
-                                .build()
-                            camera.cameraControl.startFocusAndMetering(action)
-                            focusMarker = offset
-                            scope.launch {
-                                delay(700)
-                                focusMarker = null
-                            }
-                        }
+            Box(Modifier.fillMaxSize().pointerInput(previewViewRef, cameraRef) {
+                detectTapGestures { offset ->
+                    val preview = previewViewRef ?: return@detectTapGestures
+                    val camera = cameraRef ?: return@detectTapGestures
+                    val point = preview.meteringPointFactory.createPoint(offset.x, offset.y)
+                    val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
+                        .setAutoCancelDuration(1500, TimeUnit.MILLISECONDS).build()
+                    camera.cameraControl.startFocusAndMetering(action)
+                    focusMarker = offset
+                    scope.launch { delay(700); focusMarker = null }
+                }
+            }.pointerInput(cameraRef, minZoomRatio, maxZoomRatio) {
+                detectTransformGestures { _, _, zoomChange, _ ->
+                    if (zoomChange != 1f) zoomRatio = (zoomRatio * zoomChange).coerceIn(minZoomRatio, maxZoomRatio)
+                }
+            }) {
+                AndroidView(modifier = Modifier.fillMaxSize(), factory = { viewContext ->
+                    PreviewView(viewContext).apply {
+                        scaleType = PreviewView.ScaleType.FILL_CENTER
+                        implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                        previewViewRef = this
                     }
-                    .pointerInput(cameraRef, minZoomRatio, maxZoomRatio) {
-                        detectTransformGestures { _, _, zoomChange, _ ->
-                            if (zoomChange != 1f) {
-                                zoomRatio = (zoomRatio * zoomChange).coerceIn(minZoomRatio, maxZoomRatio)
-                            }
-                        }
-                    },
-            ) {
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { viewContext ->
-                        PreviewView(viewContext).apply {
-                            scaleType = PreviewView.ScaleType.FILL_CENTER
-                            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-                            previewViewRef = this
-                        }
-                    },
-                )
-
+                })
                 if (showGrid) CameraGridOverlay()
                 focusMarker?.let { FocusMarker(marker = it) }
-
-                if (shutterOverlay) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White.copy(alpha = 0.16f)),
-                    )
-                }
-
+                if (shutterOverlay) Box(Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.16f)))
                 countdownRemaining?.let { remaining ->
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = remaining.toString(),
-                            color = Color.White,
-                            fontSize = UiTextSize.homeTitle,
-                            fontWeight = FontWeight.Bold,
-                        )
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = remaining.toString(), color = Color.White, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
                     }
                 }
-
-                if (capturing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = UiColors.Home.navItemActive,
-                    )
-                }
+                if (capturing) CircularProgressIndicator(Modifier.align(Alignment.Center), color = UiColors.Home.navItemActive)
             }
         } else {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(UiColors.Home.emptyCardBg, RoundedCornerShape(18.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "等待相机权限授权…",
-                    color = UiColors.Home.subtitle,
-                    fontSize = UiTextSize.homeEmptyBody,
-                )
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("等待相机权限授权…", color = UiColors.Home.subtitle, fontSize = UiTextSize.homeEmptyBody)
+            }
+        }
+
+        Column(Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 16.dp, top = 8.dp)) {
+            IconButton(onClick = { showSettingsPanel = !showSettingsPanel }, modifier = Modifier.size(40.dp).background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp))) {
+                Icon(imageVector = if (showSettingsPanel) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null, tint = Color.White)
+            }
+            AnimatedVisibility(visible = showSettingsPanel, enter = fadeIn(), exit = fadeOut()) {
+                CameraSettingsPanel(captureMode = captureMode, flashMode = flashMode, timerSeconds = timerSeconds, showGrid = showGrid, hasFlashUnit = hasFlashUnit, exposureRange = exposureRange, exposureIndex = exposureIndex, videoResolution = videoResolution, videoFps = videoFps, onFlashModeChange = { flashMode = it }, onTimerSecondsChange = { timerSeconds = it }, onShowGridChange = { showGrid = it }, onExposureIndexChange = { exposureIndex = it }, onVideoResolutionChange = { videoResolution = it }, onVideoFpsChange = { videoFps = it })
             }
         }
 
         message?.let {
-            Text(
-                text = it,
-                color = UiColors.Home.subtitle,
-                fontSize = UiTextSize.homeNavLabel,
-                modifier = Modifier
-                    .padding(top = 10.dp)
-                    .fillMaxWidth(),
-                textAlign = TextAlign.Center,
-            )
+            Text(text = it, color = UiColors.Home.subtitle, fontSize = UiTextSize.homeNavLabel, modifier = Modifier.align(Alignment.TopCenter).padding(top = 56.dp), textAlign = TextAlign.Center)
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp)
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CameraActionChip(
-                enabled = hasCameraPermission && !isRecording,
-                onClick = {
-                    captureMode = if (captureMode == CameraCaptureMode.PHOTO) {
-                        CameraCaptureMode.VIDEO
-                    } else {
-                        CameraCaptureMode.PHOTO
-                    }
-                },
-                label = if (captureMode == CameraCaptureMode.PHOTO) {
-                    stringResource(R.string.camera_control_mode_photo)
-                } else {
-                    stringResource(R.string.camera_control_mode_video)
-                },
-            )
-            CameraActionChip(
-                enabled = hasCameraPermission,
-                onClick = {
-                    timerSeconds = when (timerSeconds) {
-                        0 -> 3
-                        3 -> 10
-                        else -> 0
-                    }
-                },
-                label = if (timerSeconds == 0) {
-                    stringResource(R.string.camera_control_timer_off)
-                } else {
-                    stringResource(R.string.camera_control_timer_seconds, timerSeconds)
-                },
-            )
-            CameraActionChip(
-                enabled = hasCameraPermission && hasFlashUnit,
-                onClick = {
-                    flashMode = when (flashMode) {
-                        FlashUiMode.OFF -> FlashUiMode.ON
-                        FlashUiMode.ON -> FlashUiMode.AUTO
-                        FlashUiMode.AUTO -> FlashUiMode.OFF
-                    }
-                },
-                label = when (flashMode) {
-                    FlashUiMode.OFF -> stringResource(R.string.camera_control_flash_off)
-                    FlashUiMode.ON -> stringResource(R.string.camera_control_flash_on)
-                    FlashUiMode.AUTO -> stringResource(R.string.camera_control_flash_auto)
-                },
-            )
-            CameraActionChip(
-                enabled = hasCameraPermission,
-                onClick = { showGrid = !showGrid },
-                label = if (showGrid) {
-                    stringResource(R.string.camera_control_grid_on)
-                } else {
-                    stringResource(R.string.camera_control_grid_off)
-                },
-            )
-            CameraActionChip(
-                enabled = hasCameraPermission,
-                onClick = {
-                    lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                        CameraSelector.LENS_FACING_FRONT
-                    } else {
-                        CameraSelector.LENS_FACING_BACK
-                    }
-                },
-                label = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                    stringResource(R.string.camera_control_lens_rear)
-                } else {
-                    stringResource(R.string.camera_control_lens_front)
-                },
-            )
-            Text(
-                text = if (isRecording) "REC ${formatRecordingDuration(recordingDurationMs)}" else "${formatZoom(zoomRatio)}x",
-                color = if (isRecording) Color(0xFFFF6B6B) else Color(0xFFEAF1FF),
-                fontSize = UiTextSize.homeNavLabel,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 6.dp),
-            )
-        }
-
-        if (hasCameraPermission) {
-            ZoomRail(
-                minZoom = minZoomRatio,
-                maxZoom = maxZoomRatio,
-                zoomRatio = zoomRatio,
-                onZoomRatioChanged = { zoomRatio = it.coerceIn(minZoomRatio, maxZoomRatio) },
-                onSelectPreset = { preset -> zoomRatio = preset.coerceIn(minZoomRatio, maxZoomRatio) },
-            )
-        }
-
-        if (exposureRange.first != exposureRange.last) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 0.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.camera_control_exposure_value,
-                        if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
-                    ),
-                    color = UiColors.Home.subtitle,
-                    fontSize = 11.sp,
-                )
-                Slider(
-                    value = exposureIndex.toFloat(),
-                    onValueChange = { exposureIndex = it.roundToInt().coerceIn(exposureRange.first, exposureRange.last) },
-                    valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
-                    steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(20.dp),
-                )
-                if (exposureIndex != 0) {
-                    Text(
-                        text = stringResource(R.string.camera_control_exposure_auto),
-                        color = UiColors.Home.navItemActive,
-                        fontSize = 11.sp,
-                        modifier = Modifier.clickable { exposureIndex = 0 },
-                    )
-                }
+        Column(Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (hasCameraPermission) {
+                ZoomRail(minZoom = minZoomRatio, maxZoom = maxZoomRatio, zoomRatio = zoomRatio, onZoomRatioChanged = { zoomRatio = it.coerceIn(minZoomRatio, maxZoomRatio) }, onSelectPreset = { preset -> zoomRatio = preset.coerceIn(minZoomRatio, maxZoomRatio) })
             }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ShutterButton(
-                enabled = hasCameraPermission &&
-                    !capturing &&
-                    if (captureMode == CameraCaptureMode.PHOTO) imageCapture != null else videoCapture != null,
-                recording = isRecording,
-                onClick = {
-                    if (capturing) return@ShutterButton
-                    if (captureMode == CameraCaptureMode.VIDEO) {
-                        val video = videoCapture ?: return@ShutterButton
-                        if (isRecording) {
-                            activeRecording?.stop()
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) CameraSelector.LENS_FACING_FRONT else CameraSelector.LENS_FACING_BACK }, enabled = hasCameraPermission, modifier = Modifier.size(48.dp).background(Color(0x33FFFFFF), RoundedCornerShape(24.dp))) {
+                    Text("⇄", color = Color.White, fontSize = 20.sp)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    ShutterButton(enabled = hasCameraPermission && !capturing && if (captureMode == CameraCaptureMode.PHOTO) imageCapture != null else videoCapture != null, recording = isRecording, onClick = {
+                        if (capturing) return@ShutterButton
+                        if (captureMode == CameraCaptureMode.VIDEO) {
+                            val video = videoCapture ?: return@ShutterButton
+                            if (isRecording) {
+                                activeRecording?.stop()
+                                return@ShutterButton
+                            }
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            scope.launch {
+                                if (timerSeconds > 0) {
+                                    for (second in timerSeconds downTo 1) {
+                                        countdownRemaining = second
+                                        delay(1000)
+                                    }
+                                    countdownRemaining = null
+                                }
+                                val outputFile = VaultStore.reserveCameraTarget(context, DEFAULT_ALBUM_NAME, "mp4")
+                                val output = FileOutputOptions.Builder(outputFile).build()
+                                val pending: PendingRecording = video.output.prepareRecording(context, output)
+                                message = null
+                                isRecording = true
+                                recordingDurationMs = 0L
+                                Log.i(CAMERA_DIAG_TAG, "event=video_record_start path=${outputFile.name}")
+                                activeRecording = pending.start(ContextCompat.getMainExecutor(context)) { event ->
+                                    when (event) {
+                                        is VideoRecordEvent.Finalize -> {
+                                            isRecording = false
+                                            activeRecording?.close()
+                                            activeRecording = null
+                                            if (!event.hasError()) {
+                                                message = "视频已保存到保险箱"
+                                                Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
+                                            } else {
+                                                outputFile.delete()
+                                                message = "录像失败，请重试"
+                                                Log.e(CAMERA_DIAG_TAG, "event=video_record_failed code=${event.error}")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             return@ShutterButton
                         }
+                        val capture = imageCapture ?: return@ShutterButton
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        message = null
                         scope.launch {
+                            captureAttempts += 1
+                            val captureStart = System.currentTimeMillis()
+                            Log.i(CAMERA_DIAG_TAG, "event=capture_start attempt=$captureAttempts")
                             if (timerSeconds > 0) {
                                 for (second in timerSeconds downTo 1) {
                                     countdownRemaining = second
@@ -636,80 +486,45 @@ fun PrivateCameraScreen(
                                 }
                                 countdownRemaining = null
                             }
-                            val outputFile = VaultStore.reserveCameraTarget(
-                                context = context,
-                                albumName = DEFAULT_ALBUM_NAME,
-                                extension = "mp4",
-                            )
-                            val output = FileOutputOptions.Builder(outputFile).build()
-                            val pending: PendingRecording = video.output.prepareRecording(context, output)
-                            message = null
-                            isRecording = true
-                            recordingDurationMs = 0L
-                            Log.i(CAMERA_DIAG_TAG, "event=video_record_start path=${outputFile.name}")
-                            activeRecording = pending.start(ContextCompat.getMainExecutor(context)) { event ->
-                                when (event) {
-                                    is VideoRecordEvent.Finalize -> {
-                                        isRecording = false
-                                        activeRecording?.close()
-                                        activeRecording = null
-                                        if (!event.hasError()) {
-                                            message = "视频已保存到保险箱"
-                                            Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
-                                        } else {
-                                            outputFile.delete()
-                                            message = "录像失败，请重试"
-                                            Log.e(CAMERA_DIAG_TAG, "event=video_record_failed code=${event.error}")
-                                        }
-                                    }
-                                }
+                            shutterOverlay = true
+                            delay(90)
+                            shutterOverlay = false
+                            capturing = true
+                            val result = captureToTempFile(context, capture)
+                            capturing = false
+                            val elapsed = System.currentTimeMillis() - captureStart
+                            peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
+                            if (result.path != null) {
+                                captureSuccessCount += 1
+                                pendingCapturePath = result.path
+                                Log.i(CAMERA_DIAG_TAG, "event=capture_success elapsed_ms=$elapsed success=$captureSuccessCount fail=$captureFailureCount peak_mem_mb=$peakMemoryMb")
+                            } else {
+                                captureFailureCount += 1
+                                val failRate = (captureFailureCount * 100f / captureAttempts).roundToInt()
+                                val code = result.errorCode ?: CaptureErrorCode.UNKNOWN
+                                message = captureErrorMessage(code)
+                                Log.e(CAMERA_DIAG_TAG, "event=capture_failed code=$code elapsed_ms=$elapsed fail_rate_pct=$failRate success=$captureSuccessCount fail=$captureFailureCount")
                             }
                         }
-                        return@ShutterButton
+                    })
+                    if (isRecording) {
+                        Text(text = formatRecordingDuration(recordingDurationMs), color = Color(0xFFFF6B6B), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
                     }
-
-                    val capture = imageCapture ?: return@ShutterButton
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    message = null
-                    scope.launch {
-                        captureAttempts += 1
-                        val captureStart = System.currentTimeMillis()
-                        Log.i(CAMERA_DIAG_TAG, "event=capture_start attempt=$captureAttempts")
-                        if (timerSeconds > 0) {
-                            for (second in timerSeconds downTo 1) {
-                                countdownRemaining = second
-                                delay(1000)
-                            }
-                            countdownRemaining = null
-                        }
-                        shutterOverlay = true
-                        delay(90)
-                        shutterOverlay = false
-                        capturing = true
-                        val result = captureToTempFile(context, capture)
-                        capturing = false
-                        val elapsed = System.currentTimeMillis() - captureStart
-                        peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
-                        if (result.path != null) {
-                            captureSuccessCount += 1
-                            pendingCapturePath = result.path
-                            Log.i(
-                                CAMERA_DIAG_TAG,
-                                "event=capture_success elapsed_ms=$elapsed success=$captureSuccessCount fail=$captureFailureCount peak_mem_mb=$peakMemoryMb",
-                            )
-                        } else {
-                            captureFailureCount += 1
-                            val failRate = (captureFailureCount * 100f / captureAttempts).roundToInt()
-                            val code = result.errorCode ?: CaptureErrorCode.UNKNOWN
-                            message = captureErrorMessage(code)
-                            Log.e(
-                                CAMERA_DIAG_TAG,
-                                "event=capture_failed code=$code elapsed_ms=$elapsed fail_rate_pct=$failRate success=$captureSuccessCount fail=$captureFailureCount",
-                            )
-                        }
+                }
+                Box(modifier = Modifier.size(48.dp).background(Color(0x33FFFFFF), RoundedCornerShape(24.dp)), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.size(36.dp).background(Color(0x66FFFFFF), RoundedCornerShape(18.dp)))
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Row(Modifier.background(Color(0x33FFFFFF), RoundedCornerShape(20.dp)).padding(horizontal = 8.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                val modes = listOf(CameraCaptureMode.PHOTO to R.string.camera_mode_photo, CameraCaptureMode.VIDEO to R.string.camera_mode_video)
+                modes.forEach { (mode, labelRes) ->
+                    val selected = captureMode == mode
+                    Box(Modifier.clickable { captureMode = mode }.background(if (selected) Color(0xFF4A9EFF) else Color.Transparent, RoundedCornerShape(14.dp)).padding(horizontal = 20.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
+                        Text(text = stringResource(labelRes), color = if (selected) Color.White else Color(0xFFEAF1FF), fontSize = 14.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
                     }
-                },
-            )
+                }
+            }
         }
     }
 }
@@ -867,31 +682,6 @@ private suspend fun suspendImageCapture(
 }
 
 @Composable
-private fun CameraActionChip(
-    enabled: Boolean,
-    onClick: () -> Unit,
-    label: String,
-) {
-    val background = if (enabled) Color(0xB3223144) else Color(0x66223144)
-    Row(
-        modifier = Modifier
-            .background(background, RoundedCornerShape(18.dp))
-            .border(1.dp, Color(0x33EAF1FF), RoundedCornerShape(18.dp))
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = label,
-            color = Color(0xFFEAF1FF),
-            fontSize = UiTextSize.homeNavLabel,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
-}
-
-@Composable
 private fun ZoomRail(
     minZoom: Float,
     maxZoom: Float,
@@ -899,51 +689,49 @@ private fun ZoomRail(
     onZoomRatioChanged: (Float) -> Unit,
     onSelectPreset: (Float) -> Unit,
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 0.dp),
+            .padding(horizontal = 80.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Slider(
-            value = zoomRatio.coerceIn(minZoom, maxZoom),
-            onValueChange = onZoomRatioChanged,
-            valueRange = minZoom..maxZoom,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp),
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ZoomPresetText(text = "0.6x", enabled = minZoom <= 0.6f, selected = kotlin.math.abs(zoomRatio - 0.6f) < 0.08f) {
-                onSelectPreset(0.6f)
-            }
-            ZoomPresetText(text = "1x", enabled = true, selected = kotlin.math.abs(zoomRatio - 1f) < 0.08f) {
-                onSelectPreset(1f)
-            }
-            ZoomPresetText(text = "2x", enabled = maxZoom >= 2f, selected = kotlin.math.abs(zoomRatio - 2f) < 0.08f) {
-                onSelectPreset(2f)
-            }
+        ZoomPresetButton(text = ".7", enabled = minZoom <= 0.7f, selected = kotlin.math.abs(zoomRatio - 0.7f) < 0.08f) {
+            onSelectPreset(0.7f)
+        }
+        ZoomPresetButton(text = "1x", enabled = true, selected = kotlin.math.abs(zoomRatio - 1f) < 0.08f) {
+            onSelectPreset(1f)
+        }
+        ZoomPresetButton(text = "2", enabled = maxZoom >= 2f, selected = kotlin.math.abs(zoomRatio - 2f) < 0.08f) {
+            onSelectPreset(2f)
         }
     }
 }
 
 @Composable
-private fun ZoomPresetText(
+private fun ZoomPresetButton(
     text: String,
     enabled: Boolean,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    Text(
-        text = text,
-        color = if (!enabled) Color(0x66EAF1FF) else if (selected) Color(0xFFEAF1FF) else Color(0x99EAF1FF),
-        fontSize = UiTextSize.homeNavLabel,
-        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-        modifier = Modifier.clickable(enabled = enabled, onClick = onClick),
-    )
+    Box(
+        modifier = Modifier
+            .clickable(enabled = enabled, onClick = onClick)
+            .background(
+                if (selected) Color(0xFF4A9EFF) else Color.Transparent,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = if (!enabled) Color(0x66EAF1FF) else if (selected) Color.White else Color(0x99EAF1FF),
+            fontSize = UiTextSize.homeNavLabel,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+        )
+    }
 }
 
 @Composable
@@ -1096,6 +884,151 @@ private fun maskedDeviceModel(): String {
     if (model.isEmpty()) return "unknown"
     val prefix = model.take(3)
     return "$prefix***${model.length}"
+}
+
+@Composable
+private fun CameraSettingsPanel(
+    captureMode: CameraCaptureMode,
+    flashMode: FlashUiMode,
+    timerSeconds: Int,
+    showGrid: Boolean,
+    hasFlashUnit: Boolean,
+    exposureRange: IntRange,
+    exposureIndex: Int,
+    videoResolution: String,
+    videoFps: String,
+    onFlashModeChange: (FlashUiMode) -> Unit,
+    onTimerSecondsChange: (Int) -> Unit,
+    onShowGridChange: (Boolean) -> Unit,
+    onExposureIndexChange: (Int) -> Unit,
+    onVideoResolutionChange: (String) -> Unit,
+    onVideoFpsChange: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .width(280.dp)
+            .background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        when (captureMode) {
+            CameraCaptureMode.PHOTO -> {
+                SettingsRow(label = "闪光灯") {
+                    OptionPill(text = stringResource(R.string.camera_control_flash_off), selected = flashMode == FlashUiMode.OFF, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.OFF) })
+                    OptionPill(text = stringResource(R.string.camera_control_flash_auto), selected = flashMode == FlashUiMode.AUTO, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.AUTO) })
+                    OptionPill(text = stringResource(R.string.camera_control_flash_on), selected = flashMode == FlashUiMode.ON, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.ON) })
+                }
+                SettingsRow(label = "定时器") {
+                    OptionPill(text = stringResource(R.string.camera_control_timer_off), selected = timerSeconds == 0, onClick = { onTimerSecondsChange(0) })
+                    OptionPill(text = "3s", selected = timerSeconds == 3, onClick = { onTimerSecondsChange(3) })
+                    OptionPill(text = "10s", selected = timerSeconds == 10, onClick = { onTimerSecondsChange(10) })
+                }
+                SettingsRow(label = "网格") {
+                    OptionPill(text = stringResource(R.string.camera_control_grid_off), selected = !showGrid, onClick = { onShowGridChange(false) })
+                    OptionPill(text = stringResource(R.string.camera_control_grid_on), selected = showGrid, onClick = { onShowGridChange(true) })
+                }
+                if (exposureRange.first != exposureRange.last) {
+                    SettingsRow(label = "曝光") {
+                        Text(
+                            text = if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
+                            color = UiColors.Home.subtitle,
+                            fontSize = 11.sp,
+                        )
+                        Slider(
+                            value = exposureIndex.toFloat(),
+                            onValueChange = { onExposureIndexChange(it.roundToInt().coerceIn(exposureRange.first, exposureRange.last)) },
+                            valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
+                            steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
+                            modifier = Modifier.width(100.dp).height(20.dp),
+                        )
+                        if (exposureIndex != 0) {
+                            Text(
+                                text = stringResource(R.string.camera_control_exposure_auto),
+                                color = UiColors.Home.navItemActive,
+                                fontSize = 11.sp,
+                                modifier = Modifier.clickable { onExposureIndexChange(0) },
+                            )
+                        }
+                    }
+                }
+            }
+            CameraCaptureMode.VIDEO -> {
+                SettingsRow(label = "闪光灯") {
+                    OptionPill(text = stringResource(R.string.camera_control_flash_off), selected = flashMode == FlashUiMode.OFF, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.OFF) })
+                    OptionPill(text = stringResource(R.string.camera_control_flash_auto), selected = flashMode == FlashUiMode.AUTO, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.AUTO) })
+                    OptionPill(text = stringResource(R.string.camera_control_flash_on), selected = flashMode == FlashUiMode.ON, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.ON) })
+                }
+                SettingsRow(label = "分辨率") {
+                    OptionPill(text = stringResource(R.string.camera_resolution_fhd), selected = videoResolution == "FHD", onClick = { onVideoResolutionChange("FHD") })
+                    OptionPill(text = stringResource(R.string.camera_resolution_4k), selected = videoResolution == "4K", onClick = { onVideoResolutionChange("4K") })
+                }
+                SettingsRow(label = "帧率") {
+                    OptionPill(text = stringResource(R.string.camera_fps_30), selected = videoFps == "30", onClick = { onVideoFpsChange("30") })
+                    OptionPill(text = stringResource(R.string.camera_fps_60), selected = videoFps == "60", onClick = { onVideoFpsChange("60") })
+                }
+            }
+        }
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+            Text(
+                text = stringResource(R.string.camera_settings_title),
+                color = Color(0xFF8EA2C0),
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .background(Color(0x33FFFFFF), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsRow(
+    label: String,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = Color(0xFFEAF1FF),
+            fontSize = 14.sp,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun OptionPill(
+    text: String,
+    selected: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                if (!enabled) Color(0x1FFFFFFF) else if (selected) Color(0xFF4A9EFF) else Color(0x33FFFFFF),
+                RoundedCornerShape(20.dp),
+            )
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = if (!enabled) Color(0x66EAF1FF) else if (selected) Color.White else Color(0xFFEAF1FF),
+            fontSize = 12.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+        )
+    }
 }
 
 private const val CAMERA_DIAG_TAG = "PrivateCameraDiag"
