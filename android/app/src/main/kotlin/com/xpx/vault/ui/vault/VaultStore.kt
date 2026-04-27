@@ -167,6 +167,16 @@ object VaultStore {
         File(album, "camera_${System.currentTimeMillis()}.$safeExt")
     }
 
+    suspend fun deletePhoto(context: Context, path: String): Boolean = withContext(Dispatchers.IO) {
+        val file = File(path)
+        if (!file.exists()) return@withContext false
+        val trashDir = File(context.filesDir, "vault_trash")
+        if (!trashDir.exists()) trashDir.mkdirs()
+        val dest = File(trashDir, file.name)
+        if (dest.exists()) dest.delete()
+        file.renameTo(dest)
+    }
+
     private fun listAllPhotos(context: Context): List<VaultPhoto> {
         val root = rootDir(context)
         return root.listFiles()

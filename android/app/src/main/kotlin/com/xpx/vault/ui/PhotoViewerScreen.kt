@@ -17,7 +17,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -28,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.R
+import com.xpx.vault.ui.components.AppDialog
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
@@ -51,6 +54,8 @@ fun PhotoViewerScreen(
     var currentPath by remember(path) { mutableStateOf(path) }
     var orderedPaths by remember { mutableStateOf(listOf(path)) }
     var horizontalDragOffset by remember { mutableStateOf(0f) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     val currentIndex = remember(currentPath, orderedPaths) {
         orderedPaths.indexOf(currentPath).coerceAtLeast(0)
     }
@@ -85,6 +90,29 @@ fun PhotoViewerScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        AppDialog(
+            show = showDeleteDialog,
+            title = stringResource(R.string.photo_viewer_delete_title),
+            message = stringResource(R.string.photo_viewer_delete_message),
+            confirmText = stringResource(R.string.common_confirm),
+            onConfirm = {
+                showDeleteDialog = false
+                scope.launch {
+                    val deleted = VaultStore.deletePhoto(context, currentPath)
+                    if (deleted) {
+                        orderedPaths = orderedPaths.filter { it != currentPath }
+                        when {
+                            orderedPaths.isEmpty() -> onBack()
+                            currentIndex >= orderedPaths.size -> currentPath = orderedPaths.last()
+                            else -> currentPath = orderedPaths[currentIndex]
+                        }
+                    }
+                }
+            },
+            dismissText = stringResource(R.string.common_cancel),
+            onDismiss = { showDeleteDialog = false },
+            confirmVariant = com.xpx.vault.ui.components.AppButtonVariant.DANGER,
+        )
         AppTopBar(title = stringResource(R.string.photo_viewer_title), onBack = onBack)
         VaultProgressiveImage(
             path = currentPath,
@@ -141,7 +169,7 @@ fun PhotoViewerScreen(
             PhotoViewerActionButton(
                 iconRes = R.drawable.ic_photo_delete,
                 label = stringResource(R.string.photo_viewer_delete),
-                onClick = { /* TODO: delete */ },
+                onClick = { showDeleteDialog = true },
             )
         }
     }

@@ -105,6 +105,9 @@
     <string name="photo_viewer_edit">Edit</string>
     <string name="photo_viewer_info">Info</string>
     <string name="photo_viewer_delete">Delete</string>
+    <string name="photo_viewer_delete_title">Delete this photo?</string>
+    <string name="photo_viewer_delete_message">Deleted photos go to the temporary trash bin</string>
+    <string name="common_confirm">Confirm</string>
     <string name="photo_viewer_load_failed">Failed to load image</string>
     <string name="home_header_stat_photos">Photos %1$d</string>
     <string name="home_header_stat_videos">Videos 0</string>
