@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,13 +24,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.R
-import com.xpx.vault.ui.components.AppButton
-import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.components.VaultProgressiveImage
+import com.xpx.vault.ui.feedback.pressFeedback
+import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
+import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.VaultStore
@@ -113,23 +117,66 @@ fun PhotoViewerScreen(
             fontSize = UiTextSize.homeNavLabel,
         )
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            AppButton(
-                text = stringResource(R.string.photo_viewer_prev),
-                onClick = ::showPrevious,
-                variant = AppButtonVariant.SECONDARY,
-                enabled = currentIndex > 0,
-                modifier = Modifier.weight(1f),
+            PhotoViewerActionButton(
+                iconRes = R.drawable.ic_photo_share,
+                label = stringResource(R.string.photo_viewer_share),
+                onClick = { /* TODO: share */ },
             )
-            AppButton(
-                text = stringResource(R.string.photo_viewer_next),
-                onClick = ::showNext,
-                enabled = currentIndex < orderedPaths.lastIndex,
-                modifier = Modifier.weight(1f),
+            PhotoViewerActionButton(
+                iconRes = R.drawable.ic_photo_edit,
+                label = stringResource(R.string.photo_viewer_edit),
+                onClick = { /* TODO: edit */ },
+            )
+            PhotoViewerActionButton(
+                iconRes = R.drawable.ic_photo_info,
+                label = stringResource(R.string.photo_viewer_info),
+                onClick = { /* TODO: info */ },
+            )
+            PhotoViewerActionButton(
+                iconRes = R.drawable.ic_photo_delete,
+                label = stringResource(R.string.photo_viewer_delete),
+                onClick = { /* TODO: delete */ },
             )
         }
+    }
+}
+
+@Composable
+private fun PhotoViewerActionButton(
+    iconRes: Int,
+    label: String,
+    onClick: () -> Unit,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    Column(
+        modifier = Modifier
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = label,
+            tint = UiColors.Home.title,
+            modifier = Modifier.size(24.dp),
+        )
+        Text(
+            text = label,
+            color = UiColors.Home.title,
+            fontSize = UiTextSize.homeNavLabel,
+        )
     }
 }
 

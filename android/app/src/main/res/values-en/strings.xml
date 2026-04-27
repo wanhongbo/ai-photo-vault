@@ -101,8 +101,10 @@
     <string name="camera_control_lens_front">Front</string>
     <string name="camera_control_exposure_value">Exposure %1$s</string>
     <string name="camera_control_exposure_auto">Auto</string>
-    <string name="photo_viewer_prev">Previous</string>
-    <string name="photo_viewer_next">Next</string>
+    <string name="photo_viewer_share">Share</string>
+    <string name="photo_viewer_edit">Edit</string>
+    <string name="photo_viewer_info">Info</string>
+    <string name="photo_viewer_delete">Delete</string>
     <string name="photo_viewer_load_failed">Failed to load image</string>
     <string name="home_header_stat_photos">Photos %1$d</string>
     <string name="home_header_stat_videos">Videos 0</string>
