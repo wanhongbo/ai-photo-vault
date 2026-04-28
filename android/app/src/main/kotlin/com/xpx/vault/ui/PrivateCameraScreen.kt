@@ -405,13 +405,36 @@ fun PrivateCameraScreen(
             }
         }
 
-        Column(Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 16.dp, top = 8.dp)) {
-            IconButton(onClick = { showSettingsPanel = !showSettingsPanel }, modifier = Modifier.size(40.dp).background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp))) {
-                Icon(imageVector = if (showSettingsPanel) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null, tint = Color.White)
-            }
-            AnimatedVisibility(visible = showSettingsPanel, enter = fadeIn(), exit = fadeOut()) {
-                CameraSettingsPanel(captureMode = captureMode, flashMode = flashMode, timerSeconds = timerSeconds, showGrid = showGrid, hasFlashUnit = hasFlashUnit, exposureRange = exposureRange, exposureIndex = exposureIndex, videoResolution = videoResolution, videoFps = videoFps, onFlashModeChange = { flashMode = it }, onTimerSecondsChange = { timerSeconds = it }, onShowGridChange = { showGrid = it }, onExposureIndexChange = { exposureIndex = it }, onVideoResolutionChange = { videoResolution = it }, onVideoFpsChange = { videoFps = it })
-            }
+        IconButton(
+            onClick = { showSettingsPanel = !showSettingsPanel },
+            modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 16.dp, top = 8.dp).size(40.dp).background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp)),
+        ) {
+            Icon(imageVector = if (showSettingsPanel) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null, tint = Color.White)
+        }
+        AnimatedVisibility(
+            visible = showSettingsPanel,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 56.dp, start = 16.dp, end = 16.dp).fillMaxWidth(),
+        ) {
+            CameraSettingsPanel(
+                captureMode = captureMode,
+                flashMode = flashMode,
+                timerSeconds = timerSeconds,
+                showGrid = showGrid,
+                hasFlashUnit = hasFlashUnit,
+                exposureRange = exposureRange,
+                exposureIndex = exposureIndex,
+                videoResolution = videoResolution,
+                videoFps = videoFps,
+                onFlashModeChange = { flashMode = it },
+                onTimerSecondsChange = { timerSeconds = it },
+                onShowGridChange = { showGrid = it },
+                onExposureIndexChange = { exposureIndex = it },
+                onVideoResolutionChange = { videoResolution = it },
+                onVideoFpsChange = { videoFps = it },
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
 
         message?.let {
@@ -423,7 +446,7 @@ fun PrivateCameraScreen(
                 ZoomRail(minZoom = minZoomRatio, maxZoom = maxZoomRatio, zoomRatio = zoomRatio, onZoomRatioChanged = { zoomRatio = it.coerceIn(minZoomRatio, maxZoomRatio) }, onSelectPreset = { preset -> zoomRatio = preset.coerceIn(minZoomRatio, maxZoomRatio) })
             }
             Spacer(Modifier.height(12.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) CameraSelector.LENS_FACING_FRONT else CameraSelector.LENS_FACING_BACK }, enabled = hasCameraPermission, modifier = Modifier.size(48.dp).background(Color(0x33FFFFFF), RoundedCornerShape(24.dp))) {
                     Text("⇄", color = Color.White, fontSize = 20.sp)
                 }
@@ -903,11 +926,10 @@ private fun CameraSettingsPanel(
     onExposureIndexChange: (Int) -> Unit,
     onVideoResolutionChange: (String) -> Unit,
     onVideoFpsChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
-            .padding(top = 8.dp)
-            .width(280.dp)
+        modifier = modifier
             .background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
