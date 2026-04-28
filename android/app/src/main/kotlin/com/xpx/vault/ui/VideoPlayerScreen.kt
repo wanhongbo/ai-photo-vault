@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
@@ -50,6 +51,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.xpx.vault.R
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.feedback.pressFeedback
+import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
@@ -66,10 +69,6 @@ fun VideoPlayerScreen(
     val localView = LocalView.current
     val activity = remember(context) { context.findActivity() }
     val playbackStore = remember(context) { VideoPlaybackStore(context) }
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val controlsHorizontalInset: Dp = if (isLandscape) 72.dp else 10.dp
-    val controlsVerticalPadding: Dp = if (isLandscape) 8.dp else 7.dp
-    val controlsInnerGap: Dp = if (isLandscape) 6.dp else 5.dp
     val exoPlayer = remember(path) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(Uri.parse(path)))
@@ -81,13 +80,11 @@ fun VideoPlayerScreen(
 
     var muted by remember { mutableStateOf(true) }
     var isPlaying by remember { mutableStateOf(true) }
-    var showControls by remember { mutableStateOf(false) }
     var durationMs by remember { mutableLongStateOf(0L) }
     var currentPositionMs by remember { mutableLongStateOf(0L) }
     var sliderPositionMs by remember { mutableStateOf<Float?>(null) }
     var seekFeedback by remember { mutableStateOf<String?>(null) }
     var isSeeking by remember { mutableStateOf(false) }
-    var showLandscapeMore by remember { mutableStateOf(false) }
 
     fun applyMuteState() {
         exoPlayer.volume = if (muted) 0f else 1f
@@ -98,7 +95,6 @@ fun VideoPlayerScreen(
         exoPlayer.seekTo(target)
         currentPositionMs = target
         seekFeedback = if (deltaMs >= 0) "+10s" else "-10s"
-        showControls = true
     }
 
     DisposableEffect(path) {
@@ -144,11 +140,10 @@ fun VideoPlayerScreen(
         }
     }
 
-    LaunchedEffect(showControls, isPlaying) {
-        if (showControls && isPlaying) {
-            delay(1400)
-            showControls = false
-            showLandscapeMore = false
+    LaunchedEffect(isPlaying) {
+        if (!isPlaying) {
+            delay(800)
+            if (!isPlaying) exoPlayer.pause()
         }
     }
 
@@ -179,7 +174,10 @@ fun VideoPlayerScreen(
                     .fillMaxSize()
                     .pointerInput(isPlaying, durationMs, playerWidthPx) {
                         detectTapGestures(
-                            onTap = { showControls = !showControls },
+                            onTap = {
+                                isPlaying = !isPlaying
+                                if (isPlaying) exoPlayer.play() else exoPlayer.pause()
+                            },
                             onDoubleTap = { offset ->
                                 if (offset.x < playerWidthPx / 2f) seekBy(-10_000L) else seekBy(10_000L)
                             },
@@ -200,6 +198,26 @@ fun VideoPlayerScreen(
                         if (it.player !== exoPlayer) it.player = exoPlayer
                     },
                 )
+                if (!isPlaying) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .background(UiColors.Home.emptyCardBg.copy(alpha = 0.5f), RoundedCornerShape(50))
+                            .padding(16.dp)
+                            .throttledClickable {
+                                isPlaying = true
+                                exoPlayer.play()
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_video_play),
+                            contentDescription = stringResource(R.string.video_player_play),
+                            tint = UiColors.Home.title.copy(alpha = 0.92f),
+                            modifier = Modifier.size(32.dp),
+                        )
+                    }
+                }
                 if (seekFeedback != null) {
                     Text(
                         text = seekFeedback.orEmpty(),
@@ -211,104 +229,119 @@ fun VideoPlayerScreen(
                             .padding(horizontal = 9.dp, vertical = 5.dp),
                     )
                 }
-                if (showControls) {
-                    Column(
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = formatDuration(currentPositionMs),
+                        color = UiColors.Home.title.copy(alpha = 0.9f),
+                        fontSize = 11.sp,
+                    )
+                    Slider(
+                        value = sliderPositionMs ?: currentPositionMs.toFloat(),
+                        onValueChange = {
+                            isSeeking = true
+                            sliderPositionMs = it
+                        },
+                        onValueChangeFinished = {
+                            val seekTo = sliderPositionMs?.toLong() ?: currentPositionMs
+                            exoPlayer.seekTo(seekTo)
+                            currentPositionMs = seekTo
+                            sliderPositionMs = null
+                            isSeeking = false
+                        },
+                        valueRange = 0f..durationMs.coerceAtLeast(1L).toFloat(),
+                        colors = SliderDefaults.colors(
+                            thumbColor = UiColors.Home.title.copy(alpha = 0.82f),
+                            activeTrackColor = UiColors.Home.title.copy(alpha = 0.7f),
+                            inactiveTrackColor = UiColors.Home.subtitle.copy(alpha = 0.35f),
+                        ),
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(horizontal = controlsHorizontalInset)
-                            .background(UiColors.Home.emptyCardBg.copy(alpha = 0.58f), RoundedCornerShape(14.dp))
-                            .padding(horizontal = 8.dp, vertical = controlsVerticalPadding),
-                        verticalArrangement = Arrangement.spacedBy(controlsInnerGap),
-                    ) {
-                        Slider(
-                            value = sliderPositionMs ?: currentPositionMs.toFloat(),
-                            onValueChange = {
-                                isSeeking = true
-                                sliderPositionMs = it
-                            },
-                            onValueChangeFinished = {
-                                val seekTo = sliderPositionMs?.toLong() ?: currentPositionMs
-                                exoPlayer.seekTo(seekTo)
-                                currentPositionMs = seekTo
-                                sliderPositionMs = null
-                                isSeeking = false
-                            },
-                            valueRange = 0f..durationMs.coerceAtLeast(1L).toFloat(),
-                            colors = SliderDefaults.colors(
-                                thumbColor = UiColors.Home.title.copy(alpha = 0.82f),
-                                activeTrackColor = UiColors.Home.title.copy(alpha = 0.7f),
-                                inactiveTrackColor = UiColors.Home.subtitle.copy(alpha = 0.35f),
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = if (isLandscape) 6.dp else 0.dp),
-                        )
-                        Text(
-                            text = "${formatDuration(currentPositionMs)} / ${formatDuration(durationMs)}",
-                            color = UiColors.Home.subtitle.copy(alpha = 0.85f),
-                            fontSize = 10.sp,
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            VideoIconControlButton(
-                                iconRes = if (isPlaying) R.drawable.ic_video_pause else R.drawable.ic_video_play,
-                                contentDescription = if (isPlaying) stringResource(R.string.video_player_pause) else stringResource(R.string.video_player_play),
-                                onClick = {
-                                    if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
-                                    showControls = true
-                                },
-                                modifier = Modifier.weight(1f),
-                                primary = true,
-                            )
-                            VideoIconControlButton(
-                                iconRes = R.drawable.ic_video_more,
-                                contentDescription = if (showLandscapeMore) stringResource(R.string.video_player_less) else stringResource(R.string.video_player_more),
-                                onClick = {
-                                    showLandscapeMore = !showLandscapeMore
-                                    showControls = true
-                                },
-                                modifier = Modifier.weight(1f),
-                                primary = false,
-                            )
-                        }
-                        if (showLandscapeMore) {
-                            if (!isLandscape) {
-                                Text(
-                                    text = stringResource(R.string.video_player_hint),
-                                    color = UiColors.Home.subtitle,
-                                    fontSize = 11.sp,
-                                )
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                VideoControlButton(
-                                    text = if (muted) stringResource(R.string.video_player_unmute) else stringResource(R.string.video_player_mute),
-                                    onClick = { muted = !muted },
-                                    modifier = Modifier.weight(1f),
-                                    primary = false,
-                                )
-                                VideoControlButton(
-                                    text = stringResource(R.string.video_player_restart),
-                                    onClick = {
-                                        exoPlayer.seekTo(0L)
-                                        exoPlayer.play()
-                                        showControls = true
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    primary = false,
-                                )
-                            }
-                        }
-                    }
+                            .weight(1f)
+                            .padding(horizontal = 8.dp),
+                    )
+                    Text(
+                        text = formatDuration(durationMs),
+                        color = UiColors.Home.title.copy(alpha = 0.9f),
+                        fontSize = 11.sp,
+                    )
+                    Icon(
+                        painter = painterResource(if (muted) R.drawable.ic_video_mute else R.drawable.ic_video_unmute),
+                        contentDescription = if (muted) stringResource(R.string.video_player_unmute) else stringResource(R.string.video_player_mute),
+                        tint = UiColors.Home.title.copy(alpha = 0.85f),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .throttledClickable { muted = !muted },
+                    )
                 }
             }
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            VideoActionButton(
+                iconRes = R.drawable.ic_photo_share,
+                label = stringResource(R.string.photo_viewer_share),
+                onClick = { /* TODO: share */ },
+            )
+            VideoActionButton(
+                iconRes = R.drawable.ic_photo_edit,
+                label = stringResource(R.string.photo_viewer_edit),
+                onClick = { /* TODO: edit */ },
+            )
+            VideoActionButton(
+                iconRes = R.drawable.ic_photo_info,
+                label = stringResource(R.string.photo_viewer_info),
+                onClick = { /* TODO: info */ },
+            )
+            VideoActionButton(
+                iconRes = R.drawable.ic_photo_delete,
+                label = stringResource(R.string.photo_viewer_delete),
+                onClick = { /* TODO: delete */ },
+            )
+        }
+    }
+}
+
+@Composable
+private fun VideoActionButton(
+    iconRes: Int,
+    label: String,
+    onClick: () -> Unit,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    Column(
+        modifier = Modifier
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = label,
+            tint = UiColors.Home.title,
+            modifier = Modifier.size(24.dp),
+        )
+        Text(
+            text = label,
+            color = UiColors.Home.title,
+            fontSize = UiTextSize.homeNavLabel,
+        )
     }
 }
 
