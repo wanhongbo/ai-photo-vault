@@ -7,6 +7,8 @@ import android.os.Build
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
+import android.view.OrientationEventListener
+import android.view.Surface
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
@@ -58,6 +60,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -258,6 +261,23 @@ fun PrivateCameraScreen(
         }
     }
 
+    DisposableEffect(imageCapture) {
+        val capture = imageCapture ?: return@DisposableEffect onDispose {}
+        val orientationListener = object : OrientationEventListener(context) {
+            override fun onOrientationChanged(orientation: Int) {
+                val rotation = when (orientation) {
+                    in 45..134 -> Surface.ROTATION_270
+                    in 135..224 -> Surface.ROTATION_180
+                    in 225..314 -> Surface.ROTATION_90
+                    else -> Surface.ROTATION_0
+                }
+                capture.targetRotation = rotation
+            }
+        }
+        orientationListener.enable()
+        onDispose { orientationListener.disable() }
+    }
+
     LaunchedEffect(hasCameraPermission, previewViewRef, lensFacing, flashMode, lifecycleOwner, rebindTick) {
         val previewView = previewViewRef ?: return@LaunchedEffect
         if (!hasCameraPermission) return@LaunchedEffect
@@ -379,6 +399,17 @@ fun PrivateCameraScreen(
             }
         }
 
+        if (showSettingsPanel) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { showSettingsPanel = false },
+                    ),
+            )
+        }
         IconButton(
             onClick = { showSettingsPanel = !showSettingsPanel },
             modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 16.dp, top = 8.dp).size(40.dp).background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp)),
@@ -573,6 +604,9 @@ private fun bindCameraUseCases(
                         },
                     )
                     .build()
+                    .also {
+                        it.targetRotation = previewView.display?.rotation ?: Surface.ROTATION_0
+                    }
                 val recorder = Recorder.Builder()
                     .setQualitySelector(
                         QualitySelector.from(
