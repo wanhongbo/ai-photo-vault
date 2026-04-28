@@ -241,6 +241,9 @@ class MainActivity : ComponentActivity() {
                         composable(ROUTE_PRIVATE_CAMERA) {
                             PrivateCameraScreen(
                                 onBack = { navController.popBackStack() },
+                                onViewMedia = { path ->
+                                    navController.navigate(viewerRouteForPath(path)) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_VAULT_SEARCH) {

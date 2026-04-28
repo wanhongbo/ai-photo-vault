@@ -70,6 +70,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -139,6 +140,7 @@ private data class CaptureShotResult(
 @Composable
 fun PrivateCameraScreen(
     onBack: () -> Unit,
+    onViewMedia: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -175,9 +177,8 @@ fun PrivateCameraScreen(
     var exposureRange by remember { mutableStateOf(IntRange(0, 0)) }
     var exposureIndex by remember { mutableStateOf(0) }
 
-    var pendingCapturePath by remember { mutableStateOf<String?>(null) }
-    var pendingPreview by remember { mutableStateOf<Bitmap?>(null) }
-    var savingPending by remember { mutableStateOf(false) }
+    var lastMediaPath by remember { mutableStateOf<String?>(null) }
+    var lastMediaPreview by remember { mutableStateOf<Bitmap?>(null) }
     var rebindTick by remember { mutableStateOf(0) }
     var bindRetryCount by remember { mutableStateOf(0) }
     var bindStartMs by remember { mutableStateOf(0L) }
@@ -312,13 +313,17 @@ fun PrivateCameraScreen(
         cameraRef?.cameraControl?.setExposureCompensationIndex(exposureIndex)
     }
 
-    LaunchedEffect(pendingCapturePath) {
-        val path = pendingCapturePath
+    LaunchedEffect(lastMediaPath) {
+        val path = lastMediaPath
         if (path.isNullOrEmpty()) {
-            pendingPreview = null
+            lastMediaPreview = null
             return@LaunchedEffect
         }
-        pendingPreview = decodePreviewBitmap(path, 1600)
+        lastMediaPreview = if (isVideoPath(path)) {
+            decodeVideoThumbnail(path)
+        } else {
+            decodePreviewBitmap(path, 1600)
+        }
     }
 
     LaunchedEffect(isRecording) {
@@ -333,38 +338,6 @@ fun PrivateCameraScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        if (pendingCapturePath != null) {
-            Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-                PendingCapturePreview(bitmap = pendingPreview, saving = savingPending, onRetake = {
-                    pendingCapturePath?.let { File(it).delete() }
-                    pendingCapturePath = null
-                    pendingPreview = null
-                    message = "已取消，返回取景"
-                }, onSave = {
-                    val path = pendingCapturePath ?: return@PendingCapturePreview
-                    if (savingPending) return@PendingCapturePreview
-                    savingPending = true
-                    scope.launch {
-                        val saveStart = System.currentTimeMillis()
-                        val saved = savePendingToVault(context, path)
-                        savingPending = false
-                        peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
-                        Log.i(CAMERA_DIAG_TAG, "event=save_result ok=$saved elapsed_ms=${System.currentTimeMillis() - saveStart} peak_mem_mb=$peakMemoryMb")
-                        if (saved) {
-                            message = "已保存到保险箱"
-                            pendingCapturePath = null
-                            pendingPreview = null
-                            delay(220)
-                            onBack()
-                        } else {
-                            message = "保存失败（存储错误），请重试"
-                        }
-                    }
-                })
-            }
-            return@Box
-        }
-
         if (hasCameraPermission) {
             Box(Modifier.fillMaxSize().pointerInput(previewViewRef, cameraRef) {
                 detectTapGestures { offset ->
@@ -482,6 +455,7 @@ fun PrivateCameraScreen(
                                             activeRecording?.close()
                                             activeRecording = null
                                             if (!event.hasError()) {
+                                                lastMediaPath = outputFile.absolutePath
                                                 message = "视频已保存到保险箱"
                                                 Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
                                             } else {
@@ -519,7 +493,13 @@ fun PrivateCameraScreen(
                             peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
                             if (result.path != null) {
                                 captureSuccessCount += 1
-                                pendingCapturePath = result.path
+                                val vaultPath = savePendingToVault(context, result.path)
+                                if (vaultPath != null) {
+                                    lastMediaPath = vaultPath
+                                    message = "已保存到保险箱"
+                                } else {
+                                    message = "保存失败（存储错误），请重试"
+                                }
                                 Log.i(CAMERA_DIAG_TAG, "event=capture_success elapsed_ms=$elapsed success=$captureSuccessCount fail=$captureFailureCount peak_mem_mb=$peakMemoryMb")
                             } else {
                                 captureFailureCount += 1
@@ -534,8 +514,23 @@ fun PrivateCameraScreen(
                         Text(text = formatRecordingDuration(recordingDurationMs), color = Color(0xFFFF6B6B), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
                     }
                 }
-                Box(modifier = Modifier.size(48.dp).background(Color(0x33FFFFFF), RoundedCornerShape(24.dp)), contentAlignment = Alignment.Center) {
-                    Box(modifier = Modifier.size(36.dp).background(Color(0x66FFFFFF), RoundedCornerShape(18.dp)))
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0x33FFFFFF))
+                        .clickable(enabled = lastMediaPath != null) {
+                            lastMediaPath?.let { onViewMedia(it) }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    lastMediaPreview?.let { preview ->
+                        Image(
+                            bitmap = preview.asImageBitmap(),
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp),
+                        )
+                    } ?: Box(modifier = Modifier.size(36.dp).background(Color(0x66FFFFFF), RoundedCornerShape(18.dp)))
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -645,14 +640,15 @@ private suspend fun captureToTempFile(
 private suspend fun savePendingToVault(
     context: Context,
     path: String,
-): Boolean = withContext(Dispatchers.IO) {
+): String? = withContext(Dispatchers.IO) {
     val source = File(path)
-    if (!source.exists()) return@withContext false
+    if (!source.exists()) return@withContext null
     runCatching {
         val target = VaultStore.reserveCameraTarget(context, DEFAULT_ALBUM_NAME)
         source.copyTo(target, overwrite = true)
         source.delete()
-    }.isSuccess
+        target.absolutePath
+    }.getOrNull()
 }
 
 private suspend fun decodePreviewBitmap(
@@ -1051,6 +1047,26 @@ private fun OptionPill(
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
         )
     }
+}
+
+private fun isVideoPath(path: String): Boolean {
+    val lower = path.lowercase()
+    return lower.endsWith(".mp4") ||
+        lower.endsWith(".m4v") ||
+        lower.endsWith(".mov") ||
+        lower.endsWith(".3gp") ||
+        lower.endsWith(".webm") ||
+        lower.endsWith(".mkv")
+}
+
+private fun decodeVideoThumbnail(path: String): Bitmap? {
+    return runCatching {
+        val retriever = android.media.MediaMetadataRetriever()
+        retriever.setDataSource(path)
+        val bitmap = retriever.getFrameAtTime(0, android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+        retriever.release()
+        bitmap
+    }.getOrNull()
 }
 
 private const val CAMERA_DIAG_TAG = "PrivateCameraDiag"
