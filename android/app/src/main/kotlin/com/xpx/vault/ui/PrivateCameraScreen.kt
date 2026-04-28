@@ -195,6 +195,24 @@ fun PrivateCameraScreen(
     var videoResolution by remember { mutableStateOf("FHD") }
     var videoFps by remember { mutableStateOf("30") }
 
+    val orientationListener = remember {
+        object : OrientationEventListener(context) {
+            override fun onOrientationChanged(orientation: Int) {
+                val rotation = when (orientation) {
+                    in 45..134 -> Surface.ROTATION_270
+                    in 135..224 -> Surface.ROTATION_180
+                    in 225..314 -> Surface.ROTATION_90
+                    else -> Surface.ROTATION_0
+                }
+                imageCapture?.targetRotation = rotation
+            }
+        }
+    }
+    DisposableEffect(Unit) {
+        orientationListener.enable()
+        onDispose { orientationListener.disable() }
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -259,23 +277,6 @@ fun PrivateCameraScreen(
             activeRecording?.close()
             activeRecording = null
         }
-    }
-
-    DisposableEffect(imageCapture) {
-        val capture = imageCapture ?: return@DisposableEffect onDispose {}
-        val orientationListener = object : OrientationEventListener(context) {
-            override fun onOrientationChanged(orientation: Int) {
-                val rotation = when (orientation) {
-                    in 45..134 -> Surface.ROTATION_270
-                    in 135..224 -> Surface.ROTATION_180
-                    in 225..314 -> Surface.ROTATION_90
-                    else -> Surface.ROTATION_0
-                }
-                capture.targetRotation = rotation
-            }
-        }
-        orientationListener.enable()
-        onDispose { orientationListener.disable() }
     }
 
     LaunchedEffect(hasCameraPermission, previewViewRef, lensFacing, flashMode, lifecycleOwner, rebindTick) {
@@ -603,10 +604,8 @@ private fun bindCameraUseCases(
                             FlashUiMode.AUTO -> ImageCapture.FLASH_MODE_AUTO
                         },
                     )
+                    .setTargetRotation(context.display?.rotation ?: Surface.ROTATION_0)
                     .build()
-                    .also {
-                        it.targetRotation = previewView.display?.rotation ?: Surface.ROTATION_0
-                    }
                 val recorder = Recorder.Builder()
                     .setQualitySelector(
                         QualitySelector.from(
