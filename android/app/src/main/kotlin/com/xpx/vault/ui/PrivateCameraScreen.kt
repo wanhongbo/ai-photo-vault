@@ -67,6 +67,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -177,7 +178,7 @@ fun PrivateCameraScreen(
     var exposureRange by remember { mutableStateOf(IntRange(0, 0)) }
     var exposureIndex by remember { mutableStateOf(0) }
 
-    var lastMediaPath by remember { mutableStateOf<String?>(null) }
+    var lastMediaPath by rememberSaveable { mutableStateOf<String?>(null) }
     var lastMediaPreview by remember { mutableStateOf<Bitmap?>(null) }
     var rebindTick by remember { mutableStateOf(0) }
     var bindRetryCount by remember { mutableStateOf(0) }
