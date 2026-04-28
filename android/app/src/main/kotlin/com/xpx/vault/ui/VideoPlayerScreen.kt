@@ -17,10 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -59,6 +62,7 @@ import com.xpx.vault.ui.theme.UiTextSize
 import kotlinx.coroutines.delay
 import android.content.res.Configuration
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoPlayerScreen(
     path: String,
@@ -136,7 +140,7 @@ fun VideoPlayerScreen(
         while (true) {
             if (!isSeeking) currentPositionMs = exoPlayer.currentPosition
             durationMs = exoPlayer.duration.coerceAtLeast(0L)
-            delay(250)
+            delay(64)
         }
     }
 
@@ -242,6 +246,12 @@ fun VideoPlayerScreen(
                         color = UiColors.Home.title.copy(alpha = 0.9f),
                         fontSize = 11.sp,
                     )
+                    val sliderInteractionSource = remember { MutableInteractionSource() }
+                    val sliderColors = SliderDefaults.colors(
+                        thumbColor = UiColors.Home.title.copy(alpha = 0.82f),
+                        activeTrackColor = UiColors.Home.title.copy(alpha = 0.7f),
+                        inactiveTrackColor = UiColors.Home.subtitle.copy(alpha = 0.35f),
+                    )
                     Slider(
                         value = sliderPositionMs ?: currentPositionMs.toFloat(),
                         onValueChange = {
@@ -256,14 +266,26 @@ fun VideoPlayerScreen(
                             isSeeking = false
                         },
                         valueRange = 0f..durationMs.coerceAtLeast(1L).toFloat(),
-                        colors = SliderDefaults.colors(
-                            thumbColor = UiColors.Home.title.copy(alpha = 0.82f),
-                            activeTrackColor = UiColors.Home.title.copy(alpha = 0.7f),
-                            inactiveTrackColor = UiColors.Home.subtitle.copy(alpha = 0.35f),
-                        ),
+                        colors = sliderColors,
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp),
+                        thumb = {
+                            SliderDefaults.Thumb(
+                                interactionSource = sliderInteractionSource,
+                                colors = sliderColors,
+                                thumbSize = DpSize(12.dp, 12.dp),
+                            )
+                        },
+                        track = { state ->
+                            SliderDefaults.Track(
+                                sliderState = state,
+                                modifier = Modifier.height(2.dp),
+                                colors = sliderColors,
+                                thumbTrackGapSize = 0.dp,
+                                trackInsideCornerSize = 0.dp,
+                            )
+                        },
                     )
                     Text(
                         text = formatDuration(durationMs),
