@@ -168,6 +168,7 @@ fun PhotoViewerScreen(
             thumbnailMaxPx = 1080,
             loadHighQuality = true,
             highQualityMaxPx = screenMaxPx,
+            loadedBackgroundColor = UiColors.Home.bgBottom,
         )
         Text(
             text = "左右滑动可切换",

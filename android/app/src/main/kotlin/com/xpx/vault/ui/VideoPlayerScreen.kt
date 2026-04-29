@@ -36,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -180,7 +181,8 @@ fun VideoPlayerScreen(
         BoxWithConstraints(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .background(UiColors.Home.bgBottom),
         ) {
             val playerWidthPx = constraints.maxWidth.toFloat().coerceAtLeast(1f)
             Box(
@@ -205,7 +207,8 @@ fun VideoPlayerScreen(
                             player = exoPlayer
                             useController = false
                             resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-                            setShutterBackgroundColor(android.graphics.Color.BLACK)
+                            setShutterBackgroundColor(UiColors.Home.bgBottom.toArgb())
+                            setBackgroundColor(UiColors.Home.bgBottom.toArgb())
                         }
                     },
                     update = {

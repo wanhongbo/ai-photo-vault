@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -56,6 +57,7 @@ fun VaultProgressiveImage(
     loadHighQuality: Boolean = false,
     highQualityMaxPx: Int? = null,
     showVideoIndicator: Boolean = false,
+    loadedBackgroundColor: Color? = null,
 ) {
     val isVideo = remember(path) { isVideoPath(path) }
     var videoDurationMs by remember(path) { mutableStateOf(0L) }
@@ -123,13 +125,17 @@ fun VaultProgressiveImage(
 
     Box(
         modifier = modifier.background(
-            brush = Brush.linearGradient(
-                colors = if (isVideo) {
-                    listOf(Color(0xFF202030), Color(0xFF141820), Color(0xFF0E131C))
-                } else {
-                    listOf(Color(0xFF1E304B), Color(0xFF13233A), Color(0xFF0D1729))
-                },
-            ),
+            brush = if (bitmap != null && loadedBackgroundColor != null) {
+                SolidColor(loadedBackgroundColor)
+            } else {
+                Brush.linearGradient(
+                    colors = if (isVideo) {
+                        listOf(Color(0xFF202030), Color(0xFF141820), Color(0xFF0E131C))
+                    } else {
+                        listOf(Color(0xFF1E304B), Color(0xFF13233A), Color(0xFF0D1729))
+                    },
+                )
+            },
         ),
     ) {
         // Rich placeholder graphics: soft glow circles + diagonal highlight + outline.
