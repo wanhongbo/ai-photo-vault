@@ -2,8 +2,9 @@ package com.xpx.vault
 
 import android.os.Bundle
 import android.net.Uri
-import androidx.activity.ComponentActivity
+import android.content.Context
 import androidx.activity.compose.setContent
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -45,9 +46,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     @Inject
     lateinit var appLockManager: AppLockManager
+
+    override fun attachBaseContext(newBase: Context) {
+        // 将持久化的应用内语言应用到 Activity Context，覆盖所有 API 级别
+        super.attachBaseContext(LanguageManager.wrapContext(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

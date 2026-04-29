@@ -68,13 +68,17 @@ fun LockScreen(
     val biometricAvailable = biometricAvailability.isAvailable
     var biometricAutoPromptConsumed by remember { mutableStateOf(false) }
 
-    fun launchBiometricPrompt() {
+    fun launchBiometricPrompt(userInitiated: Boolean = true) {
         if (!biometricAvailable) {
-            viewModel.onBiometricUnlockFailed(biometricAvailability.unavailableMessage)
+            if (userInitiated) {
+                viewModel.onBiometricUnlockFailed(biometricAvailability.unavailableMessage)
+            }
             return
         }
         val activity = hostActivity ?: run {
-            viewModel.onBiometricUnlockFailed("当前页面无法启动生物识别认证，请使用 PIN 解锁")
+            if (userInitiated) {
+                viewModel.onBiometricUnlockFailed("当前页面无法启动生物识别认证，请使用 PIN 解锁")
+            }
             return
         }
         val executor = ContextCompat.getMainExecutor(activity)
@@ -118,7 +122,7 @@ fun LockScreen(
             !biometricAutoPromptConsumed
         ) {
             biometricAutoPromptConsumed = true
-            launchBiometricPrompt()
+            launchBiometricPrompt(userInitiated = false)
         }
     }
     if (state.unlockSuccess) {
@@ -172,16 +176,15 @@ fun LockScreen(
                     Text(text = it, color = UiColors.Lock.success, modifier = Modifier.padding(top = 12.dp))
                 }
                 state.error?.let {
-                    Box(
+                    Text(
+                        text = it,
+                        color = UiColors.Lock.error,
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp)
-                            .border(1.dp, UiColors.Lock.error, RoundedCornerShape(UiRadius.errorBanner))
-                            .background(UiColors.Lock.errorBg, RoundedCornerShape(UiRadius.errorBanner))
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                    ) {
-                        Text(text = it, color = UiColors.Lock.error)
-                    }
+                            .padding(top = 10.dp, start = 8.dp, end = 8.dp),
+                    )
                 }
 
                 NumberPad(
@@ -318,7 +321,11 @@ private fun NumberPad(
     onBiometric: () -> Unit,
     onQuickCapture: () -> Unit,
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         listOf(
             listOf(1, 2, 3),
             listOf(4, 5, 6),
