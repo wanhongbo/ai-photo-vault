@@ -1,6 +1,7 @@
 package com.xpx.vault
 
 import android.app.Application
+import android.content.Context
 import com.xpx.vault.ui.backup.AutoBackupScheduler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -9,6 +10,11 @@ import javax.inject.Inject
 class PhotoVaultApp : Application() {
     @Inject
     lateinit var appLockManager: AppLockManager
+
+    override fun attachBaseContext(base: Context) {
+        // Application 级别也包装 Locale，避免偶然使用 application context 回落到系统默认语言。
+        super.attachBaseContext(LanguageManager.wrapContext(base))
+    }
 
     override fun onCreate() {
         super.onCreate()
