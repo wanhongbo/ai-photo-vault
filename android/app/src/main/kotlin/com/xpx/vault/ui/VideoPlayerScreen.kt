@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,6 +74,7 @@ fun VideoPlayerScreen(
     path: String,
     onBack: () -> Unit,
     isTrash: Boolean = false,
+    onOpenAlbum: ((String) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
@@ -323,8 +325,10 @@ fun VideoPlayerScreen(
                     text = stringResource(R.string.trash_recover),
                     onClick = {
                         scope.launch {
-                            val ok = VaultStore.restoreFromTrash(context, path)
-                            if (ok) onBack()
+                            val album = VaultStore.restoreFromTrash(context, path)
+                            if (album != null) {
+                                if (onOpenAlbum != null) onOpenAlbum(album) else onBack()
+                            }
                         }
                     },
                     modifier = Modifier.weight(1f),
