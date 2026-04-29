@@ -32,7 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.os.ConfigurationCompat
+import com.xpx.vault.LanguageManager
 import com.xpx.vault.R
 import com.xpx.vault.ui.backup.AutoBackupScheduler
 import com.xpx.vault.ui.feedback.throttledClickable
@@ -61,8 +61,8 @@ fun SettingsHomeScreen(
     var autoBackupEnabled by remember { mutableStateOf(AutoBackupScheduler.isEnabled(context)) }
     var autoBackupRequireCharging by remember { mutableStateOf(AutoBackupScheduler.isRequireCharging(context)) }
     var autoBackupRequireIdle by remember { mutableStateOf(AutoBackupScheduler.isRequireIdle(context)) }
-    val currentLanguageCode = ConfigurationCompat.getLocales(context.resources.configuration)[0]?.language ?: "en"
-    val languageDescRes = if (currentLanguageCode.startsWith("zh")) {
+    val currentLanguageCode = LanguageManager.getCurrentLanguage(context)
+    val languageDescRes = if (currentLanguageCode == LanguageManager.LANG_ZH) {
         R.string.language_option_chinese
     } else {
         R.string.language_option_english
