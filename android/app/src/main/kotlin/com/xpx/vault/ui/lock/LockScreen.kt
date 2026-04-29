@@ -21,11 +21,13 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +40,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
@@ -49,6 +54,9 @@ import com.xpx.vault.ui.theme.UiRadius
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 
+// 生物识别自动重拉冷却期：用户取消后 4 秒内不再自动拉起，避免 ON_RESUME 立即重复弹窗
+private const val BIOMETRIC_AUTO_RETRY_COOLDOWN_MS = 4_000L
+
 @Composable
 fun LockScreen(
     onUnlockSuccess: () -> Unit,
@@ -58,6 +66,7 @@ fun LockScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val hostActivity = remember(context) { context.findFragmentActivity() }
+    val lifecycleOwner = LocalLifecycleOwner.current
     val biometricAuthenticator =
         BiometricManager.Authenticators.BIOMETRIC_STRONG or
             BiometricManager.Authenticators.BIOMETRIC_WEAK or
@@ -66,9 +75,24 @@ fun LockScreen(
         resolveBiometricAvailability(context, biometricAuthenticator)
     }
     val biometricAvailable = biometricAvailability.isAvailable
-    var biometricAutoPromptConsumed by remember { mutableStateOf(false) }
+    var biometricInFlight by remember { mutableStateOf(false) }
+    var lastBiometricDismissedAt by remember { mutableStateOf(0L) }
+    val stageState = rememberUpdatedState(state.stage)
+    val biometricEnabledState = rememberUpdatedState(state.biometricEnabled)
+    val dismissedAtState = rememberUpdatedState(lastBiometricDismissedAt)
+    val inFlightState = rememberUpdatedState(biometricInFlight)
+
+    fun canAutoPromptBiometric(): Boolean {
+        if (inFlightState.value) return false
+        if (stageState.value != LockStage.UNLOCK) return false
+        if (!biometricEnabledState.value) return false
+        if (!biometricAvailable) return false
+        val elapsed = System.currentTimeMillis() - dismissedAtState.value
+        return elapsed >= BIOMETRIC_AUTO_RETRY_COOLDOWN_MS
+    }
 
     fun launchBiometricPrompt(userInitiated: Boolean = true) {
+        if (biometricInFlight) return
         if (!biometricAvailable) {
             if (userInitiated) {
                 viewModel.onBiometricUnlockFailed(biometricAvailability.unavailableMessage)
@@ -84,14 +108,19 @@ fun LockScreen(
         val executor = ContextCompat.getMainExecutor(activity)
         val callback = object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                biometricInFlight = false
                 viewModel.onBiometricUnlockSuccess()
             }
 
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                if (errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
-                    errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
-                    errorCode != BiometricPrompt.ERROR_CANCELED
+                biometricInFlight = false
+                if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                    errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
+                    errorCode == BiometricPrompt.ERROR_CANCELED
                 ) {
+                    // 用户主动取消：记录时间戳，避免下次 ON_RESUME 立即再弹
+                    lastBiometricDismissedAt = System.currentTimeMillis()
+                } else {
                     viewModel.onBiometricUnlockFailed("生物识别失败：$errString")
                 }
             }
@@ -100,6 +129,7 @@ fun LockScreen(
                 viewModel.onBiometricUnlockFailed("生物识别未通过，请重试或改用 PIN 解锁")
             }
         }
+        biometricInFlight = true
         val prompt = BiometricPrompt(activity, executor, callback)
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("生物识别解锁")
@@ -109,21 +139,22 @@ fun LockScreen(
         prompt.authenticate(promptInfo)
     }
 
-    LaunchedEffect(state.stage) {
-        if (state.stage != LockStage.UNLOCK) {
-            biometricAutoPromptConsumed = false
+    // 首次 stage 切入 UNLOCK 时自动拉起（关心冷启动、PIN 设置完成后等异步加载场景）
+    LaunchedEffect(state.stage, state.biometricEnabled, biometricAvailable) {
+        if (canAutoPromptBiometric()) {
+            launchBiometricPrompt(userInitiated = false)
         }
     }
 
-    LaunchedEffect(state.stage, state.biometricEnabled, biometricAvailable) {
-        if (state.stage == LockStage.UNLOCK &&
-            state.biometricEnabled &&
-            biometricAvailable &&
-            !biometricAutoPromptConsumed
-        ) {
-            biometricAutoPromptConsumed = true
-            launchBiometricPrompt(userInitiated = false)
+    // App 每次从后台回到前台时自动拉起，取消后 4 秒内不重复弹
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && canAutoPromptBiometric()) {
+                launchBiometricPrompt(userInitiated = false)
+            }
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     if (state.unlockSuccess) {
         viewModel.consumeUnlockEvent()
