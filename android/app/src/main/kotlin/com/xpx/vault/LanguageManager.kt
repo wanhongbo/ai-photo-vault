@@ -1,6 +1,8 @@
 package com.xpx.vault
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
@@ -50,8 +52,24 @@ object LanguageManager {
 
     fun setLanguage(context: Context, language: String) {
         val normalized = normalize(language)
+        val current = getCurrentLanguage(context)
         saveLanguage(context, normalized)
         applyLanguage(normalized)
+        if (current == normalized) return
+        // MainActivity 继承自 ComponentActivity，AppCompat 的 backport 不会自动重建；
+        // Android 13+ 由系统 LocaleManager 触发 recreate，这里只需兜底 API < 33 的情况。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            findActivity(context)?.recreate()
+        }
+    }
+
+    private fun findActivity(context: Context): Activity? {
+        var ctx: Context? = context
+        while (ctx is ContextWrapper) {
+            if (ctx is Activity) return ctx
+            ctx = ctx.baseContext
+        }
+        return null
     }
 
     private fun applyLanguage(language: String) {

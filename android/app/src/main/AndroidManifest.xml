@@ -17,7 +17,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="locale|layoutDirection|uiMode"
             android:theme="@style/Theme.XpxVault">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
