@@ -123,10 +123,11 @@ fun VaultProgressiveImage(
         rememberUpdatedState(1f)
     }
 
+    val useSolidBackground = loadedBackgroundColor != null
     Box(
         modifier = modifier.background(
-            brush = if (bitmap != null && loadedBackgroundColor != null) {
-                SolidColor(loadedBackgroundColor)
+            brush = if (useSolidBackground) {
+                SolidColor(loadedBackgroundColor!!)
             } else {
                 Brush.linearGradient(
                     colors = if (isVideo) {
@@ -138,47 +139,45 @@ fun VaultProgressiveImage(
             },
         ),
     ) {
-        // Rich placeholder graphics: soft glow circles + diagonal highlight + outline.
-        Canvas(
-            modifier = Modifier
-                .matchParentSize()
-                .graphicsLayer(
-                    alpha = breathingAlpha,
-                    scaleX = breathingScale,
-                    scaleY = breathingScale,
-                ),
-        ) {
-            val w = size.width
-            val h = size.height
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = if (isVideo) listOf(Color(0x40A98BFF), Color.Transparent) else listOf(Color(0x4057A8FF), Color.Transparent),
-                    center = Offset(w * 0.25f, h * 0.3f),
+        // Rich placeholder graphics: only drawn when no solid background color is requested.
+        if (!useSolidBackground) {
+            Canvas(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer(
+                        alpha = breathingAlpha,
+                        scaleX = breathingScale,
+                        scaleY = breathingScale,
+                    ),
+            ) {
+                val w = size.width
+                val h = size.height
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = if (isVideo) listOf(Color(0x40A98BFF), Color.Transparent) else listOf(Color(0x4057A8FF), Color.Transparent),
+                        center = Offset(w * 0.25f, h * 0.3f),
+                        radius = max(w, h) * 0.45f,
+                    ),
                     radius = max(w, h) * 0.45f,
-                ),
-                radius = max(w, h) * 0.45f,
-                center = Offset(w * 0.25f, h * 0.3f),
-            )
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = if (isVideo) listOf(Color(0x2A8B9DFF), Color.Transparent) else listOf(Color(0x2A78D0FF), Color.Transparent),
-                    center = Offset(w * 0.78f, h * 0.74f),
+                    center = Offset(w * 0.25f, h * 0.3f),
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = if (isVideo) listOf(Color(0x2A8B9DFF), Color.Transparent) else listOf(Color(0x2A78D0FF), Color.Transparent),
+                        center = Offset(w * 0.78f, h * 0.74f),
+                        radius = max(w, h) * 0.38f,
+                    ),
                     radius = max(w, h) * 0.38f,
-                ),
-                radius = max(w, h) * 0.38f,
-                center = Offset(w * 0.78f, h * 0.74f),
-            )
-            drawRect(
-                brush = Brush.linearGradient(
-                    colors = listOf(Color.Transparent, Color(0x18FFFFFF), Color.Transparent),
-                    start = Offset(w * -0.25f, h * 0.25f),
-                    end = Offset(w * 0.85f, h * 0.95f),
-                ),
-            )
-            drawRect(
-                color = Color(0x33FFFFFF),
-                style = Stroke(width = 1.2f),
-            )
+                    center = Offset(w * 0.78f, h * 0.74f),
+                )
+                drawRect(
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color.Transparent, Color(0x18FFFFFF), Color.Transparent),
+                        start = Offset(w * -0.25f, h * 0.25f),
+                        end = Offset(w * 0.85f, h * 0.95f),
+                    ),
+                )
+            }
         }
         if (bitmap != null) {
             Image(
