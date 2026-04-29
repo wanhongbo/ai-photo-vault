@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.util.Log
 import android.view.OrientationEventListener
 import android.view.Surface
@@ -16,6 +17,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FileOutputOptions
@@ -660,15 +662,42 @@ private suspend fun captureToTempFile(
     imageCapture: ImageCapture,
 ): CaptureTempResult = withContext(Dispatchers.IO) {
     val tempFile = File(context.cacheDir, "pv_capture_${System.currentTimeMillis()}.jpg")
-    val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
     val shotResult = withTimeoutOrNull(10_000) {
-        suspendImageCapture(context, imageCapture, outputOptions)
+        suspendImageCaptureToFile(context, imageCapture, tempFile)
     } ?: return@withContext CaptureTempResult(errorCode = CaptureErrorCode.TIMEOUT)
     if (shotResult.success) {
         CaptureTempResult(path = tempFile.absolutePath)
     } else {
         CaptureTempResult(errorCode = shotResult.errorCode ?: CaptureErrorCode.UNKNOWN)
     }
+}
+
+private fun writeJpegWithRotation(
+    bytes: ByteArray,
+    rotationDegrees: Int,
+    target: File,
+) {
+    if (rotationDegrees == 0) {
+        target.outputStream().use { it.write(bytes) }
+        return
+    }
+    val src = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        ?: run {
+            target.outputStream().use { it.write(bytes) }
+            return
+        }
+    val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+    val rotated = try {
+        Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
+    } catch (e: OutOfMemoryError) {
+        src.recycle()
+        throw e
+    }
+    if (rotated !== src) src.recycle()
+    target.outputStream().use { out ->
+        rotated.compress(Bitmap.CompressFormat.JPEG, 95, out)
+    }
+    rotated.recycle()
 }
 
 private suspend fun savePendingToVault(
@@ -703,17 +732,27 @@ private suspend fun decodePreviewBitmap(
     BitmapFactory.decodeFile(path, options)
 }
 
-private suspend fun suspendImageCapture(
+private suspend fun suspendImageCaptureToFile(
     context: Context,
     imageCapture: ImageCapture,
-    outputOptions: ImageCapture.OutputFileOptions,
+    target: File,
 ): CaptureShotResult = suspendCancellableCoroutine { continuation ->
     imageCapture.takePicture(
-        outputOptions,
         ContextCompat.getMainExecutor(context),
-        object : ImageCapture.OnImageSavedCallback {
-            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                if (continuation.isActive) continuation.resume(CaptureShotResult(success = true))
+        object : ImageCapture.OnImageCapturedCallback() {
+            override fun onCaptureSuccess(image: ImageProxy) {
+                val rotationDegrees = image.imageInfo.rotationDegrees
+                val buffer = image.planes[0].buffer
+                val bytes = ByteArray(buffer.remaining()).also { buffer.get(it) }
+                image.close()
+                val result = runCatching {
+                    writeJpegWithRotation(bytes, rotationDegrees, target)
+                    CaptureShotResult(success = true)
+                }.getOrElse {
+                    Log.w(CAMERA_DIAG_TAG, "event=capture_write_failed msg=${it.message}")
+                    CaptureShotResult(success = false, errorCode = CaptureErrorCode.IO)
+                }
+                if (continuation.isActive) continuation.resume(result)
             }
 
             override fun onError(exception: ImageCaptureException) {
