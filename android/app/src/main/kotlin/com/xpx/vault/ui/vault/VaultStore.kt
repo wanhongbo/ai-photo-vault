@@ -10,6 +10,8 @@ import kotlinx.coroutines.withContext
 
 private const val ROOT_DIR = "vault_albums"
 private const val LEGACY_DIR = "vault_album"
+private const val TRASH_DIR = "vault_trash"
+private const val TRASH_RETAIN_MS: Long = 30L * 24 * 60 * 60 * 1000
 const val DEFAULT_ALBUM_NAME = "Default"
 
 data class VaultPhoto(
@@ -17,6 +19,13 @@ data class VaultPhoto(
     val path: String,
     val name: String,
     val modifiedAtMs: Long,
+)
+
+data class VaultTrashItem(
+    val path: String,
+    val name: String,
+    val trashedAtMs: Long,
+    val albumName: String?,
 )
 
 data class VaultAlbum(
@@ -29,7 +38,22 @@ data class VaultSnapshot(
     val albums: List<VaultAlbum>,
     val recentPhotos: List<VaultPhoto>,
     val totalCount: Int,
+    val imageCount: Int = 0,
+    val videoCount: Int = 0,
 )
+
+private val VIDEO_EXTENSIONS = setOf("mp4", "mov", "mkv", "webm", "avi", "3gp", "m4v", "flv")
+private val IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "bmp")
+
+fun isVaultVideo(path: String): Boolean {
+    val ext = path.substringAfterLast('.', "").lowercase()
+    return ext in VIDEO_EXTENSIONS
+}
+
+fun isVaultImage(path: String): Boolean {
+    val ext = path.substringAfterLast('.', "").lowercase()
+    return ext in IMAGE_EXTENSIONS
+}
 
 enum class VaultImportResult {
     ADDED,
@@ -48,11 +72,16 @@ object VaultStore {
     suspend fun loadSnapshot(context: Context, recentLimit: Int = 60): VaultSnapshot = withContext(Dispatchers.IO) {
         ensureInit(context)
         val albums = listAlbumsInternal(context)
-        val recentPhotos = listAllPhotos(context).sortedByDescending { it.modifiedAtMs }.take(recentLimit)
+        val allPhotos = listAllPhotos(context)
+        val recentPhotos = allPhotos.sortedByDescending { it.modifiedAtMs }.take(recentLimit)
+        val imageCount = allPhotos.count { isVaultImage(it.path) }
+        val videoCount = allPhotos.count { isVaultVideo(it.path) }
         val snapshot = VaultSnapshot(
             albums = albums,
             recentPhotos = recentPhotos,
             totalCount = albums.sumOf { it.photoCount },
+            imageCount = imageCount,
+            videoCount = videoCount,
         )
         cachedSnapshot = snapshot
         snapshot
@@ -170,12 +199,106 @@ object VaultStore {
     suspend fun deletePhoto(context: Context, path: String): Boolean = withContext(Dispatchers.IO) {
         val file = File(path)
         if (!file.exists()) return@withContext false
-        val trashDir = File(context.filesDir, "vault_trash")
-        if (!trashDir.exists()) trashDir.mkdirs()
-        val dest = File(trashDir, file.name)
+        val trashRoot = File(context.filesDir, TRASH_DIR)
+        val albumName = file.parentFile?.name
+        val targetDir = if (!albumName.isNullOrBlank()) {
+            File(trashRoot, sanitizeAlbumName(albumName))
+        } else {
+            trashRoot
+        }
+        if (!targetDir.exists()) targetDir.mkdirs()
+        val dest = File(targetDir, file.name)
         if (dest.exists()) dest.delete()
-        file.renameTo(dest)
+        val ok = file.renameTo(dest)
+        if (ok) dest.setLastModified(System.currentTimeMillis())
+        ok
     }
+
+    suspend fun listTrashItems(context: Context): List<VaultTrashItem> = withContext(Dispatchers.IO) {
+        val trashRoot = File(context.filesDir, TRASH_DIR)
+        if (!trashRoot.exists() || !trashRoot.isDirectory) return@withContext emptyList()
+        val now = System.currentTimeMillis()
+        val items = mutableListOf<VaultTrashItem>()
+        trashRoot.listFiles()?.forEach { entry ->
+            when {
+                entry.isDirectory -> {
+                    entry.listFiles()?.filter { it.isFile }?.forEach { file ->
+                        if (now - file.lastModified() > TRASH_RETAIN_MS) {
+                            file.delete()
+                        } else {
+                            items.add(
+                                VaultTrashItem(
+                                    path = file.absolutePath,
+                                    name = file.nameWithoutExtension,
+                                    trashedAtMs = file.lastModified(),
+                                    albumName = entry.name,
+                                )
+                            )
+                        }
+                    }
+                    if (entry.listFiles()?.isEmpty() == true) entry.delete()
+                }
+                entry.isFile -> {
+                    if (now - entry.lastModified() > TRASH_RETAIN_MS) {
+                        entry.delete()
+                    } else {
+                        items.add(
+                            VaultTrashItem(
+                                path = entry.absolutePath,
+                                name = entry.nameWithoutExtension,
+                                trashedAtMs = entry.lastModified(),
+                                albumName = null,
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        items.sortedByDescending { it.trashedAtMs }
+    }
+
+    suspend fun restoreFromTrash(context: Context, path: String): Boolean = withContext(Dispatchers.IO) {
+        val file = File(path)
+        if (!file.exists()) return@withContext false
+        val trashRoot = File(context.filesDir, TRASH_DIR)
+        val parent = file.parentFile
+        val albumName = if (parent != null && parent.absolutePath != trashRoot.absolutePath) {
+            parent.name
+        } else {
+            DEFAULT_ALBUM_NAME
+        }
+        ensureInit(context)
+        val albumDir = File(rootDir(context), sanitizeAlbumName(albumName))
+        if (!albumDir.exists()) albumDir.mkdirs()
+        var dest = File(albumDir, file.name)
+        if (dest.exists()) {
+            val base = file.nameWithoutExtension
+            val ext = file.extension
+            val suffix = if (ext.isBlank()) "" else ".$ext"
+            dest = File(albumDir, "${base}_restored_${System.currentTimeMillis()}$suffix")
+        }
+        val ok = file.renameTo(dest)
+        if (ok) {
+            dest.setLastModified(System.currentTimeMillis())
+            if (parent != null && parent.absolutePath != trashRoot.absolutePath) {
+                if (parent.listFiles()?.isEmpty() == true) parent.delete()
+            }
+        }
+        ok
+    }
+
+    suspend fun purgeFromTrash(path: String): Boolean = withContext(Dispatchers.IO) {
+        val file = File(path)
+        if (!file.exists()) return@withContext false
+        val parent = file.parentFile
+        val deleted = file.delete()
+        if (deleted && parent != null && parent.name != TRASH_DIR) {
+            if (parent.listFiles()?.isEmpty() == true) parent.delete()
+        }
+        deleted
+    }
+
+    fun trashRetainDurationMs(): Long = TRASH_RETAIN_MS
 
     private fun listAllPhotos(context: Context): List<VaultPhoto> {
         val root = rootDir(context)

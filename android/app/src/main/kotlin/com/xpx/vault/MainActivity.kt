@@ -215,6 +215,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(ROUTE_TRASH_BIN) {
                             TrashBinScreen(
+                                onOpenItem = { path ->
+                                    navController.navigate(trashViewerRouteForPath(path)) { launchSingleTop = true }
+                                },
                                 onBack = { navController.popBackStack() },
                             )
                         }
@@ -301,6 +304,26 @@ class MainActivity : ComponentActivity() {
                                 onBack = { navController.popBackStack() },
                             )
                         }
+                        composable(
+                            route = "$ROUTE_TRASH_PHOTO_VIEWER/{path}",
+                            arguments = listOf(navArgument("path") { defaultValue = "" }),
+                        ) { entry ->
+                            PhotoViewerScreen(
+                                path = Uri.decode(entry.arguments?.getString("path") ?: ""),
+                                onBack = { navController.popBackStack() },
+                                isTrash = true,
+                            )
+                        }
+                        composable(
+                            route = "$ROUTE_TRASH_VIDEO_PLAYER/{path}",
+                            arguments = listOf(navArgument("path") { defaultValue = "" }),
+                        ) { entry ->
+                            VideoPlayerScreen(
+                                path = Uri.decode(entry.arguments?.getString("path") ?: ""),
+                                onBack = { navController.popBackStack() },
+                                isTrash = true,
+                            )
+                        }
                     }
                 }
             }
@@ -313,6 +336,15 @@ class MainActivity : ComponentActivity() {
             "video_player/$encoded"
         } else {
             "photo_viewer/$encoded"
+        }
+    }
+
+    private fun trashViewerRouteForPath(path: String): String {
+        val encoded = Uri.encode(path)
+        return if (isVideoPath(path)) {
+            "$ROUTE_TRASH_VIDEO_PLAYER/$encoded"
+        } else {
+            "$ROUTE_TRASH_PHOTO_VIEWER/$encoded"
         }
     }
 
@@ -349,6 +381,8 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_RESTORE_PROGRESS = "restore_progress"
         private const val ROUTE_RESTORE_RESULT = "restore_result"
         private const val ROUTE_TRASH_BIN = "trash_bin"
+        private const val ROUTE_TRASH_PHOTO_VIEWER = "trash_photo_viewer"
+        private const val ROUTE_TRASH_VIDEO_PLAYER = "trash_video_player"
         private const val ROUTE_PAYWALL = "paywall"
         private const val ROUTE_CHANGE_PIN = "change_pin"
         private const val ROUTE_STORAGE_USAGE = "storage_usage"

@@ -53,13 +53,18 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.xpx.vault.R
+import com.xpx.vault.ui.components.AppButton
+import com.xpx.vault.ui.components.AppButtonVariant
+import com.xpx.vault.ui.components.AppDialog
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
+import com.xpx.vault.ui.vault.VaultStore
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import android.content.res.Configuration
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,6 +72,7 @@ import android.content.res.Configuration
 fun VideoPlayerScreen(
     path: String,
     onBack: () -> Unit,
+    isTrash: Boolean = false,
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
@@ -89,6 +95,8 @@ fun VideoPlayerScreen(
     var sliderPositionMs by remember { mutableStateOf<Float?>(null) }
     var seekFeedback by remember { mutableStateOf<String?>(null) }
     var isSeeking by remember { mutableStateOf(false) }
+    var showPurgeDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     fun applyMuteState() {
         exoPlayer.volume = if (muted) 0f else 1f
@@ -307,31 +315,67 @@ fun VideoPlayerScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = if (isTrash) Arrangement.spacedBy(12.dp) else Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            VideoActionButton(
-                iconRes = R.drawable.ic_photo_share,
-                label = stringResource(R.string.photo_viewer_share),
-                onClick = { /* TODO: share */ },
-            )
-            VideoActionButton(
-                iconRes = R.drawable.ic_photo_edit,
-                label = stringResource(R.string.photo_viewer_edit),
-                onClick = { /* TODO: edit */ },
-            )
-            VideoActionButton(
-                iconRes = R.drawable.ic_photo_info,
-                label = stringResource(R.string.photo_viewer_info),
-                onClick = { /* TODO: info */ },
-            )
-            VideoActionButton(
-                iconRes = R.drawable.ic_photo_delete,
-                label = stringResource(R.string.photo_viewer_delete),
-                onClick = { /* TODO: delete */ },
-            )
+            if (isTrash) {
+                AppButton(
+                    text = stringResource(R.string.trash_recover),
+                    onClick = {
+                        scope.launch {
+                            val ok = VaultStore.restoreFromTrash(context, path)
+                            if (ok) onBack()
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.SECONDARY,
+                )
+                AppButton(
+                    text = stringResource(R.string.trash_delete),
+                    onClick = { showPurgeDialog = true },
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.DANGER,
+                )
+            } else {
+                VideoActionButton(
+                    iconRes = R.drawable.ic_photo_share,
+                    label = stringResource(R.string.photo_viewer_share),
+                    onClick = { /* TODO: share */ },
+                )
+                VideoActionButton(
+                    iconRes = R.drawable.ic_photo_edit,
+                    label = stringResource(R.string.photo_viewer_edit),
+                    onClick = { /* TODO: edit */ },
+                )
+                VideoActionButton(
+                    iconRes = R.drawable.ic_photo_info,
+                    label = stringResource(R.string.photo_viewer_info),
+                    onClick = { /* TODO: info */ },
+                )
+                VideoActionButton(
+                    iconRes = R.drawable.ic_photo_delete,
+                    label = stringResource(R.string.photo_viewer_delete),
+                    onClick = { /* TODO: delete */ },
+                )
+            }
         }
     }
+    AppDialog(
+        show = showPurgeDialog,
+        title = stringResource(R.string.trash_purge_title),
+        message = stringResource(R.string.trash_purge_message),
+        confirmText = stringResource(R.string.trash_delete),
+        onConfirm = {
+            showPurgeDialog = false
+            scope.launch {
+                val purged = VaultStore.purgeFromTrash(path)
+                if (purged) onBack()
+            }
+        },
+        dismissText = stringResource(R.string.common_cancel),
+        onDismiss = { showPurgeDialog = false },
+        confirmVariant = AppButtonVariant.DANGER,
+    )
 }
 
 @Composable

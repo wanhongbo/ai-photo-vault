@@ -5,40 +5,75 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
-import com.xpx.vault.ui.components.AppButton
-import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.components.VaultProgressiveImage
+import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
+import com.xpx.vault.ui.vault.VaultStore
+import com.xpx.vault.ui.vault.VaultTrashItem
+import kotlinx.coroutines.launch
+import kotlin.math.ceil
 
 @Composable
-fun TrashBinScreen(onBack: () -> Unit) {
-    val items = listOf(
-        TrashItem("IMG_2198.jpg", "4.2 MB", "剩余 29 天"),
-        TrashItem("IMG_1042.jpg", "3.1 MB", "剩余 18 天"),
-        TrashItem("Vacation_2025_03.png", "2.6 MB", "剩余 7 天"),
-    )
+fun TrashBinScreen(
+    onOpenItem: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    var items by remember { mutableStateOf<List<VaultTrashItem>>(emptyList()) }
+    var loaded by remember { mutableStateOf(false) }
+
+    suspend fun refresh() {
+        items = VaultStore.listTrashItems(context)
+        loaded = true
+    }
+
+    LaunchedEffect(Unit) { refresh() }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch { refresh() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -54,7 +89,11 @@ fun TrashBinScreen(onBack: () -> Unit) {
             fontSize = UiTextSize.homeSubtitle,
             modifier = Modifier.padding(top = UiSize.backupSubtitleTopGap),
         )
-        if (items.isEmpty()) {
+        if (!loaded) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "加载中...", color = UiColors.Home.subtitle)
+            }
+        } else if (items.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -66,12 +105,25 @@ fun TrashBinScreen(onBack: () -> Unit) {
                 )
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.padding(top = UiSize.backupCardTopGap),
-                verticalArrangement = Arrangement.spacedBy(UiSize.trashRowGap),
+            Box(
+                modifier = Modifier
+                    .padding(top = UiSize.backupCardTopGap)
+                    .clip(RoundedCornerShape(UiRadius.homeCard))
+                    .background(UiColors.Home.sectionBg)
+                    .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
+                    .padding(UiSize.homeCardPadding),
             ) {
-                items(items) { item ->
-                    TrashRow(item = item)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
+                    verticalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
+                ) {
+                    items(items, key = { it.path }) { item ->
+                        TrashGridCell(
+                            item = item,
+                            onClick = { onOpenItem(item.path) },
+                        )
+                    }
                 }
             }
         }
@@ -79,72 +131,46 @@ fun TrashBinScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun TrashRow(item: TrashItem) {
-    Column(
+private fun TrashGridCell(
+    item: VaultTrashItem,
+    onClick: () -> Unit,
+) {
+    val remainingDays = remember(item.trashedAtMs) { calcRemainingDays(item.trashedAtMs) }
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(UiColors.Home.sectionBg, RoundedCornerShape(UiRadius.homeCard))
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
-            .padding(UiSize.trashItemPadding),
-        verticalArrangement = Arrangement.spacedBy(UiSize.trashRowGap),
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(UiRadius.homeThumb))
+            .throttledClickable(onClick = onClick),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(UiSize.trashInfoGap),
-            verticalAlignment = Alignment.CenterVertically,
+        VaultProgressiveImage(
+            path = item.path,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            thumbnailMaxPx = 360,
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Color.Black.copy(alpha = 0.55f))
+                .padding(vertical = 4.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(UiSize.trashThumbSize)
-                    .background(UiColors.Home.emptyIconBg, RoundedCornerShape(UiRadius.trashThumb)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_trash_thumb_placeholder),
-                    contentDescription = null,
-                    tint = UiColors.Home.navItemActive,
-                    modifier = Modifier.size(UiSize.trashThumbGlyph),
-                )
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.name,
-                    color = UiColors.Home.title,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = UiTextSize.trashFileName,
-                )
-                Text(
-                    text = stringResource(R.string.trash_item_meta, item.size, item.remainTime),
-                    color = UiColors.Home.emptyBody,
-                    fontSize = UiTextSize.homeEmptyBody,
-                    modifier = Modifier.padding(top = UiSize.trashMetaTopGap),
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(UiSize.trashActionGap),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AppButton(
-                text = stringResource(R.string.trash_recover),
-                onClick = {},
-                modifier = Modifier.weight(1f),
-                variant = AppButtonVariant.SECONDARY,
-            )
-            AppButton(
-                text = stringResource(R.string.trash_delete),
-                onClick = {},
-                modifier = Modifier.weight(1f),
-                variant = AppButtonVariant.DANGER,
+            Text(
+                text = stringResource(R.string.trash_remaining_days, remainingDays),
+                color = UiColors.Home.title,
+                fontSize = UiTextSize.homeNavLabel,
+                fontWeight = FontWeight.Medium,
             )
         }
     }
 }
 
-private data class TrashItem(
-    val name: String,
-    val size: String,
-    val remainTime: String,
-)
-
+private fun calcRemainingDays(trashedAtMs: Long): Int {
+    val retainMs = VaultStore.trashRetainDurationMs()
+    val remainingMs = (trashedAtMs + retainMs) - System.currentTimeMillis()
+    if (remainingMs <= 0L) return 0
+    val dayMs = 24L * 60 * 60 * 1000
+    return ceil(remainingMs.toDouble() / dayMs).toInt().coerceAtLeast(1)
+}

@@ -30,6 +30,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.R
+import com.xpx.vault.ui.components.AppButton
+import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.components.VaultProgressiveImage
@@ -39,11 +41,13 @@ import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.VaultStore
+import com.xpx.vault.ui.vault.isVaultImage
 
 @Composable
 fun PhotoViewerScreen(
     path: String,
     onBack: () -> Unit,
+    isTrash: Boolean = false,
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
@@ -55,6 +59,7 @@ fun PhotoViewerScreen(
     var orderedPaths by remember { mutableStateOf(listOf(path)) }
     var horizontalDragOffset by remember { mutableStateOf(0f) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showPurgeDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val currentIndex = remember(currentPath, orderedPaths) {
         orderedPaths.indexOf(currentPath).coerceAtLeast(0)
@@ -69,11 +74,26 @@ fun PhotoViewerScreen(
         if (currentIndex < orderedPaths.lastIndex) currentPath = orderedPaths[currentIndex + 1]
     }
 
-    LaunchedEffect(path) {
+    fun removeCurrentFromList() {
+        orderedPaths = orderedPaths.filter { it != currentPath }
+        when {
+            orderedPaths.isEmpty() -> onBack()
+            currentIndex >= orderedPaths.size -> currentPath = orderedPaths.last()
+            else -> currentPath = orderedPaths[currentIndex]
+        }
+    }
+
+    LaunchedEffect(path, isTrash) {
         currentPath = path
-        val allPaths = VaultStore.listRecentPhotos(context, limit = 5000)
-            .map { it.path }
-            .filterNot(::isVideoPath)
+        val allPaths = if (isTrash) {
+            VaultStore.listTrashItems(context)
+                .map { it.path }
+                .filter(::isVaultImage)
+        } else {
+            VaultStore.listRecentPhotos(context, limit = 5000)
+                .map { it.path }
+                .filterNot(::isVideoPath)
+        }
         orderedPaths = if (allPaths.contains(path)) {
             allPaths
         } else {
@@ -99,19 +119,28 @@ fun PhotoViewerScreen(
                 showDeleteDialog = false
                 scope.launch {
                     val deleted = VaultStore.deletePhoto(context, currentPath)
-                    if (deleted) {
-                        orderedPaths = orderedPaths.filter { it != currentPath }
-                        when {
-                            orderedPaths.isEmpty() -> onBack()
-                            currentIndex >= orderedPaths.size -> currentPath = orderedPaths.last()
-                            else -> currentPath = orderedPaths[currentIndex]
-                        }
-                    }
+                    if (deleted) removeCurrentFromList()
                 }
             },
             dismissText = stringResource(R.string.common_cancel),
             onDismiss = { showDeleteDialog = false },
             confirmVariant = com.xpx.vault.ui.components.AppButtonVariant.DANGER,
+        )
+        AppDialog(
+            show = showPurgeDialog,
+            title = stringResource(R.string.trash_purge_title),
+            message = stringResource(R.string.trash_purge_message),
+            confirmText = stringResource(R.string.trash_delete),
+            onConfirm = {
+                showPurgeDialog = false
+                scope.launch {
+                    val purged = VaultStore.purgeFromTrash(currentPath)
+                    if (purged) removeCurrentFromList()
+                }
+            },
+            dismissText = stringResource(R.string.common_cancel),
+            onDismiss = { showPurgeDialog = false },
+            confirmVariant = AppButtonVariant.DANGER,
         )
         AppTopBar(title = stringResource(R.string.photo_viewer_title), onBack = onBack)
         VaultProgressiveImage(
@@ -144,33 +173,61 @@ fun PhotoViewerScreen(
             color = UiColors.Home.subtitle,
             fontSize = UiTextSize.homeNavLabel,
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            PhotoViewerActionButton(
-                iconRes = R.drawable.ic_photo_share,
-                label = stringResource(R.string.photo_viewer_share),
-                onClick = { /* TODO: share */ },
-            )
-            PhotoViewerActionButton(
-                iconRes = R.drawable.ic_photo_edit,
-                label = stringResource(R.string.photo_viewer_edit),
-                onClick = { /* TODO: edit */ },
-            )
-            PhotoViewerActionButton(
-                iconRes = R.drawable.ic_photo_info,
-                label = stringResource(R.string.photo_viewer_info),
-                onClick = { /* TODO: info */ },
-            )
-            PhotoViewerActionButton(
-                iconRes = R.drawable.ic_photo_delete,
-                label = stringResource(R.string.photo_viewer_delete),
-                onClick = { showDeleteDialog = true },
-            )
+        if (isTrash) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AppButton(
+                    text = stringResource(R.string.trash_recover),
+                    onClick = {
+                        scope.launch {
+                            val ok = VaultStore.restoreFromTrash(context, currentPath)
+                            if (ok) removeCurrentFromList()
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.SECONDARY,
+                )
+                AppButton(
+                    text = stringResource(R.string.trash_delete),
+                    onClick = { showPurgeDialog = true },
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.DANGER,
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PhotoViewerActionButton(
+                    iconRes = R.drawable.ic_photo_share,
+                    label = stringResource(R.string.photo_viewer_share),
+                    onClick = { /* TODO: share */ },
+                )
+                PhotoViewerActionButton(
+                    iconRes = R.drawable.ic_photo_edit,
+                    label = stringResource(R.string.photo_viewer_edit),
+                    onClick = { /* TODO: edit */ },
+                )
+                PhotoViewerActionButton(
+                    iconRes = R.drawable.ic_photo_info,
+                    label = stringResource(R.string.photo_viewer_info),
+                    onClick = { /* TODO: info */ },
+                )
+                PhotoViewerActionButton(
+                    iconRes = R.drawable.ic_photo_delete,
+                    label = stringResource(R.string.photo_viewer_delete),
+                    onClick = { showDeleteDialog = true },
+                )
+            }
         }
     }
 }

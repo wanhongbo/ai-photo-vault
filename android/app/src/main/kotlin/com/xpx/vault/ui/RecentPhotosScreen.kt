@@ -81,13 +81,6 @@ fun RecentPhotosScreen(
             .padding(16.dp),
     ) {
         AppTopBar(title = stringResource(R.string.recent_list_title), onBack = onBack)
-        Row(
-            modifier = Modifier.padding(top = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            FilterTag(text = stringResource(R.string.recent_list_filter_date), selected = true)
-            FilterTag(text = stringResource(R.string.recent_list_filter_album), selected = false)
-        }
         if (!loaded) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                 Text(text = "加载中...", color = UiColors.Home.subtitle)

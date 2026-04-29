@@ -108,6 +108,8 @@ fun HomeScreen(
     var albums by remember { mutableStateOf(cachedSnapshot?.albums.orEmpty()) }
     var recentPhotos by remember { mutableStateOf(cachedSnapshot?.recentPhotos.orEmpty()) }
     var totalCount by remember { mutableStateOf(cachedSnapshot?.totalCount ?: 0) }
+    var imageCount by remember { mutableStateOf(cachedSnapshot?.imageCount ?: 0) }
+    var videoCount by remember { mutableStateOf(cachedSnapshot?.videoCount ?: 0) }
     var vaultLoaded by remember { mutableStateOf(cachedSnapshot != null) }
     var importing by remember { mutableStateOf(false) }
     var importTip by remember { mutableStateOf<ImportTip?>(null) }
@@ -121,6 +123,8 @@ fun HomeScreen(
         if (albums != snapshot.albums) albums = snapshot.albums
         if (recentPhotos != snapshot.recentPhotos) recentPhotos = snapshot.recentPhotos
         if (totalCount != snapshot.totalCount) totalCount = snapshot.totalCount
+        if (imageCount != snapshot.imageCount) imageCount = snapshot.imageCount
+        if (videoCount != snapshot.videoCount) videoCount = snapshot.videoCount
         vaultLoaded = true
     }
 
@@ -198,6 +202,8 @@ fun HomeScreen(
     ) {
         VaultHeader(
             totalCount = totalCount,
+            imageCount = imageCount,
+            videoCount = videoCount,
             onSearch = onOpenSearch,
             onCreateAlbum = { creatingAlbum = true },
         )
@@ -360,6 +366,8 @@ fun HomeScreen(
 @Composable
 private fun VaultHeader(
     totalCount: Int,
+    imageCount: Int,
+    videoCount: Int,
     onSearch: () -> Unit,
     onCreateAlbum: () -> Unit,
 ) {
@@ -381,9 +389,8 @@ private fun VaultHeader(
                 modifier = Modifier.padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                HeaderInfoTag(stringResource(R.string.home_header_stat_photos, totalCount))
-                HeaderInfoTag(stringResource(R.string.home_header_stat_videos))
-                HeaderInfoTag(stringResource(R.string.home_header_stat_files))
+                HeaderInfoTag(stringResource(R.string.home_header_stat_photos, imageCount))
+                HeaderInfoTag(stringResource(R.string.home_header_stat_videos, videoCount))
             }
         }
         HeaderActionButton(
