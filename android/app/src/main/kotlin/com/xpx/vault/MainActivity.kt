@@ -312,6 +312,12 @@ class MainActivity : ComponentActivity() {
                                 path = Uri.decode(entry.arguments?.getString("path") ?: ""),
                                 onBack = { navController.popBackStack() },
                                 isTrash = true,
+                                onOpenAlbum = { albumName ->
+                                    navController.navigate("album/${Uri.encode(albumName)}") {
+                                        popUpTo(ROUTE_TRASH_BIN) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
+                                },
                             )
                         }
                         composable(
@@ -322,6 +328,12 @@ class MainActivity : ComponentActivity() {
                                 path = Uri.decode(entry.arguments?.getString("path") ?: ""),
                                 onBack = { navController.popBackStack() },
                                 isTrash = true,
+                                onOpenAlbum = { albumName ->
+                                    navController.navigate("album/${Uri.encode(albumName)}") {
+                                        popUpTo(ROUTE_TRASH_BIN) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
+                                },
                             )
                         }
                     }

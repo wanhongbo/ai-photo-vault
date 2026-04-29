@@ -257,9 +257,9 @@ object VaultStore {
         items.sortedByDescending { it.trashedAtMs }
     }
 
-    suspend fun restoreFromTrash(context: Context, path: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun restoreFromTrash(context: Context, path: String): String? = withContext(Dispatchers.IO) {
         val file = File(path)
-        if (!file.exists()) return@withContext false
+        if (!file.exists()) return@withContext null
         val trashRoot = File(context.filesDir, TRASH_DIR)
         val parent = file.parentFile
         val albumName = if (parent != null && parent.absolutePath != trashRoot.absolutePath) {
@@ -268,7 +268,8 @@ object VaultStore {
             DEFAULT_ALBUM_NAME
         }
         ensureInit(context)
-        val albumDir = File(rootDir(context), sanitizeAlbumName(albumName))
+        val safeAlbum = sanitizeAlbumName(albumName)
+        val albumDir = File(rootDir(context), safeAlbum)
         if (!albumDir.exists()) albumDir.mkdirs()
         var dest = File(albumDir, file.name)
         if (dest.exists()) {
@@ -284,7 +285,7 @@ object VaultStore {
                 if (parent.listFiles()?.isEmpty() == true) parent.delete()
             }
         }
-        ok
+        if (ok) safeAlbum else null
     }
 
     suspend fun purgeFromTrash(path: String): Boolean = withContext(Dispatchers.IO) {

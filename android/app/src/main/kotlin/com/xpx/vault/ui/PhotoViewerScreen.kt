@@ -48,6 +48,7 @@ fun PhotoViewerScreen(
     path: String,
     onBack: () -> Unit,
     isTrash: Boolean = false,
+    onOpenAlbum: ((String) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
@@ -135,7 +136,7 @@ fun PhotoViewerScreen(
                 showPurgeDialog = false
                 scope.launch {
                     val purged = VaultStore.purgeFromTrash(currentPath)
-                    if (purged) removeCurrentFromList()
+                    if (purged) onBack()
                 }
             },
             dismissText = stringResource(R.string.common_cancel),
@@ -185,8 +186,10 @@ fun PhotoViewerScreen(
                     text = stringResource(R.string.trash_recover),
                     onClick = {
                         scope.launch {
-                            val ok = VaultStore.restoreFromTrash(context, currentPath)
-                            if (ok) removeCurrentFromList()
+                            val album = VaultStore.restoreFromTrash(context, currentPath)
+                            if (album != null) {
+                                if (onOpenAlbum != null) onOpenAlbum(album) else onBack()
+                            }
                         }
                     },
                     modifier = Modifier.weight(1f),
