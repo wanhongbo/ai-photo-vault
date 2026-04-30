@@ -53,10 +53,7 @@ fun BackupProgressScreen(
         if (!startedBackup && !state.backingUp) {
             startedBackup = true
             delay(startBackupDelayMs)
-            viewModel.exportBackupToUri(
-                parsedUri,
-                onSuccess = {},
-            )
+            viewModel.exportBackupToUri(parsedUri)
         }
     }
 

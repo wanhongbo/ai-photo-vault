@@ -54,7 +54,9 @@ fun RestoreProgressScreen(
         if (!startedRestore && !state.restoring) {
             startedRestore = true
             delay(startRestoreDelayMs)
-            viewModel.importBackupFromUri(parsedUri, onSuccess = { restoreSucceeded = true })
+            // 旧的无密码导入路径在双密钥重构后已废弃；直接回通超单。
+            viewModel.clearError()
+            onBack()
         }
     }
 
