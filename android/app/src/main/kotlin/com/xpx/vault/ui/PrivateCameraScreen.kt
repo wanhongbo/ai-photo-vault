@@ -344,9 +344,9 @@ fun PrivateCameraScreen(
             return@LaunchedEffect
         }
         lastMediaPreview = if (isVideoPath(path)) {
-            decodeVideoThumbnail(path)
+            decodeVideoThumbnail(context, path)
         } else {
-            decodePreviewBitmap(path, 1600)
+            decodePreviewBitmap(context, path, 1600)
         }
     }
 
@@ -490,9 +490,18 @@ fun PrivateCameraScreen(
                                             activeRecording?.close()
                                             activeRecording = null
                                             if (!event.hasError()) {
-                                                lastMediaPath = outputFile.absolutePath
-                                                message = "视频已保存到保险箱"
-                                                Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
+                                                // 录像落盘后紧接着把明文 temp 加密入库。
+                                                scope.launch {
+                                                    val vaultPath = VaultStore.finalizeCameraCapture(context, outputFile)
+                                                    if (vaultPath != null) {
+                                                        lastMediaPath = vaultPath
+                                                        message = "视频已保存到保险箱"
+                                                        Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
+                                                    } else {
+                                                        message = "视频入库失败，请重试"
+                                                        Log.e(CAMERA_DIAG_TAG, "event=video_finalize_failed")
+                                                    }
+                                                }
                                             } else {
                                                 outputFile.delete()
                                                 message = "录像失败，请重试"
@@ -707,29 +716,32 @@ private suspend fun savePendingToVault(
     val source = File(path)
     if (!source.exists()) return@withContext null
     runCatching {
-        val target = VaultStore.reserveCameraTarget(context, DEFAULT_ALBUM_NAME)
-        source.copyTo(target, overwrite = true)
-        source.delete()
-        target.absolutePath
+        // source 已是拍照生成的明文 temp jpg，直接走 finalize 加密入库即可。
+        VaultStore.finalizeCameraCapture(context, source)
     }.getOrNull()
 }
 
 private suspend fun decodePreviewBitmap(
+    context: Context,
     path: String,
     maxPx: Int,
 ): Bitmap? = withContext(Dispatchers.IO) {
-    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    BitmapFactory.decodeFile(path, bounds)
-    var inSampleSize = 1
-    while (bounds.outWidth / inSampleSize > maxPx || bounds.outHeight / inSampleSize > maxPx) {
-        inSampleSize *= 2
-    }
-    val options = BitmapFactory.Options().apply {
-        inJustDecodeBounds = false
-        this.inSampleSize = inSampleSize
-        inPreferredConfig = Bitmap.Config.ARGB_8888
-    }
-    BitmapFactory.decodeFile(path, options)
+    runCatching {
+        // vault 下均为密文；先整体解密到 byte[]，再走 BitmapFactory.decodeByteArray 采样解码。
+        val bytes = com.xpx.vault.data.crypto.VaultCipher.get(context).decryptToByteArray(File(path))
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        var inSampleSize = 1
+        while (bounds.outWidth / inSampleSize > maxPx || bounds.outHeight / inSampleSize > maxPx) {
+            inSampleSize *= 2
+        }
+        val options = BitmapFactory.Options().apply {
+            inJustDecodeBounds = false
+            this.inSampleSize = inSampleSize
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+    }.getOrNull()
 }
 
 private suspend fun suspendImageCaptureToFile(
@@ -1132,13 +1144,24 @@ private fun isVideoPath(path: String): Boolean {
         lower.endsWith(".mkv")
 }
 
-private fun decodeVideoThumbnail(path: String): Bitmap? {
+private fun decodeVideoThumbnail(context: Context, path: String): Bitmap? {
     return runCatching {
-        val retriever = android.media.MediaMetadataRetriever()
-        retriever.setDataSource(path)
-        val bitmap = retriever.getFrameAtTime(0, android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-        retriever.release()
-        bitmap
+        // 视频密文无法直接给 MediaMetadataRetriever；先解密到 cache 临时文件，取完帧再删。
+        val cacheDir = File(context.cacheDir, "camera_thumb").apply { mkdirs() }
+        val tmp = com.xpx.vault.data.crypto.VaultCipher.get(context).decryptToTempFile(
+            File(path),
+            cacheDir,
+            "thumb_${System.nanoTime()}.mp4",
+        )
+        try {
+            val retriever = android.media.MediaMetadataRetriever()
+            retriever.setDataSource(tmp.absolutePath)
+            val bitmap = retriever.getFrameAtTime(0, android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            retriever.release()
+            bitmap
+        } finally {
+            tmp.delete()
+        }
     }.getOrNull()
 }
 

@@ -3,21 +3,19 @@ package com.xpx.vault.ui.vault
 import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
+import com.xpx.vault.data.crypto.VaultCipher
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// TODO(vault-encryption): 一期 MVP 此处直接存明文（与设计 spec 不符），后续需：
-//  1. 写入路径（importFromPicker / reserveCameraTarget / 相机拍照结果）接入 AesCbcEngine.encrypt
-//  2. 读取路径（缩略图、预览、视频、导出到系统相册）接入 AesCbcEngine.decrypt / decryptStream
-//  3. 编写一次性迁移：启动时把 vault_albums/ 下已有明文文件全量加密
-//  4. 同步将 LocalBackupMvpService 中的 scanVaultAssets / writeBodyAndAssemble / doRestoreWithParsedHeader
-//     恢复为先 decrypt 再 sha256/chunk、恢复时 encrypt 之后再落盘的形式。
-//  在此之前，vault 内部相当于「普通相册」级别的保护，依赖外层 PIN/生物识别解锁 + 应用 sandbox 隔离。
+// Vault 内容全部以 AES-256-CBC 密文形式落盘；IV 前置 16B + PKCS7 密文。
+// 读/写路径统一通过 [VaultCipher] 完成；备份与恢复链路也保持对称加密。
+// 详见 core/data/.../crypto/VaultCipher.kt。
 private const val ROOT_DIR = "vault_albums"
 private const val LEGACY_DIR = "vault_album"
 private const val TRASH_DIR = "vault_trash"
+private const val CAMERA_TMP_DIR = "camera_tmp"
 private const val TRASH_RETAIN_MS: Long = 30L * 24 * 60 * 60 * 1000
 const val DEFAULT_ALBUM_NAME = "Default"
 
@@ -163,11 +161,12 @@ object VaultStore {
         val album = File(rootDir(context), sanitizeAlbumName(albumName))
         if (!album.exists()) album.mkdirs()
         val extension = resolveExtension(context, uri)
-        val temp = File(album, "tmp_${System.currentTimeMillis()}.$extension")
+        // 1) 先把源 URI 拉到明文 temp 文件；同时流式算 sha256 供 dedupe 使用。
+        val tempPlain = File(album, "tmp_plain_${System.currentTimeMillis()}.$extension")
         val digest = MessageDigest.getInstance("SHA-256")
         val input = context.contentResolver.openInputStream(uri) ?: return@withContext VaultImportResult.FAILED
         input.use { stream ->
-            temp.outputStream().use { output ->
+            tempPlain.outputStream().use { output ->
                 val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
                 while (true) {
                     val read = stream.read(buffer)
@@ -180,27 +179,70 @@ object VaultStore {
         val hash = digest.digest().joinToString("") { b -> "%02x".format(b) }
         val finalFile = File(album, "asset_$hash.$extension")
         if (finalFile.exists()) {
-            temp.delete()
+            tempPlain.delete()
             return@withContext VaultImportResult.DUPLICATE
         }
-        val renamed = temp.renameTo(finalFile)
-        if (!renamed) {
-            temp.copyTo(finalFile, overwrite = true)
-            temp.delete()
+        // 2) 把明文 temp 加密到 finalFile，再删除 temp；整个流程保证 vault_albums/ 下只会出现密文。
+        runCatching {
+            tempPlain.inputStream().buffered().use { plain ->
+                VaultCipher.get(context).encryptFile(plain, finalFile)
+            }
+        }.onFailure {
+            tempPlain.delete()
+            if (finalFile.exists()) finalFile.delete()
+            return@withContext VaultImportResult.FAILED
         }
+        tempPlain.delete()
         VaultImportResult.ADDED
     }
 
+    /**
+     * 为相机拍照/录像预留落地位置。
+     *
+     * 注意：由于 CameraX 的 `ImageCapture.takePicture` 与 `VideoCapture` 只能写 `File`，
+     * 这里返回的是 **明文临时文件** 路径（位于 `filesDir/camera_tmp/`），
+     * 由调用方在拍摄完成后调用 [finalizeCameraCapture] 把该临时文件加密落盘到 vault。
+     */
     suspend fun reserveCameraTarget(
         context: Context,
         albumName: String = DEFAULT_ALBUM_NAME,
         extension: String = "jpg",
     ): File = withContext(Dispatchers.IO) {
         ensureInit(context)
-        val album = File(rootDir(context), sanitizeAlbumName(albumName))
-        if (!album.exists()) album.mkdirs()
         val safeExt = extension.trim().removePrefix(".").ifBlank { "bin" }
-        File(album, "camera_${System.currentTimeMillis()}.$safeExt")
+        val tmpRoot = File(context.filesDir, CAMERA_TMP_DIR).apply { mkdirs() }
+        // 把目标 album 编码进 temp 文件名，供 finalize 阶段恢复。
+        val album = sanitizeAlbumName(albumName)
+        File(tmpRoot, "cam_${album}_${System.currentTimeMillis()}.$safeExt")
+    }
+
+    /**
+     * 把相机产生的明文临时文件加密入库。
+     *
+     * @param context Android 上下文
+     * @param tempFile 由 [reserveCameraTarget] 返回的明文临时文件（函数结束后将被删除）
+     * @return 入库成功后的密文文件绝对路径；失败返回 null
+     */
+    suspend fun finalizeCameraCapture(
+        context: Context,
+        tempFile: File,
+    ): String? = withContext(Dispatchers.IO) {
+        if (!tempFile.exists() || tempFile.length() == 0L) {
+            tempFile.delete()
+            return@withContext null
+        }
+        val album = parseAlbumFromCameraTempName(tempFile.name) ?: DEFAULT_ALBUM_NAME
+        val albumDir = File(rootDir(context), sanitizeAlbumName(album)).apply { mkdirs() }
+        val ext = tempFile.extension.ifBlank { "bin" }
+        val finalFile = File(albumDir, "camera_${System.currentTimeMillis()}.$ext")
+        val ok = runCatching {
+            tempFile.inputStream().buffered().use { plain ->
+                VaultCipher.get(context).encryptFile(plain, finalFile)
+            }
+            true
+        }.getOrElse { false }
+        tempFile.delete()
+        if (ok) finalFile.absolutePath else null
     }
 
     suspend fun deletePhoto(context: Context, path: String): Boolean = withContext(Dispatchers.IO) {
@@ -348,6 +390,20 @@ object VaultStore {
     }
 
     private fun rootDir(context: Context): File = File(context.filesDir, ROOT_DIR)
+
+    /** 从 `cam_<album>_<ts>.<ext>` 格式文件名中恢复 album 名称。 */
+    private fun parseAlbumFromCameraTempName(name: String): String? {
+        if (!name.startsWith("cam_")) return null
+        val stripped = name.removePrefix("cam_")
+        // 移除 `.<ext>`
+        val noExt = stripped.substringBeforeLast('.', stripped)
+        // 末尾的 `_<ts>`（纯数字）
+        val lastUnderscore = noExt.lastIndexOf('_')
+        if (lastUnderscore <= 0) return null
+        val ts = noExt.substring(lastUnderscore + 1)
+        if (ts.any { !it.isDigit() }) return null
+        return noExt.substring(0, lastUnderscore).ifBlank { null }
+    }
 
     private fun sanitizeAlbumName(raw: String): String {
         val trimmed = raw.trim().ifBlank { DEFAULT_ALBUM_NAME }
