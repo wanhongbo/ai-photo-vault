@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.StatFs
 import com.xpx.vault.AppLogger
 import com.xpx.vault.data.crypto.BackupKeyManager
+import com.xpx.vault.data.crypto.VaultCipher
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
@@ -82,7 +83,7 @@ object LocalBackupMvpService {
             else -> BackupKind.INCREMENTAL
         }
 
-        val assets = scanVaultAssets(vaultRoot)
+        val assets = scanVaultAssets(context, vaultRoot)
         AppLogger.d(
             TAG,
             "auto backup start mode=${mode.name} assets=${assets.size} " +
@@ -102,6 +103,7 @@ object LocalBackupMvpService {
         val writingFile = File(tmpDir, "auto_$backupId.writing")
         return runCatching {
             val writeResult = writeBodyAndAssemble(
+                context = context,
                 vaultRoot = vaultRoot,
                 bodyFile = bodyFile,
                 writingFile = writingFile,
@@ -178,7 +180,7 @@ object LocalBackupMvpService {
         val fingerprint = keyManager.fingerprint(backupKey)
         val kdfParams = keyManager.getOrCreateKdfParams()
 
-        val assets = scanVaultAssets(vaultRoot)
+        val assets = scanVaultAssets(context, vaultRoot)
         if (assets.isEmpty()) {
             return BackupExecutionResult.failure("保险箱为空，没有可备份的内容。")
         }
@@ -196,6 +198,7 @@ object LocalBackupMvpService {
 
         return runCatching {
             val writeResult = writeBodyAndAssemble(
+                context = context,
                 vaultRoot = vaultRoot,
                 bodyFile = bodyFile,
                 writingFile = writingFile,
@@ -345,15 +348,15 @@ object LocalBackupMvpService {
         header: BackupPackageV1.Header,
     ): RestoreExecutionResult {
         val vaultRoot = File(context.filesDir, VAULT_ROOT_DIR).apply { mkdirs() }
-        // 注：一期 MVP 中 vault_albums/ 下存储的就是明文文件（VaultStore 未接入 AES），
-        // 因此备份与恢复都按明文处理；避免触发 Keystore HW-backed key 的 encoded == null 问题。
+        val cipher = VaultCipher.get(context)
         var restored = 0
         var skipped = 0
         var failed = 0
         header.assets.forEach { asset ->
             runCatching {
                 val target = File(vaultRoot, asset.relativePath)
-                if (target.exists() && fileSha256Hex(target) == asset.sha256Hex) {
+                // 命中跳过：目标已存在且解密后的明文 sha256 与备份记录一致。
+                if (target.exists() && decryptedSha256Hex(cipher, target) == asset.sha256Hex) {
                     skipped += 1
                     // 仍需跳过 reader 中的 frame
                     repeat(asset.frameCount) { reader.readNextChunk() }
@@ -361,13 +364,13 @@ object LocalBackupMvpService {
                 }
                 target.parentFile?.mkdirs()
                 val digest = MessageDigest.getInstance("SHA-256")
-                target.outputStream().buffered().use { out ->
+                // 从 reader 拉取明文 chunk，计算明文 sha256，同时通过 VaultCipher 加密后原子写入 vault。
+                cipher.encryptFileFromChunks(target) { emit ->
                     repeat(asset.frameCount) {
                         val plain = reader.readNextChunk()
                             ?: error("unexpected end of body for ${asset.relativePath}")
-                        // vault 明文直写，后续若接入加密再在此处加一层 engine.encrypt
-                        out.write(plain)
                         digest.update(plain)
+                        emit(plain, 0, plain.size)
                     }
                 }
                 val hash = digest.digest().joinToString("") { b -> "%02x".format(b) }
@@ -423,6 +426,7 @@ object LocalBackupMvpService {
     )
 
     private fun writeBodyAndAssemble(
+        context: Context,
         vaultRoot: File,
         bodyFile: File,
         writingFile: File,
@@ -430,26 +434,23 @@ object LocalBackupMvpService {
         headerBase: BackupPackageV1.HeaderBase,
         assets: List<VaultAsset>,
     ): WriteResult {
-        // 注：vault_albums/ 在一期 MVP 里存的是明文，直接按明文流式分片写入备份包。
-        // 1. 写 body 到 tmp（逐 asset 读明文 → 按 1MB 分片 → bodyWriter.writeChunk）
+        val cipher = VaultCipher.get(context)
+        // 1. 写 body 到 tmp：逐 asset 通过 VaultCipher 流式解密 → 按 1MB 分片 → bodyWriter.writeChunk
         bodyFile.outputStream().buffered().use { bodyOut ->
             val bodyWriter = BackupPackageV1.newBodyWriter(bodyOut, backupKey)
             val chunkBuf = ByteArray(BackupPackageV1.CHUNK_MAX_PLAIN_BYTES)
-            val readBuf = ByteArray(STREAM_CHUNK_SIZE)
             assets.forEach { asset ->
                 bodyWriter.beginAsset(asset.relativePath, asset.sha256Hex, asset.sizeBytes)
                 val source = File(vaultRoot, asset.relativePath)
                 var chunkFill = 0
                 var totalPlainBytes = 0L
                 source.inputStream().buffered().use { input ->
-                    while (true) {
-                        val n = input.read(readBuf)
-                        if (n <= 0) break
-                        var remaining = n
-                        var p = 0
+                    cipher.decryptStream(input) { data, offset, length ->
+                        var remaining = length
+                        var p = offset
                         while (remaining > 0) {
                             val take = minOf(chunkBuf.size - chunkFill, remaining)
-                            System.arraycopy(readBuf, p, chunkBuf, chunkFill, take)
+                            System.arraycopy(data, p, chunkBuf, chunkFill, take)
                             chunkFill += take
                             p += take
                             remaining -= take
@@ -494,25 +495,41 @@ object LocalBackupMvpService {
         val sha256Hex: String,
     )
 
-    private fun scanVaultAssets(vaultRoot: File): List<VaultAsset> {
+    private fun scanVaultAssets(context: Context, vaultRoot: File): List<VaultAsset> {
         if (!vaultRoot.exists()) return emptyList()
-        // 注：vault_albums/ 在一期 MVP 里存的就是明文；直接对文件字节计算 sha256。
-        return vaultRoot.walkTopDown().filter { it.isFile }.map { file ->
+        // vault 下的文件是密文；备份包写入的为明文分片，因此 sha256/size 必须按解密后的明文计算，
+        // 恢复端文件校验才能对齐。
+        val cipher = VaultCipher.get(context)
+        return vaultRoot.walkTopDown()
+            .filter { it.isFile }
+            // 跳过迁移 marker 与 encryptFile 残留的临时文件，避免整个备份失败。
+            .filter { it.name != ".vault_encrypted_v1" && !it.name.contains(".enc_tmp_") }
+            .map { file ->
             val digest = MessageDigest.getInstance("SHA-256")
+            var plainSize = 0L
             file.inputStream().buffered().use { input ->
-                val buf = ByteArray(STREAM_CHUNK_SIZE)
-                while (true) {
-                    val n = input.read(buf)
-                    if (n <= 0) break
-                    digest.update(buf, 0, n)
+                cipher.decryptStream(input) { data, offset, length ->
+                    digest.update(data, offset, length)
+                    plainSize += length
                 }
             }
             VaultAsset(
                 relativePath = file.relativeTo(vaultRoot).invariantSeparatorsPath,
-                sizeBytes = file.length(),
+                sizeBytes = plainSize,
                 sha256Hex = digest.digest().joinToString("") { b -> "%02x".format(b) },
             )
         }.toList()
+    }
+
+    /** 对 vault 内的密文文件计算其解密后的明文 sha256。 */
+    private fun decryptedSha256Hex(cipher: VaultCipher, file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().buffered().use { input ->
+            cipher.decryptStream(input) { data, offset, length ->
+                digest.update(data, offset, length)
+            }
+        }
+        return digest.digest().joinToString("") { b -> "%02x".format(b) }
     }
 
     private fun hasEnoughSpace(context: Context, needBytes: Long): Boolean {
@@ -542,19 +559,6 @@ object LocalBackupMvpService {
             val n = input.read(buf)
             if (n <= 0) break
             digest.update(buf, 0, n)
-        }
-        return digest.digest().joinToString("") { b -> "%02x".format(b) }
-    }
-
-    private fun fileSha256Hex(file: File): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        file.inputStream().buffered().use { input ->
-            val buf = ByteArray(STREAM_CHUNK_SIZE)
-            while (true) {
-                val n = input.read(buf)
-                if (n <= 0) break
-                digest.update(buf, 0, n)
-            }
         }
         return digest.digest().joinToString("") { b -> "%02x".format(b) }
     }
