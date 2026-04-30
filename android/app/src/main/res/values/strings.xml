@@ -200,6 +200,9 @@
     <string name="settings_danger_reset_desc">删除后无法恢复，请谨慎操作</string>
     <string name="backup_restore_title">备份与恢复</string>
     <string name="backup_restore_subtitle">你的数据仅在本地加密处理</string>
+    <string name="backup_restore_subtitle_none">暂未备份，建议尽快创建加密备份以防数据丢失</string>
+    <string name="backup_restore_subtitle_auto">你的相册已于 %1$s 自动备份</string>
+    <string name="backup_restore_subtitle_manual">你的相册已于 %1$s 手动备份</string>
     <string name="backup_card_title">创建备份</string>
     <string name="backup_card_desc">将保险箱内容导出为加密备份文件</string>
     <string name="backup_card_action">开始备份</string>

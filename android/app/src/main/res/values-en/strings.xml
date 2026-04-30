@@ -192,6 +192,9 @@
     <string name="settings_danger_reset_desc">Deleted data cannot be recovered, proceed carefully</string>
     <string name="backup_restore_title">Backup and Restore</string>
     <string name="backup_restore_subtitle">Your data is encrypted and processed locally only</string>
+    <string name="backup_restore_subtitle_none">No backup yet. Create an encrypted backup to protect your data.</string>
+    <string name="backup_restore_subtitle_auto">Your vault was auto-backed up on %1$s</string>
+    <string name="backup_restore_subtitle_manual">Your vault was manually backed up on %1$s</string>
     <string name="backup_card_title">Create backup</string>
     <string name="backup_card_desc">Export vault content into encrypted backup files</string>
     <string name="backup_card_action">Start backup</string>

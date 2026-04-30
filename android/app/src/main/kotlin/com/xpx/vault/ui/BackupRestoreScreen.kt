@@ -190,9 +190,22 @@ fun BackupRestoreScreen(
         verticalArrangement = Arrangement.spacedBy(UiSize.backupSectionGap),
     ) {
         AppTopBar(title = stringResource(R.string.backup_restore_title), onBack = onBack)
+        val lastAt = state.lastBackupAtMs
+        val subtitleText = when {
+            lastAt == null -> stringResource(R.string.backup_restore_subtitle_none)
+            state.lastBackupIsAuto -> stringResource(
+                R.string.backup_restore_subtitle_auto,
+                formatStamp(lastAt),
+            )
+            else -> stringResource(
+                R.string.backup_restore_subtitle_manual,
+                formatStamp(lastAt),
+            )
+        }
+        val subtitleColor = if (lastAt == null) UiColors.Lock.error else UiColors.Home.subtitle
         Text(
-            text = stringResource(R.string.backup_restore_subtitle),
-            color = UiColors.Home.subtitle,
+            text = subtitleText,
+            color = subtitleColor,
             fontSize = UiTextSize.homeSubtitle,
         )
         LazyColumn(
@@ -541,6 +554,11 @@ class BackupRestoreViewModel @Inject constructor(
                 Triple(snap, treeUri, authorized)
             }
             val (snap, treeUri, authorized) = snapshot
+            // 顶部副标题文案：取 auto.lastBackupAtMs 和 manualHistory 最新一条的更晚者。
+            val autoAt = snap.auto?.lastBackupAtMs ?: 0L
+            val manualAt = snap.manualHistory.maxOfOrNull { it.createdAtMs } ?: 0L
+            val lastAt = maxOf(autoAt, manualAt).takeIf { it > 0L }
+            val lastIsAuto = autoAt >= manualAt && autoAt > 0L
             _state.value = _state.value.copy(
                 safAuthorized = authorized,
                 treeUriDisplay = treeUri?.toString(),
@@ -548,6 +566,8 @@ class BackupRestoreViewModel @Inject constructor(
                 autoFingerprintHex = snap.auto?.keyFingerprintHex,
                 autoExternalPathHint = snap.auto?.externalUri?.let { summarizeExternalUri(it) },
                 manualHistory = snap.manualHistory,
+                lastBackupAtMs = lastAt,
+                lastBackupIsAuto = lastIsAuto,
             )
         }
     }
@@ -708,4 +728,8 @@ data class BackupRestoreUiState(
     val autoFingerprintHex: String? = null,
     val autoExternalPathHint: String? = null,
     val manualHistory: List<BackupMeta.ManualEntry> = emptyList(),
+    /** auto 和 manualHistory 中最近一次备份的时间（ms），用于顶部副标题。 */
+    val lastBackupAtMs: Long? = null,
+    /** 若 [lastBackupAtMs] 来自自动备份则为 true，来自手动备份则为 false。 */
+    val lastBackupIsAuto: Boolean = false,
 )
