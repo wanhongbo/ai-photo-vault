@@ -3,6 +3,7 @@ package com.xpx.vault.ui
 import android.content.Context
 import android.net.Uri
 import android.text.format.Formatter
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -50,6 +51,7 @@ import com.xpx.vault.AppLogger
 import com.xpx.vault.R
 import com.xpx.vault.ui.backup.AutoBackupScheduler
 import com.xpx.vault.ui.backup.BackupMeta
+import com.xpx.vault.ui.backup.BackupSecretsStore
 import com.xpx.vault.ui.backup.BackupTrigger
 import com.xpx.vault.ui.backup.BackupTriggerReason
 import com.xpx.vault.ui.backup.ExternalBackupLocation
@@ -214,6 +216,7 @@ fun BackupRestoreScreen(
                     lastBackupAtMs = state.autoLastBackupAtMs,
                     fingerprintHex = state.autoFingerprintHex,
                     externalPathHint = state.autoExternalPathHint,
+                    onTriggerNow = { viewModel.triggerAutoBackupNow() },
                 )
             }
             // 手动备份
@@ -336,6 +339,7 @@ private fun AutoBackupStatusCard(
     lastBackupAtMs: Long?,
     fingerprintHex: String?,
     externalPathHint: String?,
+    onTriggerNow: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -377,6 +381,14 @@ private fun AutoBackupStatusCard(
                 )
             }
         }
+        AppButton(
+            text = "立即运行一次",
+            onClick = onTriggerNow,
+            variant = AppButtonVariant.SECONDARY,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp),
+        )
     }
 }
 
@@ -582,6 +594,30 @@ class BackupRestoreViewModel @Inject constructor(
             backupSuccessSizeBytes = 0,
             backupSuccessAssetCount = 0,
         )
+    }
+
+    fun triggerAutoBackupNow() {
+        viewModelScope.launch {
+            val safOk = withContext(Dispatchers.IO) { ExternalBackupLocation.isWritable(context) }
+            if (!safOk) {
+                Toast.makeText(context, "请先在上方授权备份目录", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            val keyOk = withContext(Dispatchers.IO) { BackupSecretsStore.hasCached(context) }
+            if (!keyOk) {
+                Toast.makeText(context, "备份密钥尚未缓存，请先解锁一次应用", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            runCatching {
+                AutoBackupScheduler.runOnceNow(context, BackupTriggerReason.USER_MANUAL_BUTTON)
+            }.onSuccess {
+                AppLogger.d("BackupUI", "runOnceNow(USER_MANUAL_BUTTON) enqueued")
+                Toast.makeText(context, "已加入后台队列，完成后请刷新页面查看", Toast.LENGTH_LONG).show()
+            }.onFailure {
+                AppLogger.e("BackupUI", "runOnceNow failed: ${it.message}")
+                Toast.makeText(context, "触发失败：${it.message ?: "未知异常"}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     fun exportBackupToUri(uri: Uri) {
