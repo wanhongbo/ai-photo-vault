@@ -2,676 +2,598 @@ package com.xpx.vault.ui.backup
 
 import android.content.Context
 import android.net.Uri
-import androidx.room.Room
+import android.os.StatFs
 import com.xpx.vault.AppLogger
 import com.xpx.vault.data.crypto.AesCbcEngine
-import com.xpx.vault.data.crypto.PasswordHasher
-import com.xpx.vault.data.db.PhotoVaultDatabase
-import com.xpx.vault.data.db.entity.BackupRecordEntity
-import java.io.DataOutputStream
+import com.xpx.vault.data.crypto.BackupKeyManager
+import com.xpx.vault.data.crypto.KeystoreSecretKeyProvider
 import java.io.File
-import java.io.RandomAccessFile
+import java.io.FileOutputStream
+import java.security.MessageDigest
 import java.util.UUID
-import java.util.zip.ZipException
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
-import javax.crypto.spec.SecretKeySpec
+import javax.crypto.SecretKey
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 
 private const val VAULT_ROOT_DIR = "vault_albums"
-private const val BACKUP_ROOT_DIR = "vault_backups_mvp"
-private const val INDEX_FILE_NAME = "index.json"
-private const val MANIFEST_FILE_NAME = "manifest.json.enc"
-private const val MAX_BACKUP_VERSIONS = 2
-private const val VOLUME_MAX_BYTES = 32L * 1024L * 1024L
-private const val STREAM_CHUNK_SIZE = 1024 * 1024
-private const val BACKUP_CRYPTO_PREFS = "backup_crypto_prefs"
-private const val BACKUP_CRYPTO_SEED = "backup_crypto_seed"
+private const val BACKUP_TMP_DIR = "backup_tmp"
+private const val STREAM_CHUNK_SIZE = BackupPackageV1.CHUNK_MAX_PLAIN_BYTES
+private const val TAG = "BackupMVP"
 
+enum class BackupTrigger { AUTO, MANUAL }
+
+enum class BackupKind { FULL, INCREMENTAL }
+
+/**
+ * 新版双密钥备份/恢复服务。
+ *
+ * - Vault Master Key (Keystore) 负责 vault_albums/ 日常加解密。
+ * - Backup Key (Argon2id 派生) 仅用于备份包加解密；由 [BackupSecretsStore] 缓存或调用方临时派生。
+ * - AUTO：固定外部路径 `Documents/AIVault/backup.dat` 覆盖式单文件；走 fp 比对决定 FULL/INCREMENTAL。
+ * - MANUAL：永远 FULL；用户 SAF 选位置；不触碰 backup_meta.json 的 `auto` 字段。
+ */
 object LocalBackupMvpService {
-    private fun engine(context: Context): AesCbcEngine {
-        val prefs = context.getSharedPreferences(BACKUP_CRYPTO_PREFS, Context.MODE_PRIVATE)
-        val seed = prefs.getString(BACKUP_CRYPTO_SEED, null) ?: UUID.randomUUID().toString().also {
-            prefs.edit().putString(BACKUP_CRYPTO_SEED, it).apply()
-            AppLogger.d(TAG, "backup crypto seed initialized")
+    private val mutex = Mutex()
+
+    /** 供 T7 / T8 注入的 BackupKeyManager 工厂。ViewModel 层也可直接构造。 */
+    fun backupKeyManager(context: Context): BackupKeyManager =
+        BackupKeyManager(context.applicationContext)
+
+    // ---------- 备份入口 ----------
+
+    suspend fun createBackup(
+        context: Context,
+        trigger: BackupTrigger,
+        targetUri: Uri? = null,
+    ): BackupExecutionResult = withContext(Dispatchers.IO) {
+        if (!mutex.tryLock()) {
+            AppLogger.w(TAG, "createBackup rejected: already running")
+            return@withContext BackupExecutionResult.alreadyRunning()
         }
-        val keyBytes = PasswordHasher.sha256HexOfUtf8(seed)
-            .chunked(2)
-            .map { it.toInt(16).toByte() }
-            .toByteArray()
-        return AesCbcEngine(SecretKeySpec(keyBytes, "AES"))
+        try {
+            when (trigger) {
+                BackupTrigger.AUTO -> doAutoBackup(context)
+                BackupTrigger.MANUAL -> {
+                    val uri = targetUri
+                        ?: return@withContext BackupExecutionResult.failure("手动备份缺少目标位置。")
+                    doManualBackup(context, uri)
+                }
+            }
+        } finally {
+            mutex.unlock()
+        }
     }
 
-    suspend fun createBackup(context: Context): BackupExecutionResult = withContext(Dispatchers.IO) {
-        runCatching {
-            val vaultRoot = File(context.filesDir, VAULT_ROOT_DIR)
-            if (!vaultRoot.exists()) return@withContext BackupExecutionResult.failure("保险箱目录不存在，无法创建备份。")
-            val assets = scanVaultAssets(vaultRoot)
-            val now = System.currentTimeMillis()
-            val backupId = "bkp_${now}_${UUID.randomUUID().toString().take(8)}"
-            AppLogger.d(TAG, "createBackup start id=${shortId(backupId)} assets=${assets.size}")
-            val backupFolder = File(backupRoot(context), backupId).apply { mkdirs() }
+    private suspend fun doAutoBackup(context: Context): BackupExecutionResult {
+        val vaultRoot = File(context.filesDir, VAULT_ROOT_DIR)
+        if (!vaultRoot.exists()) return BackupExecutionResult.failure("保险箱目录不存在，无法创建备份。")
+        if (!ExternalBackupLocation.isWritable(context)) {
+            return BackupExecutionResult.failure("未授权外部备份目录，无法写入。")
+        }
+        val backupKey = BackupSecretsStore.loadCached(context)
+            ?: return BackupExecutionResult.failure("备份密钥尚未缓存，请先解锁后再试。")
+        val keyManager = backupKeyManager(context)
+        val fingerprint = keyManager.fingerprint(backupKey)
+        val kdfParams = keyManager.getOrCreateKdfParams()
+        val meta = BackupMeta.load(context).auto
+        val mode = when {
+            meta == null -> BackupKind.FULL
+            meta.keyFingerprintHex != fingerprint -> BackupKind.FULL
+            else -> BackupKind.INCREMENTAL
+        }
 
-            val previous = loadLatestBackupMeta(context)
-            val previousManifest = previous?.let { readManifest(context, File(backupRoot(context), it.folderName)) }
-            val previousHashes = previousManifest?.assets?.associateBy { it.relativePath }.orEmpty()
-            val kind = if (previousManifest == null) BackupKind.FULL else BackupKind.INCREMENTAL
-            val payloadAssets = (if (kind == BackupKind.FULL) assets else {
-                assets.filter { previousHashes[it.relativePath]?.sha256Hex != it.sha256Hex }
-            }).toMutableList()
-            AppLogger.d(
-                TAG,
-                "createBackup mode=${kind.name} delta=${payloadAssets.size} total=${assets.size} prev=${previous?.backupId?.let(::shortId) ?: "none"}",
+        val assets = scanVaultAssets(vaultRoot)
+        AppLogger.d(
+            TAG,
+            "auto backup start mode=${mode.name} assets=${assets.size} " +
+                "prev=${meta?.lastBackupId?.let(::shortId) ?: "none"}",
+        )
+        val now = System.currentTimeMillis()
+        val backupId = newBackupId(now)
+
+        // 空间预估：估算 = 2 × vault 总大小；不足则提前失败。
+        val estimatedBytes = assets.sumOf { it.sizeBytes }
+        if (!hasEnoughSpace(context, estimatedBytes * 2)) {
+            return BackupExecutionResult.failure("本机磁盘空间不足，无法生成备份临时文件。")
+        }
+
+        val tmpDir = File(context.filesDir, BACKUP_TMP_DIR).apply { mkdirs() }
+        val bodyFile = File(tmpDir, "auto_body_$backupId.bin")
+        val writingFile = File(tmpDir, "auto_$backupId.writing")
+        return runCatching {
+            val writeResult = writeBodyAndAssemble(
+                vaultRoot = vaultRoot,
+                bodyFile = bodyFile,
+                writingFile = writingFile,
+                backupKey = backupKey,
+                headerBase = BackupPackageV1.HeaderBase(
+                    backupId = backupId,
+                    createdAtMs = now,
+                    kind = BackupPackageV1.Kind.AUTO,
+                    kdfAlgorithm = kdfParams.algorithm,
+                    kdfSaltHex = kdfParams.saltHex,
+                    kdfIterations = kdfParams.iterations,
+                    kdfMemoryKb = kdfParams.memoryKb,
+                    kdfParallelism = kdfParams.parallelism,
+                    keyFingerprintHex = fingerprint,
+                ),
+                assets = assets,
             )
 
-            val volumes = writeVolumes(context, backupFolder, payloadAssets, vaultRoot)
-            val manifest = BackupManifest(
-                backupId = backupId,
-                createdAtMs = now,
-                kind = kind,
-                baseBackupId = previousManifest?.backupId,
-                assets = payloadAssets,
-                volumes = volumes,
-                totalAssetCount = assets.size,
-            )
-            writeManifest(context, backupFolder, manifest)
-            updateIndexAfterCreate(context, manifest, backupFolder)
-            pruneOldBackups(context)
-            upsertBackupRecords(context)
+            // 写完 tmp 后把字节流原子覆盖到外部 backup.dat
+            ExternalBackupLocation.atomicReplaceAuto(context, writingFile)
 
-            val totalSize = volumes.sumOf { it.encryptedSizeBytes }
+            // 更新 backup_meta.auto
+            BackupMeta.updateAuto(
+                context,
+                BackupMeta.AutoMeta(
+                    lastBackupId = backupId,
+                    lastBackupAtMs = now,
+                    keyFingerprintHex = fingerprint,
+                    kdfParams = kdfParams,
+                    externalUri = ExternalBackupLocation.findAuto(context)?.uri?.toString(),
+                    assetIndex = assets.map { a ->
+                        BackupMeta.AssetIndexEntry(
+                            relativePath = a.relativePath,
+                            sha256Hex = a.sha256Hex,
+                            sizeBytes = a.sizeBytes,
+                        )
+                    },
+                ),
+            )
+
             val result = BackupExecutionResult.success(
                 backupId = backupId,
-                backupKind = kind,
-                outputPath = backupFolder.absolutePath,
-                outputSizeBytes = totalSize,
-                assetCount = payloadAssets.size,
+                backupKind = mode,
+                outputPath = "auto:backup.dat",
+                outputSizeBytes = writeResult.totalBytes,
+                assetCount = writeResult.writtenAssetCount,
                 totalAssetCount = assets.size,
-                volumeCount = volumes.size,
+                volumeCount = 1,
             )
             BackupRuntimeState.lastBackupResult = result
             AppLogger.d(
                 TAG,
-                "createBackup success id=${shortId(backupId)} volumes=${volumes.size} output=${backupFolder.name}",
+                "auto backup success id=${shortId(backupId)} mode=${mode.name} bytes=${writeResult.totalBytes}",
             )
             result
         }.getOrElse {
-            AppLogger.e(TAG, "createBackup failed: ${it.javaClass.simpleName} ${it.message}", it)
+            AppLogger.e(TAG, "auto backup failed: ${it.javaClass.simpleName} ${it.message}", it)
             BackupExecutionResult.failure("备份失败：${it.message ?: "未知异常"}")
+        }.also {
+            bodyFile.delete()
+            writingFile.delete()
         }
     }
 
-    suspend fun exportBackupsToUri(context: Context, uri: Uri): BackupExecutionResult = withContext(Dispatchers.IO) {
-        val latest = loadLatestBackupMeta(context) ?: return@withContext BackupExecutionResult.failure("暂无可导出的备份。")
-        AppLogger.d(TAG, "exportBackups start id=${shortId(latest.backupId)} uri=${uri.scheme ?: "unknown"}")
-        val root = backupRoot(context)
-        val output = context.contentResolver.openOutputStream(uri)
-            ?: return@withContext BackupExecutionResult.failure("无法写入所选导出位置。")
-        output.use { out ->
-            ZipOutputStream(out).use { zip ->
-                root.walkTopDown().filter { it.isFile }.forEach { file ->
-                    val rel = file.relativeTo(root).invariantSeparatorsPath
-                    zip.putNextEntry(ZipEntry(rel))
-                    file.inputStream().use { input -> input.copyTo(zip, STREAM_CHUNK_SIZE) }
-                    zip.closeEntry()
-                }
-            }
-        }
-        val verify = validateArchiveForExport(context, uri)
-        if (!verify.success) {
-            AppLogger.e(TAG, "exportBackups verify failed: ${verify.message}")
-            return@withContext BackupExecutionResult.failure(verify.message)
-        }
-        BackupExecutionResult.success(
-            backupId = latest.backupId,
-            backupKind = latest.kind,
-            outputPath = uri.toString(),
-            outputSizeBytes = 0L,
-            assetCount = 0,
-            totalAssetCount = 0,
-            volumeCount = 0,
-        )
-    }
+    private suspend fun doManualBackup(
+        context: Context,
+        targetUri: Uri,
+    ): BackupExecutionResult {
+        val vaultRoot = File(context.filesDir, VAULT_ROOT_DIR)
+        if (!vaultRoot.exists()) return BackupExecutionResult.failure("保险箱目录不存在，无法创建备份。")
+        val backupKey = BackupSecretsStore.loadCached(context)
+            ?: return BackupExecutionResult.failure("备份密钥尚未缓存，请先解锁后再试。")
+        val keyManager = backupKeyManager(context)
+        val fingerprint = keyManager.fingerprint(backupKey)
+        val kdfParams = keyManager.getOrCreateKdfParams()
 
-    suspend fun importBackupsFromUri(context: Context, uri: Uri): RestoreExecutionResult = withContext(Dispatchers.IO) {
-        AppLogger.d(TAG, "importBackups start uri=${uri.scheme ?: "unknown"}")
-        val precheck = validateBackupArchive(context, uri)
-        if (!precheck.success) {
-            AppLogger.e(TAG, "importBackups precheck failed: ${precheck.message}")
-            return@withContext RestoreExecutionResult.failure(precheck.message)
+        val assets = scanVaultAssets(vaultRoot)
+        if (assets.isEmpty()) {
+            return BackupExecutionResult.failure("保险箱为空，没有可备份的内容。")
         }
-        val input = context.contentResolver.openInputStream(uri)
-            ?: return@withContext RestoreExecutionResult.failure("无法读取所选备份文件。")
-        val root = backupRoot(context)
-        root.deleteRecursively()
-        root.mkdirs()
-        input.use { ins ->
-            ZipInputStream(ins).use { zip ->
-                while (true) {
-                    val entry = zip.nextEntry ?: break
-                    if (entry.isDirectory) continue
-                    if (entry.name.startsWith("/") || entry.name.contains("..")) {
-                        throw IllegalArgumentException("备份包存在非法路径，已拒绝导入。")
-                    }
-                    val target = File(root, entry.name)
-                    target.parentFile?.mkdirs()
-                    target.outputStream().use { output -> zip.copyTo(output, STREAM_CHUNK_SIZE) }
-                    zip.closeEntry()
-                }
-            }
-        }
-        AppLogger.d(TAG, "importBackups extracted root=${root.name}")
-        upsertBackupRecords(context)
-        val result = restoreLatest(context)
-        if (!result.success) {
-            AppLogger.e(TAG, "importBackups restore failed: ${result.message}")
-        } else {
-            AppLogger.d(TAG, "importBackups restore success from=${shortId(result.sourceBackupId)}")
-        }
-        result
-    }
+        val now = System.currentTimeMillis()
+        val backupId = newBackupId(now)
 
-    private fun validateBackupArchive(context: Context, uri: Uri): ValidationResult {
-        val input = context.contentResolver.openInputStream(uri)
-            ?: return ValidationResult(false, "无法读取备份文件，请重新选择。")
-        var hasIndex = false
-        var hasManifest = false
+        val estimatedBytes = assets.sumOf { it.sizeBytes }
+        if (!hasEnoughSpace(context, estimatedBytes * 2)) {
+            return BackupExecutionResult.failure("本机磁盘空间不足，无法生成备份临时文件。")
+        }
+
+        val tmpDir = File(context.filesDir, BACKUP_TMP_DIR).apply { mkdirs() }
+        val bodyFile = File(tmpDir, "manual_body_$backupId.bin")
+        val writingFile = File(tmpDir, "manual_$backupId.aivb.writing")
+
         return runCatching {
-            input.use { ins ->
-                ZipInputStream(ins).use { zip ->
+            val writeResult = writeBodyAndAssemble(
+                vaultRoot = vaultRoot,
+                bodyFile = bodyFile,
+                writingFile = writingFile,
+                backupKey = backupKey,
+                headerBase = BackupPackageV1.HeaderBase(
+                    backupId = backupId,
+                    createdAtMs = now,
+                    kind = BackupPackageV1.Kind.MANUAL,
+                    kdfAlgorithm = kdfParams.algorithm,
+                    kdfSaltHex = kdfParams.saltHex,
+                    kdfIterations = kdfParams.iterations,
+                    kdfMemoryKb = kdfParams.memoryKb,
+                    kdfParallelism = kdfParams.parallelism,
+                    keyFingerprintHex = fingerprint,
+                ),
+                assets = assets,
+            )
+
+            val localMd5 = fileMd5Hex(writingFile)
+            // 拷贝到用户所选 SAF 目标
+            context.contentResolver.openOutputStream(targetUri, "w").use { out ->
+                checkNotNull(out) { "openOutputStream returned null" }
+                writingFile.inputStream().buffered().use { input ->
+                    val buf = ByteArray(64 * 1024)
                     while (true) {
-                        val entry = zip.nextEntry ?: break
-                        if (entry.name == INDEX_FILE_NAME) hasIndex = true
-                        if (entry.name.endsWith("/$MANIFEST_FILE_NAME")) hasManifest = true
-                        if (entry.name.startsWith("/") || entry.name.contains("..")) {
-                            throw IllegalArgumentException("备份包包含非法路径。")
-                        }
-                        zip.closeEntry()
+                        val n = input.read(buf)
+                        if (n <= 0) break
+                        out.write(buf, 0, n)
                     }
+                    out.flush()
                 }
             }
-            when {
-                !hasIndex -> ValidationResult(false, "备份包缺少索引文件，无法导入。")
-                !hasManifest -> ValidationResult(false, "备份包缺少清单文件，无法导入。")
-                else -> ValidationResult(true, "ok")
+            // 读回校验 MD5
+            val remoteMd5 = context.contentResolver.openInputStream(targetUri)?.use { streamMd5Hex(it) }
+                ?: error("无法读回目标文件进行校验")
+            if (remoteMd5 != localMd5) {
+                error("目标文件校验不一致，请重试。")
             }
+
+            // 追加到 manualHistory
+            BackupMeta.appendManual(
+                context,
+                BackupMeta.ManualEntry(
+                    createdAtMs = now,
+                    uri = targetUri.toString(),
+                    sizeBytes = writeResult.totalBytes,
+                    note = null,
+                ),
+            )
+
+            val result = BackupExecutionResult.success(
+                backupId = backupId,
+                backupKind = BackupKind.FULL,
+                outputPath = targetUri.toString(),
+                outputSizeBytes = writeResult.totalBytes,
+                assetCount = writeResult.writtenAssetCount,
+                totalAssetCount = assets.size,
+                volumeCount = 1,
+            )
+            BackupRuntimeState.lastBackupResult = result
+            AppLogger.d(TAG, "manual backup success id=${shortId(backupId)} bytes=${writeResult.totalBytes}")
+            result
         }.getOrElse {
-            val raw = it.message.orEmpty()
-            val normalized = if (
-                raw.contains("invalid literal/length code", ignoreCase = true) ||
-                raw.contains("zip", ignoreCase = true)
-            ) {
-                "备份包已损坏或格式不正确，请重新选择有效的备份文件。"
-            } else {
-                "备份包校验失败：${it.message ?: "未知错误"}"
-            }
-            ValidationResult(false, normalized)
+            AppLogger.e(TAG, "manual backup failed: ${it.message}", it)
+            BackupExecutionResult.failure("备份失败：${it.message ?: "未知异常"}")
+        }.also {
+            bodyFile.delete()
+            writingFile.delete()
         }
     }
 
-    private fun validateArchiveForExport(context: Context, uri: Uri): ValidationResult {
-        val input = context.contentResolver.openInputStream(uri)
-            ?: return ValidationResult(false, "导出文件写入失败，请重试。")
-        var hasIndex = false
-        var hasManifest = false
-        return runCatching {
-            input.use { ins ->
-                ZipInputStream(ins).use { zip ->
-                    while (true) {
-                        val entry = zip.nextEntry ?: break
-                        if (!entry.isDirectory) {
-                            if (entry.name == INDEX_FILE_NAME) hasIndex = true
-                            if (entry.name.endsWith("/$MANIFEST_FILE_NAME")) hasManifest = true
-                            // Consume full entry to verify archive integrity.
-                            val sink = ByteArray(STREAM_CHUNK_SIZE)
-                            while (zip.read(sink) > 0) { /* no-op */ }
-                        }
-                        zip.closeEntry()
-                    }
-                }
+    // ---------- 恢复入口 ----------
+
+    suspend fun restoreFromAutoPackage(
+        context: Context,
+        pin: CharArray,
+    ): RestoreExecutionResult = withContext(Dispatchers.IO) {
+        val autoFile = ExternalBackupLocation.findAuto(context)
+            ?: return@withContext RestoreExecutionResult.failure("外部未发现可恢复的自动备份。").also {
+                pin.fill(0.toChar())
             }
-            when {
-                !hasIndex -> ValidationResult(false, "导出失败：备份索引缺失，请重试。")
-                !hasManifest -> ValidationResult(false, "导出失败：备份清单缺失，请重试。")
-                else -> ValidationResult(true, "ok")
+        val input = runCatching { context.contentResolver.openInputStream(autoFile.uri) }
+            .getOrNull()
+            ?: return@withContext RestoreExecutionResult.failure("无法打开外部自动备份文件。").also {
+                pin.fill(0.toChar())
             }
-        }.getOrElse {
-            val msg = when (it) {
-                is ZipException -> "导出失败：备份文件损坏，请重试。"
-                else -> "导出失败：${it.message ?: "未知错误"}"
-            }
-            ValidationResult(false, msg)
+        input.use { stream ->
+            restoreFromStream(context, stream, pin)
         }
     }
 
-    suspend fun restoreLatest(context: Context): RestoreExecutionResult = withContext(Dispatchers.IO) {
-        val backupMeta = loadLatestBackupMeta(context)
-            ?: return@withContext RestoreExecutionResult.failure("暂无可恢复的备份文件。")
-        AppLogger.d(TAG, "restoreLatest start id=${shortId(backupMeta.backupId)}")
-        val backupFolder = File(backupRoot(context), backupMeta.folderName)
-        val currentManifest = readManifest(context, backupFolder)
-            ?: return@withContext RestoreExecutionResult.failure("备份清单读取失败。")
+    suspend fun restoreFromManualFile(
+        context: Context,
+        fileUri: Uri,
+        pin: CharArray,
+    ): RestoreExecutionResult = withContext(Dispatchers.IO) {
+        val input = runCatching { context.contentResolver.openInputStream(fileUri) }
+            .getOrNull()
+            ?: return@withContext RestoreExecutionResult.failure("无法读取所选备份文件。").also {
+                pin.fill(0.toChar())
+            }
+        input.use { stream ->
+            restoreFromStream(context, stream, pin)
+        }
+    }
 
-        val manifestChain = buildManifestChain(context, currentManifest)
-        val mergedAssets = linkedMapOf<String, BackupAsset>()
-        manifestChain.forEach { manifest -> manifest.assets.forEach { mergedAssets[it.relativePath] = it } }
-        val assetsToRestore = mergedAssets.values.toList()
+    private fun restoreFromStream(
+        context: Context,
+        input: java.io.InputStream,
+        pin: CharArray,
+    ): RestoreExecutionResult {
+        // 为了拿到 kdfParams/fp，先读 header；header 小，允许占用内存。
+        val buffered = java.io.BufferedInputStream(input)
+        val keyManager = backupKeyManager(context)
+        val backupKey: SecretKey
+        val header: BackupPackageV1.Header
+        try {
+            // 预读 header（未传 key 之前无法创建 reader，这里借用 dummy key，仅解析到 header 部分）。
+            // 为了避免临时解析两次，我们先把 header 部分字节拷贝出来解析：
+            val headerInfo = peekHeader(buffered)
+            header = headerInfo.header
+            val params = BackupKeyManager.KdfParams(
+                algorithm = header.kdfAlgorithm,
+                saltHex = header.kdfSaltHex,
+                iterations = header.kdfIterations,
+                memoryKb = header.kdfMemoryKb,
+                parallelism = header.kdfParallelism,
+            )
+            val material = keyManager.deriveKey(pin, params)
+            if (material.fingerprintHex != header.keyFingerprintHex) {
+                return RestoreExecutionResult.failure("密码不正确，请重试。")
+            }
+            backupKey = material.key
+        } finally {
+            pin.fill(0.toChar())
+        }
+
+        val reader = BackupPackageV1.newReader(buffered, backupKey)
+        // peekHeader 已消费 header 字节；直接把已解析的 header 注入 reader，跳过 readHeader 过程。
+        reader.attachHeader(header)
+        return doRestoreWithParsedHeader(context, reader, header)
+    }
+
+    private fun doRestoreWithParsedHeader(
+        context: Context,
+        reader: BackupPackageV1.Reader,
+        header: BackupPackageV1.Header,
+    ): RestoreExecutionResult {
         val vaultRoot = File(context.filesDir, VAULT_ROOT_DIR).apply { mkdirs() }
-
+        val masterKey = KeystoreSecretKeyProvider().getOrCreateAesSecretKey()
+        val engine = AesCbcEngine(masterKey)
         var restored = 0
         var skipped = 0
         var failed = 0
-        assetsToRestore.forEach { asset ->
+        header.assets.forEach { asset ->
             runCatching {
                 val target = File(vaultRoot, asset.relativePath)
-                if (target.exists()) {
+                if (target.exists() && fileSha256Hex(target) == asset.sha256Hex) {
                     skipped += 1
+                    // 仍需跳过 reader 中的 frame
+                    repeat(asset.frameCount) { reader.readNextChunk() }
                     return@runCatching
                 }
                 target.parentFile?.mkdirs()
-                val volumeFile = File(backupRoot(context), "${asset.backupId}/${asset.volumeFileName}")
-                RandomAccessFile(volumeFile, "r").use { raf ->
-                    raf.seek(asset.offsetInVolume)
-                    var remaining = asset.encryptedLengthInVolume
-                    val digestBuffer = ByteArray(STREAM_CHUNK_SIZE)
-                    target.outputStream().use { out ->
-                        while (remaining > 0L) {
-                            if (remaining < 4L) throw IllegalStateException("invalid encrypted frame")
-                            val encLen = raf.readInt()
-                            if (encLen <= 0) throw IllegalStateException("invalid encrypted block length")
-                            val encryptedChunk = ByteArray(encLen)
-                            raf.readFully(encryptedChunk)
-                            val plainChunk = engine(context).decrypt(encryptedChunk)
-                            out.write(plainChunk)
-                            remaining -= (4L + encLen.toLong())
-                        }
-                    }
-                    target.inputStream().use { stream ->
-                        val digest = java.security.MessageDigest.getInstance("SHA-256")
-                        while (true) {
-                            val read = stream.read(digestBuffer)
-                            if (read <= 0) break
-                            digest.update(digestBuffer, 0, read)
-                        }
-                        val hash = digest.digest().joinToString("") { b -> "%02x".format(b) }
-                        if (hash != asset.sha256Hex) throw IllegalStateException("asset checksum mismatch")
+                val digest = MessageDigest.getInstance("SHA-256")
+                target.outputStream().buffered().use { out ->
+                    repeat(asset.frameCount) {
+                        val plain = reader.readNextChunk()
+                            ?: error("unexpected end of body for ${asset.relativePath}")
+                        // 用 Keystore 主密钥重加密后落地
+                        val enc = engine.encrypt(plain)
+                        out.write(enc)
+                        digest.update(plain)
                     }
                 }
+                val hash = digest.digest().joinToString("") { b -> "%02x".format(b) }
+                if (hash != asset.sha256Hex) {
+                    target.delete()
+                    error("asset checksum mismatch: ${asset.relativePath}")
+                }
                 restored += 1
-            }.onFailure { failed += 1 }
+            }.onFailure {
+                failed += 1
+                AppLogger.e(TAG, "restore asset failed: ${asset.relativePath} ${it.message}")
+            }
         }
-        val result = RestoreExecutionResult.success(restored, skipped, failed, currentManifest.backupId)
+        val result = RestoreExecutionResult.success(restored, skipped, failed, header.backupId)
         BackupRuntimeState.lastRestoreResult = result
         AppLogger.d(
             TAG,
-            "restoreLatest done id=${shortId(currentManifest.backupId)} restored=$restored skipped=$skipped failed=$failed",
+            "restore done id=${shortId(header.backupId)} restored=$restored skipped=$skipped failed=$failed",
         )
-        result
+        return result
     }
 
-    private fun writeVolumes(
-        context: Context,
-        backupFolder: File,
-        assets: MutableList<BackupAsset>,
+    private data class HeaderPeek(
+        val header: BackupPackageV1.Header,
+    )
+
+    /**
+     * 读 MAGIC/VERSION/HEADER_LEN/HEADER_JSON 并解析；之后 [input] 的指针刚好停在 body 起点，
+     * 这样外层用 [BackupPackageV1.newReader] 时，构造的 Reader 需要直接从 body 读 frame——
+     * 但 Reader 自身要求先调用 readHeader()。为兼容，我们把 Reader 改造成"接受已解析 header"。
+     *
+     * 实现上：我们在这里不使用 BackupPackageV1.newReader 的 readHeader 流程，
+     * 改为直接构造一个轻量 ChunkReader 子过程（见 [doRestoreWithParsedHeader]，这里直接复用 reader
+     * 并给 Reader 手工塞入 header——为此在 BackupPackageV1.Reader 暴露 attachPreParsedHeader。
+     */
+    private fun peekHeader(input: java.io.BufferedInputStream): HeaderPeek {
+        val magic = ByteArray(BackupPackageV1.MAGIC.size).also { readFully(input, it) }
+        require(magic.contentEquals(BackupPackageV1.MAGIC)) { "bad magic" }
+        val version = readInt32BE(input)
+        require(version == BackupPackageV1.VERSION) { "unsupported version=$version" }
+        val headerLen = readInt32BE(input)
+        require(headerLen in 1..(32 * 1024 * 1024)) { "invalid header length=$headerLen" }
+        val headerBytes = ByteArray(headerLen).also { readFully(input, it) }
+        val header = BackupPackageV1.parseHeaderJson(String(headerBytes, Charsets.UTF_8))
+        return HeaderPeek(header)
+    }
+
+    // ---------- 内部工具 ----------
+
+    private data class WriteResult(
+        val totalBytes: Long,
+        val writtenAssetCount: Int,
+    )
+
+    private fun writeBodyAndAssemble(
         vaultRoot: File,
-    ): List<BackupVolume> {
-        if (assets.isEmpty()) return emptyList()
-        val volumes = mutableListOf<BackupVolume>()
-        var volumeIndex = -1
-        var out: DataOutputStream? = null
-        var currentFile: File? = null
-        var currentSize = 0L
-        var currentDigest: java.security.MessageDigest? = null
+        bodyFile: File,
+        writingFile: File,
+        backupKey: SecretKey,
+        headerBase: BackupPackageV1.HeaderBase,
+        assets: List<VaultAsset>,
+    ): WriteResult {
+        val masterKey = KeystoreSecretKeyProvider().getOrCreateAesSecretKey()
+        val engine = AesCbcEngine(masterKey)
 
-        fun closeCurrentVolumeIfNeeded() {
-            if (out != null && currentFile != null && currentDigest != null) {
-                out!!.flush()
-                out!!.close()
-                val encryptedSize = currentFile!!.length()
-                val checksum = currentDigest!!.digest().joinToString("") { b -> "%02x".format(b) }
-                volumes += BackupVolume(
-                    fileName = currentFile!!.name,
-                    encryptedSizeBytes = encryptedSize,
-                    checksumHex = checksum,
+        // 1. 写 body 到 tmp（逐 asset 读 vault 密文 → 解密 → 明文 → GCM 加密 chunk 写入 body）
+        bodyFile.outputStream().buffered().use { bodyOut ->
+            val bodyWriter = BackupPackageV1.newBodyWriter(bodyOut, backupKey)
+            assets.forEach { asset ->
+                bodyWriter.beginAsset(asset.relativePath, asset.sha256Hex, asset.sizeBytes)
+                val source = File(vaultRoot, asset.relativePath)
+                val encrypted = source.readBytes()
+                val plain = engine.decrypt(encrypted)
+                // 分片写入：每个 chunk 不超过 CHUNK_MAX_PLAIN_BYTES
+                var offset = 0
+                while (offset < plain.size) {
+                    val len = minOf(BackupPackageV1.CHUNK_MAX_PLAIN_BYTES, plain.size - offset)
+                    bodyWriter.writeChunk(plain, offset, len)
+                    offset += len
+                }
+                if (plain.isEmpty()) {
+                    // 空文件：写入一个 0 长度 chunk 让 frameCount 合法（极少见，占位）
+                    bodyWriter.writeChunk(ByteArray(0), 0, 0)
+                }
+                bodyWriter.endAsset()
+            }
+            // 2. 组装最终文件到 writingFile，并 fsync
+            FileOutputStream(writingFile).use { out ->
+                val total = BackupPackageV1.finalizePackage(
+                    bodyFile = bodyFile,
+                    bodyWriter = bodyWriter,
+                    headerBase = headerBase,
+                    finalOutput = out,
                 )
+                out.fd.sync()
+                // 额外一次读回校验 MD5（写盘可靠性）：读回并比对
+                val md5 = fileMd5Hex(writingFile)
+                AppLogger.d(TAG, "assemble done bytes=$total md5=${md5.take(8)}")
+                return WriteResult(totalBytes = total, writtenAssetCount = assets.size)
             }
-            out = null
-            currentFile = null
-            currentDigest = null
-            currentSize = 0L
         }
-
-        fun openNextVolume() {
-            closeCurrentVolumeIfNeeded()
-            volumeIndex += 1
-            currentFile = File(backupFolder, "volume_${volumeIndex.toString().padStart(3, '0')}.bin.enc")
-            out = DataOutputStream(currentFile!!.outputStream().buffered())
-            currentSize = 0L
-            currentDigest = java.security.MessageDigest.getInstance("SHA-256")
-        }
-
-        openNextVolume()
-        assets.forEachIndexed { idx, asset ->
-            val source = File(vaultRoot, asset.relativePath)
-            val estimated = source.length()
-            if (currentSize > 0 && currentSize + estimated > VOLUME_MAX_BYTES) openNextVolume()
-
-            val startOffset = currentSize
-            source.inputStream().buffered().use { input ->
-                val buffer = ByteArray(STREAM_CHUNK_SIZE)
-                while (true) {
-                    val read = input.read(buffer)
-                    if (read <= 0) break
-                    val chunk = if (read == buffer.size) buffer.copyOf() else buffer.copyOf(read)
-                    val encryptedChunk = engine(context).encrypt(chunk)
-                    out!!.writeInt(encryptedChunk.size)
-                    out!!.write(encryptedChunk)
-                    currentDigest!!.update(intToBytes(encryptedChunk.size))
-                    currentDigest!!.update(encryptedChunk)
-                    currentSize += 4L + encryptedChunk.size.toLong()
-                }
-            }
-            assets[idx] = asset.copy(
-                backupId = backupFolder.name,
-                volumeFileName = currentFile!!.name,
-                offsetInVolume = startOffset,
-                encryptedLengthInVolume = currentSize - startOffset,
-            )
-            AppLogger.d(
-                TAG,
-                "writeVolumes asset=${asset.relativePath.substringAfterLast('/')} size=${asset.sizeBytes} volume=${currentFile!!.name}",
-            )
-        }
-        closeCurrentVolumeIfNeeded()
-        AppLogger.d(TAG, "writeVolumes done volumes=${volumes.size}")
-        return volumes
     }
 
-    private fun writeManifest(context: Context, folder: File, manifest: BackupManifest) {
-        val encrypted = engine(context).encrypt(manifest.toJson().toByteArray(Charsets.UTF_8))
-        File(folder, MANIFEST_FILE_NAME).writeBytes(encrypted)
-    }
+    private data class VaultAsset(
+        val relativePath: String,
+        val sizeBytes: Long,
+        val sha256Hex: String,
+    )
 
-    private fun readManifest(context: Context, folder: File): BackupManifest? {
-        val encrypted = File(folder, MANIFEST_FILE_NAME)
-        if (!encrypted.exists()) return null
-        return runCatching {
-            val plain = engine(context).decrypt(encrypted.readBytes())
-            BackupManifest.fromJson(String(plain, Charsets.UTF_8))
-        }.getOrNull()
-    }
-
-    private fun scanVaultAssets(vaultRoot: File): List<BackupAsset> {
+    private fun scanVaultAssets(vaultRoot: File): List<VaultAsset> {
+        if (!vaultRoot.exists()) return emptyList()
+        val masterKey = KeystoreSecretKeyProvider().getOrCreateAesSecretKey()
+        val engine = AesCbcEngine(masterKey)
         return vaultRoot.walkTopDown().filter { it.isFile }.map { file ->
-            val digest = java.security.MessageDigest.getInstance("SHA-256")
-            file.inputStream().buffered().use { input ->
-                val buf = ByteArray(STREAM_CHUNK_SIZE)
-                while (true) {
-                    val read = input.read(buf)
-                    if (read <= 0) break
-                    digest.update(buf, 0, read)
+            val digest = MessageDigest.getInstance("SHA-256")
+            // 计算明文 sha256，用于恢复端校验
+            runCatching {
+                val encrypted = file.readBytes()
+                val plain = engine.decrypt(encrypted)
+                digest.update(plain)
+            }.onFailure {
+                // 无法解密则回退为密文 sha256（避免崩溃；恢复端会在 restore 侧失败）
+                file.inputStream().buffered().use { input ->
+                    val buf = ByteArray(STREAM_CHUNK_SIZE)
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n <= 0) break
+                        digest.update(buf, 0, n)
+                    }
                 }
             }
-            BackupAsset(
-                backupId = "",
+            VaultAsset(
                 relativePath = file.relativeTo(vaultRoot).invariantSeparatorsPath,
                 sizeBytes = file.length(),
-                modifiedAtMs = file.lastModified(),
                 sha256Hex = digest.digest().joinToString("") { b -> "%02x".format(b) },
-                volumeFileName = "",
-                offsetInVolume = 0L,
-                encryptedLengthInVolume = 0L,
             )
         }.toList()
     }
 
-    private fun buildManifestChain(context: Context, target: BackupManifest): List<BackupManifest> {
-        val byId = loadIndex(context).associateBy { it.backupId }
-        val ordered = mutableListOf<BackupManifest>()
-        var cursor: BackupManifest? = target
-        while (cursor != null) {
-            ordered.add(cursor)
-            cursor = cursor.baseBackupId?.let { parentId ->
-                val meta = byId[parentId] ?: return@let null
-                readManifest(context, File(backupRoot(context), meta.folderName))
-            }
-        }
-        return ordered.reversed()
-    }
-
-    private suspend fun upsertBackupRecords(context: Context) {
-        val db = Room.databaseBuilder(
-            context.applicationContext,
-            PhotoVaultDatabase::class.java,
-            PhotoVaultDatabase.NAME,
-        ).build()
-        runCatching {
-            val dao = db.backupRecordDao()
-            val metas = loadIndex(context).sortedByDescending { it.createdAtMs }.take(MAX_BACKUP_VERSIONS)
-            metas.forEach { meta ->
-                val folder = File(backupRoot(context), meta.folderName)
-                dao.insert(
-                    BackupRecordEntity(
-                        filePath = folder.absolutePath,
-                        createdAtEpochMs = meta.createdAtMs,
-                        version = if (meta.kind == BackupKind.FULL) 1 else 2,
-                        checksumHex = null,
-                    ),
-                )
-            }
-            val latest = dao.latest(200)
-            if (latest.size > MAX_BACKUP_VERSIONS) {
-                dao.deleteByIds(latest.drop(MAX_BACKUP_VERSIONS).map { it.id })
-            }
-            AppLogger.d(TAG, "backupRecord synced count=${metas.size}")
-        }.onFailure {
-            AppLogger.e(TAG, "backupRecord sync failed: ${it.message}", it)
-        }
-        db.close()
-    }
-
-    private fun updateIndexAfterCreate(context: Context, manifest: BackupManifest, folder: File) {
-        val current = loadIndex(context).toMutableList()
-        current.add(
-            BackupIndexMeta(
-                backupId = manifest.backupId,
-                folderName = folder.name,
-                createdAtMs = manifest.createdAtMs,
-                kind = manifest.kind,
-                baseBackupId = manifest.baseBackupId,
-            ),
-        )
-        saveIndex(context, current)
-    }
-
-    private fun pruneOldBackups(context: Context) {
-        val all = loadIndex(context).sortedByDescending { it.createdAtMs }
-        if (all.size <= MAX_BACKUP_VERSIONS) return
-        val keep = all.take(MAX_BACKUP_VERSIONS)
-        all.drop(MAX_BACKUP_VERSIONS).forEach { File(backupRoot(context), it.folderName).deleteRecursively() }
-        saveIndex(context, keep)
-    }
-
-    private fun loadLatestBackupMeta(context: Context): BackupIndexMeta? =
-        loadIndex(context).maxByOrNull { it.createdAtMs }
-
-    private fun loadIndex(context: Context): List<BackupIndexMeta> {
-        val file = File(backupRoot(context), INDEX_FILE_NAME)
-        if (!file.exists()) return emptyList()
+    private fun hasEnoughSpace(context: Context, needBytes: Long): Boolean {
         return runCatching {
-            val arr = JSONArray(file.readText())
-            buildList {
-                for (i in 0 until arr.length()) {
-                    val item = arr.getJSONObject(i)
-                    add(
-                        BackupIndexMeta(
-                            backupId = item.getString("backupId"),
-                            folderName = item.getString("folderName"),
-                            createdAtMs = item.getLong("createdAtMs"),
-                            kind = BackupKind.valueOf(item.getString("kind")),
-                            baseBackupId = item.optString("baseBackupId").ifBlank { null },
-                        ),
-                    )
-                }
+            val stat = StatFs(context.filesDir.absolutePath)
+            stat.availableBytes >= needBytes
+        }.getOrDefault(true)
+    }
+
+    private fun fileMd5Hex(file: File): String {
+        val digest = MessageDigest.getInstance("MD5")
+        file.inputStream().buffered().use { input ->
+            val buf = ByteArray(STREAM_CHUNK_SIZE)
+            while (true) {
+                val n = input.read(buf)
+                if (n <= 0) break
+                digest.update(buf, 0, n)
             }
-        }.getOrDefault(emptyList())
-    }
-
-    private fun saveIndex(context: Context, metas: List<BackupIndexMeta>) {
-        val arr = JSONArray()
-        metas.sortedByDescending { it.createdAtMs }.forEach { meta ->
-            arr.put(
-                JSONObject()
-                    .put("backupId", meta.backupId)
-                    .put("folderName", meta.folderName)
-                    .put("createdAtMs", meta.createdAtMs)
-                    .put("kind", meta.kind.name)
-                    .put("baseBackupId", meta.baseBackupId ?: ""),
-            )
         }
-        backupRoot(context).mkdirs()
-        File(backupRoot(context), INDEX_FILE_NAME).writeText(arr.toString())
+        return digest.digest().joinToString("") { b -> "%02x".format(b) }
     }
 
-    private fun backupRoot(context: Context): File = File(context.filesDir, BACKUP_ROOT_DIR)
+    private fun streamMd5Hex(input: java.io.InputStream): String {
+        val digest = MessageDigest.getInstance("MD5")
+        val buf = ByteArray(STREAM_CHUNK_SIZE)
+        while (true) {
+            val n = input.read(buf)
+            if (n <= 0) break
+            digest.update(buf, 0, n)
+        }
+        return digest.digest().joinToString("") { b -> "%02x".format(b) }
+    }
 
-    private fun intToBytes(value: Int): ByteArray = byteArrayOf(
-        ((value ushr 24) and 0xFF).toByte(),
-        ((value ushr 16) and 0xFF).toByte(),
-        ((value ushr 8) and 0xFF).toByte(),
-        (value and 0xFF).toByte(),
-    )
+    private fun fileSha256Hex(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().buffered().use { input ->
+            val buf = ByteArray(STREAM_CHUNK_SIZE)
+            while (true) {
+                val n = input.read(buf)
+                if (n <= 0) break
+                digest.update(buf, 0, n)
+            }
+        }
+        return digest.digest().joinToString("") { b -> "%02x".format(b) }
+    }
+
+    private fun readFully(input: java.io.InputStream, buf: ByteArray) {
+        var total = 0
+        while (total < buf.size) {
+            val n = input.read(buf, total, buf.size - total)
+            if (n < 0) error("unexpected EOF, need ${buf.size} bytes, got $total")
+            total += n
+        }
+    }
+
+    private fun readInt32BE(input: java.io.InputStream): Int {
+        val b = ByteArray(4).also { readFully(input, it) }
+        return ((b[0].toInt() and 0xFF) shl 24) or
+            ((b[1].toInt() and 0xFF) shl 16) or
+            ((b[2].toInt() and 0xFF) shl 8) or
+            (b[3].toInt() and 0xFF)
+    }
+
+    private fun newBackupId(now: Long): String =
+        "bkp_${now}_${UUID.randomUUID().toString().take(8)}"
 
     private fun shortId(backupId: String): String = backupId.takeLast(8)
 
-    private const val TAG = "BackupMVP"
-}
+    // ---------- 启动清理：旧 v0 结构 + 外部 .writing/.bak 自检 ----------
 
-enum class BackupKind { FULL, INCREMENTAL }
-
-data class BackupVolume(
-    val fileName: String,
-    val encryptedSizeBytes: Long,
-    val checksumHex: String,
-)
-
-data class BackupAsset(
-    val backupId: String,
-    val relativePath: String,
-    val sizeBytes: Long,
-    val modifiedAtMs: Long,
-    val sha256Hex: String,
-    val volumeFileName: String,
-    val offsetInVolume: Long,
-    val encryptedLengthInVolume: Long,
-)
-
-data class BackupManifest(
-    val backupId: String,
-    val createdAtMs: Long,
-    val kind: BackupKind,
-    val baseBackupId: String?,
-    val assets: List<BackupAsset>,
-    val volumes: List<BackupVolume>,
-    val totalAssetCount: Int,
-) {
-    fun toJson(): String {
-        val assetsJson = JSONArray()
-        assets.forEach { a ->
-            assetsJson.put(
-                JSONObject()
-                    .put("backupId", a.backupId)
-                    .put("relativePath", a.relativePath)
-                    .put("sizeBytes", a.sizeBytes)
-                    .put("modifiedAtMs", a.modifiedAtMs)
-                    .put("sha256Hex", a.sha256Hex)
-                    .put("volumeFileName", a.volumeFileName)
-                    .put("offsetInVolume", a.offsetInVolume)
-                    .put("encryptedLengthInVolume", a.encryptedLengthInVolume),
-            )
-        }
-        val volumesJson = JSONArray()
-        volumes.forEach { v ->
-            volumesJson.put(
-                JSONObject()
-                    .put("fileName", v.fileName)
-                    .put("encryptedSizeBytes", v.encryptedSizeBytes)
-                    .put("checksumHex", v.checksumHex),
-            )
-        }
-        return JSONObject()
-            .put("backupId", backupId)
-            .put("createdAtMs", createdAtMs)
-            .put("kind", kind.name)
-            .put("baseBackupId", baseBackupId ?: "")
-            .put("totalAssetCount", totalAssetCount)
-            .put("assets", assetsJson)
-            .put("volumes", volumesJson)
-            .toString()
-    }
-
-    companion object {
-        fun fromJson(json: String): BackupManifest {
-            val root = JSONObject(json)
-            val assetsArray = root.getJSONArray("assets")
-            val assets = buildList {
-                for (i in 0 until assetsArray.length()) {
-                    val a = assetsArray.getJSONObject(i)
-                    add(
-                        BackupAsset(
-                            backupId = a.getString("backupId"),
-                            relativePath = a.getString("relativePath"),
-                            sizeBytes = a.getLong("sizeBytes"),
-                            modifiedAtMs = a.getLong("modifiedAtMs"),
-                            sha256Hex = a.getString("sha256Hex"),
-                            volumeFileName = a.getString("volumeFileName"),
-                            offsetInVolume = a.getLong("offsetInVolume"),
-                            encryptedLengthInVolume = a.getLong("encryptedLengthInVolume"),
-                        ),
-                    )
-                }
-            }
-            val volumesArray = root.getJSONArray("volumes")
-            val volumes = buildList {
-                for (i in 0 until volumesArray.length()) {
-                    val v = volumesArray.getJSONObject(i)
-                    add(
-                        BackupVolume(
-                            fileName = v.getString("fileName"),
-                            encryptedSizeBytes = v.getLong("encryptedSizeBytes"),
-                            checksumHex = v.getString("checksumHex"),
-                        ),
-                    )
-                }
-            }
-            return BackupManifest(
-                backupId = root.getString("backupId"),
-                createdAtMs = root.getLong("createdAtMs"),
-                kind = BackupKind.valueOf(root.getString("kind")),
-                baseBackupId = root.optString("baseBackupId").ifBlank { null },
-                assets = assets,
-                volumes = volumes,
-                totalAssetCount = root.optInt("totalAssetCount", assets.size),
-            )
+    fun sanitizeOnStartup(context: Context) {
+        ExternalBackupLocation.sanitizeOnStartup(context)
+        runCatching {
+            // 清空 backup_tmp（kill 后的遗留）
+            val tmp = File(context.filesDir, BACKUP_TMP_DIR)
+            if (tmp.exists()) tmp.listFiles()?.forEach { it.delete() }
         }
     }
 }
 
-data class BackupIndexMeta(
-    val backupId: String,
-    val folderName: String,
-    val createdAtMs: Long,
-    val kind: BackupKind,
-    val baseBackupId: String?,
-)
+// ---------- 结果数据类 ----------
 
 data class BackupExecutionResult(
     val success: Boolean,
     val message: String,
+    val alreadyRunning: Boolean = false,
     val backupId: String = "",
     val backupKind: BackupKind = BackupKind.FULL,
     val outputPath: String = "",
@@ -702,6 +624,12 @@ data class BackupExecutionResult(
         )
 
         fun failure(message: String) = BackupExecutionResult(success = false, message = message)
+
+        fun alreadyRunning() = BackupExecutionResult(
+            success = false,
+            message = "已有备份任务在进行中。",
+            alreadyRunning = true,
+        )
     }
 }
 
@@ -726,8 +654,3 @@ data class RestoreExecutionResult(
         fun failure(message: String) = RestoreExecutionResult(success = false, message = message)
     }
 }
-
-private data class ValidationResult(
-    val success: Boolean,
-    val message: String,
-)
