@@ -192,8 +192,9 @@ class LockViewModel @Inject constructor(
                     failCount = 0,
                 ),
             )
-            refreshBackupKeyForPin(rawValue, triggerAutoBackup = true)
+            // UI 立即跳转；Argon2id 派生放后台，备份尽早触发一次。
             onSaved()
+            launchRefreshBackupKey(rawValue, triggerAutoBackup = true, force = true)
         }
     }
 
@@ -203,8 +204,9 @@ class LockViewModel @Inject constructor(
             val hashed = PasswordHasher.sha256HexOfUtf8(pin)
             if (setting.pinHashHex == hashed) {
                 dao.upsert(setting.copy(failCount = 0))
-                refreshBackupKeyForPin(pin, triggerAutoBackup = false)
+                // PIN 校验通过立即解锁 UI；Argon2id 派生放后台，已有缓存则直接跳过。
                 _state.value = _state.value.copy(unlockSuccess = true, enteredPin = "", error = null)
+                launchRefreshBackupKey(pin, triggerAutoBackup = false, force = false)
             } else {
                 val nextFail = setting.failCount + 1
                 dao.upsert(setting.copy(failCount = nextFail))
@@ -217,27 +219,33 @@ class LockViewModel @Inject constructor(
     }
 
     /**
-     * 用 PIN 派生并缓存当前 BackupKey。
-     * 触发时机：解锁成功、首次设置 PIN、修改 PIN。
-     * @param triggerAutoBackup 当为修改/设置 PIN 时传 true，随后触发一次自动备份以对齐外部包。
+     * 后台异步刷新 BackupKey，避免阻塞 UI。
+     * @param force true 时忽略缓存强制重新派生（用于 Setup / 改密码）。
+     * @param triggerAutoBackup 派生成功后是否迷一次 PASSWORD_CHANGED 自动备份。
      */
-    private suspend fun refreshBackupKeyForPin(pin: String, triggerAutoBackup: Boolean) {
-        runCatching {
-            withContext(Dispatchers.IO) {
-                val params = backupKeyManager.getOrCreateKdfParams()
-                val chars = pin.toCharArray()
-                val material = try {
-                    backupKeyManager.deriveKey(chars, params)
-                } finally {
-                    chars.fill(0.toChar())
+    private fun launchRefreshBackupKey(pin: String, triggerAutoBackup: Boolean, force: Boolean) {
+        viewModelScope.launch {
+            runCatching {
+                // 已有有效缓存且非强刷：不再运行 Argon2id。
+                if (!force && BackupSecretsStore.hasCached(appContext)) {
+                    return@runCatching
                 }
-                BackupSecretsStore.cache(appContext, material.key)
+                withContext(Dispatchers.IO) {
+                    val params = backupKeyManager.getOrCreateKdfParams()
+                    val chars = pin.toCharArray()
+                    val material = try {
+                        backupKeyManager.deriveKey(chars, params)
+                    } finally {
+                        chars.fill(0.toChar())
+                    }
+                    BackupSecretsStore.cache(appContext, material.key)
+                }
+                if (triggerAutoBackup) {
+                    AutoBackupScheduler.runOnceNow(appContext, BackupTriggerReason.PASSWORD_CHANGED)
+                }
+            }.onFailure {
+                AppLogger.e(TAG, "refreshBackupKey failed: ${it.message}", it)
             }
-            if (triggerAutoBackup) {
-                AutoBackupScheduler.runOnceNow(appContext, BackupTriggerReason.PASSWORD_CHANGED)
-            }
-        }.onFailure {
-            AppLogger.e(TAG, "refreshBackupKey failed: ${it.message}", it)
         }
     }
 
@@ -277,7 +285,7 @@ class LockViewModel @Inject constructor(
                     ),
                 )
                 // 2) 缓存 BackupKey
-                refreshBackupKeyForPin(pin, triggerAutoBackup = false)
+                launchRefreshBackupKey(pin, triggerAutoBackup = false, force = true)
                 _state.value = _state.value.copy(
                     loading = false,
                     unlockSuccess = true,

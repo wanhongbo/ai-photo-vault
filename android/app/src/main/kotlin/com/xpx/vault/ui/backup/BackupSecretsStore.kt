@@ -6,7 +6,6 @@ import android.security.keystore.KeyProperties
 import com.xpx.vault.AppLogger
 import java.io.File
 import java.security.KeyStore
-import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -39,10 +38,14 @@ object BackupSecretsStore {
             ?: error("backupKey not extractable; expected raw SecretKeySpec")
         try {
             val wrapKey = getOrCreateWrapKey()
-            val iv = ByteArray(IV_LENGTH).also { SecureRandom().nextBytes(it) }
+            // AndroidKeystore 的 AES-GCM 要求 randomizedEncryption，IV 必须由系统生成；
+            // 不能通过 GCMParameterSpec 传入调用方 IV，否则抛 InvalidAlgorithmParameterException。
             val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(Cipher.ENCRYPT_MODE, wrapKey, GCMParameterSpec(GCM_TAG_BITS, iv))
+            cipher.init(Cipher.ENCRYPT_MODE, wrapKey)
             val combined = cipher.doFinal(keyBytes)
+            val iv = cipher.iv
+                ?: error("cipher.iv is null after ENCRYPT_MODE init")
+            require(iv.size == IV_LENGTH) { "unexpected iv length=${iv.size}" }
             val out = cacheFile(context)
             out.parentFile?.mkdirs()
             out.outputStream().use { stream ->
@@ -51,7 +54,6 @@ object BackupSecretsStore {
                 stream.flush()
             }
         } finally {
-            // 擦除本地中间副本
             java.util.Arrays.fill(keyBytes, 0.toByte())
         }
     }

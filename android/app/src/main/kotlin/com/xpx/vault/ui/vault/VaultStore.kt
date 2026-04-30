@@ -8,6 +8,13 @@ import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+// TODO(vault-encryption): 一期 MVP 此处直接存明文（与设计 spec 不符），后续需：
+//  1. 写入路径（importFromPicker / reserveCameraTarget / 相机拍照结果）接入 AesCbcEngine.encrypt
+//  2. 读取路径（缩略图、预览、视频、导出到系统相册）接入 AesCbcEngine.decrypt / decryptStream
+//  3. 编写一次性迁移：启动时把 vault_albums/ 下已有明文文件全量加密
+//  4. 同步将 LocalBackupMvpService 中的 scanVaultAssets / writeBodyAndAssemble / doRestoreWithParsedHeader
+//     恢复为先 decrypt 再 sha256/chunk、恢复时 encrypt 之后再落盘的形式。
+//  在此之前，vault 内部相当于「普通相册」级别的保护，依赖外层 PIN/生物识别解锁 + 应用 sandbox 隔离。
 private const val ROOT_DIR = "vault_albums"
 private const val LEGACY_DIR = "vault_album"
 private const val TRASH_DIR = "vault_trash"

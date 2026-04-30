@@ -4,9 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.StatFs
 import com.xpx.vault.AppLogger
-import com.xpx.vault.data.crypto.AesCbcEngine
 import com.xpx.vault.data.crypto.BackupKeyManager
-import com.xpx.vault.data.crypto.KeystoreSecretKeyProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
@@ -347,8 +345,8 @@ object LocalBackupMvpService {
         header: BackupPackageV1.Header,
     ): RestoreExecutionResult {
         val vaultRoot = File(context.filesDir, VAULT_ROOT_DIR).apply { mkdirs() }
-        val masterKey = KeystoreSecretKeyProvider().getOrCreateAesSecretKey()
-        val engine = AesCbcEngine(masterKey)
+        // 注：一期 MVP 中 vault_albums/ 下存储的就是明文文件（VaultStore 未接入 AES），
+        // 因此备份与恢复都按明文处理；避免触发 Keystore HW-backed key 的 encoded == null 问题。
         var restored = 0
         var skipped = 0
         var failed = 0
@@ -367,9 +365,8 @@ object LocalBackupMvpService {
                     repeat(asset.frameCount) {
                         val plain = reader.readNextChunk()
                             ?: error("unexpected end of body for ${asset.relativePath}")
-                        // 用 Keystore 主密钥重加密后落地
-                        val enc = engine.encrypt(plain)
-                        out.write(enc)
+                        // vault 明文直写，后续若接入加密再在此处加一层 engine.encrypt
+                        out.write(plain)
                         digest.update(plain)
                     }
                 }
@@ -433,25 +430,42 @@ object LocalBackupMvpService {
         headerBase: BackupPackageV1.HeaderBase,
         assets: List<VaultAsset>,
     ): WriteResult {
-        val masterKey = KeystoreSecretKeyProvider().getOrCreateAesSecretKey()
-        val engine = AesCbcEngine(masterKey)
-
-        // 1. 写 body 到 tmp（逐 asset 读 vault 密文 → 解密 → 明文 → GCM 加密 chunk 写入 body）
+        // 注：vault_albums/ 在一期 MVP 里存的是明文，直接按明文流式分片写入备份包。
+        // 1. 写 body 到 tmp（逐 asset 读明文 → 按 1MB 分片 → bodyWriter.writeChunk）
         bodyFile.outputStream().buffered().use { bodyOut ->
             val bodyWriter = BackupPackageV1.newBodyWriter(bodyOut, backupKey)
+            val chunkBuf = ByteArray(BackupPackageV1.CHUNK_MAX_PLAIN_BYTES)
+            val readBuf = ByteArray(STREAM_CHUNK_SIZE)
             assets.forEach { asset ->
                 bodyWriter.beginAsset(asset.relativePath, asset.sha256Hex, asset.sizeBytes)
                 val source = File(vaultRoot, asset.relativePath)
-                val encrypted = source.readBytes()
-                val plain = engine.decrypt(encrypted)
-                // 分片写入：每个 chunk 不超过 CHUNK_MAX_PLAIN_BYTES
-                var offset = 0
-                while (offset < plain.size) {
-                    val len = minOf(BackupPackageV1.CHUNK_MAX_PLAIN_BYTES, plain.size - offset)
-                    bodyWriter.writeChunk(plain, offset, len)
-                    offset += len
+                var chunkFill = 0
+                var totalPlainBytes = 0L
+                source.inputStream().buffered().use { input ->
+                    while (true) {
+                        val n = input.read(readBuf)
+                        if (n <= 0) break
+                        var remaining = n
+                        var p = 0
+                        while (remaining > 0) {
+                            val take = minOf(chunkBuf.size - chunkFill, remaining)
+                            System.arraycopy(readBuf, p, chunkBuf, chunkFill, take)
+                            chunkFill += take
+                            p += take
+                            remaining -= take
+                            totalPlainBytes += take
+                            if (chunkFill == chunkBuf.size) {
+                                bodyWriter.writeChunk(chunkBuf, 0, chunkFill)
+                                chunkFill = 0
+                            }
+                        }
+                    }
                 }
-                if (plain.isEmpty()) {
+                if (chunkFill > 0) {
+                    bodyWriter.writeChunk(chunkBuf, 0, chunkFill)
+                    chunkFill = 0
+                }
+                if (totalPlainBytes == 0L) {
                     // 空文件：写入一个 0 长度 chunk 让 frameCount 合法（极少见，占位）
                     bodyWriter.writeChunk(ByteArray(0), 0, 0)
                 }
@@ -482,24 +496,15 @@ object LocalBackupMvpService {
 
     private fun scanVaultAssets(vaultRoot: File): List<VaultAsset> {
         if (!vaultRoot.exists()) return emptyList()
-        val masterKey = KeystoreSecretKeyProvider().getOrCreateAesSecretKey()
-        val engine = AesCbcEngine(masterKey)
+        // 注：vault_albums/ 在一期 MVP 里存的就是明文；直接对文件字节计算 sha256。
         return vaultRoot.walkTopDown().filter { it.isFile }.map { file ->
             val digest = MessageDigest.getInstance("SHA-256")
-            // 计算明文 sha256，用于恢复端校验
-            runCatching {
-                val encrypted = file.readBytes()
-                val plain = engine.decrypt(encrypted)
-                digest.update(plain)
-            }.onFailure {
-                // 无法解密则回退为密文 sha256（避免崩溃；恢复端会在 restore 侧失败）
-                file.inputStream().buffered().use { input ->
-                    val buf = ByteArray(STREAM_CHUNK_SIZE)
-                    while (true) {
-                        val n = input.read(buf)
-                        if (n <= 0) break
-                        digest.update(buf, 0, n)
-                    }
+            file.inputStream().buffered().use { input ->
+                val buf = ByteArray(STREAM_CHUNK_SIZE)
+                while (true) {
+                    val n = input.read(buf)
+                    if (n <= 0) break
+                    digest.update(buf, 0, n)
                 }
             }
             VaultAsset(
