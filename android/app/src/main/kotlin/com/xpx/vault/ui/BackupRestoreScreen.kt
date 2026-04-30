@@ -2,6 +2,7 @@ package com.xpx.vault.ui
 
 import android.content.Context
 import android.net.Uri
+import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -167,6 +168,15 @@ fun BackupRestoreScreen(
         message = "备份已恢复。后台将立即触发一次自动备份以对齐设备上的备份文件。",
         confirmText = "好的",
         onConfirm = { viewModel.consumeRestoreSuccess() },
+    )
+
+    val backupSuccessContext = LocalContext.current
+    AppDialog(
+        show = state.showBackupSuccess,
+        title = "备份成功",
+        message = "已成功备份 ${state.backupSuccessAssetCount} 个文件，共 ${Formatter.formatShortFileSize(backupSuccessContext, state.backupSuccessSizeBytes)}。",
+        confirmText = "好的",
+        onConfirm = { viewModel.consumeBackupSuccess() },
     )
 
     Column(
@@ -566,6 +576,14 @@ class BackupRestoreViewModel @Inject constructor(
         _state.value = _state.value.copy(showRestoreSuccess = false)
     }
 
+    fun consumeBackupSuccess() {
+        _state.value = _state.value.copy(
+            showBackupSuccess = false,
+            backupSuccessSizeBytes = 0,
+            backupSuccessAssetCount = 0,
+        )
+    }
+
     fun exportBackupToUri(uri: Uri) {
         if (_state.value.restoring) return
         viewModelScope.launch {
@@ -578,7 +596,12 @@ class BackupRestoreViewModel @Inject constructor(
             )
             if (result.success) {
                 AppLogger.d("BackupUI", "manual backup success")
-                _state.value = _state.value.copy(backingUp = false)
+                _state.value = _state.value.copy(
+                    backingUp = false,
+                    showBackupSuccess = true,
+                    backupSuccessSizeBytes = result.outputSizeBytes,
+                    backupSuccessAssetCount = result.assetCount,
+                )
                 refresh()
             } else {
                 AppLogger.e("BackupUI", "manual backup failed: ${result.message}")
@@ -640,6 +663,9 @@ data class BackupRestoreUiState(
     val showPinDialog: Boolean = false,
     val pinErrorMessage: String? = null,
     val showRestoreSuccess: Boolean = false,
+    val showBackupSuccess: Boolean = false,
+    val backupSuccessSizeBytes: Long = 0,
+    val backupSuccessAssetCount: Int = 0,
     val safAuthorized: Boolean = false,
     val treeUriDisplay: String? = null,
     val autoLastBackupAtMs: Long? = null,

@@ -1,6 +1,7 @@
 package com.xpx.vault.ui
 
 import android.net.Uri
+import android.text.format.Formatter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -57,12 +59,22 @@ fun BackupProgressScreen(
         }
     }
 
-    LaunchedEffect(state.backingUp, state.errorMessage, startedBackup) {
+    LaunchedEffect(state.backingUp, state.errorMessage, state.showBackupSuccess, startedBackup) {
         if (!startedBackup || hasNavigated) return@LaunchedEffect
         if (state.backingUp || state.errorMessage != null) return@LaunchedEffect
+        if (state.showBackupSuccess) return@LaunchedEffect
         hasNavigated = true
         onBackupSuccess()
     }
+
+    val successContext = LocalContext.current
+    AppDialog(
+        show = state.showBackupSuccess,
+        title = "备份成功",
+        message = "已成功备份 ${state.backupSuccessAssetCount} 个文件，共 ${Formatter.formatShortFileSize(successContext, state.backupSuccessSizeBytes)}。",
+        confirmText = "好的",
+        onConfirm = { viewModel.consumeBackupSuccess() },
+    )
 
     AppDialog(
         show = state.errorMessage != null,
