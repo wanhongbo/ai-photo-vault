@@ -29,6 +29,10 @@ class PhotoVaultApp : Application() {
         runCatching {
             com.xpx.vault.ui.backup.LegacyBackupCleanup.runOnce(this)
         }.onFailure { AppLogger.w("AppInit", "legacy cleanup failed: ${it.message}") }
+        // 开发期一次性迁移：后台协程里静默将存量明文加密，完成后打 marker 避免重复计算。
+        runCatching {
+            com.xpx.vault.ui.vault.VaultPlaintextMigration.scheduleOnStartup(this)
+        }.onFailure { AppLogger.w("AppInit", "vault migration schedule failed: ${it.message}") }
         AutoBackupScheduler.ensureScheduled(this)
     }
 
