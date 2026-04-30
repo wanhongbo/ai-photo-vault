@@ -34,6 +34,9 @@ class PhotoVaultApp : Application() {
             com.xpx.vault.ui.vault.VaultPlaintextMigration.scheduleOnStartup(this)
         }.onFailure { AppLogger.w("AppInit", "vault migration schedule failed: ${it.message}") }
         AutoBackupScheduler.ensureScheduled(this)
+        // 冷启补偿：若距上次自动备份已过阈值（默认 8h），在后台排一次延迟 30s 的 OneTimeWork，避免只靠 24h 周期。
+        runCatching { AutoBackupScheduler.scheduleColdStartIfDue(this) }
+            .onFailure { AppLogger.w("AppInit", "coldStart backup schedule failed: ${it.message}") }
     }
 
     private fun installGlobalExceptionBoundary() {
