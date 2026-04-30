@@ -2,8 +2,8 @@ package com.xpx.vault.data.di
 
 import android.content.Context
 import androidx.room.Room
-import com.xpx.vault.data.crypto.AesCbcEngine
 import com.xpx.vault.data.crypto.KeystoreSecretKeyProvider
+import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.data.db.PhotoVaultDatabase
 import dagger.Module
 import dagger.Provides
@@ -33,7 +33,7 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideAesCbcEngine(
-        keystoreSecretKeyProvider: KeystoreSecretKeyProvider,
-    ): AesCbcEngine = AesCbcEngine(keystoreSecretKeyProvider.getOrCreateAesSecretKey())
+    fun provideVaultCipher(
+        @ApplicationContext context: Context,
+    ): VaultCipher = VaultCipher.get(context)
 }
