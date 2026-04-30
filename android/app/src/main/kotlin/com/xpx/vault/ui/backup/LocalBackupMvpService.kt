@@ -504,33 +504,65 @@ object LocalBackupMvpService {
             .filter { it.isFile }
             // 跳过迁移 marker 与 encryptFile 残留的临时文件，避免整个备份失败。
             .filter { it.name != ".vault_encrypted_v1" && !it.name.contains(".enc_tmp_") }
-            .map { file ->
-            val digest = MessageDigest.getInstance("SHA-256")
-            var plainSize = 0L
-            file.inputStream().buffered().use { input ->
-                cipher.decryptStream(input) { data, offset, length ->
-                    digest.update(data, offset, length)
-                    plainSize += length
-                }
-            }
-            VaultAsset(
-                relativePath = file.relativeTo(vaultRoot).invariantSeparatorsPath,
-                sizeBytes = plainSize,
-                sha256Hex = digest.digest().joinToString("") { b -> "%02x".format(b) },
-            )
-        }.toList()
+            .mapNotNull { file -> scanOrHealAsset(cipher, vaultRoot, file) }
+            .toList()
     }
 
-    /** 对 vault 内的密文文件计算其解密后的明文 sha256。 */
-    private fun decryptedSha256Hex(cipher: VaultCipher, file: File): String {
+    /**
+     * 单文件扩展扫描。正常密文走 [computePlainDigest] 算 sha256/size；
+     * 若报 BadPadding（开发期迁移协程未跑完 / 代码升级前存量明文 / 迁移判则偽阳性），
+     * 就地自愈：将明文文件 encryptFile 原子加密后重扫一次；若仍失败（文件损坏等）返回 null 跳过。
+     */
+    private fun scanOrHealAsset(
+        cipher: VaultCipher,
+        vaultRoot: File,
+        file: File,
+    ): VaultAsset? {
+        runCatching { return buildAsset(cipher, vaultRoot, file) }
+            .onFailure { firstErr ->
+                AppLogger.w(
+                    TAG,
+                    "scan decrypt failed, attempt self-heal: ${file.absolutePath} ${firstErr.message}",
+                )
+            }
+        return runCatching {
+            // 自愈：将明文原地加密（encryptFile 默认 .enc_tmp_ → rename），再重扫。
+            file.inputStream().buffered().use { input ->
+                cipher.encryptFile(input, file)
+            }
+            buildAsset(cipher, vaultRoot, file)
+        }.getOrElse {
+            AppLogger.e(TAG, "scan self-heal failed, skip asset: ${file.absolutePath} ${it.message}")
+            null
+        }
+    }
+
+    private fun buildAsset(cipher: VaultCipher, vaultRoot: File, file: File): VaultAsset {
+        val digest = MessageDigest.getInstance("SHA-256")
+        var plainSize = 0L
+        file.inputStream().buffered().use { input ->
+            cipher.decryptStream(input) { data, offset, length ->
+                digest.update(data, offset, length)
+                plainSize += length
+            }
+        }
+        return VaultAsset(
+            relativePath = file.relativeTo(vaultRoot).invariantSeparatorsPath,
+            sizeBytes = plainSize,
+            sha256Hex = digest.digest().joinToString("") { b -> "%02x".format(b) },
+        )
+    }
+
+    /** 对 vault 内的密文文件计算其解密后的明文 sha256；对明文/损坏返回 null 以触发重写。 */
+    private fun decryptedSha256Hex(cipher: VaultCipher, file: File): String? = runCatching {
         val digest = MessageDigest.getInstance("SHA-256")
         file.inputStream().buffered().use { input ->
             cipher.decryptStream(input) { data, offset, length ->
                 digest.update(data, offset, length)
             }
         }
-        return digest.digest().joinToString("") { b -> "%02x".format(b) }
-    }
+        digest.digest().joinToString("") { b -> "%02x".format(b) }
+    }.getOrNull()
 
     private fun hasEnoughSpace(context: Context, needBytes: Long): Boolean {
         return runCatching {
