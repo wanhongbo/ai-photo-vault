@@ -56,6 +56,7 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.xpx.vault.R
+import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
@@ -67,6 +68,7 @@ import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.VaultStore
+import java.io.File
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import android.content.res.Configuration
@@ -84,9 +86,21 @@ fun VideoPlayerScreen(
     val localView = LocalView.current
     val activity = remember(context) { context.findActivity() }
     val playbackStore = remember(context) { VideoPlaybackStore(context) }
-    val exoPlayer = remember(path) {
+    // 视频密文无法直接预 ExoPlayer，先解密到 filesDir/video_cache/ 临时文件。
+    // 启动时清一次 > 1h 的残留；退出页面时 delete 当前临时文件。
+    val playbackFile = remember(path) {
+        val cacheRoot = File(context.filesDir, "video_cache").apply { mkdirs() }
+        pruneStaleVideoCache(cacheRoot)
+        val src = File(path)
+        val name = "play_${src.nameWithoutExtension}_${System.nanoTime()}.${src.extension.ifBlank { "mp4" }}"
+        runCatching {
+            VaultCipher.get(context).decryptToTempFile(src, cacheRoot, name)
+        }.getOrNull()
+    }
+    val exoPlayer = remember(path, playbackFile) {
         ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(Uri.parse(path)))
+            val target = playbackFile?.toURI()?.toString() ?: path
+            setMediaItem(MediaItem.fromUri(Uri.parse(target)))
             repeatMode = Player.REPEAT_MODE_ONE
             volume = 0f
             prepare()
@@ -131,6 +145,8 @@ fun VideoPlayerScreen(
             playbackStore.put(path, exoPlayer.currentPosition, exoPlayer.duration)
             exoPlayer.removeListener(listener)
             exoPlayer.release()
+            // 释放解密后的明文临时文件，避免占用静态介质空间。
+            playbackFile?.delete()
         }
     }
 
@@ -464,6 +480,15 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+private fun pruneStaleVideoCache(dir: File) {
+    val expireMs = System.currentTimeMillis() - 60L * 60 * 1000 // 1h
+    dir.listFiles()?.forEach { entry ->
+        if (entry.isFile && entry.lastModified() < expireMs) {
+            runCatching { entry.delete() }
+        }
+    }
 }
 
 @Composable
