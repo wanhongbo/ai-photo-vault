@@ -45,6 +45,7 @@ import com.xpx.vault.ui.theme.UiTextSize
 fun SettingsHomeScreen(
     onOpenTab: (HomeTab) -> Unit,
     onOpenBackupRestore: () -> Unit,
+    onOpenBulkExport: () -> Unit,
     onOpenTrashBin: () -> Unit,
     onOpenPaywall: () -> Unit,
     onOpenChangePin: () -> Unit,
@@ -128,6 +129,12 @@ fun SettingsHomeScreen(
             desc = stringResource(R.string.settings_item_backup_restore_desc),
             trailing = SettingsTrailing.CHEVRON,
             onClick = onOpenBackupRestore,
+        ),
+        SettingsRowModel(
+            title = stringResource(R.string.settings_item_bulk_export),
+            desc = stringResource(R.string.settings_item_bulk_export_desc),
+            trailing = SettingsTrailing.CHEVRON,
+            onClick = onOpenBulkExport,
         ),
         SettingsRowModel(
             title = stringResource(R.string.settings_item_trash),

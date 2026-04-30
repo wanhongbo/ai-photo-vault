@@ -38,6 +38,8 @@ import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
+import android.widget.Toast
+import com.xpx.vault.ui.export.MediaExporter
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.VaultStore
@@ -217,9 +219,21 @@ fun PhotoViewerScreen(
                     onClick = { /* TODO: share */ },
                 )
                 PhotoViewerActionButton(
-                    iconRes = R.drawable.ic_photo_edit,
-                    label = stringResource(R.string.photo_viewer_edit),
-                    onClick = { /* TODO: edit */ },
+                    iconRes = R.drawable.ic_photo_save,
+                    label = stringResource(R.string.photo_viewer_save_to_gallery),
+                    onClick = {
+                        val pathSnapshot = currentPath
+                        scope.launch {
+                            val outcome = MediaExporter.exportFile(context, pathSnapshot)
+                            val msg = when (outcome) {
+                                is MediaExporter.ExportOutcome.Success ->
+                                    context.getString(R.string.export_toast_single_success)
+                                is MediaExporter.ExportOutcome.Failure ->
+                                    context.getString(R.string.export_toast_single_failed)
+                            }
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    },
                 )
                 PhotoViewerActionButton(
                     iconRes = R.drawable.ic_photo_info,

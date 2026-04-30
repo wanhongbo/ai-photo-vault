@@ -20,6 +20,7 @@ fun MainScreen(
     onOpenAlbumList: () -> Unit,
     onOpenRecentList: () -> Unit,
     onOpenBackupRestore: () -> Unit,
+    onOpenBulkExport: () -> Unit,
     onOpenTrashBin: () -> Unit,
     onOpenPaywall: () -> Unit,
     onOpenChangePin: () -> Unit,
@@ -72,6 +73,7 @@ fun MainScreen(
         SettingsHomeScreen(
             onOpenTab = onSelectTab,
             onOpenBackupRestore = onOpenBackupRestore,
+            onOpenBulkExport = onOpenBulkExport,
             onOpenTrashBin = onOpenTrashBin,
             onOpenPaywall = onOpenPaywall,
             onOpenChangePin = onOpenChangePin,

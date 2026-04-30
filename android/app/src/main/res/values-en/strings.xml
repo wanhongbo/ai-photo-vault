@@ -241,4 +241,34 @@
     <string name="language_option_english">English</string>
     <string name="language_option_chinese">Simplified Chinese</string>
     <string name="language_selected_mark">Selected</string>
+    <!-- Export to system gallery -->
+    <string name="photo_viewer_save_to_gallery">Export</string>
+    <string name="album_select_mode_title">Selected %1$d</string>
+    <string name="album_select_all">Select all</string>
+    <string name="album_deselect_all">Deselect all</string>
+    <string name="album_action_select">Select</string>
+    <string name="album_action_camera_roll">Export to Camera Roll</string>
+    <string name="settings_item_bulk_export">Bulk export to Camera Roll</string>
+    <string name="settings_item_bulk_export_desc">Select multiple photos or videos to export</string>
+    <string name="export_progress_title">Exporting</string>
+    <string name="export_progress_doing">Exporting to system gallery…</string>
+    <string name="export_progress_count">%1$d / %2$d</string>
+    <string name="export_result_title">Export result</string>
+    <string name="export_result_success_title">Exported to system gallery</string>
+    <string name="export_result_failed_title">Export failed</string>
+    <string name="export_result_partial_title">Exported with errors</string>
+    <string name="export_result_summary">Succeeded %1$d / %2$d</string>
+    <string name="export_result_failed_n">Failed %1$d</string>
+    <string name="export_result_open_gallery">Open system gallery</string>
+    <string name="export_result_open_gallery_failed">No gallery app available</string>
+    <string name="export_toast_single_success">Exported to system gallery</string>
+    <string name="export_toast_single_failed">Export failed: %1$s</string>
+    <string name="bulk_export_title">Bulk export</string>
+    <string name="bulk_export_loading">Loading…</string>
+    <string name="bulk_export_empty">No exportable content</string>
+    <string name="bulk_export_filter_all">All</string>
+    <string name="bulk_export_filter_images">Images</string>
+    <string name="bulk_export_filter_videos">Videos</string>
+    <string name="bulk_export_action_empty">Select items to export</string>
+    <string name="bulk_export_action_n">Export to Camera Roll (%1$d)</string>
 </resources>

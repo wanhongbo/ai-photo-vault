@@ -249,4 +249,34 @@
     <string name="language_option_english">English</string>
     <string name="language_option_chinese">简体中文</string>
     <string name="language_selected_mark">已选择</string>
+    <!-- Export to system gallery -->
+    <string name="photo_viewer_save_to_gallery">导出</string>
+    <string name="album_select_mode_title">已选 %1$d</string>
+    <string name="album_select_all">全选</string>
+    <string name="album_deselect_all">取消全选</string>
+    <string name="album_action_select">选择</string>
+    <string name="album_action_camera_roll">导出到相册</string>
+    <string name="settings_item_bulk_export">批量导出到相册</string>
+    <string name="settings_item_bulk_export_desc">选择多张图片或视频保存到系统相册</string>
+    <string name="export_progress_title">导出中</string>
+    <string name="export_progress_doing">正在导出到系统相册…</string>
+    <string name="export_progress_count">%1$d / %2$d</string>
+    <string name="export_result_title">导出结果</string>
+    <string name="export_result_success_title">已导出到系统相册</string>
+    <string name="export_result_failed_title">导出失败</string>
+    <string name="export_result_partial_title">部分导出成功</string>
+    <string name="export_result_summary">成功 %1$d / %2$d</string>
+    <string name="export_result_failed_n">失败 %1$d</string>
+    <string name="export_result_open_gallery">打开系统相册</string>
+    <string name="export_result_open_gallery_failed">未找到可用的相册应用</string>
+    <string name="export_toast_single_success">已导出到系统相册</string>
+    <string name="export_toast_single_failed">导出失败：%1$s</string>
+    <string name="bulk_export_title">批量导出</string>
+    <string name="bulk_export_loading">加载中…</string>
+    <string name="bulk_export_empty">暂无可导出的内容</string>
+    <string name="bulk_export_filter_all">全部</string>
+    <string name="bulk_export_filter_images">图片</string>
+    <string name="bulk_export_filter_videos">视频</string>
+    <string name="bulk_export_action_empty">请先选择要导出的内容</string>
+    <string name="bulk_export_action_n">导出到系统相册 (%1$d)</string>
 </resources>

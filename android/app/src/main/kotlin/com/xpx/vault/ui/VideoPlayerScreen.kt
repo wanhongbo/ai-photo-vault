@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.Toast
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -59,6 +60,7 @@ import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.export.MediaExporter
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
@@ -350,9 +352,20 @@ fun VideoPlayerScreen(
                     onClick = { /* TODO: share */ },
                 )
                 VideoActionButton(
-                    iconRes = R.drawable.ic_photo_edit,
-                    label = stringResource(R.string.photo_viewer_edit),
-                    onClick = { /* TODO: edit */ },
+                    iconRes = R.drawable.ic_photo_save,
+                    label = stringResource(R.string.photo_viewer_save_to_gallery),
+                    onClick = {
+                        scope.launch {
+                            val outcome = MediaExporter.exportFile(context, path)
+                            val msg = when (outcome) {
+                                is MediaExporter.ExportOutcome.Success ->
+                                    context.getString(R.string.export_toast_single_success)
+                                is MediaExporter.ExportOutcome.Failure ->
+                                    context.getString(R.string.export_toast_single_failed)
+                            }
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    },
                 )
                 VideoActionButton(
                     iconRes = R.drawable.ic_photo_info,

@@ -26,6 +26,9 @@ import com.xpx.vault.ui.AlbumListScreen
 import com.xpx.vault.ui.BackupRestoreScreen
 import com.xpx.vault.ui.BackupProgressScreen
 import com.xpx.vault.ui.BackupResultScreen
+import com.xpx.vault.ui.BulkExportScreen
+import com.xpx.vault.ui.ExportProgressScreen
+import com.xpx.vault.ui.ExportResultScreen
 import com.xpx.vault.ui.PrivateCameraScreen
 import com.xpx.vault.ui.ChangePinScreen
 import com.xpx.vault.ui.MainScreen
@@ -144,6 +147,9 @@ class MainActivity : FragmentActivity() {
                                 },
                                 onOpenBackupRestore = {
                                     navController.navigate(ROUTE_BACKUP_RESTORE) { launchSingleTop = true }
+                                },
+                                onOpenBulkExport = {
+                                    navController.navigate(ROUTE_BULK_EXPORT) { launchSingleTop = true }
                                 },
                                 onOpenTrashBin = {
                                     navController.navigate(ROUTE_TRASH_BIN) { launchSingleTop = true }
@@ -290,6 +296,33 @@ class MainActivity : FragmentActivity() {
                                     navController.navigate(viewerRouteForPath(path)) { launchSingleTop = true }
                                 },
                                 onBack = { navController.popBackStack() },
+                                onOpenExportProgress = {
+                                    navController.navigate(ROUTE_EXPORT_PROGRESS) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_BULK_EXPORT) {
+                            BulkExportScreen(
+                                onOpenExportProgress = {
+                                    navController.navigate(ROUTE_EXPORT_PROGRESS) { launchSingleTop = true }
+                                },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_EXPORT_PROGRESS) {
+                            ExportProgressScreen(
+                                onExportSuccess = {
+                                    navController.navigate(ROUTE_EXPORT_RESULT) {
+                                        popUpTo(ROUTE_EXPORT_PROGRESS) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_EXPORT_RESULT) {
+                            ExportResultScreen(
+                                onDone = { navController.popBackStack() },
                             )
                         }
                         composable(
@@ -405,5 +438,8 @@ class MainActivity : FragmentActivity() {
         private const val ROUTE_CHANGE_PIN = "change_pin"
         private const val ROUTE_STORAGE_USAGE = "storage_usage"
         private const val ROUTE_LANGUAGE_SETTINGS = "language_settings"
+        private const val ROUTE_BULK_EXPORT = "bulk_export"
+        private const val ROUTE_EXPORT_PROGRESS = "export_progress"
+        private const val ROUTE_EXPORT_RESULT = "export_result"
     }
 }
