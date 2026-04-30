@@ -11,6 +11,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -74,12 +76,23 @@ class MainActivity : FragmentActivity() {
                     val currentRoute = backStackEntry?.destination?.route
                     val previousRoute = navController.previousBackStackEntry?.destination?.route
 
-                    LaunchedEffect(requireUnlock, currentRoute) {
+                    // 用 rememberUpdatedState 保障 LaunchedEffect 内能读到最新值，避免闭包过期。
+                    val requireUnlockState = rememberUpdatedState(requireUnlock)
+                    val currentRouteState = rememberUpdatedState(currentRoute)
+                    val previousRouteState = rememberUpdatedState(previousRoute)
+
+                    LaunchedEffect(requireUnlock, currentRoute, previousRoute) {
                         if (!requireUnlock) return@LaunchedEffect
-                        val shouldSkipLock = isBackupRestoreRoute(currentRoute) || isBackupRestoreRoute(previousRoute)
-                        if (currentRoute != null &&
-                            currentRoute != ROUTE_LOCK &&
-                            currentRoute != ROUTE_PRIVATE_CAMERA &&
+                        // Race 保护：解锁成功瞬间 requireUnlock=false 和 currentRoute=main 可能不同步推送，
+                        // 等下一帧开始时再重读，此刻 Compose 已应用本帧所有 snapshot 变化。
+                        withFrameNanos { }
+                        if (!requireUnlockState.value) return@LaunchedEffect
+                        val latestRoute = currentRouteState.value
+                        val shouldSkipLock =
+                            isBackupRestoreRoute(latestRoute) || isBackupRestoreRoute(previousRouteState.value)
+                        if (latestRoute != null &&
+                            latestRoute != ROUTE_LOCK &&
+                            latestRoute != ROUTE_PRIVATE_CAMERA &&
                             !shouldSkipLock
                         ) {
                             navController.navigate(ROUTE_LOCK) {
