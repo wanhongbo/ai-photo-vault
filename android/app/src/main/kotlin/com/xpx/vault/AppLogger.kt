@@ -28,6 +28,15 @@ object AppLogger {
         }
     }
 
+    fun w(tag: String, message: String, throwable: Throwable? = null) {
+        val line = format(tag, scrub(message))
+        if (throwable != null) {
+            Log.w(GLOBAL_TAG, line, throwable)
+        } else {
+            Log.w(GLOBAL_TAG, line)
+        }
+    }
+
     private fun format(tag: String, body: String): String = "[$tag] $body"
 
     private fun scrub(raw: String): String {
