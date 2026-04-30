@@ -22,6 +22,13 @@ class PhotoVaultApp : Application() {
         AppLogger.install()
         installGlobalExceptionBoundary()
         appLockManager.start()
+        // 备份启动自检：修复上次可能残留的 .writing / .bak 中间态；清理旧模型的文件。
+        runCatching {
+            com.xpx.vault.ui.backup.ExternalBackupLocation.sanitizeOnStartup(this)
+        }.onFailure { AppLogger.w("AppInit", "sanitize failed: ${it.message}") }
+        runCatching {
+            com.xpx.vault.ui.backup.LegacyBackupCleanup.runOnce(this)
+        }.onFailure { AppLogger.w("AppInit", "legacy cleanup failed: ${it.message}") }
         AutoBackupScheduler.ensureScheduled(this)
     }
 
