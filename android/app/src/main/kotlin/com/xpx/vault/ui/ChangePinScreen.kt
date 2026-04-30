@@ -43,7 +43,14 @@ import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.data.crypto.PasswordHasher
 import com.xpx.vault.data.db.PhotoVaultDatabase
 import com.xpx.vault.data.db.entity.SecuritySettingEntity
+import com.xpx.vault.AppLogger
+import com.xpx.vault.data.crypto.BackupKeyManager
+import com.xpx.vault.ui.backup.AutoBackupScheduler
+import com.xpx.vault.ui.backup.BackupSecretsStore
+import com.xpx.vault.ui.backup.BackupTriggerReason
+import android.content.Context
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -191,8 +198,10 @@ fun ChangePinScreen(
 @HiltViewModel
 class ChangePinViewModel @Inject constructor(
     db: PhotoVaultDatabase,
+    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     private val dao = db.securitySettingDao()
+    private val backupKeyManager = BackupKeyManager(appContext)
     private val _state = MutableStateFlow(ChangePinUiState())
     val state: StateFlow<ChangePinUiState> = _state.asStateFlow()
 
@@ -289,6 +298,7 @@ class ChangePinViewModel @Inject constructor(
                     ),
                 )
             }.onSuccess {
+                refreshBackupKeyForPin(confirmPin)
                 _state.value = _state.value.copy(
                     loading = false,
                     currentPinInput = "",
@@ -301,6 +311,25 @@ class ChangePinViewModel @Inject constructor(
                     fatalError = "PIN 修改失败，请稍后重试。",
                 )
             }
+        }
+    }
+
+    /** 修改 PIN 成功后，用新 PIN 重新派生 BackupKey 并触发一次外部包同步。 */
+    private suspend fun refreshBackupKeyForPin(newPin: String) {
+        runCatching {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val params = backupKeyManager.getOrCreateKdfParams()
+                val chars = newPin.toCharArray()
+                val material = try {
+                    backupKeyManager.deriveKey(chars, params)
+                } finally {
+                    chars.fill(0.toChar())
+                }
+                BackupSecretsStore.cache(appContext, material.key)
+            }
+            AutoBackupScheduler.runOnceNow(appContext, BackupTriggerReason.PASSWORD_CHANGED)
+        }.onFailure {
+            AppLogger.e("ChangePinVM", "refreshBackupKey failed: ${it.message}", it)
         }
     }
 }

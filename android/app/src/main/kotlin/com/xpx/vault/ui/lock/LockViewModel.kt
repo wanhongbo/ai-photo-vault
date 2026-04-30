@@ -1,45 +1,74 @@
 package com.xpx.vault.ui.lock
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.xpx.vault.AppLogger
+import com.xpx.vault.data.crypto.BackupKeyManager
 import com.xpx.vault.data.crypto.PasswordHasher
 import com.xpx.vault.data.db.PhotoVaultDatabase
 import com.xpx.vault.data.db.entity.SecuritySettingEntity
+import com.xpx.vault.ui.backup.AutoBackupScheduler
+import com.xpx.vault.ui.backup.BackupSecretsStore
+import com.xpx.vault.ui.backup.BackupTriggerReason
+import com.xpx.vault.ui.backup.LocalBackupMvpService
+import com.xpx.vault.ui.setup.FirstLaunchRouter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val PIN_LENGTH = 6
 private const val LOCK_TYPE_PIN = "PIN"
+private const val TAG = "LockViewModel"
 
 @HiltViewModel
 class LockViewModel @Inject constructor(
     private val db: PhotoVaultDatabase,
+    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     private val dao = db.securitySettingDao()
+    private val backupKeyManager = BackupKeyManager(appContext)
 
     private val _state = MutableStateFlow(LockUiState(loading = true))
     val state: StateFlow<LockUiState> = _state.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val setting = dao.getById()
-            _state.value = if (setting == null) {
-                LockUiState(
-                    stage = LockStage.SETUP_ENTER,
-                    loading = false,
-                    title = "设置 PIN 码",
-                    subtitle = "请设置一个 6 位 PIN 码用于快速解锁",
-                    stepLabel = "1 / 2",
-                )
-            } else {
-                toUnlockState(setting)
+            when (FirstLaunchRouter.detect(appContext, db)) {
+                FirstLaunchRouter.Branch.Unlock -> {
+                    val setting = dao.getById()
+                    _state.value = if (setting != null) toUnlockState(setting) else freshSetupState()
+                }
+                FirstLaunchRouter.Branch.Fresh -> {
+                    _state.value = freshSetupState()
+                }
+                FirstLaunchRouter.Branch.RestoreLogin -> {
+                    _state.value = LockUiState(
+                        stage = LockStage.RESTORE_LOGIN,
+                        loading = false,
+                        isSetup = false,
+                        title = "欢迎回来",
+                        subtitle = "检测到你的备份，请输入 AI Vault 密码",
+                        stepLabel = null,
+                    )
+                }
             }
         }
     }
+
+    private fun freshSetupState(): LockUiState = LockUiState(
+        stage = LockStage.SETUP_ENTER,
+        loading = false,
+        title = "设置 PIN 码",
+        subtitle = "请设置一个 6 位 PIN 码用于快速解锁",
+        stepLabel = "1 / 2",
+    )
 
     fun onNumber(number: Int) {
         val s = _state.value
@@ -81,6 +110,8 @@ class LockViewModel @Inject constructor(
                 }
             } else if (s.stage == LockStage.UNLOCK) {
                 verifyUnlockPin(next)
+            } else if (s.stage == LockStage.RESTORE_LOGIN) {
+                attemptRestoreLogin(next)
             }
         }
     }
@@ -161,6 +192,7 @@ class LockViewModel @Inject constructor(
                     failCount = 0,
                 ),
             )
+            refreshBackupKeyForPin(rawValue, triggerAutoBackup = true)
             onSaved()
         }
     }
@@ -171,6 +203,7 @@ class LockViewModel @Inject constructor(
             val hashed = PasswordHasher.sha256HexOfUtf8(pin)
             if (setting.pinHashHex == hashed) {
                 dao.upsert(setting.copy(failCount = 0))
+                refreshBackupKeyForPin(pin, triggerAutoBackup = false)
                 _state.value = _state.value.copy(unlockSuccess = true, enteredPin = "", error = null)
             } else {
                 val nextFail = setting.failCount + 1
@@ -180,6 +213,31 @@ class LockViewModel @Inject constructor(
                     error = "PIN 错误，请重试（已失败 $nextFail 次）",
                 )
             }
+        }
+    }
+
+    /**
+     * 用 PIN 派生并缓存当前 BackupKey。
+     * 触发时机：解锁成功、首次设置 PIN、修改 PIN。
+     * @param triggerAutoBackup 当为修改/设置 PIN 时传 true，随后触发一次自动备份以对齐外部包。
+     */
+    private suspend fun refreshBackupKeyForPin(pin: String, triggerAutoBackup: Boolean) {
+        runCatching {
+            withContext(Dispatchers.IO) {
+                val params = backupKeyManager.getOrCreateKdfParams()
+                val chars = pin.toCharArray()
+                val material = try {
+                    backupKeyManager.deriveKey(chars, params)
+                } finally {
+                    chars.fill(0.toChar())
+                }
+                BackupSecretsStore.cache(appContext, material.key)
+            }
+            if (triggerAutoBackup) {
+                AutoBackupScheduler.runOnceNow(appContext, BackupTriggerReason.PASSWORD_CHANGED)
+            }
+        }.onFailure {
+            AppLogger.e(TAG, "refreshBackupKey failed: ${it.message}", it)
         }
     }
 
@@ -194,6 +252,57 @@ class LockViewModel @Inject constructor(
             stepLabel = null,
         )
     }
+
+    /**
+     * RESTORE_LOGIN 分支：以输入 PIN 尝试解密外部 backup.dat。
+     * - 成功：把该 PIN 写入 SecuritySetting（等于本机 PIN），并缓存 BackupKey，解锁成功。
+     * - 失败：累计次数，♥3 暴露「放弃备份」入口。
+     */
+    private fun attemptRestoreLogin(pin: String) {
+        val s = _state.value
+        _state.value = s.copy(loading = true, error = null)
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                LocalBackupMvpService.restoreFromAutoPackage(appContext, pin.toCharArray())
+            }
+            if (result.success) {
+                // 1) 用该 PIN 注册为本机 PIN
+                val hashed = PasswordHasher.sha256HexOfUtf8(pin)
+                dao.upsert(
+                    SecuritySettingEntity(
+                        lockType = LOCK_TYPE_PIN,
+                        pinHashHex = hashed,
+                        biometricEnabled = false,
+                        failCount = 0,
+                    ),
+                )
+                // 2) 缓存 BackupKey
+                refreshBackupKeyForPin(pin, triggerAutoBackup = false)
+                _state.value = _state.value.copy(
+                    loading = false,
+                    unlockSuccess = true,
+                    enteredPin = "",
+                    error = null,
+                    restoreFailCount = 0,
+                )
+            } else {
+                val nextFail = s.restoreFailCount + 1
+                _state.value = _state.value.copy(
+                    loading = false,
+                    enteredPin = "",
+                    error = result.message,
+                    restoreFailCount = nextFail,
+                    showAbandonBackupEntry = nextFail >= 3,
+                )
+            }
+        }
+    }
+
+    /** 放弃外部备份，回到正常的 SETUP_ENTER 新建相册流程。 */
+    fun abandonBackupAndCreateFresh() {
+        // 不删除外部 backup.dat（防反悔）；下次设置 PIN 后的自动备份会 FULL 覆盖。
+        _state.value = freshSetupState()
+    }
 }
 
 enum class LockStage {
@@ -201,6 +310,7 @@ enum class LockStage {
     SETUP_CONFIRM,
     SETUP_CONFIRM_ERROR,
     UNLOCK,
+    RESTORE_LOGIN,
 }
 
 data class LockUiState(
@@ -218,4 +328,6 @@ data class LockUiState(
     val enteredPin: String = "",
     val firstPinOrPattern: String? = null,
     val error: String? = null,
+    val restoreFailCount: Int = 0,
+    val showAbandonBackupEntry: Boolean = false,
 )

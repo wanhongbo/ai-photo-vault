@@ -77,6 +77,7 @@ fun LockScreen(
     val biometricAvailable = biometricAvailability.isAvailable
     var biometricInFlight by remember { mutableStateOf(false) }
     var lastBiometricDismissedAt by remember { mutableStateOf(0L) }
+    var showAbandonBackupDialog by remember { mutableStateOf(false) }
     val stageState = rememberUpdatedState(state.stage)
     val biometricEnabledState = rememberUpdatedState(state.biometricEnabled)
     val dismissedAtState = rememberUpdatedState(lastBiometricDismissedAt)
@@ -239,10 +240,35 @@ fun LockScreen(
                             .pressFeedback(resetInteraction),
                         variant = AppButtonVariant.DANGER,
                     )
+                } else if (state.stage == LockStage.RESTORE_LOGIN && state.showAbandonBackupEntry) {
+                    val abandonInteraction = rememberFeedbackInteractionSource()
+                    AppButton(
+                        text = "放弃备份，创建新相册",
+                        onClick = { showAbandonBackupDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 18.dp)
+                            .height(52.dp)
+                            .pressFeedback(abandonInteraction),
+                        variant = AppButtonVariant.DANGER,
+                    )
                 }
             }
         }
     }
+
+    AppDialog(
+        show = showAbandonBackupDialog,
+        title = "确认放弃备份？",
+        message = "此操作会忽略设备上已有的备份文件，并创建一个全新的空相册。\n原备份文件不会被删除，但新相册将无法读取其中的照片。\n\n确定继续吗？",
+        confirmText = "确认放弃",
+        dismissText = "再试一次",
+        onConfirm = {
+            showAbandonBackupDialog = false
+            viewModel.abandonBackupAndCreateFresh()
+        },
+        onDismiss = { showAbandonBackupDialog = false },
+    )
 
     AppDialog(
         show = state.success && state.biometricPromptAfterSetup && biometricAvailable,
