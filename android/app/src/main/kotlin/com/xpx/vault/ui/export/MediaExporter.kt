@@ -8,6 +8,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.annotation.VisibleForTesting
+import com.xpx.vault.data.crypto.VaultCipher
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -70,12 +71,11 @@ object MediaExporter {
         }
         val displayName = pickDisplayName(file)
         val nowSec = System.currentTimeMillis() / 1000L
+        // 注意：不预写 SIZE，因为 vault 中是密文（长度不等于明文）；写完 IS_PENDING=0 后 MediaStore 会自行扫描实际大小。
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
             put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
-            // 补充元数据，使系统相册按时间正确排序、显示文件大小。
-            put(MediaStore.MediaColumns.SIZE, file.length())
             put(MediaStore.MediaColumns.DATE_ADDED, nowSec)
             put(MediaStore.MediaColumns.DATE_MODIFIED, nowSec)
             put(MediaStore.MediaColumns.DATE_TAKEN, file.lastModified())
@@ -83,14 +83,11 @@ object MediaExporter {
         }
         val uri = resolver.insert(collection, values) ?: return ExportOutcome.Failure("insert_failed")
         return try {
-            // 优先使用 ParcelFileDescriptor + FileChannel.transferTo 零拷贝，失败时回退到 64KB buffer。
             val pfd = resolver.openFileDescriptor(uri, "w")
                 ?: return ExportOutcome.Failure("open_stream_failed")
             pfd.use { descriptor ->
-                FileInputStream(file).use { input ->
-                    FileOutputStream(descriptor.fileDescriptor).use { output ->
-                        fastCopy(input, output)
-                    }
+                FileOutputStream(descriptor.fileDescriptor).use { output ->
+                    decryptInto(context, file, output)
                 }
             }
             val finishValues = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
@@ -129,9 +126,7 @@ object MediaExporter {
             counter++
         }
         return try {
-            FileInputStream(file).use { input ->
-                FileOutputStream(candidate).use { output -> fastCopy(input, output) }
-            }
+            FileOutputStream(candidate).use { output -> decryptInto(context, file, output) }
             // Trigger media scanner
             val intent = android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE).apply {
                 data = Uri.fromFile(candidate)
@@ -188,7 +183,20 @@ object MediaExporter {
     }
 
     /**
-     * 高性能文件拷贝：
+     * 从 vault 中的密文文件解密并写入到目标 OutputStream。
+     * 通过 VaultCipher.decryptStream 流式解密（256KB 块），避免把整段明文载入内存。
+     */
+    private fun decryptInto(context: Context, src: File, output: OutputStream) {
+        FileInputStream(src).buffered(256 * 1024).use { input ->
+            VaultCipher.get(context).decryptStream(input) { data, offset, length ->
+                output.write(data, offset, length)
+            }
+        }
+        output.flush()
+    }
+
+    /**
+     * 高性能文件拷贝（明文到明文路径使用；加密源请走 decryptInto）：
      * - 优先使用 FileChannel.transferTo 零拷贝（内核级拷贝，避免用户态-内核态双向拷贝）。
      * - 如果当前流无法拿到 channel、或 transferTo 返回 0 （诸如某些虚拟文件系统），回退到 256KB buffer 循环拷贝。
      * - buffer 大小综合考虑：8KB(默认)对大视频产生数万次循环，256KB 能使 read/write 序列化开销下降一个数量级。
