@@ -1,5 +1,6 @@
 package com.xpx.vault.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,13 +11,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,12 +30,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.R
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.export.ExportBatchResult
 import com.xpx.vault.ui.export.ExportRuntimeState
-import com.xpx.vault.ui.export.MediaExporter
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 @Composable
 fun ExportProgressScreen(
@@ -39,35 +45,64 @@ fun ExportProgressScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val total by ExportRuntimeState.progressTotal
     val done by ExportRuntimeState.progressDone
     val currentName by ExportRuntimeState.progressCurrentName
     var started by remember { mutableStateOf(false) }
     var finished by remember { mutableStateOf(false) }
+    var cancelled by remember { mutableStateOf(false) }
+    var showCancelDialog by remember { mutableStateOf(false) }
+    var exportJob by remember { mutableStateOf<Job?>(null) }
 
     LaunchedEffect(Unit) {
         if (started) return@LaunchedEffect
         started = true
         val paths = ExportRuntimeState.pendingPaths
         if (paths.isEmpty()) {
-            ExportRuntimeState.publishResult(com.xpx.vault.ui.export.ExportBatchResult(emptyList(), emptyList()))
+            ExportRuntimeState.publishResult(ExportBatchResult(emptyList(), emptyList()))
             finished = true
             return@LaunchedEffect
         }
-        val result = ExportRuntimeState.runExport(context, paths) { index, outcome ->
-            ExportRuntimeState.progressDone.value = index + 1
-            ExportRuntimeState.progressCurrentName.value = when (outcome) {
-                is MediaExporter.ExportOutcome.Success -> outcome.displayName
-                is MediaExporter.ExportOutcome.Failure -> null
-            }
+        exportJob = scope.launch {
+            val result = ExportRuntimeState.runExport(context, paths)
+            ExportRuntimeState.publishResult(result)
+            ExportRuntimeState.clearPending()
+            finished = true
         }
-        ExportRuntimeState.publishResult(result)
-        ExportRuntimeState.clearPending()
-        finished = true
     }
 
-    LaunchedEffect(finished) {
-        if (finished) onExportSuccess()
+    LaunchedEffect(finished, cancelled) {
+        if (cancelled) {
+            onBack()
+        } else if (finished) {
+            onExportSuccess()
+        }
+    }
+
+    // ④ 取消：拦截系统返回键，弹确认对话框。
+    BackHandler(enabled = !finished && !cancelled) {
+        showCancelDialog = true
+    }
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text(stringResource(R.string.export_cancel_title)) },
+            text = { Text(stringResource(R.string.export_cancel_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCancelDialog = false
+                    exportJob?.cancel()
+                    ExportRuntimeState.clearPending()
+                    cancelled = true
+                }) { Text(stringResource(R.string.export_cancel_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text(stringResource(R.string.export_cancel_continue))
+                }
+            },
+        )
     }
 
     Column(
@@ -78,7 +113,12 @@ fun ExportProgressScreen(
             .padding(UiSize.backupScreenPadding),
         verticalArrangement = Arrangement.spacedBy(UiSize.backupSectionGap),
     ) {
-        AppTopBar(title = stringResource(R.string.export_progress_title), onBack = onBack)
+        AppTopBar(
+            title = stringResource(R.string.export_progress_title),
+            onBack = {
+                if (!finished && !cancelled) showCancelDialog = true else onBack()
+            },
+        )
         Box(
             modifier = Modifier
                 .padding(top = UiSize.backupCardTopGap)

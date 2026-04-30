@@ -9,6 +9,10 @@ import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.annotation.VisibleForTesting
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -65,17 +69,30 @@ object MediaExporter {
             Kind.UNKNOWN -> return ExportOutcome.Failure("unsupported_type")
         }
         val displayName = pickDisplayName(file)
+        val nowSec = System.currentTimeMillis() / 1000L
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
             put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+            // 补充元数据，使系统相册按时间正确排序、显示文件大小。
+            put(MediaStore.MediaColumns.SIZE, file.length())
+            put(MediaStore.MediaColumns.DATE_ADDED, nowSec)
+            put(MediaStore.MediaColumns.DATE_MODIFIED, nowSec)
+            put(MediaStore.MediaColumns.DATE_TAKEN, file.lastModified())
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
         val uri = resolver.insert(collection, values) ?: return ExportOutcome.Failure("insert_failed")
         return try {
-            resolver.openOutputStream(uri, "w")?.use { output ->
-                file.inputStream().use { input -> input.copyTo(output) }
-            } ?: return ExportOutcome.Failure("open_stream_failed")
+            // 优先使用 ParcelFileDescriptor + FileChannel.transferTo 零拷贝，失败时回退到 64KB buffer。
+            val pfd = resolver.openFileDescriptor(uri, "w")
+                ?: return ExportOutcome.Failure("open_stream_failed")
+            pfd.use { descriptor ->
+                FileInputStream(file).use { input ->
+                    FileOutputStream(descriptor.fileDescriptor).use { output ->
+                        fastCopy(input, output)
+                    }
+                }
+            }
             val finishValues = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
             resolver.update(uri, finishValues, null, null)
             ExportOutcome.Success(uri, displayName)
@@ -112,8 +129,8 @@ object MediaExporter {
             counter++
         }
         return try {
-            file.inputStream().use { input ->
-                candidate.outputStream().use { output -> input.copyTo(output) }
+            FileInputStream(file).use { input ->
+                FileOutputStream(candidate).use { output -> fastCopy(input, output) }
             }
             // Trigger media scanner
             val intent = android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE).apply {
@@ -168,5 +185,39 @@ object MediaExporter {
         mimeType.startsWith("image/") -> Kind.IMAGE
         mimeType.startsWith("video/") -> Kind.VIDEO
         else -> Kind.UNKNOWN
+    }
+
+    /**
+     * 高性能文件拷贝：
+     * - 优先使用 FileChannel.transferTo 零拷贝（内核级拷贝，避免用户态-内核态双向拷贝）。
+     * - 如果当前流无法拿到 channel、或 transferTo 返回 0 （诸如某些虚拟文件系统），回退到 256KB buffer 循环拷贝。
+     * - buffer 大小综合考虑：8KB(默认)对大视频产生数万次循环，256KB 能使 read/write 序列化开销下降一个数量级。
+     */
+    @VisibleForTesting
+    internal fun fastCopy(input: InputStream, output: OutputStream) {
+        val inCh = (input as? FileInputStream)?.channel
+        val outCh = (output as? FileOutputStream)?.channel
+        if (inCh != null && outCh != null) {
+            try {
+                val size = inCh.size()
+                var pos = 0L
+                // 部分内核 transferTo 一次只会拷贝不到 2GB，需要循环。
+                while (pos < size) {
+                    val transferred = inCh.transferTo(pos, size - pos, outCh)
+                    if (transferred <= 0L) break
+                    pos += transferred
+                }
+                if (pos >= size) return
+            } catch (_: Throwable) {
+                // fallback 到 buffer 拷贝
+            }
+        }
+        val buf = ByteArray(256 * 1024)
+        while (true) {
+            val n = input.read(buf)
+            if (n <= 0) break
+            output.write(buf, 0, n)
+        }
+        output.flush()
     }
 }

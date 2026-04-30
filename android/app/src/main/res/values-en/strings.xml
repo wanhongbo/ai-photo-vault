@@ -271,4 +271,10 @@
     <string name="bulk_export_filter_videos">Videos</string>
     <string name="bulk_export_action_empty">Select items to export</string>
     <string name="bulk_export_action_n">Export to Camera Roll (%1$d)</string>
+    <!-- Export cancel dialog & failure reasons -->
+    <string name="export_cancel_title">Cancel export?</string>
+    <string name="export_cancel_message">The export is still running. Already-exported files will remain in the system gallery.</string>
+    <string name="export_cancel_confirm">Cancel export</string>
+    <string name="export_cancel_continue">Continue</string>
+    <string name="export_fail_insufficient_space">Insufficient storage space</string>
 </resources>

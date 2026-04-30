@@ -279,4 +279,10 @@
     <string name="bulk_export_filter_videos">视频</string>
     <string name="bulk_export_action_empty">请先选择要导出的内容</string>
     <string name="bulk_export_action_n">导出到系统相册 (%1$d)</string>
+    <!-- Export cancel dialog & failure reasons -->
+    <string name="export_cancel_title">取消导出？</string>
+    <string name="export_cancel_message">导出尚未完成，取消后已导出的文件仍会保留在系统相册中。</string>
+    <string name="export_cancel_confirm">取消导出</string>
+    <string name="export_cancel_continue">继续导出</string>
+    <string name="export_fail_insufficient_space">存储空间不足</string>
 </resources>
