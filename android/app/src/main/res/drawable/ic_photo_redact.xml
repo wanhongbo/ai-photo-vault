@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 简化的马赛克方块矩阵，表达"打码/脱敏"语义 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3,3h7v7h-7zM12,3h4v4h-4zM17,3h4v4h-4zM17,8h4v4h-4zM12,8h4v4h-4zM3,12h4v4h-4zM8,12h4v4h-4zM13,13h8v8h-8zM3,17h4v4h-4zM8,17h4v4h-4z" />
+</vector>

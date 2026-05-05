@@ -34,12 +34,16 @@ import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.components.MediaInfoDialog
 import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import android.widget.Toast
+import java.io.File
 import com.xpx.vault.ui.export.MediaExporter
+import com.xpx.vault.ui.export.MediaMetaFormatter
+import com.xpx.vault.ui.export.MediaShareHelper
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.VaultStore
@@ -64,6 +68,7 @@ fun PhotoViewerScreen(
     var horizontalDragOffset by remember { mutableStateOf(0f) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showPurgeDialog by remember { mutableStateOf(false) }
+    var showInfoDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val currentIndex = remember(currentPath, orderedPaths) {
         orderedPaths.indexOf(currentPath).coerceAtLeast(0)
@@ -146,6 +151,13 @@ fun PhotoViewerScreen(
             onDismiss = { showPurgeDialog = false },
             confirmVariant = AppButtonVariant.DANGER,
         )
+        MediaInfoDialog(
+            show = showInfoDialog,
+            title = stringResource(R.string.photo_viewer_info_title),
+            items = rememberPhotoInfoItems(currentPath, isVideo = false),
+            confirmText = stringResource(R.string.photo_viewer_info_done),
+            onDismiss = { showInfoDialog = false },
+        )
         AppTopBar(title = stringResource(R.string.photo_viewer_title), onBack = onBack)
         VaultProgressiveImage(
             path = currentPath,
@@ -214,11 +226,28 @@ fun PhotoViewerScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val shareChooserTitle = stringResource(R.string.photo_viewer_share_chooser)
+                val shareFailedMsg = stringResource(R.string.photo_viewer_share_failed)
                 PhotoViewerActionButton(
                     iconRes = R.drawable.ic_photo_share,
                     label = stringResource(R.string.photo_viewer_share),
-                    onClick = { /* TODO: share */ },
+                    onClick = {
+                        val pathSnapshot = currentPath
+                        scope.launch {
+                            val result = MediaShareHelper.shareFile(context, pathSnapshot, shareChooserTitle)
+                            if (result is MediaShareHelper.ShareOutcome.Failure) {
+                                Toast.makeText(context, shareFailedMsg, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
                 )
+                if (onOpenRedact != null) {
+                    PhotoViewerActionButton(
+                        iconRes = R.drawable.ic_photo_redact,
+                        label = stringResource(R.string.photo_viewer_redact),
+                        onClick = { onOpenRedact(currentPath) },
+                    )
+                }
                 PhotoViewerActionButton(
                     iconRes = R.drawable.ic_photo_save,
                     label = stringResource(R.string.photo_viewer_save_to_gallery),
@@ -239,15 +268,8 @@ fun PhotoViewerScreen(
                 PhotoViewerActionButton(
                     iconRes = R.drawable.ic_photo_info,
                     label = stringResource(R.string.photo_viewer_info),
-                    onClick = { /* TODO: info */ },
+                    onClick = { showInfoDialog = true },
                 )
-                if (onOpenRedact != null && isVaultImage(currentPath)) {
-                    PhotoViewerActionButton(
-                        iconRes = R.drawable.ic_ai_eye_off,
-                        label = "\u8131\u654f",
-                        onClick = { onOpenRedact(currentPath) },
-                    )
-                }
                 PhotoViewerActionButton(
                     iconRes = R.drawable.ic_photo_delete,
                     label = stringResource(R.string.photo_viewer_delete),
@@ -299,4 +321,30 @@ private fun isVideoPath(path: String): Boolean {
         lower.endsWith(".3gp") ||
         lower.endsWith(".webm") ||
         lower.endsWith(".mkv")
+}
+
+@Composable
+internal fun rememberPhotoInfoItems(path: String, isVideo: Boolean): List<Pair<String, String>> {
+    val labelName = stringResource(R.string.photo_viewer_info_name)
+    val labelAlbum = stringResource(R.string.photo_viewer_info_album)
+    val labelType = stringResource(R.string.photo_viewer_info_type)
+    val labelSize = stringResource(R.string.photo_viewer_info_size)
+    val labelModified = stringResource(R.string.photo_viewer_info_modified)
+    val labelPath = stringResource(R.string.photo_viewer_info_path)
+    val typeImage = stringResource(R.string.photo_viewer_info_type_image)
+    val typeVideo = stringResource(R.string.photo_viewer_info_type_video)
+    return remember(path, isVideo) {
+        val file = File(path)
+        val album = file.parentFile?.name.orEmpty()
+        val size = if (file.exists()) file.length() else 0L
+        val modified = if (file.exists()) file.lastModified() else 0L
+        listOf(
+            labelName to file.name,
+            labelAlbum to album,
+            labelType to if (isVideo) typeVideo else typeImage,
+            labelSize to MediaMetaFormatter.formatFileSize(size),
+            labelModified to MediaMetaFormatter.formatModifiedTime(modified),
+            labelPath to path,
+        )
+    }
 }

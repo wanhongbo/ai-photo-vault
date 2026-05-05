@@ -61,7 +61,9 @@ import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.components.MediaInfoDialog
 import com.xpx.vault.ui.export.MediaExporter
+import com.xpx.vault.ui.export.MediaShareHelper
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
@@ -115,6 +117,8 @@ fun VideoPlayerScreen(
     var seekFeedback by remember { mutableStateOf<String?>(null) }
     var isSeeking by remember { mutableStateOf(false) }
     var showPurgeDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showInfoDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun applyMuteState() {
@@ -362,10 +366,24 @@ fun VideoPlayerScreen(
                     variant = AppButtonVariant.DANGER,
                 )
             } else {
+                val shareChooserTitle = stringResource(R.string.photo_viewer_share_chooser)
+                val shareFailedMsg = stringResource(R.string.photo_viewer_share_failed)
                 VideoActionButton(
                     iconRes = R.drawable.ic_photo_share,
                     label = stringResource(R.string.photo_viewer_share),
-                    onClick = { /* TODO: share */ },
+                    onClick = {
+                        // 先暂停播放，避免与外部 App 抢占声音焦点
+                        if (isPlaying) {
+                            exoPlayer.pause()
+                            isPlaying = false
+                        }
+                        scope.launch {
+                            val result = MediaShareHelper.shareFile(context, path, shareChooserTitle)
+                            if (result is MediaShareHelper.ShareOutcome.Failure) {
+                                Toast.makeText(context, shareFailedMsg, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
                 )
                 VideoActionButton(
                     iconRes = R.drawable.ic_photo_save,
@@ -386,12 +404,12 @@ fun VideoPlayerScreen(
                 VideoActionButton(
                     iconRes = R.drawable.ic_photo_info,
                     label = stringResource(R.string.photo_viewer_info),
-                    onClick = { /* TODO: info */ },
+                    onClick = { showInfoDialog = true },
                 )
                 VideoActionButton(
                     iconRes = R.drawable.ic_photo_delete,
                     label = stringResource(R.string.photo_viewer_delete),
-                    onClick = { /* TODO: delete */ },
+                    onClick = { showDeleteDialog = true },
                 )
             }
         }
@@ -411,6 +429,29 @@ fun VideoPlayerScreen(
         dismissText = stringResource(R.string.common_cancel),
         onDismiss = { showPurgeDialog = false },
         confirmVariant = AppButtonVariant.DANGER,
+    )
+    AppDialog(
+        show = showDeleteDialog,
+        title = stringResource(R.string.video_viewer_delete_title),
+        message = stringResource(R.string.video_viewer_delete_message),
+        confirmText = stringResource(R.string.common_confirm),
+        onConfirm = {
+            showDeleteDialog = false
+            scope.launch {
+                val deleted = VaultStore.deletePhoto(context, path)
+                if (deleted) onBack()
+            }
+        },
+        dismissText = stringResource(R.string.common_cancel),
+        onDismiss = { showDeleteDialog = false },
+        confirmVariant = AppButtonVariant.DANGER,
+    )
+    MediaInfoDialog(
+        show = showInfoDialog,
+        title = stringResource(R.string.photo_viewer_info_title),
+        items = rememberPhotoInfoItems(path, isVideo = true),
+        confirmText = stringResource(R.string.photo_viewer_info_done),
+        onDismiss = { showInfoDialog = false },
     )
 }
 

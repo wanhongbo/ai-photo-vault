@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 用于分享解密后的临时明文文件，仅授权 FLAG_GRANT_READ_URI_PERMISSION 的外部应用临时可读。 -->
+    <cache-path
+        name="share_cache"
+        path="share_cache/" />
+</paths>
