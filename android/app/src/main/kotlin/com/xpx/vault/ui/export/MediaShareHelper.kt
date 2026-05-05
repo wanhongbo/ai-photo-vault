@@ -2,6 +2,7 @@ package com.xpx.vault.ui.export
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
@@ -46,6 +47,33 @@ object MediaShareHelper {
         val prepared = prepare(context, sourcePath)
         if (prepared is ShareOutcome.Failure) return prepared
         prepared as ShareOutcome.Success
+        return launchShareIntent(context, prepared, chooserTitle)
+    }
+
+    /**
+     * 将内存中的 [Bitmap] 以 JPEG 编码后通过系统分享。
+     *
+     * 适用于隐私脱敏预览图：脱敏后的预览图不落 vault 也不导出系统相册，
+     * 直接走 cacheDir 中转给外部 App。文件名以 [baseName] 为后缀，1h 内自动清理。
+     */
+    suspend fun shareBitmap(
+        context: Context,
+        bitmap: Bitmap,
+        baseName: String,
+        chooserTitle: String,
+        quality: Int = 95,
+    ): ShareOutcome {
+        val prepared = prepareBitmap(context, bitmap, baseName, quality)
+        if (prepared is ShareOutcome.Failure) return prepared
+        prepared as ShareOutcome.Success
+        return launchShareIntent(context, prepared, chooserTitle)
+    }
+
+    private fun launchShareIntent(
+        context: Context,
+        prepared: ShareOutcome.Success,
+        chooserTitle: String,
+    ): ShareOutcome {
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
             type = prepared.mimeType
             putExtra(Intent.EXTRA_STREAM, prepared.uri)
@@ -62,6 +90,38 @@ object MediaShareHelper {
         } catch (t: Throwable) {
             ShareOutcome.Failure(t.message ?: "no_share_app")
         }
+    }
+
+    private suspend fun prepareBitmap(
+        context: Context,
+        bitmap: Bitmap,
+        baseName: String,
+        quality: Int,
+    ): ShareOutcome = withContext(Dispatchers.IO) {
+        if (bitmap.isRecycled) return@withContext ShareOutcome.Failure("bitmap_recycled")
+        val shareRoot = File(context.cacheDir, SHARE_SUB_DIR).apply { mkdirs() }
+        pruneStale(shareRoot)
+        val safeBase = baseName.filter { it.isLetterOrDigit() || it == '_' || it == '-' }
+            .ifBlank { "redacted" }
+            .takeLast(24)
+        val dest = File(shareRoot, "${System.nanoTime()}_${safeBase}.jpg")
+        try {
+            FileOutputStream(dest).use { output ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, output)
+                output.flush()
+            }
+        } catch (t: Throwable) {
+            if (dest.exists()) dest.delete()
+            return@withContext ShareOutcome.Failure(t.message ?: "encode_failed")
+        }
+        val authority = "${context.packageName}.fileprovider"
+        val uri = try {
+            FileProvider.getUriForFile(context, authority, dest)
+        } catch (t: Throwable) {
+            dest.delete()
+            return@withContext ShareOutcome.Failure(t.message ?: "provider_uri_failed")
+        }
+        ShareOutcome.Success(uri, "image/jpeg")
     }
 
     private suspend fun prepare(context: Context, sourcePath: String): ShareOutcome = withContext(Dispatchers.IO) {

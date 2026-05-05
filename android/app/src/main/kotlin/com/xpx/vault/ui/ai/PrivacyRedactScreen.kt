@@ -125,7 +125,7 @@ fun PrivacyRedactScreen(
         PrimaryActionButton(
             iconRes = R.drawable.ic_ai_shield,
             label = if (state.saving) "保存中…" else "保存到安全相册",
-            enabled = state.ready && state.preview != null && !state.saving && !state.exporting,
+            enabled = state.ready && state.preview != null && !state.saving && !state.exporting && !state.sharing,
             onClick = {
                 viewModel.saveToVault { success, msg ->
                     val text = if (success) "已保存到安全相册" else "保存失败：$msg"
@@ -134,24 +134,46 @@ fun PrivacyRedactScreen(
             },
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // 次按钮：导出明文副本到系统相册
-        SecondaryActionButton(
-            iconRes = R.drawable.ic_photo_save,
-            label = if (state.exporting) "导出中…" else "导出到系统相册",
-            enabled = state.ready && state.preview != null && !state.exporting && !state.saving,
-            onClick = {
-                viewModel.exportRedacted { success, msg ->
-                    val text = if (success) {
-                        "已导出到系统相册 Redacted 目录：$msg"
-                    } else {
-                        "导出失败：$msg"
+        // 次行：导出到系统相册 / 分享，等宽并排
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SecondaryActionButton(
+                iconRes = R.drawable.ic_photo_save,
+                label = if (state.exporting) "导出中…" else "导出系统相册",
+                enabled = state.ready && state.preview != null && !state.exporting && !state.saving && !state.sharing,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    viewModel.exportRedacted { success, msg ->
+                        val text = if (success) {
+                            "已导出到系统相册 Redacted 目录：$msg"
+                        } else {
+                            "导出失败：$msg"
+                        }
+                        Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
                     }
-                    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
-                }
-            },
-        )
+                },
+            )
+            SecondaryActionButton(
+                iconRes = R.drawable.ic_photo_share,
+                label = if (state.sharing) "分享中…" else "分享",
+                enabled = state.ready && state.preview != null && !state.sharing && !state.saving && !state.exporting,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    viewModel.shareRedacted(chooserTitle = "分享脱敏后的图片") { success, msg ->
+                        if (!success) {
+                            Toast.makeText(context, "分享失败：$msg", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
     }
@@ -330,6 +352,7 @@ private fun SecondaryActionButton(
     iconRes: Int,
     label: String,
     enabled: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val interaction = rememberFeedbackInteractionSource()
@@ -337,9 +360,7 @@ private fun SecondaryActionButton(
     val stroke = if (enabled) UiColors.Ai.featureCardStroke else Color(0xFF1E1E22)
     val fg = if (enabled) Color(0xFFD8DAE0) else Color(0xFF555559)
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
+        modifier = modifier
             .height(44.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(bg)

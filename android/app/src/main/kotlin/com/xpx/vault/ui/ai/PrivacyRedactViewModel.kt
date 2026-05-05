@@ -13,6 +13,7 @@ import com.xpx.vault.ai.privacy.RedactionRegion
 import com.xpx.vault.ai.privacy.RedactionStyle
 import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.ui.export.MediaExporter
+import com.xpx.vault.ui.export.MediaShareHelper
 import com.xpx.vault.ui.vault.VaultStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -128,6 +129,32 @@ class PrivacyRedactViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 分享脱敏后的预览图。
+     *
+     * 预览图以 JPEG 编码后写入 cacheDir/share_cache/，通过 FileProvider 临时授权给外部 App。
+     * 不落 vault、不写系统相册，1h 内自动清理。
+     */
+    fun shareRedacted(chooserTitle: String, onResult: (Boolean, String) -> Unit) {
+        val preview = _state.value.preview
+        val path = _state.value.sourcePath
+        if (preview == null || path == null) {
+            onResult(false, "no_preview")
+            return
+        }
+        if (_state.value.sharing) return
+        _state.value = _state.value.copy(sharing = true)
+        viewModelScope.launch {
+            val baseName = "redacted_" + File(path).nameWithoutExtension.takeLast(8)
+            val outcome = MediaShareHelper.shareBitmap(appContext, preview, baseName, chooserTitle)
+            _state.value = _state.value.copy(sharing = false)
+            when (outcome) {
+                is MediaShareHelper.ShareOutcome.Success -> onResult(true, outcome.mimeType)
+                is MediaShareHelper.ShareOutcome.Failure -> onResult(false, outcome.reason)
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         // 注意：detector 是 @Singleton，进程内全局共享，这里绝对不能调 detector.close()：
@@ -191,5 +218,6 @@ data class PrivacyRedactUiState(
     val exported: Boolean = false,
     val saving: Boolean = false,
     val savedToVault: Boolean = false,
+    val sharing: Boolean = false,
     val errorMessage: String? = null,
 )
