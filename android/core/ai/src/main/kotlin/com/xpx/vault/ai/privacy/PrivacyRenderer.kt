@@ -40,14 +40,30 @@ object PrivacyRenderer {
      */
     private const val MOSAIC_RATIO = 0.10f
 
+    /**
+     * 马赛克块相对“长边”的比例，专治卡号/证件行这类“扁长条形 ROI”。
+     * 纯看短边时 block 太小（比如 60px 高 → 6px），字形仍可辨；
+     * 从长边再限一下（800px × 0.04 = 32px）能把整个数字笔画糊成一块。
+     */
+    private const val MOSAIC_LONG_SIDE_RATIO = 0.04f
+
     /** 马赛克块的最小像素下限，避免小 ROI 下块太细仍然能辨认原始内容。 */
-    private const val MOSAIC_MIN_BLOCK_PX = 10
+    private const val MOSAIC_MIN_BLOCK_PX = 14
 
     /** 模糊近似的缩放倍数（低版本 fallback 用）；倍数越大越糊。 */
     private const val BLUR_DOWNSCALE = 12
 
-    /** RenderEffect 真高斯的模糊半径（像素）。ML Kit 框住的脸通常 200~600 px，25 是人脸打码常用值。 */
-    private const val BLUR_RADIUS_PX = 25f
+    /** RenderEffect 高斯半径按 ROI 最长边按比例计算：大的 ROI 需要更大半径才看得到效果。 */
+    private const val BLUR_RADIUS_RATIO = 0.08f
+    private const val BLUR_MIN_RADIUS_PX = 20f
+    private const val BLUR_MAX_RADIUS_PX = 80f
+
+    /**
+     * TEXT / BARCODE 类 ROI 向外延展的比例。
+     * ML Kit OCR 框贴字边很紧，模糊采样时边界像素仍会泄露原始字形；
+     * 外扩 8% 给模糊/马赛克留“缓冲带”，不会扩到整图级别的视觉破坏。
+     */
+    private const val TEXT_PADDING_RATIO = 0.08f
 
     fun render(
         src: Bitmap,
@@ -61,7 +77,12 @@ object PrivacyRenderer {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
         regions.forEach { region ->
-            val rect = region.clampTo(output.width, output.height) ?: return@forEach
+            val base = region.clampTo(output.width, output.height) ?: return@forEach
+            // TEXT / BARCODE 类 ROI 外扩 padding，避免贴边字形暴露。
+            val rect = when (region.kind) {
+                RedactionKind.TEXT, RedactionKind.BARCODE -> base.inflatedBy(TEXT_PADDING_RATIO, output.width, output.height)
+                else -> base
+            }
             when (style) {
                 RedactionStyle.BAR -> drawBar(canvas, rect, paint, Color.BLACK)
                 RedactionStyle.WHITE_BAR -> drawBar(canvas, rect, paint, Color.WHITE)
@@ -88,10 +109,19 @@ object PrivacyRenderer {
     private fun drawMosaic(canvas: Canvas, src: Bitmap, rect: Rect, paint: Paint) {
         val roi = safeSubBitmap(src, rect) ?: return
         val shortSide = min(rect.width(), rect.height()).coerceAtLeast(1)
-        // blockPx 同时受比例与绝对像素下限约束：
-        //   - 大 ROI：按比例算 → 比例起作用，确保视觉一致的“粗颗粒度”
-        //   - 小 ROI（如证件号码小区块）：下限起作用，避免块过细导致数字仍可辨认
-        val blockPx = max(MOSAIC_MIN_BLOCK_PX, (shortSide * MOSAIC_RATIO).toInt())
+        val longSide = max(rect.width(), rect.height()).coerceAtLeast(1)
+        // blockPx 同时受三项约束，取最大值：
+        //   - 绝对像素下限（小 ROI 仍能确保块粗度）
+        //   - 短边 * 比例（近方形 ROI，如人脸）
+        //   - 长边 * 更小比例（扁长条形 ROI，如卡号行只有 60px 高，
+        //     仅看短边会得到 6px 块导致数字仍可辨）
+        val blockPx = max(
+            MOSAIC_MIN_BLOCK_PX,
+            max(
+                (shortSide * MOSAIC_RATIO).toInt(),
+                (longSide * MOSAIC_LONG_SIDE_RATIO).toInt(),
+            ),
+        )
         val w = max(1, roi.width / blockPx)
         val h = max(1, roi.height / blockPx)
         val small = Bitmap.createScaledBitmap(roi, w, h, false)
@@ -146,8 +176,11 @@ object PrivacyRenderer {
      */
     private fun blurRoi(src: Bitmap, rect: Rect): Bitmap? {
         val roi = safeSubBitmap(src, rect) ?: return null
+        // 半径随 ROI 最长边动态缩放：大图框用固定 25px 根本不够糊。
+        val radius = ((max(rect.width(), rect.height()) * BLUR_RADIUS_RATIO)
+            .coerceIn(BLUR_MIN_RADIUS_PX, BLUR_MAX_RADIUS_PX))
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val blurred = runCatching { blurWithRenderEffect(roi, BLUR_RADIUS_PX) }.getOrNull()
+            val blurred = runCatching { blurWithRenderEffect(roi, radius) }.getOrNull()
             if (blurred != null && blurred !== roi) {
                 roi.recycle()
                 blurred
@@ -236,6 +269,21 @@ object PrivacyRenderer {
         } catch (_: Throwable) {
             null
         }
+    }
+
+    /**
+     * 向外扩展 [ratio] 比例的 padding，并裁剪在图像范围内。
+     * TEXT/BARCODE 贴字框外扩后，模糊/马赛克能够包住原始字形的全部笔画。
+     */
+    private fun Rect.inflatedBy(ratio: Float, maxW: Int, maxH: Int): Rect {
+        val padX = (width() * ratio).toInt().coerceAtLeast(4)
+        val padY = (height() * ratio).toInt().coerceAtLeast(4)
+        return Rect(
+            (left - padX).coerceAtLeast(0),
+            (top - padY).coerceAtLeast(0),
+            (right + padX).coerceAtMost(maxW),
+            (bottom + padY).coerceAtMost(maxH),
+        )
     }
 
     /** 遮盖用 emoji：🙈 捂眼猴，意图最明显的 "别看" 表达。 */
