@@ -1,5 +1,6 @@
 package com.xpx.vault.data.ai
 
+import com.xpx.vault.data.db.PhotoVaultDatabase
 import com.xpx.vault.data.db.dao.AiPhashDao
 import com.xpx.vault.data.db.dao.AiQualityDao
 import com.xpx.vault.data.db.dao.AiSensitiveDao
@@ -13,6 +14,7 @@ import com.xpx.vault.domain.model.AiQualityRecord
 import com.xpx.vault.domain.model.AiSensitiveRecord
 import com.xpx.vault.domain.model.AiTag
 import com.xpx.vault.domain.repo.AiAnalysisRepository
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -24,6 +26,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AiAnalysisRepositoryImpl @Inject constructor(
+    private val database: PhotoVaultDatabase,
     private val tagDao: AiTagDao,
     private val phashDao: AiPhashDao,
     private val qualityDao: AiQualityDao,
@@ -46,6 +49,11 @@ class AiAnalysisRepositoryImpl @Inject constructor(
 
     override suspend fun listAllPerceptualHashes(): List<AiPerceptualHash> =
         phashDao.listAll().map { AiPerceptualHash(it.photoId, it.phash, it.dhash) }
+
+    override suspend fun listAllScannedPhotoIds(): List<Long> = phashDao.listAllPhotoIds()
+
+    override suspend fun <R> runInTransaction(block: suspend () -> R): R =
+        database.withTransaction { block() }
 
     override suspend fun upsertQuality(record: AiQualityRecord) {
         qualityDao.upsert(record.toEntity())

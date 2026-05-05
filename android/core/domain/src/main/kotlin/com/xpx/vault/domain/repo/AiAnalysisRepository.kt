@@ -22,6 +22,15 @@ interface AiAnalysisRepository {
     suspend fun upsertPerceptualHash(hash: AiPerceptualHash)
     suspend fun listAllPerceptualHashes(): List<AiPerceptualHash>
 
+    /** 仅拉取已扫过的 photoId 集合，用于增量扫描差集判定（比完整 phash 便宜得多）。 */
+    suspend fun listAllScannedPhotoIds(): List<Long>
+
+    /**
+     * 在单个数据库事务中执行 [block]。用于把一次扫描结果的多条 upsert 合并成单事务，
+     * 把 N 次 fsync 压到 1 次，显著降低写入延迟。
+     */
+    suspend fun <R> runInTransaction(block: suspend () -> R): R
+
     // ---- Quality ----
     suspend fun upsertQuality(record: AiQualityRecord)
     fun observeBlurry(): Flow<List<AiQualityRecord>>
