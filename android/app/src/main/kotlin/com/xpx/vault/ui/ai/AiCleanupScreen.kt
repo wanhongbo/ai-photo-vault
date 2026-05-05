@@ -5,8 +5,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,6 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -34,7 +39,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xpx.vault.R
+import com.xpx.vault.domain.model.AiQualityRecord
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
@@ -43,14 +50,16 @@ import com.xpx.vault.ui.theme.UiColors
 /**
  * 垃圾清理页：展示 AI 识别出的模糊/重复照片，供用户批量清理。
  *
- * PR2 当前版本：
+ * 当前版本：
  *   - 提供三个 Tab（全部 / 模糊 / 重复）
- *   - 空态 + 扫描按钮（点击暂无操作，PR3 接入真实扫描）
- *   - 消费 [AiCleanupViewModel] 的 Flow，有数据时展示计数；无数据展示空态引导
+ *   - 点击 Tab 下方显示对应分类的 3 列缩略图宫格
+ *   - 点击缩略图跳转到图片预览页
+ *   - 空态 + 扫描按钮；消费 [AiCleanupViewModel] 的 Flow与 photoId→path 映射
  */
 @Composable
 fun AiCleanupScreen(
     onBack: () -> Unit,
+    onOpenPhoto: (String) -> Unit = {},
     viewModel: AiCleanupViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -62,7 +71,7 @@ fun AiCleanupScreen(
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding(),
     ) {
-        AppTopBar(title = "\u5783\u573e\u6e05\u7406", onBack = onBack)
+        AppTopBar(title = "垃圾清理", onBack = onBack)
 
         CleanupSummary(state = state, onScan = { viewModel.startScan() })
 
@@ -75,10 +84,12 @@ fun AiCleanupScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             when {
                 state.isEmpty -> EmptyState()
-                else -> CleanupListPlaceholder(
+                else -> CleanupGrid(
                     tab = selectedTab,
-                    blurryCount = state.blurry.size,
-                    duplicateCount = state.duplicates.size,
+                    blurry = state.blurry,
+                    duplicates = state.duplicates,
+                    pathMap = state.pathByPhotoId,
+                    onOpenPhoto = onOpenPhoto,
                 )
             }
         }
@@ -241,16 +252,165 @@ private fun EmptyState() {
 }
 
 @Composable
-private fun CleanupListPlaceholder(tab: CleanupTab, blurryCount: Int, duplicateCount: Int) {
-    // PR2 暂不渲染缩略图列表（涉及 photoId → 文件路径映射，留到 PR3 统一处理）。
+private fun CleanupGrid(
+    tab: CleanupTab,
+    blurry: List<AiQualityRecord>,
+    duplicates: List<AiQualityRecord>,
+    pathMap: Map<Long, String>,
+    onOpenPhoto: (String) -> Unit,
+) {
+    // 组装当前 Tab 要展示的单元格列表。
+    //  - ALL: blurry + duplicates 取并集（同一 photoId 可能同时为模糊与重复）
+    //  - BLURRY / DUPLICATE: 只取对应分类
+    val blurryById = remember(blurry) { blurry.associateBy { it.photoId } }
+    val dupById = remember(duplicates) { duplicates.associateBy { it.photoId } }
+    val cells: List<CleanupCellItem> = remember(tab, blurry, duplicates, pathMap) {
+        val base = when (tab) {
+            CleanupTab.ALL -> (blurry.map { it.photoId } + duplicates.map { it.photoId })
+                .toSet()
+                .sortedDescending()
+            CleanupTab.BLURRY -> blurry.map { it.photoId }
+            CleanupTab.DUPLICATE -> duplicates.sortedBy { it.duplicateGroupId ?: 0L }
+                .map { it.photoId }
+        }
+        base.map { id ->
+            val b = blurryById[id]
+            val d = dupById[id]
+            CleanupCellItem(
+                photoId = id,
+                path = pathMap[id],
+                isBlurry = b != null,
+                isDuplicate = d != null,
+                duplicateGroupId = d?.duplicateGroupId,
+            )
+        }
+    }
+    if (cells.isEmpty()) {
+        TabEmptyState(tab)
+        return
+    }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(vertical = 8.dp),
+    ) {
+        items(cells, key = { it.photoId }) { cell ->
+            CleanupGridCell(
+                cell = cell,
+                onClick = cell.path?.let { p -> { onOpenPhoto(p) } },
+            )
+        }
+    }
+}
+
+/** 单个宫格单元的 UI 模型。 */
+private data class CleanupCellItem(
+    val photoId: Long,
+    val path: String?,
+    val isBlurry: Boolean,
+    val isDuplicate: Boolean,
+    val duplicateGroupId: Long?,
+)
+
+@Composable
+private fun CleanupGridCell(
+    cell: CleanupCellItem,
+    onClick: (() -> Unit)?,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    val clickModifier = if (onClick != null) {
+        Modifier
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick,
+            )
+    } else {
+        Modifier
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(10.dp))
+            .background(UiColors.Ai.featureCardBg)
+            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(10.dp))
+            .then(clickModifier),
+    ) {
+        if (cell.path != null) {
+            VaultProgressiveImage(
+                path = cell.path,
+                modifier = Modifier.fillMaxSize(),
+                thumbnailMaxPx = 360,
+            )
+        } else {
+            // 映射缺失（已删除 / 尚未同步）时的占位信息。
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+            ) {
+                Text(
+                    text = "photoId",
+                    color = Color(0xFF8A8A90),
+                    fontSize = 10.sp,
+                )
+                Text(
+                    text = cell.photoId.toString(),
+                    color = Color(0xFFF0F4FF),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
+        // 左上角征标：模糊 / 重复 / 模糊+重复
+        val badgeText = when {
+            cell.isBlurry && cell.isDuplicate -> "模糊·重复"
+            cell.isBlurry -> "模糊"
+            cell.isDuplicate -> "重复"
+            else -> null
+        }
+        val badgeColor = when {
+            cell.isBlurry && cell.isDuplicate -> Color(0xCCE46A6A)
+            cell.isBlurry -> Color(0xCCFFB547)
+            cell.isDuplicate -> Color(0xCC4A90E2)
+            else -> Color.Transparent
+        }
+        if (badgeText != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(badgeColor)
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+            ) {
+                Text(
+                    text = badgeText,
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TabEmptyState(tab: CleanupTab) {
     Box(
         modifier = Modifier.fillMaxSize().padding(32.dp),
         contentAlignment = Alignment.Center,
     ) {
         val desc = when (tab) {
-            CleanupTab.ALL -> "\u6a21\u7cca ${blurryCount}\uff0c\u91cd\u590d ${duplicateCount}"
-            CleanupTab.BLURRY -> "\u6a21\u7cca ${blurryCount} \u5f20"
-            CleanupTab.DUPLICATE -> "\u91cd\u590d ${duplicateCount} \u7ec4"
+            CleanupTab.ALL -> "暂无可清理照片"
+            CleanupTab.BLURRY -> "未发现模糊照片"
+            CleanupTab.DUPLICATE -> "未发现重复照片"
         }
         Text(text = desc, color = Color(0xFFB0B0B8), fontSize = 14.sp)
     }
