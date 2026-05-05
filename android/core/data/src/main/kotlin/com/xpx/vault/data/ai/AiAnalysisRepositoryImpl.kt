@@ -83,6 +83,20 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         qualityDao.deleteByPhoto(photoId)
     }
 
+    override suspend fun clearAllDuplicateFlags() {
+        qualityDao.clearAllDuplicateFlags()
+    }
+
+    override suspend fun purgePhoto(photoId: Long) {
+        // 单事务原子清除 4 表，避免半成品状态导致另一次扫描观察到不一致数据。
+        database.withTransaction {
+            phashDao.deleteByPhoto(photoId)
+            qualityDao.deleteByPhoto(photoId)
+            tagDao.deleteByPhoto(photoId)
+            sensitiveDao.deleteByPhoto(photoId)
+        }
+    }
+
     override suspend fun upsertSensitive(record: AiSensitiveRecord): Long =
         sensitiveDao.upsert(record.toEntity())
 

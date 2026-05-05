@@ -14,8 +14,11 @@ import com.xpx.vault.domain.model.AiPerceptualHash
  */
 object DuplicateClusterer {
 
-    private const val DEFAULT_DHASH_THRESHOLD = 5
-    private const val DEFAULT_PHASH_THRESHOLD = 5
+    // 阈值根据真实相机样本校准：256px 缩略图下，同一场景连拍的两张照片
+    // 因传感器噪声 / 微抖动 / 自动对焦微差，pHash 汉明距离常落在 6～12，
+    // dHash 略敏感落在 4～10。原阈值 5 对“拍的重复照片”偏严，导致用户观测到的“未检出”。
+    private const val DEFAULT_DHASH_THRESHOLD = 8
+    private const val DEFAULT_PHASH_THRESHOLD = 10
 
     data class Cluster(
         val groupId: Long,
@@ -28,9 +31,12 @@ object DuplicateClusterer {
         pHashThreshold: Int = DEFAULT_PHASH_THRESHOLD,
     ): List<Cluster> {
         if (hashes.isEmpty()) return emptyList()
+        // 按 photoId 升序处理，保证代表张稳定（总是“最早的 photoId”），
+        // 避免因 repository 返回顺序波动导致新拍照片被选为代表张、旧照片被标 duplicate 的观感倒转。
+        val ordered = hashes.sortedBy { it.photoId }
         val seeds = mutableListOf<AiPerceptualHash>()        // 每簇种子
         val members = mutableListOf<MutableList<Long>>()     // 对应成员列表
-        for (h in hashes) {
+        for (h in ordered) {
             var matched = -1
             for (i in seeds.indices) {
                 val s = seeds[i]

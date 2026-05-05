@@ -38,6 +38,16 @@ interface AiAnalysisRepository {
     suspend fun findQualityByPhoto(photoId: Long): AiQualityRecord?
     suspend fun clearQualityForPhoto(photoId: Long)
 
+    /** 批量清除全表 is_duplicate 标记。重新聚类前调用，避免悬挂的脏标记。 */
+    suspend fun clearAllDuplicateFlags()
+
+    /**
+     * 彻底清除一张照片的所有 AI 分析遗留（phash / quality / tag / sensitive）。
+     * 用于孤儿数据清理：照片已在 Vault 中删除，但旧的 AI 表记录残留，
+     * 导致聚类 / 分类 / 清理页拿到查不到文件的 photoId。
+     */
+    suspend fun purgePhoto(photoId: Long)
+
     // ---- Sensitive ----
     suspend fun upsertSensitive(record: AiSensitiveRecord): Long
     fun observePendingSensitiveCount(): Flow<Int>

@@ -2,6 +2,7 @@ package com.xpx.vault.ai
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import com.xpx.vault.AppLogger
 import com.xpx.vault.ai.algo.DuplicateClusterer
 import com.xpx.vault.ai.core.AiAnalysisResult
 import com.xpx.vault.ai.core.AiEngine
@@ -154,7 +155,27 @@ class AiLocalScanUseCase @Inject constructor(
 
         // 重复聚类：把所有 phash 跑一遍聚类，把非代表张标 is_duplicate=true。
         val fullHashes = runCatching { repository.listAllPerceptualHashes() }.getOrDefault(recordedHashes.toList())
-        if (fullHashes.size >= 2) markDuplicates(fullHashes)
+        // 孤儿数据清理：ai_phash 里记录的 photoId 如果已不存在于当前 Vault 目录
+        // （照片被删除 / Vault 迁移 等历史原因），必须从所有 AI 表拆掉：
+        //  - 避免聚类把无文件的 photoId 标成 duplicate（UI 会显示为纯数字占位）；
+        //  - 也避免它们继续参与下次聚类，减少无意义计算。
+        val validPhotoIds: Set<Long> = allPhotos.asSequence()
+            .map { PhotoIdentity.fromPath(it.path) }
+            .toSet()
+        val orphanIds = fullHashes.asSequence()
+            .map { it.photoId }
+            .filter { it !in validPhotoIds }
+            .toSet()
+        if (orphanIds.isNotEmpty()) {
+            AppLogger.d(TAG, "purging orphan AI records: count=${orphanIds.size}")
+            for (id in orphanIds) {
+                runCatching { repository.purgePhoto(id) }
+                    .onFailure { AppLogger.w(TAG, "purgePhoto($id) failed: ${it.message}") }
+            }
+        }
+        val cleanHashes = if (orphanIds.isEmpty()) fullHashes else fullHashes.filter { it.photoId !in orphanIds }
+        AppLogger.d(TAG, "markDuplicates input: hashes=${cleanHashes.size}")
+        if (cleanHashes.size >= 2) markDuplicates(cleanHashes)
 
         _progress.value = _progress.value.copy(running = false)
     }
@@ -348,16 +369,31 @@ class AiLocalScanUseCase @Inject constructor(
 
     private suspend fun markDuplicates(hashes: List<AiPerceptualHash>) {
         val clusters = DuplicateClusterer.cluster(hashes)
-        if (clusters.isEmpty()) return
+        // 无论本轮是否有新簇，都先清零全表旧标记：避免上一轮或历史残留的
+        // is_duplicate=1 在阈值调整 / 代表张变更 / 原件删除等情况下被悬挂。
+        runCatching { repository.clearAllDuplicateFlags() }
+            .onFailure { AppLogger.w(TAG, "clearAllDuplicateFlags failed: ${it.message}") }
+        if (clusters.isEmpty()) {
+            AppLogger.d(TAG, "markDuplicates: no clusters (hashes=${hashes.size})")
+            return
+        }
+        var marked = 0
         for (cluster in clusters) {
             val rep = cluster.photoIds.first()
-            for (id in cluster.photoIds.drop(1)) {
+            val members = cluster.photoIds.drop(1)
+            AppLogger.d(
+                TAG,
+                "cluster rep=$rep size=${cluster.photoIds.size} members=${members.joinToString(limit = 8)}",
+            )
+            for (id in members) {
                 val existing = repository.findQualityByPhoto(id) ?: continue
                 repository.upsertQuality(
                     existing.copy(isDuplicate = true, duplicateGroupId = rep),
                 )
+                marked++
             }
         }
+        AppLogger.d(TAG, "markDuplicates done: clusters=${clusters.size}, markedDuplicates=$marked")
     }
 
     companion object {
