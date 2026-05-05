@@ -91,6 +91,38 @@ object UiColors {
         val skipBtnStroke = Color(0x30FFFFFF)
         val iconBgWhite = Color(0x20FFFFFF)
 
+        // —— Scanning 状态（蓝）：用默认渐变 + 进度条色 ——
+        val scanningProgressFill = Color(0xFF4A9EFF)
+        val scanningProgressTrack = Color(0x334A9EFF)
+
+        // —— Sensitive 状态（红调）——
+        val sensitiveGradStart = Color(0xFF6E1A3A)
+        val sensitiveGradEnd = Color(0xFF0D1B2E)
+        val sensitiveIconBg = Color(0x33E85A4F)
+        val sensitiveBadgeBg = Color(0x33E85A4F)
+        val sensitiveBadgeText = Color(0xFFFF7A6F)
+        val sensitiveExecBtnBg = Color(0xFFE85A4F)
+        val sensitiveExecBtnText = Color(0xFFFFFFFF)
+
+        // —— Cleanup 状态（橙调）——
+        val cleanupGradStart = Color(0xFF6E4A1A)
+        val cleanupGradEnd = Color(0xFF0D1B2E)
+        val cleanupIconBg = Color(0x33FFB547)
+        val cleanupBadgeBg = Color(0x33FFB547)
+        val cleanupBadgeText = Color(0xFFFFC87A)
+        val cleanupExecBtnBg = Color(0xFFFFB547)
+        val cleanupExecBtnText = Color(0xFF0D0D0D)
+
+        // —— AllClear 状态（绿调）——
+        val allClearGradStart = Color(0xFF1A6E3A)
+        val allClearGradEnd = Color(0xFF0D2B1E)
+        val allClearIconBg = Color(0x3332D583)
+        val allClearBadgeBg = Color(0x3332D583)
+        val allClearBadgeText = Color(0xFF5BE59D)
+        val allClearExecBtnBg = Color(0x2232D583)
+        val allClearExecBtnText = Color(0xFF5BE59D)
+        val allClearExecBtnStroke = Color(0x5532D583)
+
         val classifyBar = Color(0xFF4A9EFF)
         val searchBar = Color(0xFF32D583)
         val blurBar = Color(0xFFE85A4F)
