@@ -119,38 +119,83 @@ fun PrivacyRedactScreen(
             onSelect = { viewModel.selectStyle(it) },
         )
 
-        ExportButton(
-            enabled = state.ready && state.preview != null && !state.exporting,
-            exporting = state.exporting,
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 主按钮：保存到安全相册（加密入库，与原图共存）
+        PrimaryActionButton(
+            iconRes = R.drawable.ic_ai_shield,
+            label = if (state.saving) "保存中…" else "保存到安全相册",
+            enabled = state.ready && state.preview != null && !state.saving && !state.exporting,
+            onClick = {
+                viewModel.saveToVault { success, msg ->
+                    val text = if (success) "已保存到安全相册" else "保存失败：$msg"
+                    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+                }
+            },
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 次按钮：导出明文副本到系统相册
+        SecondaryActionButton(
+            iconRes = R.drawable.ic_photo_save,
+            label = if (state.exporting) "导出中…" else "导出到系统相册",
+            enabled = state.ready && state.preview != null && !state.exporting && !state.saving,
             onClick = {
                 viewModel.exportRedacted { success, msg ->
                     val text = if (success) {
-                        "\u5df2\u5bfc\u51fa\u5230\u7cfb\u7edf\u76f8\u518c Redacted \u76ee\u5f55\uff1a$msg"
+                        "已导出到系统相册 Redacted 目录：$msg"
                     } else {
-                        "\u5bfc\u51fa\u5931\u8d25\uff1a$msg"
+                        "导出失败：$msg"
                     }
                     Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
                 }
             },
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
 @Composable
 private fun RegionSummary(state: PrivacyRedactUiState) {
-    val desc = when {
-        state.loading -> "检测中…"
-        !state.mlKitReady -> "Google Play 服务不可用，已降级为纯预览（未检到敏感区域）"
-        state.regionCount == 0 -> "未检测到人脸 / 证件号 / 条码，脱敏样式不可用，可直接导出原图副本"
-        else -> "共识别到 ${state.regionCount} 个敏感区域，已自动遮盖"
+    val (desc, tone) = when {
+        state.loading -> "检测中…" to SummaryTone.INFO
+        !state.mlKitReady -> "Google Play 服务不可用，已降级为纯预览。未检到敏感区域" to SummaryTone.WARN
+        state.regionCount == 0 -> "未检测到人脸 / 证件号 / 条码，脱敏样式不可用，可直接导出原图副本" to SummaryTone.INFO
+        else -> "已识别 ${state.regionCount} 个敏感区域，应用脱敏样式即可预览" to SummaryTone.OK
     }
-    Text(
-        text = desc,
-        color = Color(0xFFB0B0B8),
-        fontSize = 12.sp,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-    )
+    val dotColor = when (tone) {
+        SummaryTone.OK -> UiColors.Ai.execBtnBg
+        SummaryTone.WARN -> Color(0xFFFFB547)
+        SummaryTone.INFO -> Color(0xFF707078)
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(UiColors.Ai.featureCardBg)
+            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(dotColor),
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = desc,
+            color = Color(0xFFC8C8CE),
+            fontSize = 12.sp,
+        )
+    }
 }
+
+private enum class SummaryTone { OK, WARN, INFO }
 
 @Composable
 private fun StylePicker(
@@ -205,9 +250,10 @@ private fun StylePicker(
 }
 
 @Composable
-private fun ExportButton(
+private fun PrimaryActionButton(
+    iconRes: Int,
+    label: String,
     enabled: Boolean,
-    exporting: Boolean,
     onClick: () -> Unit,
 ) {
     val interaction = rememberFeedbackInteractionSource()
@@ -216,7 +262,7 @@ private fun ExportButton(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .padding(horizontal = 20.dp)
             .height(48.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(bg)
@@ -231,17 +277,62 @@ private fun ExportButton(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_photo_save),
+            painter = painterResource(iconRes),
             contentDescription = null,
             tint = fg,
             modifier = Modifier.size(18.dp),
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = if (exporting) "\u5bfc\u51fa\u4e2d\u2026" else "\u5bfc\u51fa\u8131\u654f\u526f\u672c\u5230\u7cfb\u7edf\u76f8\u518c",
+            text = label,
             color = fg,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+private fun SecondaryActionButton(
+    iconRes: Int,
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    val bg = UiColors.Ai.featureCardBg
+    val stroke = if (enabled) UiColors.Ai.featureCardStroke else Color(0xFF1E1E22)
+    val fg = if (enabled) Color(0xFFD8DAE0) else Color(0xFF555559)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .height(44.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(bg)
+            .border(1.dp, stroke, RoundedCornerShape(14.dp))
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            ),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = fg,
+            modifier = Modifier.size(16.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = label,
+            color = fg,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
         )
     }
 }

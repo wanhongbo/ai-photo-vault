@@ -1,6 +1,7 @@
 package com.xpx.vault.ui.vault
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import com.xpx.vault.data.crypto.VaultCipher
@@ -150,6 +151,43 @@ object VaultStore {
     suspend fun totalPhotos(context: Context): Int = withContext(Dispatchers.IO) {
         ensureInit(context)
         rootDir(context).walkTopDown().count { it.isFile }
+    }
+
+    /**
+     * 将一张内存中的 Bitmap（隐私脱敏后的预览图）压 JPEG 加密落盘到指定相册。
+     *
+     * 与 [importFromPicker] 的 SHA-256 去重不同，这里每次都落新文件：
+     * 同一张原图用户可能尝试不同样式（马赛克 / 高斯模糊 / 黑条）分别保存，
+     * 各自为独立资产。文件名加毫秒时戳保证唯一。
+     *
+     * @return 密文绝对路径；失败返回 null
+     */
+    suspend fun importRedactedBitmap(
+        context: Context,
+        bitmap: Bitmap,
+        baseName: String,
+        albumName: String = DEFAULT_ALBUM_NAME,
+        quality: Int = 95,
+    ): String? = withContext(Dispatchers.IO) {
+        ensureInit(context)
+        val album = File(rootDir(context), sanitizeAlbumName(albumName)).apply { mkdirs() }
+        val safeBase = baseName.filter { it.isLetterOrDigit() || it == '_' || it == '-' }
+            .ifBlank { "redacted" }
+            .takeLast(24)
+        val finalFile = File(album, "redacted_${safeBase}_${System.currentTimeMillis()}.jpg")
+        runCatching {
+            val bytes = java.io.ByteArrayOutputStream().use { bos ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, bos)
+                bos.toByteArray()
+            }
+            java.io.ByteArrayInputStream(bytes).use { plain ->
+                VaultCipher.get(context).encryptFile(plain, finalFile)
+            }
+            finalFile.absolutePath
+        }.getOrElse {
+            if (finalFile.exists()) finalFile.delete()
+            null
+        }
     }
 
     suspend fun importFromPicker(

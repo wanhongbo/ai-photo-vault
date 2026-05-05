@@ -13,6 +13,7 @@ import com.xpx.vault.ai.privacy.RedactionRegion
 import com.xpx.vault.ai.privacy.RedactionStyle
 import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.ui.export.MediaExporter
+import com.xpx.vault.ui.vault.VaultStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -101,6 +102,32 @@ class PrivacyRedactViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 保存脱敏副本到安全相册（Vault）。
+     *
+     * 与 [exportRedacted] 不同：后者落系统 Pictures/AIPhotoVault/Redacted 明文；
+     * 本方法把预览图压 JPEG 后用 VaultCipher 加密落盘到 vault_albums/Default/，
+     * 以加密资产形式与原图共存于安全相册内。
+     */
+    fun saveToVault(onResult: (Boolean, String) -> Unit) {
+        val preview = _state.value.preview
+        val path = _state.value.sourcePath
+        if (preview == null || path == null) {
+            onResult(false, "no_preview")
+            return
+        }
+        if (_state.value.saving) return
+        _state.value = _state.value.copy(saving = true)
+        viewModelScope.launch {
+            val baseName = File(path).nameWithoutExtension.takeLast(12)
+            val saved = withContext(Dispatchers.IO) {
+                VaultStore.importRedactedBitmap(appContext, preview, baseName)
+            }
+            _state.value = _state.value.copy(saving = false, savedToVault = saved != null)
+            onResult(saved != null, saved ?: "save_failed")
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         runCatching { detector.close() }
@@ -159,5 +186,7 @@ data class PrivacyRedactUiState(
     val sourcePath: String? = null,
     val exporting: Boolean = false,
     val exported: Boolean = false,
+    val saving: Boolean = false,
+    val savedToVault: Boolean = false,
     val errorMessage: String? = null,
 )
