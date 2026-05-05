@@ -2,6 +2,7 @@ package com.xpx.vault.ai.mlkit
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.tasks.Task
@@ -41,7 +42,12 @@ class MlKitRedactionDetector @Inject constructor(
     private val faceDetector by lazy {
         FaceDetection.getClient(
             FaceDetectorOptions.Builder()
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                // 隐私脱敏是一次性交互，不跟扫描相比对延迟敯感：用 ACCURATE 模式求检测率。
+                // 对自拍 / 微侧 / 低对比人脸比 FAST 全面过滤得低。
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                // minFaceSize 默认 0.1f（短边 10%），适当放宽到 0.08f，
+                // 罩住远景小人脸、多人合照中的边缘人脸。
+                .setMinFaceSize(0.08f)
                 .build(),
         )
     }
@@ -59,9 +65,14 @@ class MlKitRedactionDetector @Inject constructor(
 
     suspend fun detect(bitmap: Bitmap): List<RedactionRegion> {
         val input = InputImage.fromBitmap(bitmap, 0)
+        Log.d(TAG, "detect: bitmap=${bitmap.width}x${bitmap.height}")
         val faces: List<Face> = awaitOrNull { faceDetector.process(input) }.orEmpty()
         val text: Text? = awaitOrNull { textRecognizer.process(input) }
         val barcodes: List<Barcode> = awaitOrNull { barcodeScanner.process(input) }.orEmpty()
+        Log.d(
+            TAG,
+            "detect done: faces=${faces.size} textBlocks=${text?.textBlocks?.size ?: 0} barcodes=${barcodes.size}",
+        )
 
         val regions = mutableListOf<RedactionRegion>()
 
@@ -104,10 +115,18 @@ class MlKitRedactionDetector @Inject constructor(
         suspendCancellableCoroutine<T?> { cont ->
             val task = block()
             task.addOnSuccessListener { if (cont.isActive) cont.resume(it) }
-            task.addOnFailureListener { if (cont.isActive) cont.resume(null) }
+            task.addOnFailureListener {
+                Log.w(TAG, "ml kit task failed", it)
+                if (cont.isActive) cont.resume(null)
+            }
             task.addOnCanceledListener { if (cont.isActive) cont.resume(null) }
         }
-    } catch (_: Throwable) {
+    } catch (t: Throwable) {
+        Log.w(TAG, "ml kit task exception", t)
         null
+    }
+
+    companion object {
+        private const val TAG = "MlKitRedactionDetector"
     }
 }
