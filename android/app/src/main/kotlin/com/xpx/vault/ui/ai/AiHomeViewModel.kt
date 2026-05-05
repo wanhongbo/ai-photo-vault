@@ -63,6 +63,9 @@ class AiHomeViewModel @Inject constructor(
 
     /** 用户点击 AllClear 卡片上的「重新扫描」按钮。 */
     fun onRescan() {
+        // 主动重扫 = 用户要求重新评估，顺手 revoke 之前的忽略，
+        // 避免“重扫检出新重复却被旧 snooze 隔断、卡片误示一切良好”。
+        snoozePrefs.clearAllSnoozes()
         scanUseCase.requestScan(force = true)
     }
 

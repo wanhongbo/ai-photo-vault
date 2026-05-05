@@ -47,13 +47,10 @@ data class AiCleanupUiState(
      */
     val redundantCount: Int get() {
         val blurryIds = blurry.map { it.photoId }.toSet()
-        // 重复组中每组保留 sharpness 最高的一张，其余计入冗余
-        val dupRedundantIds = duplicates
-            .groupBy { it.duplicateGroupId ?: it.photoId }
-            .flatMap { (_, group) ->
-                if (group.size <= 1) emptyList()
-                else group.sortedByDescending { it.sharpness }.drop(1).map { it.photoId }
-            }.toSet()
+        // observeDuplicates() 的 SQL 是 WHERE is_duplicate=1，本身就不包含代表张（代表张 is_duplicate=false），
+        // 所以 duplicates 里每一条都是应清的“非代表”，直接全算入冗余。
+        // （旧逻辑 groupBy + drop(1) 会每簇少算 1 张，导致按钮文案偏少 + 清不干净。）
+        val dupRedundantIds = duplicates.map { it.photoId }.toSet()
         return (blurryIds + dupRedundantIds).size
     }
 }
@@ -105,20 +102,18 @@ class AiCleanupViewModel @Inject constructor(
     /**
      * 一键清理冗余照片：
      *  - 全部模糊照片 → 移入垃圾桶
-     *  - 每个重复组保留 sharpness 最高的一张，其余 → 移入垃圾桶
-     *  - 同时从 AI 数据库中删除对应 quality 记录，让 Flow 自动刷新 UI
+     *  - 每个重复组的非代表张全部 → 移入垃圾桶（代表张 is_duplicate=false，不在 duplicates 里）
+         *  - 每删一张照片，同时原子清除其 AI 表的全部遗留（phash/quality/tag/sensitive），
+         *    避免下次扫描时产生孤儿记录；
+         *  - 清理完主动触发一次重扫，让残留簇重新聚类，AI Tab 卡片状态即时刷新。
      */
     fun cleanupRedundant() {
         viewModelScope.launch {
             _cleaning.value = true
             val state = uiState.value
             val blurryIds = state.blurry.map { it.photoId }.toSet()
-            val dupRedundantIds = state.duplicates
-                .groupBy { it.duplicateGroupId ?: it.photoId }
-                .flatMap { (_, group) ->
-                    if (group.size <= 1) emptyList()
-                    else group.sortedByDescending { it.sharpness }.drop(1).map { it.photoId }
-                }.toSet()
+            // duplicates Flow 已不包含代表张，直接全量列为待清。
+            val dupRedundantIds = state.duplicates.map { it.photoId }.toSet()
             val toDelete = (blurryIds + dupRedundantIds)
             var count = 0
             withContext(Dispatchers.IO) {
@@ -126,7 +121,8 @@ class AiCleanupViewModel @Inject constructor(
                     val path = state.pathByPhotoId[id] ?: continue
                     val ok = VaultStore.deletePhoto(app, path)
                     if (ok) {
-                        repository.clearQualityForPhoto(id)
+                        // 一次性清 4 表 AI 遗留，避免孤儿 phash 残留让下次聚类再次标错。
+                        repository.purgePhoto(id)
                         count++
                     }
                 }
@@ -134,6 +130,9 @@ class AiCleanupViewModel @Inject constructor(
             _lastCleanedCount.value = count
             _cleaning.value = false
             refreshPathMap()
+            // 清理后触发一次重扫：残留的簇可能因成员数降到 <2 而解散，markDuplicates 会清理旧标记，
+            // 避免 AI Tab 在 duplicates Flow 更新时还挂着孤立的 is_duplicate=1 残跡。
+            scanUseCase.requestScan(force = true)
         }
     }
 

@@ -41,6 +41,19 @@ class AiSuggestSnoozePrefs @Inject constructor(
         bumpVersion()
     }
 
+    /**
+     * 清除所有类型的忽略到期时间。用户主动触发“重新扫描”时调用：
+     * 重扫是用户明确要求重新评估的信号，之前的 snooze 应被 revoke，
+     * 否则重扫出的真实结果会被旧 snooze 隔断，却给用户呈现一切良好的假象。
+     */
+    fun clearAllSnoozes() {
+        prefs.edit()
+            .remove(KEY_SENSITIVE_UNTIL_MS)
+            .remove(KEY_CLEANUP_UNTIL_MS)
+            .apply()
+        bumpVersion()
+    }
+
     /** 是否完成过至少一次扫描。用于区分 Idle / AllClear。 */
     fun hasEverScanned(): Boolean = prefs.contains(KEY_LAST_SCAN_END_MS)
 
