@@ -3,6 +3,8 @@ package com.xpx.vault.ui.ai
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xpx.vault.ai.mlkit.MlKitRedactionDetector
@@ -109,8 +111,35 @@ class PrivacyRedactViewModel @Inject constructor(
     private fun decryptOriginal(path: String): Bitmap? {
         return runCatching {
             val bytes = VaultCipher.get(appContext).decryptToByteArray(File(path))
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            val raw = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return@runCatching null
+            // BitmapFactory 不会应用 EXIF Orientation，立屏拍摄的照片（Orientation=6/8）
+            // 解出来是“侧躺”的 bitmap，ML Kit FaceDetector FAST 模式对旋转 90° 的脸容易漏检。
+            // 这里读 EXIF 后实际旋转 Bitmap，保证下游 detect / render / display 都用正向图像。
+            val degrees = readExifRotationDegrees(bytes)
+            if (degrees == 0) raw else rotateBitmap(raw, degrees)
         }.getOrNull()
+    }
+
+    private fun readExifRotationDegrees(bytes: ByteArray): Int = runCatching {
+        val exif = ExifInterface(java.io.ByteArrayInputStream(bytes))
+        when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270
+            else -> 0
+        }
+    }.getOrDefault(0)
+
+    private fun rotateBitmap(src: Bitmap, degrees: Int): Bitmap {
+        if (degrees % 360 == 0) return src
+        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+        return try {
+            val rotated = Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
+            if (rotated !== src) src.recycle()
+            rotated
+        } catch (_: OutOfMemoryError) {
+            src
+        }
     }
 
     private fun renderPreview(
