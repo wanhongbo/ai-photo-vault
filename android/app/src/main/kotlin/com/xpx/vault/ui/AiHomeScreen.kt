@@ -5,9 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,7 +24,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -35,14 +32,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.xpx.vault.R
-import com.xpx.vault.ui.ai.AiHomeUiState
 import com.xpx.vault.ui.ai.AiHomeViewModel
+import com.xpx.vault.ui.ai.AiSuggestCard
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
-import com.xpx.vault.ui.theme.UiRadius
-import com.xpx.vault.ui.theme.UiSize
 
 /**
  * 与 AiFeature 卡片关联的逻辑标识，供跳转路由映射使用。
@@ -75,7 +70,15 @@ fun AiHomeScreen(
                 .padding(top = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item { AiSuggestCard(uiState = uiState, onOpenFeature = onOpenFeature) }
+            item {
+                AiSuggestCard(
+                    uiState = uiState,
+                    onOpenPrivacy = { onOpenFeature(AiFeatureKey.PRIVACY) },
+                    onOpenDedup = { onOpenFeature(AiFeatureKey.DEDUP) },
+                    onRescan = viewModel::onRescan,
+                    onSnooze = viewModel::onSnooze,
+                )
+            }
             item { AiFeaturesSection(onOpenFeature = onOpenFeature) }
         }
         if (showBottomNav) {
@@ -86,216 +89,23 @@ fun AiHomeScreen(
 
 @Composable
 private fun AiHeader() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column {
-            Text(
-                text = stringResource(R.string.ai_title),
-                color = Color(0xFFF0F4FF),
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = stringResource(R.string.ai_subtitle),
-                color = Color(0xFF6B6B70),
-                fontSize = 13.sp,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            AiHeaderButton(
-                iconRes = R.drawable.ic_ai_sliders,
-                contentDesc = "Filter",
-                onClick = { },
-            )
-            AiHeaderButton(
-                iconRes = R.drawable.ic_ai_help,
-                contentDesc = "Help",
-                onClick = { },
-            )
-        }
-    }
-}
-
-@Composable
-private fun AiHeaderButton(
-    iconRes: Int,
-    contentDesc: String,
-    onClick: () -> Unit,
-) {
-    val interaction = rememberFeedbackInteractionSource()
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(UiColors.Ai.headerBtnBg)
-            .border(1.dp, UiColors.Ai.headerBtnStroke, RoundedCornerShape(20.dp))
-            .pressFeedback(interaction)
-            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = contentDesc,
-            tint = Color(0xFFF0F4FF),
-            modifier = Modifier.size(18.dp),
-        )
-    }
-}
-
-@Composable
-private fun AiSuggestCard(
-    uiState: AiHomeUiState,
-    onOpenFeature: (AiFeatureKey) -> Unit,
-) {
-    // pending 优先（敏感内容直接跑隐私脱敏），其次是垃圾清理。
-    val (title, desc, action) = when {
-        uiState.pendingSensitive > 0 -> Triple(
-            "发现 ${uiState.pendingSensitive} 张敏感照片",
-            "AI 检测到您的相册中存在可能包含身份证/银行卡/二维码等敏感信息的照片，建议使用隐私脱敏功能进行保护。",
-            AiFeatureKey.PRIVACY,
-        )
-        uiState.totalCleanup > 0 -> Triple(
-            "发现 ${uiState.totalCleanup} 张可清理照片",
-            "AI 识别到模糊/重复/废片，一键清理可释放存储空间。",
-            AiFeatureKey.DEDUP,
-        )
-        else -> Triple(
-            stringResourceSafe(R.string.ai_suggest_title),
-            stringResourceSafe(R.string.ai_suggest_desc),
-            AiFeatureKey.PRIVACY,
-        )
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        UiColors.Ai.suggestCardGradientStart,
-                        UiColors.Ai.suggestCardGradientEnd,
-                    ),
-                ),
-            )
-            .padding(18.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(UiColors.Ai.iconBgWhite),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_ai_brain),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(UiColors.Ai.badgeBg)
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.ai_suggest_badge),
-                        color = UiColors.Ai.badgeText,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.5.sp,
-                    )
-                }
-                Text(
-                    text = title,
-                    color = UiColors.Ai.suggestTitle,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        }
+    // 仅保留标题 / 副标题；原右侧的「筛选 / 帮助」两个圆形按钮为占位（onClick 为空），
+    // 因暂无实际功能且用户明确要求移除，整块 Row + AiHeaderButton 一并删掉。
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = desc,
-            color = UiColors.Ai.suggestDesc,
-            fontSize = 14.sp,
-            lineHeight = (14 * 1.55).sp,
+            text = stringResource(R.string.ai_title),
+            color = Color(0xFFF0F4FF),
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            val execInteraction = rememberFeedbackInteractionSource()
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(UiColors.Ai.execBtnBg)
-                    .pressFeedback(execInteraction)
-                    .throttledClickable(
-                        interactionSource = execInteraction,
-                        indication = null,
-                        onClick = { onOpenFeature(action) },
-                    ),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_ai_zap),
-                    contentDescription = null,
-                    tint = UiColors.Ai.execBtnText,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.ai_action_exec),
-                    color = UiColors.Ai.execBtnText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            val skipInteraction = rememberFeedbackInteractionSource()
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(UiColors.Ai.skipBtnBg)
-                    .border(1.dp, UiColors.Ai.skipBtnStroke, RoundedCornerShape(12.dp))
-                    .pressFeedback(skipInteraction)
-                    .throttledClickable(
-                        interactionSource = skipInteraction,
-                        indication = null,
-                        onClick = { },
-                    ),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.ai_action_skip),
-                    color = UiColors.Ai.skipBtnText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-        }
+        Text(
+            text = stringResource(R.string.ai_subtitle),
+            color = Color(0xFF6B6B70),
+            fontSize = 13.sp,
+            modifier = Modifier.padding(top = 4.dp),
+        )
     }
 }
-
-/** Wrapper 避免在静态获取字符串时必须在 @Composable 函数内的冗余。 */
-@Composable
-private fun stringResourceSafe(id: Int): String = stringResource(id)
 
 @Composable
 private fun AiFeaturesSection(onOpenFeature: (AiFeatureKey) -> Unit) {
