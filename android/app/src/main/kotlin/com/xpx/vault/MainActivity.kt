@@ -34,6 +34,12 @@ import com.xpx.vault.ui.ExportResultScreen
 import com.xpx.vault.ui.PrivateCameraScreen
 import com.xpx.vault.ui.ChangePinScreen
 import com.xpx.vault.ui.MainScreen
+import com.xpx.vault.ui.AiFeatureKey
+import com.xpx.vault.ui.ai.AiCleanupScreen
+import com.xpx.vault.ui.ai.AiClassifyScreen
+import com.xpx.vault.ui.ai.AiFeaturePlaceholderScreen
+import com.xpx.vault.ui.ai.AiSensitiveReviewScreen
+import com.xpx.vault.ui.ai.PrivacyRedactScreen
 import com.xpx.vault.ui.LanguageSettingsScreen
 import com.xpx.vault.ui.PaywallScreen
 import com.xpx.vault.ui.PhotoViewerScreen
@@ -179,6 +185,15 @@ class MainActivity : FragmentActivity() {
                                 onOpenLanguageSettings = {
                                     navController.navigate(ROUTE_LANGUAGE_SETTINGS) { launchSingleTop = true }
                                 },
+                                onOpenAiFeature = { key ->
+                                    val route = when (key) {
+                                        AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> ROUTE_AI_CLASSIFY
+                                        AiFeatureKey.PRIVACY -> ROUTE_RECENT_LIST
+                                        AiFeatureKey.ENCRYPT -> ROUTE_AI_SENSITIVE
+                                        AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> ROUTE_AI_CLEANUP
+                                    }
+                                    navController.navigate(route) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_BACKUP_RESTORE) {
@@ -266,6 +281,28 @@ class MainActivity : FragmentActivity() {
                                 onBack = { navController.popBackStack() },
                             )
                         }
+                        composable(ROUTE_AI_CLEANUP) {
+                            AiCleanupScreen(
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_AI_SENSITIVE) {
+                            AiSensitiveReviewScreen(
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_AI_CLASSIFY) {
+                            AiClassifyScreen(
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_AI_PRIVACY) {
+                            AiFeaturePlaceholderScreen(
+                                title = "\u9690\u79c1\u8131\u654f",
+                                description = "Canvas \u5b9e\u65f6\u9a6c\u8d5b\u514b / \u9ad8\u65af\u6a21\u7cca / \u9ed1\u6761\u9884\u89c8\u4e0e\u5bfc\u51fa\uff0c\u4e0d\u6539\u539f\u56fe\u3002",
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
                         composable(ROUTE_PRIVATE_CAMERA) {
                             PrivateCameraScreen(
                                 onBack = { navController.popBackStack() },
@@ -343,6 +380,20 @@ class MainActivity : FragmentActivity() {
                             arguments = listOf(navArgument("path") { defaultValue = "" }),
                         ) { entry ->
                             PhotoViewerScreen(
+                                path = Uri.decode(entry.arguments?.getString("path") ?: ""),
+                                onBack = { navController.popBackStack() },
+                                onOpenRedact = { path ->
+                                    navController.navigate("$ROUTE_AI_PRIVACY_REDACT/${Uri.encode(path)}") {
+                                        launchSingleTop = true
+                                    }
+                                },
+                            )
+                        }
+                        composable(
+                            route = "$ROUTE_AI_PRIVACY_REDACT/{path}",
+                            arguments = listOf(navArgument("path") { defaultValue = "" }),
+                        ) { entry ->
+                            PrivacyRedactScreen(
                                 path = Uri.decode(entry.arguments?.getString("path") ?: ""),
                                 onBack = { navController.popBackStack() },
                             )
@@ -454,5 +505,10 @@ class MainActivity : FragmentActivity() {
         private const val ROUTE_BULK_EXPORT = "bulk_export"
         private const val ROUTE_EXPORT_PROGRESS = "export_progress"
         private const val ROUTE_EXPORT_RESULT = "export_result"
+        private const val ROUTE_AI_CLEANUP = "ai_cleanup"
+        private const val ROUTE_AI_SENSITIVE = "ai_sensitive"
+        private const val ROUTE_AI_CLASSIFY = "ai_classify"
+        private const val ROUTE_AI_PRIVACY = "ai_privacy"
+        private const val ROUTE_AI_PRIVACY_REDACT = "ai_privacy_redact"
     }
 }

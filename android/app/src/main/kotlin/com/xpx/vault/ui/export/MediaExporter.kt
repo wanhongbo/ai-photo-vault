@@ -2,6 +2,7 @@ package com.xpx.vault.ui.export
 
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -28,6 +29,7 @@ import kotlinx.coroutines.withContext
 object MediaExporter {
 
     private const val EXPORT_SUB_DIR = "AIPhotoVault"
+    private const val REDACTED_SUB_DIR = "AIPhotoVault/Redacted"
 
     sealed class ExportOutcome {
         data class Success(val uri: Uri, val displayName: String) : ExportOutcome()
@@ -35,6 +37,89 @@ object MediaExporter {
     }
 
     enum class Kind { IMAGE, VIDEO, UNKNOWN }
+
+    /**
+     * 导出脱敏后的 Bitmap 到系统相册。Redacted 子目录独立，避免和普通导出混淆；
+     * 输出固定 JPEG 90 质量。Bitmap 调用方负责生命周期（不在此 recycle）。
+     */
+    suspend fun exportRedactedBitmap(
+        context: Context,
+        bitmap: Bitmap,
+        displayName: String,
+    ): ExportOutcome = withContext(Dispatchers.IO) {
+        val safeName = if (displayName.endsWith(".jpg", ignoreCase = true)) displayName else "$displayName.jpg"
+        return@withContext if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            exportBitmapViaMediaStore(context, bitmap, safeName)
+        } else {
+            exportBitmapViaLegacy(context, bitmap, safeName)
+        }
+    }
+
+    private fun exportBitmapViaMediaStore(
+        context: Context,
+        bitmap: Bitmap,
+        displayName: String,
+    ): ExportOutcome {
+        val resolver = context.contentResolver
+        val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val relativePath = "${Environment.DIRECTORY_PICTURES}/$REDACTED_SUB_DIR"
+        val nowSec = System.currentTimeMillis() / 1000L
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+            put(MediaStore.MediaColumns.DATE_ADDED, nowSec)
+            put(MediaStore.MediaColumns.DATE_MODIFIED, nowSec)
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+        val uri = resolver.insert(collection, values) ?: return ExportOutcome.Failure("insert_failed")
+        return try {
+            resolver.openOutputStream(uri)?.use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                out.flush()
+            } ?: return ExportOutcome.Failure("open_stream_failed")
+            val finishValues = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
+            resolver.update(uri, finishValues, null, null)
+            ExportOutcome.Success(uri, displayName)
+        } catch (t: Throwable) {
+            runCatching { resolver.delete(uri, null, null) }
+            ExportOutcome.Failure(t.message ?: "io_error")
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun exportBitmapViaLegacy(
+        context: Context,
+        bitmap: Bitmap,
+        displayName: String,
+    ): ExportOutcome {
+        val base = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val targetDir = File(base, REDACTED_SUB_DIR)
+        if (!targetDir.exists() && !targetDir.mkdirs()) {
+            return ExportOutcome.Failure("mkdir_failed")
+        }
+        var candidate = File(targetDir, displayName)
+        var counter = 1
+        val baseName = displayName.substringBeforeLast('.', displayName)
+        while (candidate.exists()) {
+            candidate = File(targetDir, "${baseName}_$counter.jpg")
+            counter++
+        }
+        return try {
+            FileOutputStream(candidate).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                out.flush()
+            }
+            val intent = android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE).apply {
+                data = Uri.fromFile(candidate)
+            }
+            context.sendBroadcast(intent)
+            ExportOutcome.Success(Uri.fromFile(candidate), candidate.name)
+        } catch (t: Throwable) {
+            if (candidate.exists()) candidate.delete()
+            ExportOutcome.Failure(t.message ?: "io_error")
+        }
+    }
 
     suspend fun exportFile(context: Context, sourcePath: String): ExportOutcome = withContext(Dispatchers.IO) {
         val file = File(sourcePath)

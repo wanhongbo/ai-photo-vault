@@ -51,6 +51,7 @@ fun PhotoViewerScreen(
     onBack: () -> Unit,
     isTrash: Boolean = false,
     onOpenAlbum: ((String) -> Unit)? = null,
+    onOpenRedact: ((String) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
@@ -240,6 +241,13 @@ fun PhotoViewerScreen(
                     label = stringResource(R.string.photo_viewer_info),
                     onClick = { /* TODO: info */ },
                 )
+                if (onOpenRedact != null && isVaultImage(currentPath)) {
+                    PhotoViewerActionButton(
+                        iconRes = R.drawable.ic_ai_eye_off,
+                        label = "\u8131\u654f",
+                        onClick = { onOpenRedact(currentPath) },
+                    )
+                }
                 PhotoViewerActionButton(
                     iconRes = R.drawable.ic_photo_delete,
                     label = stringResource(R.string.photo_viewer_delete),
