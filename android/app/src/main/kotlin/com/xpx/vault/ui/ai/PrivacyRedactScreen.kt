@@ -91,7 +91,7 @@ fun PrivacyRedactScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(horizontal = 20.dp, vertical = 8.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color.Black),
             contentAlignment = Alignment.Center,
@@ -126,17 +126,20 @@ fun PrivacyRedactScreen(
             }
         }
 
-        RegionSummary(state = state)
-
-        // 手动框选控制条：切换 / 撤销 / 清空
-        ManualControls(
-            manualMode = state.manualMode,
-            manualCount = state.manualRegions.size,
+        // 状态行：左侧检测摘要 / 右侧手动切换，两行合为一行
+        StatusLine(
+            state = state,
             enabled = state.ready && state.preview != null,
-            onToggle = { viewModel.toggleManualMode() },
-            onUndo = { viewModel.undoManualRegion() },
-            onClear = { viewModel.clearManualRegions() },
+            onToggleManual = { viewModel.toggleManualMode() },
         )
+        // 手动区域存在时才出现的窄行：计数 + 撤销 + 清空
+        if (state.manualRegions.isNotEmpty()) {
+            ManualOpsRow(
+                count = state.manualRegions.size,
+                onUndo = { viewModel.undoManualRegion() },
+                onClear = { viewModel.clearManualRegions() },
+            )
+        }
 
         StylePicker(
             current = state.style,
@@ -145,7 +148,7 @@ fun PrivacyRedactScreen(
             onSelect = { viewModel.selectStyle(it) },
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         // 主按钮：保存到安全相册（加密入库，与原图共存）
         PrimaryActionButton(
@@ -160,7 +163,7 @@ fun PrivacyRedactScreen(
             },
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         // 次行：导出到系统相册 / 分享，等宽并排
         Row(
@@ -201,49 +204,95 @@ fun PrivacyRedactScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 
 @Composable
-private fun RegionSummary(state: PrivacyRedactUiState) {
-    val (desc, tone) = when {
-        state.loading -> "检测中…" to SummaryTone.INFO
-        !state.mlKitReady -> "Google Play 服务不可用，已降级为纯预览。未检到敏感区域" to SummaryTone.WARN
-        state.regionCount == 0 -> "未检测到人脸 / 证件号 / 条码，脱敏样式不可用，可直接导出原图副本" to SummaryTone.INFO
-        else -> "已识别 ${state.regionCount} 个敏感区域，应用脱敏样式即可预览" to SummaryTone.OK
+private fun StatusLine(
+    state: PrivacyRedactUiState,
+    enabled: Boolean,
+    onToggleManual: () -> Unit,
+) {
+    // 统一精简文案，能在一行里与“+ 手动” chip 共存不溢行。
+    val totalCount = state.regionCount + state.manualRegions.size
+    val desc = when {
+        state.loading -> "检测中…"
+        !state.mlKitReady -> "Play 服务不可用，可手动框选"
+        totalCount == 0 -> "未检测到敏感区域，可手动框选"
+        state.manualRegions.isEmpty() -> "已识别 ${state.regionCount} 个敏感区域"
+        state.regionCount == 0 -> "手动标记 ${state.manualRegions.size} 个区域"
+        else -> "自动 ${state.regionCount} · 手动 ${state.manualRegions.size}"
     }
-    val dotColor = when (tone) {
-        SummaryTone.OK -> UiColors.Ai.execBtnBg
-        SummaryTone.WARN -> Color(0xFFFFB547)
-        SummaryTone.INFO -> Color(0xFF707078)
+    val dot = when {
+        state.loading -> Color(0xFF707078)
+        totalCount == 0 -> Color(0xFFFFB547)
+        else -> UiColors.Ai.execBtnBg
     }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(UiColors.Ai.featureCardBg)
-            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
+        // 左侧摘要卡，占剩余宽度
+        Row(
             modifier = Modifier
-                .size(8.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(dotColor),
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = desc,
-            color = Color(0xFFC8C8CE),
-            fontSize = 12.sp,
+                .weight(1f)
+                .clip(RoundedCornerShape(10.dp))
+                .background(UiColors.Ai.featureCardBg)
+                .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(10.dp))
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(dot),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = desc,
+                color = Color(0xFFC8C8CE),
+                fontSize = 11.sp,
+            )
+        }
+        // 右侧：手动框选开关
+        ManualChip(
+            label = if (state.manualMode) "完成" else "+ 手动",
+            active = state.manualMode,
+            enabled = enabled,
+            onClick = onToggleManual,
         )
     }
 }
 
-private enum class SummaryTone { OK, WARN, INFO }
+/** 有手动区域时出现的窄行：计数 + 撤销 + 清空。 */
+@Composable
+private fun ManualOpsRow(
+    count: Int,
+    onUndo: () -> Unit,
+    onClear: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "已添加 $count",
+            color = Color(0xFFB0B0B8),
+            fontSize = 11.sp,
+            modifier = Modifier.weight(1f),
+        )
+        ManualChip(label = "撤销", active = false, enabled = true, onClick = onUndo)
+        ManualChip(label = "清空", active = false, enabled = true, onClick = onClear)
+    }
+}
 
 @Composable
 private fun StylePicker(
@@ -258,13 +307,13 @@ private fun StylePicker(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 20.dp, vertical = 3.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         rows.forEach { rowStyles ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 rowStyles.forEach { style ->
                     StylePill(
@@ -306,11 +355,11 @@ private fun StylePill(
     val interaction = rememberFeedbackInteractionSource()
     Row(
         modifier = modifier
-            .height(40.dp)
+            .height(34.dp)
             .alpha(if (enabled) 1f else 0.4f)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(bg)
-            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(10.dp))
             .pressFeedback(interaction)
             .throttledClickable(
                 interactionSource = interaction,
@@ -324,7 +373,7 @@ private fun StylePill(
         Text(
             text = label,
             color = fg,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
         )
     }
@@ -344,8 +393,8 @@ private fun PrimaryActionButton(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
-            .height(48.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .height(44.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(bg)
             .pressFeedback(interaction)
             .throttledClickable(
@@ -367,7 +416,7 @@ private fun PrimaryActionButton(
         Text(
             text = label,
             color = fg,
-            fontSize = 15.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
         )
     }
@@ -387,10 +436,10 @@ private fun SecondaryActionButton(
     val fg = if (enabled) Color(0xFFD8DAE0) else Color(0xFF555559)
     Row(
         modifier = modifier
-            .height(44.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .height(38.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(bg)
-            .border(1.dp, stroke, RoundedCornerShape(14.dp))
+            .border(1.dp, stroke, RoundedCornerShape(12.dp))
             .pressFeedback(interaction)
             .throttledClickable(
                 interactionSource = interaction,
@@ -405,13 +454,13 @@ private fun SecondaryActionButton(
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = fg,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(14.dp),
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = label,
             color = fg,
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
         )
     }
@@ -577,55 +626,6 @@ private fun ManualOverlay(
     }
 }
 
-/**
- * 手动框选控制条：切换开关＋有手动区域时显示撤销 / 清空。
- */
-@Composable
-private fun ManualControls(
-    manualMode: Boolean,
-    manualCount: Int,
-    enabled: Boolean,
-    onToggle: () -> Unit,
-    onUndo: () -> Unit,
-    onClear: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val toggleLabel = if (manualMode) "完成框选" else "手动框选"
-        ManualChip(
-            label = toggleLabel,
-            active = manualMode,
-            enabled = enabled,
-            modifier = Modifier.weight(1f),
-            onClick = onToggle,
-        )
-        if (manualCount > 0) {
-            Text(
-                text = "已添加 $manualCount",
-                color = Color(0xFFB0B0B8),
-                fontSize = 12.sp,
-            )
-            ManualChip(
-                label = "撤销",
-                active = false,
-                enabled = true,
-                onClick = onUndo,
-            )
-            ManualChip(
-                label = "清空",
-                active = false,
-                enabled = true,
-                onClick = onClear,
-            )
-        }
-    }
-}
-
 @Composable
 private fun ManualChip(
     label: String,
@@ -644,7 +644,7 @@ private fun ManualChip(
     val interaction = rememberFeedbackInteractionSource()
     Row(
         modifier = modifier
-            .height(34.dp)
+            .height(30.dp)
             .alpha(if (enabled) 1f else 0.4f)
             .clip(RoundedCornerShape(10.dp))
             .background(bg)
@@ -656,14 +656,14 @@ private fun ManualChip(
                 enabled = enabled,
                 onClick = onClick,
             )
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 10.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
             color = fg,
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
         )
     }
