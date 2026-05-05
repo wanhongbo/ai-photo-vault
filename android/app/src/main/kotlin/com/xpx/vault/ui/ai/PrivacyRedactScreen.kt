@@ -203,49 +203,81 @@ private fun StylePicker(
     enabled: Boolean,
     onSelect: (RedactionStyle) -> Unit,
 ) {
-    Row(
+    // 5 种样式：一行排不下，改为 3+2 两行 Grid，保持列宽一致。
+    // 第二行的空位用 weight(1f) + 空 Row 占位，避免最后一个按钮横拉宽。
+    val styles = RedactionStyle.values().toList()
+    val rows = styles.chunked(3)
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 20.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        RedactionStyle.values().forEach { style ->
-            val label = when (style) {
-                RedactionStyle.MOSAIC -> "马赛克"
-                RedactionStyle.BLUR -> "高斯模糊"
-                RedactionStyle.BAR -> "黑条"
-            }
-            val isSelected = current == style
-            val bg = if (isSelected) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardBg
-            val border = if (isSelected) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardStroke
-            val fg = if (isSelected) UiColors.Ai.execBtnText else Color(0xFFB0B0B8)
-            val interaction = rememberFeedbackInteractionSource()
+        rows.forEach { rowStyles ->
             Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(40.dp)
-                    .alpha(if (enabled) 1f else 0.4f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(bg)
-                    .border(1.dp, border, RoundedCornerShape(12.dp))
-                    .pressFeedback(interaction)
-                    .throttledClickable(
-                        interactionSource = interaction,
-                        indication = null,
-                        enabled = enabled,
-                        onClick = { onSelect(style) },
-                    ),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    text = label,
-                    color = fg,
-                    fontSize = 13.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                )
+                rowStyles.forEach { style ->
+                    StylePill(
+                        style = style,
+                        isSelected = current == style,
+                        enabled = enabled,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onSelect(style) },
+                    )
+                }
+                // 空位占位，第 2 行 2 个按钮时补 1 个空 weight 保持对齐
+                repeat(3 - rowStyles.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun StylePill(
+    style: RedactionStyle,
+    isSelected: Boolean,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val label = when (style) {
+        RedactionStyle.MOSAIC -> "马赛克"
+        RedactionStyle.BLUR -> "高斯模糊"
+        RedactionStyle.BAR -> "黑条"
+        RedactionStyle.OVAL_BLUR -> "椭圆模糊"
+        RedactionStyle.EMOJI -> "Emoji"
+    }
+    val bg = if (isSelected) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardBg
+    val borderColor = if (isSelected) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardStroke
+    val fg = if (isSelected) UiColors.Ai.execBtnText else Color(0xFFB0B0B8)
+    val interaction = rememberFeedbackInteractionSource()
+    Row(
+        modifier = modifier
+            .height(40.dp)
+            .alpha(if (enabled) 1f else 0.4f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(bg)
+            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            ),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = fg,
+            fontSize = 13.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+        )
     }
 }
 
