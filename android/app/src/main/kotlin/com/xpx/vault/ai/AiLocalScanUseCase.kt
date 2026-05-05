@@ -25,13 +25,18 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 
 /**
@@ -128,47 +133,67 @@ class AiLocalScanUseCase @Inject constructor(
         }
 
         val readyAnalyzers: List<ImageAnalyzer> = registry.all().filter { runCatching { it.isReady() }.getOrDefault(false) }
-        val recordedHashes = mutableListOf<AiPerceptualHash>()
+        val recordedHashes = java.util.Collections.synchronizedList(mutableListOf<AiPerceptualHash>())
+        val doneCounter = java.util.concurrent.atomic.AtomicInteger(0)
 
-        for ((index, photo) in photos.withIndex()) {
-            val decoded = VaultThumbnailCache.loadDecoded(appContext, photo.path, targetMaxPx = 256)
-            val bitmap = decoded?.bitmap
-            if (bitmap != null && readyAnalyzers.isNotEmpty()) {
-                val photoId = PhotoIdentity.fromPath(photo.path)
-                var merged = analyzeAll(readyAnalyzers, photoId, bitmap)
-                val isScreenshot = isScreenshotByDimensions(decoded.originalWidth, decoded.originalHeight) ||
-                    merged.tags.any { it.category == ClassifyCategory.SCREENSHOT }
-                merged = if (isScreenshot) {
-                    // 截图与其他分类互斥：清除 ML Kit 对截图内容的错标（例如纯白截图被误判为 Selfie）。
-                    merged.copy(
-                        tags = listOf(
-                            CoreAiTag(
-                                label = "Screenshot",
-                                category = ClassifyCategory.SCREENSHOT,
-                                confidence = 0.9f,
-                                source = AiEngine.LOCAL_ALGO,
-                            ),
-                        ),
-                    )
-                } else {
-                    // 非截图：过滤低置信度 tag，避免 ML Kit 在模棱两可的误判污染分类 Tab。
-                    merged.copy(tags = merged.tags.filter { it.confidence >= MIN_TAG_CONFIDENCE })
-                }
-                persist(merged)
-                merged.phash?.let { p ->
-                    merged.dhash?.let { d ->
-                        recordedHashes += AiPerceptualHash(photoId, p, d)
+        // 照片级并发：Semaphore 限流 [PHOTO_CONCURRENCY]。
+        // ML Kit 各类 client 从线程安全的角度支持并发 process()；Room 事务自带串行隔离，
+        // 故同时多张照片分别走 persist 安全。并发收益：解密 / 磁盘 IO / ML Kit 三类耗时重叠。
+        val semaphore = Semaphore(PHOTO_CONCURRENCY)
+        coroutineScope {
+            photos.map { photo ->
+                async {
+                    semaphore.withPermit {
+                        processOnePhoto(photo, readyAnalyzers, recordedHashes)
                     }
+                    val n = doneCounter.incrementAndGet()
+                    _progress.value = _progress.value.copy(done = n)
                 }
-            }
-            _progress.value = _progress.value.copy(done = index + 1)
+            }.awaitAll()
         }
 
         // 重复聚类：把所有 phash 跑一遍聚类，把非代表张标 is_duplicate=true。
-        val fullHashes = runCatching { repository.listAllPerceptualHashes() }.getOrDefault(recordedHashes)
+        val fullHashes = runCatching { repository.listAllPerceptualHashes() }.getOrDefault(recordedHashes.toList())
         if (fullHashes.size >= 2) markDuplicates(fullHashes)
 
         _progress.value = _progress.value.copy(running = false)
+    }
+
+    /** 单张照片的扫描逻辑（解密 → analyze → 截图判定 / 置信度过滤 → persist → 收集 phash）。 */
+    private suspend fun processOnePhoto(
+        photo: com.xpx.vault.ui.vault.VaultPhoto,
+        readyAnalyzers: List<ImageAnalyzer>,
+        recordedHashes: MutableList<AiPerceptualHash>,
+    ) {
+        val decoded = VaultThumbnailCache.loadDecoded(appContext, photo.path, targetMaxPx = 256)
+        val bitmap = decoded?.bitmap ?: return
+        if (readyAnalyzers.isEmpty()) return
+        val photoId = PhotoIdentity.fromPath(photo.path)
+        var merged = analyzeAll(readyAnalyzers, photoId, bitmap)
+        val isScreenshot = isScreenshotByDimensions(decoded.originalWidth, decoded.originalHeight) ||
+            merged.tags.any { it.category == ClassifyCategory.SCREENSHOT }
+        merged = if (isScreenshot) {
+            // 截图与其他分类互斥：清除 ML Kit 对截图内容的错标（例如纯白截图被误判为 Selfie）。
+            merged.copy(
+                tags = listOf(
+                    CoreAiTag(
+                        label = "Screenshot",
+                        category = ClassifyCategory.SCREENSHOT,
+                        confidence = 0.9f,
+                        source = AiEngine.LOCAL_ALGO,
+                    ),
+                ),
+            )
+        } else {
+            // 非截图：过滤低置信度 tag，避免 ML Kit 在模棱两可的误判污染分类 Tab。
+            merged.copy(tags = merged.tags.filter { it.confidence >= MIN_TAG_CONFIDENCE })
+        }
+        persist(merged)
+        merged.phash?.let { p ->
+            merged.dhash?.let { d ->
+                recordedHashes += AiPerceptualHash(photoId, p, d)
+            }
+        }
     }
 
     private suspend fun analyzeAll(
@@ -316,5 +341,13 @@ class AiLocalScanUseCase @Inject constructor(
          * 容易把纯色/截图类照片误标为 Selfie/Portrait。提高门槛避免污染分类 Tab。
          */
         const val MIN_TAG_CONFIDENCE = 0.6f
+
+        /**
+         * 照片级并发度。平衡点：
+         *  - 中端机 CPU 4 大核 / 4 小核，解密和图像采样是 IO+CPU 混合；
+         *  - ML Kit 内部线程池在调用 process() 之后可以并行处理输入。
+         * 3 在绝大多数手机上是吞吐 / CPU 占用 / 内存〈=300MB〉的合理折中点。
+         */
+        const val PHOTO_CONCURRENCY = 3
     }
 }
