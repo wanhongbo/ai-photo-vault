@@ -34,8 +34,14 @@ import kotlin.math.min
  */
 object PrivacyRenderer {
 
-    /** 马赛克方块相对短边的比例；越大越粗。 */
-    private const val MOSAIC_RATIO = 0.04f
+    /**
+     * 马赛克方块相对短边的比例；越大越粗。
+     * 0.10f 在 400px 的脸上得到 ~40px 块，分辨率足够粗犷以遮盖五官特征。
+     */
+    private const val MOSAIC_RATIO = 0.10f
+
+    /** 马赛克块的最小像素下限，避免小 ROI 下块太细仍然能辨认原始内容。 */
+    private const val MOSAIC_MIN_BLOCK_PX = 10
 
     /** 模糊近似的缩放倍数（低版本 fallback 用）；倍数越大越糊。 */
     private const val BLUR_DOWNSCALE = 12
@@ -82,7 +88,10 @@ object PrivacyRenderer {
     private fun drawMosaic(canvas: Canvas, src: Bitmap, rect: Rect, paint: Paint) {
         val roi = safeSubBitmap(src, rect) ?: return
         val shortSide = min(rect.width(), rect.height()).coerceAtLeast(1)
-        val blockPx = max(1, (shortSide * MOSAIC_RATIO).toInt())
+        // blockPx 同时受比例与绝对像素下限约束：
+        //   - 大 ROI：按比例算 → 比例起作用，确保视觉一致的“粗颗粒度”
+        //   - 小 ROI（如证件号码小区块）：下限起作用，避免块过细导致数字仍可辨认
+        val blockPx = max(MOSAIC_MIN_BLOCK_PX, (shortSide * MOSAIC_RATIO).toInt())
         val w = max(1, roi.width / blockPx)
         val h = max(1, roi.height / blockPx)
         val small = Bitmap.createScaledBitmap(roi, w, h, false)
