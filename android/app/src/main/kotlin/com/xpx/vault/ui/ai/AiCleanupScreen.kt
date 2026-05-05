@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,14 +33,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.widget.Toast
 import com.xpx.vault.R
 import com.xpx.vault.domain.model.AiQualityRecord
+import com.xpx.vault.ui.components.AppDialog
+import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
@@ -64,6 +69,16 @@ fun AiCleanupScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by rememberSaveable { mutableStateOf(CleanupTab.ALL) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // 清理完成后弹 Toast
+    LaunchedEffect(state.lastCleanedCount) {
+        if (state.lastCleanedCount >= 0) {
+            Toast.makeText(context, "已清理 ${state.lastCleanedCount} 张冗余照片", Toast.LENGTH_SHORT).show()
+            viewModel.consumeCleanedCount()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -73,7 +88,11 @@ fun AiCleanupScreen(
     ) {
         AppTopBar(title = "垃圾清理", onBack = onBack)
 
-        CleanupSummary(state = state, onScan = { viewModel.startScan() })
+        CleanupSummary(
+            state = state,
+            onScan = { viewModel.startScan() },
+            onCleanup = { showConfirmDialog = true },
+        )
 
         CleanupTabRow(
             selected = selectedTab,
@@ -94,6 +113,21 @@ fun AiCleanupScreen(
             }
         }
     }
+
+    // 确认弹窗
+    AppDialog(
+        show = showConfirmDialog,
+        title = "一键清理",
+        message = "将把 ${state.redundantCount} 张冗余照片（模糊 + 重复组的非最清晰照片）移入垃圾桶，30 天后自动彻底删除。",
+        confirmText = "确认清理",
+        dismissText = "取消",
+        onConfirm = {
+            showConfirmDialog = false
+            viewModel.cleanupRedundant()
+        },
+        onDismiss = { showConfirmDialog = false },
+        confirmVariant = AppButtonVariant.PRIMARY,
+    )
 }
 
 private enum class CleanupTab(val labelZh: String) {
@@ -103,7 +137,7 @@ private enum class CleanupTab(val labelZh: String) {
 }
 
 @Composable
-private fun CleanupSummary(state: AiCleanupUiState, onScan: () -> Unit) {
+private fun CleanupSummary(state: AiCleanupUiState, onScan: () -> Unit, onCleanup: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -130,47 +164,86 @@ private fun CleanupSummary(state: AiCleanupUiState, onScan: () -> Unit) {
             }
             Column {
                 Text(
-                    text = "\u68c0\u6d4b\u5230 ${state.totalCount} \u5f20\u53ef\u6e05\u7406\u7167\u7247",
+                    text = "检测到 ${state.totalCount} 张可清理照片",
                     color = Color(0xFFF0F4FF),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    text = "\u6a21\u7cca ${state.blurry.size}  \u00b7  \u91cd\u590d ${state.duplicates.size}",
+                    text = "模糊 ${state.blurry.size}  ·  重复 ${state.duplicates.size}",
                     color = Color(0xFF8A8A90),
                     fontSize = 12.sp,
                 )
             }
         }
-        val interaction = rememberFeedbackInteractionSource()
+        // 扫描 + 清理并排
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(UiColors.Ai.execBtnBg)
-                .pressFeedback(interaction)
-                .throttledClickable(
-                    interactionSource = interaction,
-                    indication = null,
-                    onClick = onScan,
-                ),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_ai_zap),
-                contentDescription = null,
-                tint = UiColors.Ai.execBtnText,
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = if (state.scanning) "\u6b63\u5728\u626b\u63cf\u2026" else "\u7acb\u5373\u626b\u63cf",
-                color = UiColors.Ai.execBtnText,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
+            val scanInteraction = rememberFeedbackInteractionSource()
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(UiColors.Ai.execBtnBg)
+                    .pressFeedback(scanInteraction)
+                    .throttledClickable(
+                        interactionSource = scanInteraction,
+                        indication = null,
+                        onClick = onScan,
+                    ),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_ai_zap),
+                    contentDescription = null,
+                    tint = UiColors.Ai.execBtnText,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = if (state.scanning) "正在扫描…" else "立即扫描",
+                    color = UiColors.Ai.execBtnText,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            // 一键清理按钮（仅有冗余照片时可点击）
+            if (state.redundantCount > 0 && !state.cleaning) {
+                val cleanInteraction = rememberFeedbackInteractionSource()
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE04848))
+                        .pressFeedback(cleanInteraction)
+                        .throttledClickable(
+                            interactionSource = cleanInteraction,
+                            indication = null,
+                            onClick = onCleanup,
+                        ),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_ai_copy),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "清理 ${state.redundantCount} 张",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
         }
     }
 }

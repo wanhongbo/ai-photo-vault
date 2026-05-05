@@ -36,6 +36,7 @@ interface AiAnalysisRepository {
     fun observeBlurry(): Flow<List<AiQualityRecord>>
     fun observeDuplicates(): Flow<List<AiQualityRecord>>
     suspend fun findQualityByPhoto(photoId: Long): AiQualityRecord?
+    suspend fun clearQualityForPhoto(photoId: Long)
 
     // ---- Sensitive ----
     suspend fun upsertSensitive(record: AiSensitiveRecord): Long

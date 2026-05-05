@@ -79,6 +79,10 @@ class AiAnalysisRepositoryImpl @Inject constructor(
     override suspend fun findQualityByPhoto(photoId: Long): AiQualityRecord? =
         qualityDao.findByPhoto(photoId)?.toDomain()
 
+    override suspend fun clearQualityForPhoto(photoId: Long) {
+        qualityDao.deleteByPhoto(photoId)
+    }
+
     override suspend fun upsertSensitive(record: AiSensitiveRecord): Long =
         sensitiveDao.upsert(record.toEntity())
 
