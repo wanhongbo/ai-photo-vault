@@ -19,6 +19,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * 脱敏处理：在原图上对命中区域覆盖指定样式。
@@ -156,15 +157,43 @@ object PrivacyRenderer {
 
     private fun drawEmoji(canvas: Canvas, rect: Rect, paint: Paint) {
         paint.shader = null
-        paint.color = Color.BLACK
+        // 1. 先铺一层不透明底色，避免平铺 emoji 间隙（特别是 🙈 脸部周围的
+        // 透明区域）泄露原始像素；白底与 emoji 颜色反差更大，视觉上也更准确。
+        paint.color = Color.WHITE
         paint.style = Paint.Style.FILL
+        canvas.drawRect(RectF(rect), paint)
+
+        val w = rect.width()
+        val h = rect.height()
+        val shortSide = min(w, h).coerceAtLeast(1)
+        val longSide = max(w, h).coerceAtLeast(1)
+
+        // 2. emoji 单个尺寸按短边充满（间隔给 4% 不贴边）
+        val emojiSize = (shortSide * 0.92f).coerceAtLeast(14f)
+        paint.color = Color.BLACK
         paint.textAlign = Paint.Align.CENTER
-        // 字号取短边的 90%，让 emoji 基本充满 ROI；Paint.descent/ascent 调垂直居中。
-        paint.textSize = (min(rect.width(), rect.height()) * 0.9f).coerceAtLeast(14f)
+        paint.textSize = emojiSize
         val metrics = paint.fontMetrics
-        val cx = rect.exactCenterX()
-        val cy = rect.exactCenterY() - (metrics.ascent + metrics.descent) / 2f
-        canvas.drawText(EMOJI_COVER, cx, cy, paint)
+        val baselineOffset = -(metrics.ascent + metrics.descent) / 2f
+
+        // 3. 沿长边方向平铺：长边 / 短边 确定个数，垂直于短边的 ROI 仍正中位置
+        //   - 近方形 ROI（人脸）count=1，行为与旧版一致
+        //   - 扁长 ROI（卡号 800×60）count≈13，全排在卡号行上
+        val count = max(1, (longSide.toFloat() / shortSide).roundToInt())
+        val step = longSide.toFloat() / count
+        val isHorizontal = w >= h
+        for (i in 0 until count) {
+            val cx: Float
+            val cy: Float
+            if (isHorizontal) {
+                cx = rect.left + step * (i + 0.5f)
+                cy = rect.exactCenterY() + baselineOffset
+            } else {
+                cx = rect.exactCenterX()
+                cy = rect.top + step * (i + 0.5f) + baselineOffset
+            }
+            canvas.drawText(EMOJI_COVER, cx, cy, paint)
+        }
     }
 
     // ------------------------------------------------------------------
