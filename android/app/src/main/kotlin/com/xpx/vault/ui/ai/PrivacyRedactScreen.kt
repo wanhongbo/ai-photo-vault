@@ -1,11 +1,15 @@
 package com.xpx.vault.ui.ai
 
+import android.graphics.Bitmap
 import android.widget.Toast
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,14 +27,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,12 +51,16 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xpx.vault.R
+import com.xpx.vault.ai.privacy.RedactionRegion
 import com.xpx.vault.ai.privacy.RedactionStyle
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * 隐私脱敏页：进入后自动解密原图 + ML Kit 检测敏感区域，提供三种样式预览与导出。
@@ -99,11 +116,11 @@ fun PrivacyRedactScreen(
                     )
                 }
                 state.preview != null -> {
-                    Image(
-                        bitmap = state.preview!!.asImageBitmap(),
-                        contentDescription = "\u8131\u654f\u9884\u89c8",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize(),
+                    PreviewWithManualOverlay(
+                        preview = state.preview!!,
+                        manualMode = state.manualMode,
+                        manualRegions = state.manualRegions,
+                        onAddManual = { l, t, r, b -> viewModel.addManualRegion(l, t, r, b) },
                     )
                 }
             }
@@ -111,11 +128,20 @@ fun PrivacyRedactScreen(
 
         RegionSummary(state = state)
 
+        // 手动框选控制条：切换 / 撤销 / 清空
+        ManualControls(
+            manualMode = state.manualMode,
+            manualCount = state.manualRegions.size,
+            enabled = state.ready && state.preview != null,
+            onToggle = { viewModel.toggleManualMode() },
+            onUndo = { viewModel.undoManualRegion() },
+            onClear = { viewModel.clearManualRegions() },
+        )
+
         StylePicker(
             current = state.style,
-            // 无敏感区域时样式切换不会改变图像（PrivacyRenderer 会直接返回原图拷贝），
-            // 置灰按钮避免用户误以为 "点击无效"。
-            enabled = state.ready && state.regionCount > 0,
+            // 有任一类区域（自动或手动）就允许切换样式。
+            enabled = state.ready && (state.regionCount + state.manualRegions.size) > 0,
             onSelect = { viewModel.selectStyle(it) },
         )
 
@@ -387,6 +413,258 @@ private fun SecondaryActionButton(
             color = fg,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
+        )
+    }
+}
+
+/**
+ * 预览图 + 手动区域叠加层。
+ *
+ * BoxWithConstraints 计算出 bitmap 以 ContentScale.Fit 在容器内的实际显示矩形
+ * （fitW x fitH），再在这个精确矩形上重套 Image + 手势 Canvas，
+ * 这样手势坐标 -> bitmap 像素坐标的换算只需等比例缩放。
+ */
+@Composable
+private fun PreviewWithManualOverlay(
+    preview: Bitmap,
+    manualMode: Boolean,
+    manualRegions: List<RedactionRegion>,
+    onAddManual: (Int, Int, Int, Int) -> Unit,
+) {
+    val bmpW = preview.width
+    val bmpH = preview.height
+    if (bmpW <= 0 || bmpH <= 0) return
+    val ratio = bmpW.toFloat() / bmpH.toFloat()
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        val cw = constraints.maxWidth.toFloat()
+        val ch = constraints.maxHeight.toFloat().coerceAtLeast(1f)
+        val containerRatio = cw / ch
+        val fitW: Float
+        val fitH: Float
+        if (containerRatio > ratio) {
+            // 容器比例宽：高到顶，两侧留空
+            fitH = ch
+            fitW = ch * ratio
+        } else {
+            // 容器比例窤：宽到满，上下留空
+            fitW = cw
+            fitH = cw / ratio
+        }
+        val density = LocalDensity.current
+        val fitWDp = with(density) { fitW.toDp() }
+        val fitHDp = with(density) { fitH.toDp() }
+        Box(modifier = Modifier.size(fitWDp, fitHDp)) {
+            Image(
+                bitmap = preview.asImageBitmap(),
+                contentDescription = "脱敏预览",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(),
+            )
+            // 手动区域叠加层：manualMode = true 时拦截拖动手势；归 false 只显示已录入的区域轮廓。
+            if (manualMode || manualRegions.isNotEmpty()) {
+                ManualOverlay(
+                    bitmapW = bmpW,
+                    bitmapH = bmpH,
+                    manualRegions = manualRegions,
+                    dragEnabled = manualMode,
+                    onAdd = onAddManual,
+                )
+            }
+            if (manualMode) {
+                // 左上角提示：拖动进行框选
+                Box(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xCC1A1A1F))
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                ) {
+                    Text(
+                        text = "拖动框选敏感区域",
+                        color = Color(0xFFEAEAF0),
+                        fontSize = 11.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManualOverlay(
+    bitmapW: Int,
+    bitmapH: Int,
+    manualRegions: List<RedactionRegion>,
+    dragEnabled: Boolean,
+    onAdd: (Int, Int, Int, Int) -> Unit,
+) {
+    // Compose 坐标（px）
+    var dragStart by remember { mutableStateOf<Offset?>(null) }
+    var dragCurrent by remember { mutableStateOf<Offset?>(null) }
+    val gestureModifier = if (dragEnabled) {
+        Modifier.pointerInput(bitmapW, bitmapH) {
+            detectDragGestures(
+                onDragStart = { offset ->
+                    dragStart = offset
+                    dragCurrent = offset
+                },
+                onDrag = { change, _ ->
+                    change.consume()
+                    dragCurrent = change.position
+                },
+                onDragEnd = {
+                    val s = dragStart
+                    val c = dragCurrent
+                    if (s != null && c != null) {
+                        val w = size.width.toFloat().coerceAtLeast(1f)
+                        val h = size.height.toFloat().coerceAtLeast(1f)
+                        val sx = bitmapW / w
+                        val sy = bitmapH / h
+                        val l = (min(s.x, c.x) * sx).toInt()
+                        val t = (min(s.y, c.y) * sy).toInt()
+                        val r = (max(s.x, c.x) * sx).toInt()
+                        val b = (max(s.y, c.y) * sy).toInt()
+                        onAdd(l, t, r, b)
+                    }
+                    dragStart = null
+                    dragCurrent = null
+                },
+                onDragCancel = {
+                    dragStart = null
+                    dragCurrent = null
+                },
+            )
+        }
+    } else {
+        Modifier
+    }
+    Canvas(modifier = Modifier.fillMaxSize().then(gestureModifier)) {
+        val sx = size.width / bitmapW.toFloat()
+        val sy = size.height / bitmapH.toFloat()
+        // 已录入的手动区域：半透明红色实线框
+        manualRegions.forEach { reg ->
+            drawRect(
+                color = Color(0xFFFF5A5A),
+                topLeft = Offset(reg.left * sx, reg.top * sy),
+                size = Size(
+                    width = (reg.right - reg.left) * sx,
+                    height = (reg.bottom - reg.top) * sy,
+                ),
+                style = Stroke(width = 2.5f),
+            )
+        }
+        // 当前拖动中的矩形：白色虚线实时预览
+        val s = dragStart
+        val c = dragCurrent
+        if (s != null && c != null) {
+            val left = min(s.x, c.x)
+            val top = min(s.y, c.y)
+            val w = abs(c.x - s.x)
+            val h = abs(c.y - s.y)
+            drawRect(
+                color = Color.White,
+                topLeft = Offset(left, top),
+                size = Size(w, h),
+                style = Stroke(
+                    width = 2f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 8f), 0f),
+                ),
+            )
+        }
+    }
+}
+
+/**
+ * 手动框选控制条：切换开关＋有手动区域时显示撤销 / 清空。
+ */
+@Composable
+private fun ManualControls(
+    manualMode: Boolean,
+    manualCount: Int,
+    enabled: Boolean,
+    onToggle: () -> Unit,
+    onUndo: () -> Unit,
+    onClear: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val toggleLabel = if (manualMode) "完成框选" else "手动框选"
+        ManualChip(
+            label = toggleLabel,
+            active = manualMode,
+            enabled = enabled,
+            modifier = Modifier.weight(1f),
+            onClick = onToggle,
+        )
+        if (manualCount > 0) {
+            Text(
+                text = "已添加 $manualCount",
+                color = Color(0xFFB0B0B8),
+                fontSize = 12.sp,
+            )
+            ManualChip(
+                label = "撤销",
+                active = false,
+                enabled = true,
+                onClick = onUndo,
+            )
+            ManualChip(
+                label = "清空",
+                active = false,
+                enabled = true,
+                onClick = onClear,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ManualChip(
+    label: String,
+    active: Boolean,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val bg = if (active) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardBg
+    val stroke = if (active) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardStroke
+    val fg = when {
+        active -> UiColors.Ai.execBtnText
+        enabled -> Color(0xFFC8C8CE)
+        else -> Color(0xFF555559)
+    }
+    val interaction = rememberFeedbackInteractionSource()
+    Row(
+        modifier = modifier
+            .height(34.dp)
+            .alpha(if (enabled) 1f else 0.4f)
+            .clip(RoundedCornerShape(10.dp))
+            .background(bg)
+            .border(1.dp, stroke, RoundedCornerShape(10.dp))
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            )
+            .padding(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = fg,
+            fontSize = 12.sp,
+            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
         )
     }
 }

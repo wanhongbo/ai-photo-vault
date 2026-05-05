@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xpx.vault.ai.mlkit.MlKitRedactionDetector
 import com.xpx.vault.ai.privacy.PrivacyRenderer
+import com.xpx.vault.ai.privacy.RedactionKind
 import com.xpx.vault.ai.privacy.RedactionRegion
 import com.xpx.vault.ai.privacy.RedactionStyle
 import com.xpx.vault.data.crypto.VaultCipher
@@ -25,6 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * 隐私脱敏页 ViewModel。
@@ -77,8 +80,62 @@ class PrivacyRedactViewModel @Inject constructor(
         val src = originalBitmap ?: return
         if (_state.value.style == style) return
         viewModelScope.launch {
-            val rendered = withContext(Dispatchers.Default) { renderPreview(src, regions, style) }
+            val merged = regions + _state.value.manualRegions
+            val rendered = withContext(Dispatchers.Default) { renderPreview(src, merged, style) }
             _state.value = _state.value.copy(style = style, preview = rendered)
+        }
+    }
+
+    /** 切换手动框选模式。开启后在预览图上通过拖动手势添加打码矩形。 */
+    fun toggleManualMode() {
+        _state.value = _state.value.copy(manualMode = !_state.value.manualMode)
+    }
+
+    /**
+     * 添加一个手动打码区域（坐标为原图 bitmap 像素系）。
+     * 内部会做合法化处理：裁剪到 bitmap 范围、丢弃过小的废区域。
+     */
+    fun addManualRegion(left: Int, top: Int, right: Int, bottom: Int) {
+        val src = originalBitmap ?: return
+        val l = left.coerceIn(0, src.width)
+        val t = top.coerceIn(0, src.height)
+        val r = right.coerceIn(0, src.width)
+        val b = bottom.coerceIn(0, src.height)
+        val minL = min(l, r)
+        val minT = min(t, b)
+        val maxR = max(l, r)
+        val maxB = max(t, b)
+        // 最小 12px 下限，避免“误触点击”产生真尺寸 0 区域。
+        if (maxR - minL < 12 || maxB - minT < 12) return
+        val region = RedactionRegion(minL, minT, maxR, maxB, RedactionKind.MANUAL)
+        val newManual = _state.value.manualRegions + region
+        _state.value = _state.value.copy(manualRegions = newManual)
+        reRenderMerged(src, newManual, _state.value.style)
+    }
+
+    /** 撤销最后一个手动区域。 */
+    fun undoManualRegion() {
+        val src = originalBitmap ?: return
+        val current = _state.value.manualRegions
+        if (current.isEmpty()) return
+        val newManual = current.dropLast(1)
+        _state.value = _state.value.copy(manualRegions = newManual)
+        reRenderMerged(src, newManual, _state.value.style)
+    }
+
+    /** 清空所有手动区域。 */
+    fun clearManualRegions() {
+        val src = originalBitmap ?: return
+        if (_state.value.manualRegions.isEmpty()) return
+        _state.value = _state.value.copy(manualRegions = emptyList())
+        reRenderMerged(src, emptyList(), _state.value.style)
+    }
+
+    private fun reRenderMerged(src: Bitmap, manual: List<RedactionRegion>, style: RedactionStyle) {
+        viewModelScope.launch {
+            val merged = regions + manual
+            val rendered = withContext(Dispatchers.Default) { renderPreview(src, merged, style) }
+            _state.value = _state.value.copy(preview = rendered)
         }
     }
 
@@ -219,5 +276,7 @@ data class PrivacyRedactUiState(
     val saving: Boolean = false,
     val savedToVault: Boolean = false,
     val sharing: Boolean = false,
+    val manualMode: Boolean = false,
+    val manualRegions: List<RedactionRegion> = emptyList(),
     val errorMessage: String? = null,
 )
