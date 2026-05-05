@@ -54,6 +54,7 @@ import com.xpx.vault.ui.theme.UiColors
 @Composable
 fun AiClassifyScreen(
     onBack: () -> Unit,
+    onOpenPhoto: (String) -> Unit = {},
     viewModel: AiClassifyViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,7 +81,12 @@ fun AiClassifyScreen(
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp),
             ) {
                 items(state.tags, key = { it.id }) { tag ->
-                    ClassifyGridCell(tag = tag, path = state.pathByPhotoId[tag.photoId])
+                    val path = state.pathByPhotoId[tag.photoId]
+                    ClassifyGridCell(
+                        tag = tag,
+                        path = path,
+                        onClick = if (path != null) ({ onOpenPhoto(path) }) else null,
+                    )
                 }
             }
         }
@@ -190,14 +196,31 @@ private fun ClassifyTabRow(selected: ClassifyCategory, onSelect: (ClassifyCatego
 }
 
 @Composable
-private fun ClassifyGridCell(tag: com.xpx.vault.domain.model.AiTag, path: String?) {
+private fun ClassifyGridCell(
+    tag: com.xpx.vault.domain.model.AiTag,
+    path: String?,
+    onClick: (() -> Unit)? = null,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    val clickModifier = if (onClick != null) {
+        Modifier
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick,
+            )
+    } else {
+        Modifier
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
             .clip(RoundedCornerShape(12.dp))
             .background(UiColors.Ai.featureCardBg)
-            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(12.dp)),
+            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(12.dp))
+            .then(clickModifier),
     ) {
         if (path != null) {
             VaultProgressiveImage(

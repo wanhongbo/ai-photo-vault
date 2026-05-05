@@ -302,6 +302,11 @@ class MainActivity : FragmentActivity() {
                         composable(ROUTE_AI_CLASSIFY) {
                             AiClassifyScreen(
                                 onBack = { navController.popBackStack() },
+                                onOpenPhoto = { path ->
+                                    navController.navigate(viewerRouteForPath(path)) {
+                                        launchSingleTop = true
+                                    }
+                                },
                             )
                         }
                         composable(ROUTE_AI_PRIVACY) {
