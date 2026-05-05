@@ -128,6 +128,8 @@ fun AlbumScreen(
                     VaultStore.importFromPicker(context, uri, albumName)
                 }
                 reload()
+                // 导入完成后触发一次增量 AI 扫描。
+                com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
             }
         }
     }

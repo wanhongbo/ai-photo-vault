@@ -61,6 +61,9 @@ class MainActivity : FragmentActivity() {
     @Inject
     lateinit var appLockManager: AppLockManager
 
+    @Inject
+    lateinit var aiLocalScanUseCase: com.xpx.vault.ai.AiLocalScanUseCase
+
     override fun attachBaseContext(newBase: Context) {
         // 将持久化的应用内语言应用到 Activity Context，覆盖所有 API 级别
         super.attachBaseContext(LanguageManager.wrapContext(newBase))
@@ -81,6 +84,11 @@ class MainActivity : FragmentActivity() {
                     val backStackEntry by navController.currentBackStackEntryAsState()
                     val currentRoute = backStackEntry?.destination?.route
                     val previousRoute = navController.previousBackStackEntry?.destination?.route
+
+                    // 解锁后自动启动一次增量 AI 扫描（增量扫描、mutex 去重，安全反复触发）。
+                    LaunchedEffect(requireUnlock) {
+                        if (!requireUnlock) aiLocalScanUseCase.requestScan()
+                    }
 
                     // 用 rememberUpdatedState 保障 LaunchedEffect 内能读到最新值，避免闭包过期。
                     val requireUnlockState = rememberUpdatedState(requireUnlock)

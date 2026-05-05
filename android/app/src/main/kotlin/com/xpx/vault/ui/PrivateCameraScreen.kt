@@ -497,6 +497,8 @@ fun PrivateCameraScreen(
                                                         lastMediaPath = vaultPath
                                                         message = "视频已保存到保险箱"
                                                         Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
+                                                        // 录像入库后触发一次增量 AI 扫描（视频当前仅用于 Cleanup/停止笖选，对分类影响小）。
+                                                        com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
                                                     } else {
                                                         message = "视频入库失败，请重试"
                                                         Log.e(CAMERA_DIAG_TAG, "event=video_finalize_failed")
@@ -541,6 +543,8 @@ fun PrivateCameraScreen(
                                 if (vaultPath != null) {
                                     lastMediaPath = vaultPath
                                     message = "已保存到保险箱"
+                                    // 拍照入库后触发一次增量 AI 扫描。
+                                    com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
                                 } else {
                                     message = "保存失败（存储错误），请重试"
                                 }

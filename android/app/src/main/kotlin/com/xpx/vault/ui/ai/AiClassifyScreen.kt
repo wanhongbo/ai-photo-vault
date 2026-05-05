@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,8 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -37,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xpx.vault.R
 import com.xpx.vault.ai.core.ClassifyCategory
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
@@ -67,33 +70,17 @@ fun AiClassifyScreen(
         if (state.tags.isEmpty()) {
             ClassifyEmptyState(scanning = state.scanning)
         } else {
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp),
             ) {
                 items(state.tags, key = { it.id }) { tag ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(UiColors.Ai.featureCardBg)
-                            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(10.dp))
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                    ) {
-                        Text(
-                            text = tag.label,
-                            color = Color(0xFFF0F4FF),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = "photoId=${tag.photoId}  confidence=${"%.2f".format(tag.confidence)}  (${tag.source})",
-                            color = Color(0xFF8A8A90),
-                            fontSize = 12.sp,
-                        )
-                    }
+                    ClassifyGridCell(tag = tag, path = state.pathByPhotoId[tag.photoId])
                 }
             }
         }
@@ -198,6 +185,60 @@ private fun ClassifyTabRow(selected: ClassifyCategory, onSelect: (ClassifyCatego
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ClassifyGridCell(tag: com.xpx.vault.domain.model.AiTag, path: String?) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(UiColors.Ai.featureCardBg)
+            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(12.dp)),
+    ) {
+        if (path != null) {
+            VaultProgressiveImage(
+                path = path,
+                modifier = Modifier.fillMaxSize(),
+                thumbnailMaxPx = 360,
+            )
+        } else {
+            // 映射缺失（已删除或未同步）：用占位显示信息。
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp),
+            ) {
+                Text(
+                    text = tag.label,
+                    color = Color(0xFFF0F4FF),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "photoId=${tag.photoId}",
+                    color = Color(0xFF8A8A90),
+                    fontSize = 11.sp,
+                )
+            }
+        }
+        // 底部半透明渐层 + label 叠加
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .background(Color(0x99000000))
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+        ) {
+            Text(
+                text = "${tag.label}  ${"%.0f".format(tag.confidence * 100)}%",
+                color = Color(0xFFF0F4FF),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+            )
         }
     }
 }

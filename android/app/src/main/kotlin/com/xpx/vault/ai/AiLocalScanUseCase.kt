@@ -1,11 +1,16 @@
 package com.xpx.vault.ai
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import com.xpx.vault.ai.algo.DuplicateClusterer
 import com.xpx.vault.ai.core.AiAnalysisResult
+import com.xpx.vault.ai.core.AiEngine
 import com.xpx.vault.ai.core.AiFeatureRegistry
+import com.xpx.vault.ai.core.AiTag as CoreAiTag
+import com.xpx.vault.ai.core.ClassifyCategory
 import com.xpx.vault.ai.core.ImageAnalyzer
 import com.xpx.vault.ai.util.PhotoIdentity
+import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.domain.model.AiPerceptualHash
 import com.xpx.vault.domain.model.AiQualityRecord
 import com.xpx.vault.domain.model.AiSensitiveRecord
@@ -19,6 +24,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,47 +71,100 @@ class AiLocalScanUseCase @Inject constructor(
     val progress: StateFlow<AiScanProgress> = _progress.asStateFlow()
     private val mutex = Mutex()
 
+    /** 供自动触发场景（解锁后、导入后、拍照后）在后台 launch 扫描。 */
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /**
+     * 当前扫描这一轮结束后是否要再补一轮。通过 [requestScan] 累加：
+     * 正在扫描时多次请求被合并为“在当前轮次之后继续补扫一轮”，避免漏掉正在过程中新增的照片。
+     */
+    @Volatile private var rescanRequested = false
+
+    /**
+     * 异步触发一次扫描。无论当前是否在扫，进程生命周期内常驻执行。
+     *
+     * @param force 为 true 时强制全量重扫（忽略增量跳过），对应 UI 手动 “扫描” 按钮的语义；
+     *   false 时走增量扫描，已扫过的 photoId 会被跳过。
+     */
+    fun requestScan(force: Boolean = false) {
+        appScope.launch { run(force) }
+    }
+
     fun launch(scope: CoroutineScope) {
         scope.launch { run() }
     }
 
-    suspend fun run() {
-        if (!mutex.tryLock()) return
+    suspend fun run(force: Boolean = false) {
+        if (!mutex.tryLock()) {
+            // 已有一轮在运行：记下请求，当前轮结束后自动再补一轮（合并多次触发）。
+            rescanRequested = true
+            return
+        }
         try {
-            val photos = VaultStore.listRecentPhotos(appContext, limit = Int.MAX_VALUE)
-                .filter { isVaultImage(it.path) }
-            _progress.value = AiScanProgress(running = true, total = photos.size, done = 0)
-            if (photos.isEmpty()) {
-                _progress.value = AiScanProgress(running = false, total = 0, done = 0)
-                return
-            }
-
-            val readyAnalyzers: List<ImageAnalyzer> = registry.all().filter { runCatching { it.isReady() }.getOrDefault(false) }
-            val recordedHashes = mutableListOf<AiPerceptualHash>()
-
-            for ((index, photo) in photos.withIndex()) {
-                val bitmap = VaultThumbnailCache.load(appContext, photo.path, targetMaxPx = 256)
-                if (bitmap != null && readyAnalyzers.isNotEmpty()) {
-                    val photoId = PhotoIdentity.fromPath(photo.path)
-                    val merged = analyzeAll(readyAnalyzers, photoId, bitmap)
-                    persist(merged)
-                    merged.phash?.let { p ->
-                        merged.dhash?.let { d ->
-                            recordedHashes += AiPerceptualHash(photoId, p, d)
-                        }
-                    }
-                }
-                _progress.value = _progress.value.copy(done = index + 1)
-            }
-
-            // 重复聚类：把所有 phash 跑一遍聚类，把非代表张标 is_duplicate=true。
-            val fullHashes = runCatching { repository.listAllPerceptualHashes() }.getOrDefault(recordedHashes)
-            if (fullHashes.size >= 2) markDuplicates(fullHashes)
-
-            _progress.value = _progress.value.copy(running = false)
+            do {
+                rescanRequested = false
+                runOnePass(force)
+            } while (rescanRequested)
         } finally {
             mutex.unlock()
         }
+    }
+
+    private suspend fun runOnePass(force: Boolean) {
+        val allPhotos = VaultStore.listRecentPhotos(appContext, limit = Int.MAX_VALUE)
+            .filter { isVaultImage(it.path) }
+        // 增量扫描：通过 phash 表已有的 photoId 集合做差集（LOCAL_ALGO analyzer 总是 ready，所以 phash 能视为“已扫过”的标志）。
+        val scanned: Set<Long> = if (force) emptySet() else runCatching {
+            repository.listAllPerceptualHashes().map { it.photoId }.toSet()
+        }.getOrDefault(emptySet())
+        val photos = allPhotos.filter { PhotoIdentity.fromPath(it.path) !in scanned }
+        _progress.value = AiScanProgress(running = true, total = photos.size, done = 0)
+        if (photos.isEmpty()) {
+            _progress.value = AiScanProgress(running = false, total = 0, done = 0)
+            return
+        }
+
+        val readyAnalyzers: List<ImageAnalyzer> = registry.all().filter { runCatching { it.isReady() }.getOrDefault(false) }
+        val recordedHashes = mutableListOf<AiPerceptualHash>()
+
+        for ((index, photo) in photos.withIndex()) {
+            val bitmap = VaultThumbnailCache.load(appContext, photo.path, targetMaxPx = 256)
+            if (bitmap != null && readyAnalyzers.isNotEmpty()) {
+                val photoId = PhotoIdentity.fromPath(photo.path)
+                var merged = analyzeAll(readyAnalyzers, photoId, bitmap)
+                val isScreenshot = detectScreenshotByResolution(photo.path) ||
+                    merged.tags.any { it.category == ClassifyCategory.SCREENSHOT }
+                merged = if (isScreenshot) {
+                    // 截图与其他分类互斥：清除 ML Kit 对截图内容的错标（例如纯白截图被误判为 Selfie）。
+                    merged.copy(
+                        tags = listOf(
+                            CoreAiTag(
+                                label = "Screenshot",
+                                category = ClassifyCategory.SCREENSHOT,
+                                confidence = 0.9f,
+                                source = AiEngine.LOCAL_ALGO,
+                            ),
+                        ),
+                    )
+                } else {
+                    // 非截图：过滤低置信度 tag，避免 ML Kit 在模棱两可的误判污染分类 Tab。
+                    merged.copy(tags = merged.tags.filter { it.confidence >= MIN_TAG_CONFIDENCE })
+                }
+                persist(merged)
+                merged.phash?.let { p ->
+                    merged.dhash?.let { d ->
+                        recordedHashes += AiPerceptualHash(photoId, p, d)
+                    }
+                }
+            }
+            _progress.value = _progress.value.copy(done = index + 1)
+        }
+
+        // 重复聚类：把所有 phash 跑一遍聚类，把非代表张标 is_duplicate=true。
+        val fullHashes = runCatching { repository.listAllPerceptualHashes() }.getOrDefault(recordedHashes)
+        if (fullHashes.size >= 2) markDuplicates(fullHashes)
+
+        _progress.value = _progress.value.copy(running = false)
     }
 
     private suspend fun analyzeAll(
@@ -181,6 +240,39 @@ class AiLocalScanUseCase @Inject constructor(
         }
     }
 
+    /**
+     * 通过原图分辨率与设备屏幕尺寸匹配，启发式判断是否为截图。
+     *
+     * Vault 导入后文件名被改成 `asset_<sha256>.ext`，无法通过名称识别；
+     * 依靠 `BitmapFactory.inJustDecodeBounds` 只读 JPEG/PNG 头部，成本可接受。
+     *
+     * 规则：(w, h) 或 (h, w) 与屏幕物理像素近似相等（容差 ±3%）。
+     * 放宽的原因：Android 系统截图分辨率不一定完全等于 displayMetrics（横屏旋转 / 多窗口 / 状态栏裁切等）。
+     */
+    private suspend fun detectScreenshotByResolution(path: String): Boolean = withContext(Dispatchers.IO) {
+        val dm = appContext.resources.displayMetrics
+        val screenW = dm.widthPixels
+        val screenH = dm.heightPixels
+        if (screenW <= 0 || screenH <= 0) return@withContext false
+        val bytes = runCatching { VaultCipher.get(appContext).decryptToByteArray(java.io.File(path)) }
+            .getOrNull() ?: return@withContext false
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        val w = bounds.outWidth
+        val h = bounds.outHeight
+        if (w <= 0 || h <= 0) return@withContext false
+        val tolerance = 0.03f
+        val matchPortrait = approxEqual(w, screenW, tolerance) && approxEqual(h, screenH, tolerance)
+        val matchLandscape = approxEqual(w, screenH, tolerance) && approxEqual(h, screenW, tolerance)
+        matchPortrait || matchLandscape
+    }
+
+    private fun approxEqual(a: Int, b: Int, tolerance: Float): Boolean {
+        val diff = kotlin.math.abs(a - b)
+        val base = kotlin.math.max(a, b)
+        return base > 0 && diff.toFloat() / base <= tolerance
+    }
+
     private suspend fun markDuplicates(hashes: List<AiPerceptualHash>) {
         val clusters = DuplicateClusterer.cluster(hashes)
         if (clusters.isEmpty()) return
@@ -197,5 +289,11 @@ class AiLocalScanUseCase @Inject constructor(
 
     companion object {
         const val TAG = "AiLocalScanUseCase"
+
+        /**
+         * Tag 最低置信度阈值。ML Kit ImageLabeler 返回在 0.5 附近的标签常常接近随机猜测，
+         * 容易把纯色/截图类照片误标为 Selfie/Portrait。提高门槛避免污染分类 Tab。
+         */
+        const val MIN_TAG_CONFIDENCE = 0.6f
     }
 }

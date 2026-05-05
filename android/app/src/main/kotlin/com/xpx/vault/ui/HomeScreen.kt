@@ -156,6 +156,10 @@ fun HomeScreen(
                     }
                 }
                 refreshVault()
+                // 导入完成后触发一次增量 AI 扫描（mutex + rescanRequested 会合并多次触发）。
+                if (added > 0) {
+                    com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
+                }
                 importTip = if (uris.size == 1) {
                     when {
                         added == 1 -> ImportTip(context.getString(R.string.home_import_success_default_album), false)
