@@ -27,36 +27,76 @@ object VaultThumbnailCache {
     private const val DISK_DIR = "thumb_cache"
     private const val MEMORY_BYTES = 32 * 1024 * 1024
 
+    /**
+     * 返回给调用方的解码结果，包含缩略图 bitmap 和原图尺寸。
+     *
+     * [originalWidth] / [originalHeight] 在“首次生成缩略图”的路径能准确得到（来自 BitmapFactory.inJustDecodeBounds）；
+     * 从磁盘缓存命中时，如 `.dim` 边信息文件存在则同样准确，否则为 0。
+     * 调用方在拿不到原图尺寸时应有 fallback。
+     */
+    data class DecodedImage(
+        val bitmap: Bitmap,
+        val originalWidth: Int,
+        val originalHeight: Int,
+    )
+
     private val memory: LruCache<String, Bitmap> = object : LruCache<String, Bitmap>(MEMORY_BYTES) {
         override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
     }
 
+    /**
+     * 或相小型映射：把缩略图 key 映射到原图尺寸，避免消费方再读一次 `.dim` 磁盘文件。
+     */
+    private val originalDimensions = java.util.concurrent.ConcurrentHashMap<String, Pair<Int, Int>>()
+
+    /** 兼容旧 API：只要 bitmap 时使用。 */
     suspend fun load(
         context: Context,
         path: String,
         targetMaxPx: Int,
-    ): Bitmap? = withContext(Dispatchers.IO) {
+    ): Bitmap? = loadDecoded(context, path, targetMaxPx)?.bitmap
+
+    /**
+     * 新 API：同时返回 bitmap + 原图尺寸。
+     *
+     * 相比 [load]，调用方可复用解密过程中已经读出的 JPEG/PNG 头宽高，无需再次解密原图文件。
+     */
+    suspend fun loadDecoded(
+        context: Context,
+        path: String,
+        targetMaxPx: Int,
+    ): DecodedImage? = withContext(Dispatchers.IO) {
         val file = File(path)
         if (!file.exists()) return@withContext null
         val key = makeKey(file, targetMaxPx)
 
-        memory.get(key)?.let { return@withContext it }
+        memory.get(key)?.let { cached ->
+            val dim = originalDimensions[key] ?: readDimFromDisk(context, key)
+            val (ow, oh) = dim ?: (0 to 0)
+            return@withContext DecodedImage(cached, ow, oh)
+        }
 
         val diskFile = diskEntry(context, key)
         decodeFromDisk(context, diskFile)?.let { cached ->
             memory.put(key, cached)
-            return@withContext cached
+            val dim = originalDimensions[key] ?: readDimFromDisk(context, key)?.also { originalDimensions[key] = it }
+            val (ow, oh) = dim ?: (0 to 0)
+            return@withContext DecodedImage(cached, ow, oh)
         }
 
-        val bitmap = runCatching {
+        val decoded = runCatching {
             val bytes = VaultCipher.get(context).decryptToByteArray(file)
-            sampleDecode(bytes, targetMaxPx)
+            sampleDecodeWithBounds(bytes, targetMaxPx)
         }.getOrNull() ?: return@withContext null
 
-        // 写磁盘缓存（加密 JPG）；失败不影响返回。
-        runCatching { writeDiskCache(context, diskFile, bitmap) }
-        memory.put(key, bitmap)
-        bitmap
+        // 写磁盘缓存（加密 JPG），并同步写入原图宽高 `.dim` 边信息；失败不影响返回。
+        runCatching { writeDiskCache(context, diskFile, decoded.bitmap) }
+        if (decoded.originalWidth > 0 && decoded.originalHeight > 0) {
+            originalDimensions[key] = decoded.originalWidth to decoded.originalHeight
+            runCatching { writeDimSidecar(context, key, decoded.originalWidth, decoded.originalHeight) }
+        }
+        memory.put(key, decoded.bitmap)
+        decoded
     }
 
     fun invalidate(path: String) {
@@ -98,7 +138,7 @@ object VaultThumbnailCache {
         }
     }
 
-    private fun sampleDecode(bytes: ByteArray, targetMaxPx: Int): Bitmap? {
+    private fun sampleDecodeWithBounds(bytes: ByteArray, targetMaxPx: Int): DecodedImage? {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
         val w = bounds.outWidth
@@ -111,6 +151,31 @@ object VaultThumbnailCache {
             this.inSampleSize = inSampleSize
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options) ?: return null
+        return DecodedImage(bitmap = bitmap, originalWidth = w, originalHeight = h)
+    }
+
+    private fun dimSidecar(context: Context, key: String): File {
+        val dir = File(context.cacheDir, DISK_DIR).apply { mkdirs() }
+        val hash = MessageDigest.getInstance("SHA-256")
+            .digest(key.toByteArray(Charsets.UTF_8))
+            .joinToString("") { b -> "%02x".format(b) }
+        return File(dir, "$hash.dim")
+    }
+
+    private fun writeDimSidecar(context: Context, key: String, width: Int, height: Int) {
+        dimSidecar(context, key).writeText("${width}x${height}")
+    }
+
+    private fun readDimFromDisk(context: Context, key: String): Pair<Int, Int>? {
+        val f = dimSidecar(context, key)
+        if (!f.exists() || f.length() == 0L) return null
+        return runCatching {
+            val parts = f.readText().trim().split('x')
+            if (parts.size != 2) return@runCatching null
+            val w = parts[0].toInt()
+            val h = parts[1].toInt()
+            if (w > 0 && h > 0) w to h else null
+        }.getOrNull()
     }
 }

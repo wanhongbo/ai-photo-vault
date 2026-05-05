@@ -131,11 +131,12 @@ class AiLocalScanUseCase @Inject constructor(
         val recordedHashes = mutableListOf<AiPerceptualHash>()
 
         for ((index, photo) in photos.withIndex()) {
-            val bitmap = VaultThumbnailCache.load(appContext, photo.path, targetMaxPx = 256)
+            val decoded = VaultThumbnailCache.loadDecoded(appContext, photo.path, targetMaxPx = 256)
+            val bitmap = decoded?.bitmap
             if (bitmap != null && readyAnalyzers.isNotEmpty()) {
                 val photoId = PhotoIdentity.fromPath(photo.path)
                 var merged = analyzeAll(readyAnalyzers, photoId, bitmap)
-                val isScreenshot = detectScreenshotByResolution(photo.path) ||
+                val isScreenshot = isScreenshotByDimensions(decoded.originalWidth, decoded.originalHeight) ||
                     merged.tags.any { it.category == ClassifyCategory.SCREENSHOT }
                 merged = if (isScreenshot) {
                     // 截图与其他分类互斥：清除 ML Kit 对截图内容的错标（例如纯白截图被误判为 Selfie）。
@@ -249,11 +250,25 @@ class AiLocalScanUseCase @Inject constructor(
     /**
      * 通过原图分辨率与设备屏幕尺寸匹配，启发式判断是否为截图。
      *
-     * Vault 导入后文件名被改成 `asset_<sha256>.ext`，无法通过名称识别；
-     * 依靠 `BitmapFactory.inJustDecodeBounds` 只读 JPEG/PNG 头部，成本可接受。
+     * 宽高从 [VaultThumbnailCache.loadDecoded] 的解码过程顺带带出，避免对原图再做一次解密 + inJustDecodeBounds。
+     * 当宽高为 0（旧版 `.dim` 边信息文件缺失）时回落到原有路径 [detectScreenshotByResolution]。
      *
      * 规则：(w, h) 或 (h, w) 与屏幕物理像素近似相等（容差 ±3%）。
-     * 放宽的原因：Android 系统截图分辨率不一定完全等于 displayMetrics（横屏旋转 / 多窗口 / 状态栏裁切等）。
+     */
+    private fun isScreenshotByDimensions(w: Int, h: Int): Boolean {
+        if (w <= 0 || h <= 0) return false
+        val dm = appContext.resources.displayMetrics
+        val screenW = dm.widthPixels
+        val screenH = dm.heightPixels
+        if (screenW <= 0 || screenH <= 0) return false
+        val tolerance = 0.03f
+        return approxEqual(w, screenW, tolerance) && approxEqual(h, screenH, tolerance) ||
+            approxEqual(w, screenH, tolerance) && approxEqual(h, screenW, tolerance)
+    }
+
+    /**
+     * 旧路径：当 loadDecoded 从旧磁盘缓存命中且缺 `.dim` 边信息时 fallback。
+     * 成本高（会解密一次原图），故仅做兼容兆底。
      */
     private suspend fun detectScreenshotByResolution(path: String): Boolean = withContext(Dispatchers.IO) {
         val dm = appContext.resources.displayMetrics
