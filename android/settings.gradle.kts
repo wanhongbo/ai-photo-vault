@@ -18,3 +18,6 @@ rootProject.name = "PhotoVault"
 include(":app")
 include(":core:domain")
 include(":core:data")
+include(":core:ai")
+include(":core:ai-mlkit")
+include(":feature:ai")

@@ -26,6 +26,7 @@ fun MainScreen(
     onOpenChangePin: () -> Unit,
     onOpenStorageUsage: () -> Unit,
     onOpenLanguageSettings: () -> Unit,
+    onOpenAiFeature: (AiFeatureKey) -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(HomeTab.VAULT) }
     val onSelectTab: (HomeTab) -> Unit = { tab ->
@@ -65,6 +66,7 @@ fun MainScreen(
             onOpenTab = onSelectTab,
             selectedTab = selectedTab,
             showBottomNav = selectedTab == HomeTab.AI,
+            onOpenFeature = onOpenAiFeature,
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(if (selectedTab == HomeTab.AI) 1f else 0f)

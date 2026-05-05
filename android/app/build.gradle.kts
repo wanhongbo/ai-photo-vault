@@ -63,6 +63,9 @@ android {
 dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
+    implementation(project(":core:ai"))
+    implementation(project(":core:ai-mlkit"))
+    implementation(project(":feature:ai"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

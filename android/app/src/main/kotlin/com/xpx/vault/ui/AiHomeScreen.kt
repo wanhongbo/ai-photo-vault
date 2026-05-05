@@ -20,7 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +33,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.xpx.vault.R
+import com.xpx.vault.ui.ai.AiHomeUiState
+import com.xpx.vault.ui.ai.AiHomeViewModel
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
@@ -39,13 +44,21 @@ import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 
+/**
+ * 与 AiFeature 卡片关联的逻辑标识，供跳转路由映射使用。
+ */
+enum class AiFeatureKey { CLASSIFY, SEARCH, PRIVACY, COMPRESS, ENCRYPT, DEDUP }
+
 @Composable
 fun AiHomeScreen(
     onOpenTab: (HomeTab) -> Unit,
     selectedTab: HomeTab = HomeTab.AI,
     showBottomNav: Boolean = true,
+    onOpenFeature: (AiFeatureKey) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val viewModel: AiHomeViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val tabs = remember { homeTabs() }
     Column(
         modifier = modifier
@@ -62,8 +75,8 @@ fun AiHomeScreen(
                 .padding(top = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item { AiSuggestCard() }
-            item { AiFeaturesSection() }
+            item { AiSuggestCard(uiState = uiState, onOpenFeature = onOpenFeature) }
+            item { AiFeaturesSection(onOpenFeature = onOpenFeature) }
         }
         if (showBottomNav) {
             HomeBottomNav(tabs = tabs, selectedIndex = selectedTab.ordinal, onSelect = { onOpenTab(tabs[it].tab) })
@@ -134,7 +147,28 @@ private fun AiHeaderButton(
 }
 
 @Composable
-private fun AiSuggestCard() {
+private fun AiSuggestCard(
+    uiState: AiHomeUiState,
+    onOpenFeature: (AiFeatureKey) -> Unit,
+) {
+    // pending 优先（敏感内容直接跑隐私脱敏），其次是垃圾清理。
+    val (title, desc, action) = when {
+        uiState.pendingSensitive > 0 -> Triple(
+            "发现 ${uiState.pendingSensitive} 张敏感照片",
+            "AI 检测到您的相册中存在可能包含身份证/银行卡/二维码等敏感信息的照片，建议使用隐私脱敏功能进行保护。",
+            AiFeatureKey.PRIVACY,
+        )
+        uiState.totalCleanup > 0 -> Triple(
+            "发现 ${uiState.totalCleanup} 张可清理照片",
+            "AI 识别到模糊/重复/废片，一键清理可释放存储空间。",
+            AiFeatureKey.DEDUP,
+        )
+        else -> Triple(
+            stringResourceSafe(R.string.ai_suggest_title),
+            stringResourceSafe(R.string.ai_suggest_desc),
+            AiFeatureKey.PRIVACY,
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,7 +218,7 @@ private fun AiSuggestCard() {
                     )
                 }
                 Text(
-                    text = stringResource(R.string.ai_suggest_title),
+                    text = title,
                     color = UiColors.Ai.suggestTitle,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -192,7 +226,7 @@ private fun AiSuggestCard() {
             }
         }
         Text(
-            text = stringResource(R.string.ai_suggest_desc),
+            text = desc,
             color = UiColors.Ai.suggestDesc,
             fontSize = 14.sp,
             lineHeight = (14 * 1.55).sp,
@@ -212,7 +246,7 @@ private fun AiSuggestCard() {
                     .throttledClickable(
                         interactionSource = execInteraction,
                         indication = null,
-                        onClick = { },
+                        onClick = { onOpenFeature(action) },
                     ),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
@@ -259,8 +293,12 @@ private fun AiSuggestCard() {
     }
 }
 
+/** Wrapper 避免在静态获取字符串时必须在 @Composable 函数内的冗余。 */
 @Composable
-private fun AiFeaturesSection() {
+private fun stringResourceSafe(id: Int): String = stringResource(id)
+
+@Composable
+private fun AiFeaturesSection(onOpenFeature: (AiFeatureKey) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -289,7 +327,7 @@ private fun AiFeaturesSection() {
                     AiFeatureCard(
                         feature = feature,
                         modifier = Modifier.weight(1f),
-                        onClick = { },
+                        onClick = { onOpenFeature(feature.key) },
                     )
                 }
             }
@@ -355,6 +393,7 @@ private fun AiFeatureCard(
 }
 
 data class AiFeature(
+    val key: AiFeatureKey,
     val nameRes: Int,
     val descRes: Int,
     val iconRes: Int,
@@ -364,6 +403,7 @@ data class AiFeature(
 
 private fun aiFeatures(): List<AiFeature> = listOf(
     AiFeature(
+        key = AiFeatureKey.CLASSIFY,
         nameRes = R.string.ai_feat_classify,
         descRes = R.string.ai_feat_classify_desc,
         iconRes = R.drawable.ic_ai_layers,
@@ -371,6 +411,7 @@ private fun aiFeatures(): List<AiFeature> = listOf(
         iconBgColor = UiColors.Ai.classifyIconBg,
     ),
     AiFeature(
+        key = AiFeatureKey.SEARCH,
         nameRes = R.string.ai_feat_search,
         descRes = R.string.ai_feat_search_desc,
         iconRes = R.drawable.ic_home_action_search,
@@ -378,6 +419,7 @@ private fun aiFeatures(): List<AiFeature> = listOf(
         iconBgColor = UiColors.Ai.searchIconBg,
     ),
     AiFeature(
+        key = AiFeatureKey.PRIVACY,
         nameRes = R.string.ai_feat_blur,
         descRes = R.string.ai_feat_blur_desc,
         iconRes = R.drawable.ic_ai_eye_off,
@@ -385,6 +427,7 @@ private fun aiFeatures(): List<AiFeature> = listOf(
         iconBgColor = UiColors.Ai.blurIconBg,
     ),
     AiFeature(
+        key = AiFeatureKey.COMPRESS,
         nameRes = R.string.ai_feat_compress,
         descRes = R.string.ai_feat_compress_desc,
         iconRes = R.drawable.ic_ai_image,
@@ -392,6 +435,7 @@ private fun aiFeatures(): List<AiFeature> = listOf(
         iconBgColor = UiColors.Ai.compressIconBg,
     ),
     AiFeature(
+        key = AiFeatureKey.ENCRYPT,
         nameRes = R.string.ai_feat_encrypt,
         descRes = R.string.ai_feat_encrypt_desc,
         iconRes = R.drawable.ic_ai_shield,
@@ -399,6 +443,7 @@ private fun aiFeatures(): List<AiFeature> = listOf(
         iconBgColor = UiColors.Ai.encryptIconBg,
     ),
     AiFeature(
+        key = AiFeatureKey.DEDUP,
         nameRes = R.string.ai_feat_dedup,
         descRes = R.string.ai_feat_dedup_desc,
         iconRes = R.drawable.ic_ai_copy,

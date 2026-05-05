@@ -24,6 +24,11 @@ robolectric = "4.14.1"
 work = "2.9.1"
 bouncycastle = "1.78.1"
 documentfile = "1.0.1"
+mlkitImageLabeling = "16.0.8"
+mlkitFaceDetection = "17.1.0"
+mlkitTextRecognition = "19.0.0"
+mlkitBarcodeScanning = "18.3.0"
+playServicesBase = "18.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,6 +58,7 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -63,6 +69,12 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 bouncycastle-bcprov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
+# ML Kit (play-services variant -- 模型按需下载，APK 增量 ≈ 0)
+mlkit-image-labeling = { group = "com.google.android.gms", name = "play-services-mlkit-image-labeling", version.ref = "mlkitImageLabeling" }
+mlkit-face-detection = { group = "com.google.android.gms", name = "play-services-mlkit-face-detection", version.ref = "mlkitFaceDetection" }
+mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "mlkitTextRecognition" }
+mlkit-barcode-scanning = { group = "com.google.android.gms", name = "play-services-mlkit-barcode-scanning", version.ref = "mlkitBarcodeScanning" }
+play-services-base = { group = "com.google.android.gms", name = "play-services-base", version.ref = "playServicesBase" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
