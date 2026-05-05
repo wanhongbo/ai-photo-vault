@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -112,7 +113,9 @@ fun PrivacyRedactScreen(
 
         StylePicker(
             current = state.style,
-            enabled = state.ready,
+            // 无敏感区域时样式切换不会改变图像（PrivacyRenderer 会直接返回原图拷贝），
+            // 置灰按钮避免用户误以为 "点击无效"。
+            enabled = state.ready && state.regionCount > 0,
             onSelect = { viewModel.selectStyle(it) },
         )
 
@@ -136,10 +139,10 @@ fun PrivacyRedactScreen(
 @Composable
 private fun RegionSummary(state: PrivacyRedactUiState) {
     val desc = when {
-        state.loading -> "\u68c0\u6d4b\u4e2d\u2026"
-        !state.mlKitReady -> "Google Play \u670d\u52a1\u4e0d\u53ef\u7528\uff0c\u5df2\u964d\u7ea7\u4e3a\u7eaf\u9884\u89c8\uff08\u672a\u68c0\u5230\u654f\u611f\u533a\u57df\uff09"
-        state.regionCount == 0 -> "\u672a\u68c0\u6d4b\u5230\u4eba\u8138 / \u8bc1\u4ef6\u53f7 / \u6761\u7801\uff0c\u53ef\u4ee5\u76f4\u63a5\u5bfc\u51fa"
-        else -> "\u5171\u8bc6\u522b\u5230 ${state.regionCount} \u4e2a\u654f\u611f\u533a\u57df\uff0c\u5df2\u81ea\u52a8\u906e\u76d6"
+        state.loading -> "检测中…"
+        !state.mlKitReady -> "Google Play 服务不可用，已降级为纯预览（未检到敏感区域）"
+        state.regionCount == 0 -> "未检测到人脸 / 证件号 / 条码，脱敏样式不可用，可直接导出原图副本"
+        else -> "共识别到 ${state.regionCount} 个敏感区域，已自动遮盖"
     }
     Text(
         text = desc,
@@ -163,9 +166,9 @@ private fun StylePicker(
     ) {
         RedactionStyle.values().forEach { style ->
             val label = when (style) {
-                RedactionStyle.MOSAIC -> "\u9a6c\u8d5b\u514b"
-                RedactionStyle.BLUR -> "\u9ad8\u65af\u6a21\u7cca"
-                RedactionStyle.BAR -> "\u9ed1\u6761"
+                RedactionStyle.MOSAIC -> "马赛克"
+                RedactionStyle.BLUR -> "高斯模糊"
+                RedactionStyle.BAR -> "黑条"
             }
             val isSelected = current == style
             val bg = if (isSelected) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardBg
@@ -176,6 +179,7 @@ private fun StylePicker(
                 modifier = Modifier
                     .weight(1f)
                     .height(40.dp)
+                    .alpha(if (enabled) 1f else 0.4f)
                     .clip(RoundedCornerShape(12.dp))
                     .background(bg)
                     .border(1.dp, border, RoundedCornerShape(12.dp))
