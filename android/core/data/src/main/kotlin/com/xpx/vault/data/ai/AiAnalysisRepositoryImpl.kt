@@ -41,7 +41,18 @@ class AiAnalysisRepositoryImpl @Inject constructor(
     }
 
     override fun observeTagsByCategory(category: String): Flow<List<AiTag>> =
-        tagDao.observeByCategory(category).map { list -> list.map { it.toDomain() } }
+        tagDao.observeByCategory(category).map { list ->
+            // 同一张照片在 ai_tag 表会有多条 label 记录（ML Kit 输出多 label）。
+            // 扫描侧已把这些 tag 的 category 统一到代表分类，但 UI 展示应按 photoId 去重，
+            // 否则一张照片会在同一 Tab 里按 label 数量重复展示（例 Flower/Flowerpot/Plant/Building）。
+            // 每张照片保留 confidence 最高的那一条作为代表 tag，既保留最有代表性的 label 文本，
+            // 又确保宫格天然唯一。
+            list
+                .groupBy { it.photoId }
+                .map { (_, group) -> group.maxByOrNull { it.confidence }!! }
+                .sortedByDescending { it.confidence }
+                .map { it.toDomain() }
+        }
 
     override suspend fun upsertPerceptualHash(hash: AiPerceptualHash) {
         phashDao.upsert(AiPhashEntity(hash.photoId, hash.phash, hash.dhash))
