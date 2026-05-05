@@ -57,7 +57,8 @@ object PrivacyRenderer {
         regions.forEach { region ->
             val rect = region.clampTo(output.width, output.height) ?: return@forEach
             when (style) {
-                RedactionStyle.BAR -> drawBar(canvas, rect, paint)
+                RedactionStyle.BAR -> drawBar(canvas, rect, paint, Color.BLACK)
+                RedactionStyle.WHITE_BAR -> drawBar(canvas, rect, paint, Color.WHITE)
                 RedactionStyle.MOSAIC -> drawMosaic(canvas, output, rect, paint)
                 RedactionStyle.BLUR -> drawBlur(canvas, output, rect, paint)
                 RedactionStyle.OVAL_BLUR -> drawOvalBlur(canvas, output, rect, paint)
@@ -71,8 +72,8 @@ object PrivacyRenderer {
     // 单样式绘制
     // ------------------------------------------------------------------
 
-    private fun drawBar(canvas: Canvas, rect: Rect, paint: Paint) {
-        paint.color = Color.BLACK
+    private fun drawBar(canvas: Canvas, rect: Rect, paint: Paint, @androidx.annotation.ColorInt color: Int) {
+        paint.color = color
         paint.style = Paint.Style.FILL
         paint.shader = null
         canvas.drawRect(RectF(rect), paint)

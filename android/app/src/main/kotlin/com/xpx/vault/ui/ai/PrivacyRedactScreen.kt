@@ -248,6 +248,7 @@ private fun StylePill(
         RedactionStyle.MOSAIC -> "马赛克"
         RedactionStyle.BLUR -> "高斯模糊"
         RedactionStyle.BAR -> "黑条"
+        RedactionStyle.WHITE_BAR -> "白条"
         RedactionStyle.OVAL_BLUR -> "椭圆模糊"
         RedactionStyle.EMOJI -> "Emoji"
     }

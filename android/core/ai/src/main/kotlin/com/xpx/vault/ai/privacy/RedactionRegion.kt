@@ -8,10 +8,11 @@ import android.graphics.Rect
  * - [MOSAIC]  方块马赛克
  * - [BLUR]    矩形区域高斯模糊（API 31+ 真 RenderEffect，低版本降级两次缩放）
  * - [BAR]     黑色矩形条
+ * - [WHITE_BAR] 白色矩形条（浅色照片上视觉更柔和）
  * - [OVAL_BLUR] 椭圆高斯模糊（形状比矩形更贴面部，不露硬边）
  * - [EMOJI]   将 🙈 emoji 画在区域内，社交风
  */
-enum class RedactionStyle { MOSAIC, BLUR, BAR, OVAL_BLUR, EMOJI }
+enum class RedactionStyle { MOSAIC, BLUR, BAR, WHITE_BAR, OVAL_BLUR, EMOJI }
 
 /** 脱敏区域命中类别，用于 UI 分组展示/区分颜色。 */
 enum class RedactionKind { FACE, TEXT, BARCODE, MANUAL }
