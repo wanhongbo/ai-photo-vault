@@ -2,21 +2,32 @@
 
 <cite>
 **本文档引用的文件**
-- [ChangePinScreen.kt](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt)
-- [LockScreen.kt](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockScreen.kt)
-- [LockViewModel.kt](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockViewModel.kt)
-- [AppLockManager.kt](file://android/app/src/main/kotlin/com/photovault/app/AppLockManager.kt)
-- [SecuritySettingEntity.kt](file://android/core/data/src/main/kotlin/com/photovault/data/db/entity/SecuritySettingEntity.kt)
-- [SecuritySettingDao.kt](file://android/core/data/src/main/kotlin/com/photovault/data/db/dao/SecuritySettingDao.kt)
-- [PasswordHasher.kt](file://android/core/data/src/main/kotlin/com/photovault/data/crypto/PasswordHasher.kt)
+- [ChangePinScreen.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt)
+- [LockScreen.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockScreen.kt)
+- [LockViewModel.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt)
+- [FirstLaunchRouter.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/setup/FirstLaunchRouter.kt)
+- [AppLockManager.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/AppLockManager.kt)
+- [SecuritySettingEntity.kt](file://android/core/data/src/main/kotlin/com/xpx/vault/data/db/entity/SecuritySettingEntity.kt)
+- [SecuritySettingDao.kt](file://android/core/data/src/main/kotlin/com/xpx/vault/data/db/dao/SecuritySettingDao.kt)
+- [PasswordHasher.kt](file://android/core/data/src/main/kotlin/com/xpx/vault/data/crypto/PasswordHasher.kt)
+- [BackupRestoreScreen.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/BackupRestoreScreen.kt)
+- [RestoreProgressScreen.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/RestoreProgressScreen.kt)
+- [RestoreResultScreen.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/RestoreResultScreen.kt)
 - [strings.xml](file://android/app/src/main/res/values/strings.xml)
 - [strings.xml(en)](file://android/app/src/main/res/values-en/strings.xml)
-- [Theme.kt](file://android/app/src/main/kotlin/com/photovault/app/ui/theme/Theme.kt)
-- [UiTokens.kt](file://android/app/src/main/kotlin/com/photovault/app/ui/theme/UiTokens.kt)
-- [AppButton.kt](file://android/app/src/main/kotlin/com/photovault/app/ui/components/AppButton.kt)
-- [AppDialog.kt](file://android/app/src/main/kotlin/com/photovault/app/ui/components/AppDialog.kt)
-- [MainActivity.kt](file://android/app/src/main/kotlin/com/photovault/app/MainActivity.kt)
+- [Theme.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/theme/Theme.kt)
+- [UiTokens.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/theme/UiTokens.kt)
+- [AppButton.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/components/AppButton.kt)
+- [AppDialog.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/components/AppDialog.kt)
+- [MainActivity.kt](file://android/app/src/main/kotlin/com/xpx/vault/ui/MainActivity.kt)
 </cite>
+
+## 更新摘要
+**变更内容**
+- 新增RESTORE_LOGIN阶段支持，允许用户通过外部备份进行恢复登录
+- 更新首启路由逻辑，支持从外部备份恢复的场景
+- 增强PIN管理流程，支持从备份恢复后的PIN设置
+- 添加放弃备份选项，允许用户创建全新相册
 
 ## 目录
 1. [简介](#简介)
@@ -24,14 +35,17 @@
 3. [核心组件](#核心组件)
 4. [架构概览](#架构概览)
 5. [详细组件分析](#详细组件分析)
-6. [依赖关系分析](#依赖关系分析)
-7. [性能考虑](#性能考虑)
-8. [故障排除指南](#故障排除指南)
-9. [结论](#结论)
+6. [RESTORE_LOGIN阶段详解](#restore-login阶段详解)
+7. [依赖关系分析](#依赖关系分析)
+8. [性能考虑](#性能考虑)
+9. [故障排除指南](#故障排除指南)
+10. [结论](#结论)
 
 ## 简介
 
 PIN管理界面是AI照片保险箱应用中重要的安全功能模块，负责管理用户的PIN码设置、验证和修改。该模块采用现代Android开发技术栈，包括Jetpack Compose UI框架、MVVM架构模式、Room数据库持久化和Hilt依赖注入。
+
+**更新** 系统现已支持RESTORE_LOGIN阶段，允许用户通过外部备份文件进行恢复登录，提供更灵活的数据迁移和恢复能力。
 
 本系统提供完整的PIN管理功能，包括：
 - 6位数字PIN码设置
@@ -40,6 +54,8 @@ PIN管理界面是AI照片保险箱应用中重要的安全功能模块，负责
 - 密码哈希存储
 - 生物识别解锁集成
 - 错误计数和安全锁定
+- **新增** 外部备份恢复登录
+- **新增** 放弃备份选项
 
 ## 项目结构
 
@@ -49,52 +65,61 @@ PIN管理功能分布在以下关键目录中：
 graph TB
 subgraph "UI层"
 A[ChangePinScreen.kt<br/>PIN修改界面]
-B[LockScreen.kt<br/>PIN设置界面]
+B[LockScreen.kt<br/>PIN设置/恢复界面]
 C[AppButton.kt<br/>按钮组件]
 D[AppDialog.kt<br/>对话框组件]
+E[BackupRestoreScreen.kt<br/>备份恢复界面]
+F[RestoreProgressScreen.kt<br/>恢复进度界面]
+G[RestoreResultScreen.kt<br/>恢复结果界面]
 end
 subgraph "视图模型层"
-E[ChangePinViewModel.kt<br/>PIN修改逻辑]
-F[LockViewModel.kt<br/>PIN设置逻辑]
+H[ChangePinViewModel.kt<br/>PIN修改逻辑]
+I[LockViewModel.kt<br/>PIN设置/恢复逻辑]
+J[BackupRestoreViewModel.kt<br/>备份恢复逻辑]
 end
 subgraph "数据层"
-G[SecuritySettingEntity.kt<br/>安全设置实体]
-H[SecuritySettingDao.kt<br/>数据访问接口]
-I[PasswordHasher.kt<br/>密码哈希器]
+K[SecuritySettingEntity.kt<br/>安全设置实体]
+L[SecuritySettingDao.kt<br/>数据访问接口]
+M[PasswordHasher.kt<br/>密码哈希器]
+N[FirstLaunchRouter.kt<br/>首启路由]
 end
 subgraph "应用管理"
-J[AppLockManager.kt<br/>应用锁定管理]
-K[MainActivity.kt<br/>主活动导航]
+O[AppLockManager.kt<br/>应用锁定管理]
+P[MainActivity.kt<br/>主活动导航]
+Q[LocalBackupMvpService.kt<br/>本地备份服务]
 end
-A --> E
-B --> F
-E --> H
-F --> H
-H --> G
-E --> I
-F --> I
-J --> K
+A --> H
+B --> I
+E --> J
+I --> N
+I --> Q
+H --> L
+I --> L
+J --> Q
+N --> Q
+O --> P
 ```
 
 **图表来源**
-- [ChangePinScreen.kt:1-345](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L1-L345)
-- [LockScreen.kt:1-414](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockScreen.kt#L1-L414)
-- [SecuritySettingEntity.kt:1-19](file://android/core/data/src/main/kotlin/com/photovault/data/db/entity/SecuritySettingEntity.kt#L1-L19)
+- [ChangePinScreen.kt:1-374](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt#L1-L374)
+- [LockScreen.kt:1-478](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockScreen.kt#L1-L478)
+- [FirstLaunchRouter.kt:1-28](file://android/app/src/main/kotlin/com/xpx/vault/ui/setup/FirstLaunchRouter.kt#L1-L28)
 
 **章节来源**
-- [ChangePinScreen.kt:1-345](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L1-L345)
-- [LockScreen.kt:1-414](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockScreen.kt#L1-L414)
-- [MainActivity.kt:1-355](file://android/app/src/main/kotlin/com/photovault/app/MainActivity.kt#L1-L355)
+- [ChangePinScreen.kt:1-374](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt#L1-L374)
+- [LockScreen.kt:1-478](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockScreen.kt#L1-L478)
+- [MainActivity.kt:1-355](file://android/app/src/main/kotlin/com/xpx/vault/ui/MainActivity.kt#L1-L355)
 
 ## 核心组件
 
 ### PIN管理核心组件
 
-系统包含三个主要的PIN管理组件：
+系统包含四个主要的PIN管理组件：
 
 1. **ChangePinScreen**: 负责PIN修改的用户界面
 2. **LockScreen**: 负责PIN设置和验证的用户界面  
-3. **AppLockManager**: 管理应用的锁定状态
+3. **BackupRestoreScreen**: 负责备份和恢复的用户界面
+4. **AppLockManager**: 管理应用的锁定状态
 
 ### 数据模型
 
@@ -117,19 +142,31 @@ class PasswordHasher {
 +sha256HexOfUtf8(string) : String
 +sha256HexWithSalt(password, salt) : String
 }
+class FirstLaunchRouter {
++detect(context, db) : Branch
+}
+class LockStage {
++SETUP_ENTER
++SETUP_CONFIRM
++SETUP_CONFIRM_ERROR
++UNLOCK
++RESTORE_LOGIN
+}
 SecuritySettingDao --> SecuritySettingEntity : "操作"
 PasswordHasher --> SecuritySettingEntity : "哈希密码"
+FirstLaunchRouter --> LockStage : "路由分支"
 ```
 
 **图表来源**
-- [SecuritySettingEntity.kt:1-19](file://android/core/data/src/main/kotlin/com/photovault/data/db/entity/SecuritySettingEntity.kt#L1-L19)
-- [SecuritySettingDao.kt:1-17](file://android/core/data/src/main/kotlin/com/photovault/data/db/dao/SecuritySettingDao.kt#L1-L17)
-- [PasswordHasher.kt:1-26](file://android/core/data/src/main/kotlin/com/photovault/data/crypto/PasswordHasher.kt#L1-L26)
+- [SecuritySettingEntity.kt:1-19](file://android/core/data/src/main/kotlin/com/xpx/vault/data/db/entity/SecuritySettingEntity.kt#L1-L19)
+- [SecuritySettingDao.kt:1-17](file://android/core/data/src/main/kotlin/com/xpx/vault/data/db/dao/SecuritySettingDao.kt#L1-L17)
+- [PasswordHasher.kt:1-26](file://android/core/data/src/main/kotlin/com/xpx/vault/data/crypto/PasswordHasher.kt#L1-L26)
+- [FirstLaunchRouter.kt:14-26](file://android/app/src/main/kotlin/com/xpx/vault/ui/setup/FirstLaunchRouter.kt#L14-L26)
 
 **章节来源**
-- [SecuritySettingEntity.kt:1-19](file://android/core/data/src/main/kotlin/com/photovault/data/db/entity/SecuritySettingEntity.kt#L1-L19)
-- [SecuritySettingDao.kt:1-17](file://android/core/data/src/main/kotlin/com/photovault/data/db/dao/SecuritySettingDao.kt#L1-L17)
-- [PasswordHasher.kt:1-26](file://android/core/data/src/main/kotlin/com/photovault/data/crypto/PasswordHasher.kt#L1-L26)
+- [SecuritySettingEntity.kt:1-19](file://android/core/data/src/main/kotlin/com/xpx/vault/data/db/entity/SecuritySettingEntity.kt#L1-L19)
+- [SecuritySettingDao.kt:1-17](file://android/core/data/src/main/kotlin/com/xpx/vault/data/db/dao/SecuritySettingDao.kt#L1-L17)
+- [PasswordHasher.kt:1-26](file://android/core/data/src/main/kotlin/com/xpx/vault/data/crypto/PasswordHasher.kt#L1-L26)
 
 ## 架构概览
 
@@ -140,38 +177,56 @@ graph TB
 subgraph "用户界面层"
 UI1[ChangePinScreen]
 UI2[LockScreen]
-UI3[LockSuccessContent]
+UI3[BackupRestoreScreen]
+UI4[LockSuccessContent]
+UI5[RestoreProgressScreen]
+UI6[RestoreResultScreen]
 end
 subgraph "视图模型层"
 VM1[ChangePinViewModel]
 VM2[LockViewModel]
+VM3[BackupRestoreViewModel]
 end
 subgraph "业务逻辑层"
 BL1[PIN验证逻辑]
 BL2[密码哈希处理]
 BL3[错误计数管理]
+BL4[备份恢复逻辑]
+BL5[首启路由判断]
 end
 subgraph "数据访问层"
 DA1[SecuritySettingDao]
 DA2[Room数据库]
+DA3[BackupKeyManager]
+DA4[LocalBackupMvpService]
 end
 UI1 --> VM1
 UI2 --> VM2
+UI3 --> VM3
+UI5 --> VM3
+UI6 --> VM3
 VM1 --> BL1
 VM2 --> BL1
+VM3 --> BL4
+VM2 --> BL5
 VM1 --> BL2
 VM2 --> BL2
-VM1 --> BL3
+VM3 --> BL3
 VM2 --> BL3
+VM2 --> BL4
 BL1 --> DA1
 BL2 --> DA1
 BL3 --> DA1
+BL4 --> DA4
+BL5 --> DA1
 DA1 --> DA2
+DA3 --> DA2
+DA4 --> DA2
 ```
 
 **图表来源**
-- [ChangePinViewModel.kt:191-306](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L191-L306)
-- [LockViewModel.kt:18-197](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockViewModel.kt#L18-L197)
+- [LockViewModel.kt:41-63](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L41-L63)
+- [BackupRestoreScreen.kt:86-104](file://android/app/src/main/kotlin/com/xpx/vault/ui/BackupRestoreScreen.kt#L86-L104)
 
 ## 详细组件分析
 
@@ -222,8 +277,8 @@ end
 ```
 
 **图表来源**
-- [ChangePinScreen.kt:217-305](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L217-L305)
-- [ChangePinViewModel.kt:239-305](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L239-L305)
+- [ChangePinScreen.kt:279-341](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt#L279-L341)
+- [ChangePinViewModel.kt:239-305](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt#L239-L305)
 
 #### UI状态管理
 
@@ -259,42 +314,45 @@ state CONFIRM_NEW {
 ```
 
 **图表来源**
-- [ChangePinScreen.kt:308-344](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L308-L344)
+- [ChangePinScreen.kt:308-344](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt#L308-L344)
 
 **章节来源**
-- [ChangePinScreen.kt:55-189](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L55-L189)
-- [ChangePinScreen.kt:191-306](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L191-L306)
+- [ChangePinScreen.kt:55-189](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt#L55-L189)
+- [ChangePinScreen.kt:191-306](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt#L191-L306)
 
 ### LockScreen 组件分析
 
-LockScreen负责首次设置PIN码和日常解锁验证：
+LockScreen负责首次设置PIN码和日常解锁验证，现支持RESTORE_LOGIN阶段：
 
 #### PIN设置流程
 
 ```mermaid
 flowchart TD
 Start([应用启动]) --> CheckSetting{检查PIN设置}
-CheckSetting --> |未设置| SetupEnter[设置PIN步骤1]
+CheckSetting --> |未设置| CheckBackup{检查外部备份}
 CheckSetting --> |已设置| Unlock[解锁界面]
-SetupEnter --> EnterPIN[输入6位PIN]
-EnterPIN --> ConfirmPIN[确认PIN]
-ConfirmPIN --> CheckMatch{两次输入一致?}
-CheckMatch --> |否| ShowError[显示错误]
-CheckMatch --> |是| SavePIN[保存PIN]
-ShowError --> SetupEnter
+CheckBackup --> |有备份| RestoreLogin[恢复登录步骤]
+CheckBackup --> |无备份| SetupEnter[设置PIN步骤1]
+RestoreLogin --> EnterPIN[输入6位PIN]
+EnterPIN --> VerifyBackup[验证备份解密]
+VerifyBackup --> CheckMatch{备份验证成功?}
+CheckMatch --> |否| IncrementFail[增加失败次数]
+CheckMatch --> |是| SavePIN[保存为本机PIN]
+IncrementFail --> ShowError[显示错误]
+ShowError --> RestoreLogin
 SavePIN --> Success[设置成功]
 Success --> BiometricPrompt[生物识别提示]
 BiometricPrompt --> Unlock
 Unlock --> VerifyPIN[验证PIN]
 VerifyPIN --> CheckCorrect{PIN正确?}
-CheckCorrect --> |否| IncrementFail[增加失败次数]
+CheckCorrect --> |否| IncrementFail2[增加失败次数]
 CheckCorrect --> |是| SuccessUnlock[解锁成功]
-IncrementFail --> ShowError
+IncrementFail2 --> ShowError
 ```
 
 **图表来源**
-- [LockScreen.kt:108-228](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockScreen.kt#L108-L228)
-- [LockViewModel.kt:44-86](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockViewModel.kt#L44-L86)
+- [LockScreen.kt:108-228](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockScreen.kt#L108-L228)
+- [LockViewModel.kt:44-86](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L44-L86)
 
 #### 生物识别集成
 
@@ -306,8 +364,8 @@ IncrementFail --> ShowError
 - **弱生物识别**：BIOMETRIC_WEAK
 
 **章节来源**
-- [LockScreen.kt:52-228](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockScreen.kt#L52-L228)
-- [LockViewModel.kt:18-197](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockViewModel.kt#L18-L197)
+- [LockScreen.kt:52-228](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockScreen.kt#L52-L228)
+- [LockViewModel.kt:18-197](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L18-L197)
 
 ### AppLockManager 组件分析
 
@@ -332,10 +390,90 @@ CheckBackgroundPolicy --> NoLock : ON_PAUSE策略
 ```
 
 **图表来源**
-- [AppLockManager.kt:17-49](file://android/app/src/main/kotlin/com/photovault/app/AppLockManager.kt#L17-L49)
+- [AppLockManager.kt:17-49](file://android/app/src/main/kotlin/com/xpx/vault/ui/AppLockManager.kt#L17-L49)
 
 **章节来源**
-- [AppLockManager.kt:17-49](file://android/app/src/main/kotlin/com/photovault/app/AppLockManager.kt#L17-L49)
+- [AppLockManager.kt:17-49](file://android/app/src/main/kotlin/com/xpx/vault/ui/AppLockManager.kt#L17-L49)
+
+## RESTORE_LOGIN阶段详解
+
+**新增** RESTORE_LOGIN阶段是本次更新的核心功能，允许用户通过外部备份文件进行恢复登录。
+
+### 首启路由机制
+
+```mermaid
+flowchart TD
+Start([应用启动]) --> Detect[FirstLaunchRouter.detect]
+Detect --> HasSetting{已有SecuritySetting?}
+HasSetting --> |是| Unlock[Branch.Unlock]
+HasSetting --> |否| CheckBackup{外部backup.dat存在?}
+CheckBackup --> |是| RestoreLogin[Branch.RestoreLogin]
+CheckBackup --> |否| Fresh[Branch.Fresh]
+Unlock --> ShowUnlock[显示LockScreen UNLOCK]
+RestoreLogin --> ShowRestoreLogin[显示LockScreen RESTORE_LOGIN]
+Fresh --> ShowFresh[显示LockScreen SETUP_ENTER]
+```
+
+**图表来源**
+- [FirstLaunchRouter.kt:21-26](file://android/app/src/main/kotlin/com/xpx/vault/ui/setup/FirstLaunchRouter.kt#L21-L26)
+- [LockViewModel.kt:41-63](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L41-L63)
+
+### RESTORE_LOGIN流程
+
+```mermaid
+sequenceDiagram
+participant User as 用户
+participant Screen as LockScreen
+participant VM as LockViewModel
+participant Service as LocalBackupMvpService
+participant DAO as SecuritySettingDao
+User->>Screen : 打开恢复登录界面
+Screen->>VM : 输入6位PIN
+VM->>VM : attemptRestoreLogin()
+VM->>Service : restoreFromAutoPackage()
+Service-->>VM : 解密结果(success/failure)
+alt 解密成功
+VM->>DAO : upsert SecuritySetting(PIN)
+VM->>VM : refreshBackupKeyForPin()
+VM->>Screen : 显示解锁成功
+else 解密失败
+VM->>VM : 增加失败次数
+VM->>Screen : 显示错误信息
+alt 失败≥3次
+VM->>Screen : 显示放弃备份按钮
+end
+```
+
+**图表来源**
+- [LockViewModel.kt:261-299](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L261-L299)
+
+### 放弃备份选项
+
+当用户连续3次输入错误的PIN时，系统会显示"放弃备份，创建新相册"按钮：
+
+```mermaid
+stateDiagram-v2
+[*] --> AttemptRestore : 输入PIN
+AttemptRestore --> Success : 解密成功
+AttemptRestore --> Fail1 : 第1次失败
+AttemptRestore --> Fail2 : 第2次失败
+AttemptRestore --> Fail3 : 第3次失败
+Fail1 --> AttemptRestore
+Fail2 --> AttemptRestore
+Fail3 --> ShowAbandon : 显示放弃备份按钮
+ShowAbandon --> AbandonBackup : 用户点击放弃
+ShowAbandon --> AttemptRestore : 用户继续尝试
+AbandonBackup --> FreshSetup : 跳转到新建相册流程
+```
+
+**图表来源**
+- [LockScreen.kt:243-255](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockScreen.kt#L243-L255)
+- [LockViewModel.kt:301-306](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L301-L306)
+
+**章节来源**
+- [FirstLaunchRouter.kt:7-26](file://android/app/src/main/kotlin/com/xpx/vault/ui/setup/FirstLaunchRouter.kt#L7-L26)
+- [LockViewModel.kt:256-306](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L256-L306)
+- [LockScreen.kt:242-271](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockScreen.kt#L242-L271)
 
 ## 依赖关系分析
 
@@ -348,38 +486,47 @@ A[Android Jetpack Compose]
 B[Room Database]
 C[Hilt DI]
 D[Biometric API]
+E[LocalBackupMvpService]
+F[ExternalBackupLocation]
 end
 subgraph "内部模块"
-E[UI组件层]
-F[视图模型层]
-G[数据访问层]
-H[加密服务层]
+G[UI组件层]
+H[视图模型层]
+I[数据访问层]
+J[加密服务层]
+K[备份恢复层]
 end
 subgraph "核心功能"
-I[PIN管理]
-J[安全设置]
-K[应用锁定]
-L[生物识别]
+L[PIN管理]
+M[安全设置]
+N[应用锁定]
+O[生物识别]
+P[备份恢复]
+Q[首启路由]
 end
-A --> E
-B --> G
-C --> F
-D --> L
-E --> F
-F --> G
+A --> G
+B --> I
+C --> H
+D --> O
+E --> P
+F --> P
 G --> H
+H --> I
 I --> J
-J --> K
-K --> L
-I --> A
+L --> M
+M --> N
+N --> O
+L --> P
+P --> Q
+Q --> F
+I --> B
 J --> B
-K --> C
-L --> D
+K --> E
 ```
 
 **图表来源**
-- [MainActivity.kt:47-355](file://android/app/src/main/kotlin/com/photovault/app/MainActivity.kt#L47-L355)
-- [ChangePinViewModel.kt:191-306](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L191-L306)
+- [MainActivity.kt:47-355](file://android/app/src/main/kotlin/com/xpx/vault/ui/MainActivity.kt#L47-L355)
+- [LockViewModel.kt:184-198](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L184-L198)
 
 ### 数据流分析
 
@@ -401,12 +548,12 @@ VM-->>UI : 更新界面状态
 ```
 
 **图表来源**
-- [PasswordHasher.kt:9-24](file://android/core/data/src/main/kotlin/com/photovault/data/crypto/PasswordHasher.kt#L9-L24)
-- [SecuritySettingDao.kt:14-15](file://android/core/data/src/main/kotlin/com/photovault/data/db/dao/SecuritySettingDao.kt#L14-L15)
+- [PasswordHasher.kt:9-24](file://android/core/data/src/main/kotlin/com/xpx/vault/data/crypto/PasswordHasher.kt#L9-L24)
+- [SecuritySettingDao.kt:14-15](file://android/core/data/src/main/kotlin/com/xpx/vault/data/db/dao/SecuritySettingDao.kt#L14-L15)
 
 **章节来源**
-- [MainActivity.kt:47-355](file://android/app/src/main/kotlin/com/photovault/app/MainActivity.kt#L47-L355)
-- [PasswordHasher.kt:1-26](file://android/core/data/src/main/kotlin/com/photovault/data/crypto/PasswordHasher.kt#L1-L26)
+- [MainActivity.kt:47-355](file://android/app/src/main/kotlin/com/xpx/vault/ui/MainActivity.kt#L47-L355)
+- [PasswordHasher.kt:1-26](file://android/core/data/src/main/kotlin/com/xpx/vault/data/crypto/PasswordHasher.kt#L1-L26)
 
 ## 性能考虑
 
@@ -427,6 +574,7 @@ VM-->>UI : 更新界面状态
 1. **哈希计算**：使用SHA-256算法确保密码安全存储
 2. **错误计数**：防止暴力破解攻击
 3. **加密存储**：PIN哈希值本地存储，不传输到云端
+4. **备份解密**：RESTORE_LOGIN阶段的备份解密在IO线程中执行
 
 ## 故障排除指南
 
@@ -477,9 +625,38 @@ VM-->>UI : 更新界面状态
 3. 录入指纹或面部数据
 4. 重新尝试生物识别解锁
 
+#### 外部备份恢复失败
+
+**问题症状**：RESTORE_LOGIN阶段输入PIN后显示"备份解密失败"
+
+**可能原因**：
+1. 外部备份文件损坏
+2. 输入的PIN码与备份创建时使用的密码不匹配
+3. 备份文件格式不兼容
+
+**解决步骤**：
+1. 确认备份文件的完整性和有效性
+2. 检查输入的PIN码是否正确
+3. 尝试使用其他备份文件
+4. 如问题持续，选择"放弃备份，创建新相册"选项
+
+#### 放弃备份后创建新相册
+
+**问题症状**：选择放弃备份后无法正常创建新相册
+
+**可能原因**：
+1. 应用状态异常
+2. 外部备份文件仍然存在影响
+
+**解决步骤**：
+1. 重启应用后重试
+2. 清除应用数据后重新启动
+3. 检查外部备份文件是否被正确识别
+
 **章节来源**
-- [ChangePinScreen.kt:235-305](file://android/app/src/main/kotlin/com/photovault/app/ui/ChangePinScreen.kt#L235-L305)
-- [LockScreen.kt:360-382](file://android/app/src/main/kotlin/com/photovault/app/ui/lock/LockScreen.kt#L360-L382)
+- [ChangePinScreen.kt:235-305](file://android/app/src/main/kotlin/com/xpx/vault/ui/ChangePinScreen.kt#L235-L305)
+- [LockScreen.kt:360-382](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockScreen.kt#L360-L382)
+- [LockViewModel.kt:288-299](file://android/app/src/main/kotlin/com/xpx/vault/ui/lock/LockViewModel.kt#L288-L299)
 
 ## 结论
 
@@ -491,6 +668,8 @@ PIN管理界面是AI照片保险箱应用的核心安全功能，采用了现代
 2. **用户体验**：流畅的三步式PIN修改流程
 3. **安全性强**：SHA-256哈希存储，错误计数防护
 4. **扩展性好**：模块化设计，易于功能扩展
+5. ****新增** RESTORE_LOGIN阶段**：支持通过外部备份进行恢复登录
+6. ****新增** 放弃备份选项**：提供灵活的数据迁移方案
 
 ### 功能完整性
 
@@ -499,6 +678,8 @@ PIN管理界面是AI照片保险箱应用的核心安全功能，采用了现代
 - 生物识别解锁集成
 - 错误计数和安全锁定
 - 多语言支持
+- **新增** 外部备份恢复登录
+- **新增** 放弃备份创建新相册
 
 ### 改进建议
 
@@ -506,5 +687,8 @@ PIN管理界面是AI照片保险箱应用的核心安全功能，采用了现代
 2. **用户体验优化**：添加PIN码强度指示器
 3. **安全增强**：考虑添加安装级salt提高安全性
 4. **功能扩展**：支持多种解锁方式组合
+5. ****新增** 备份恢复向导**：提供更直观的备份恢复指导
+
+**更新** 本次更新显著增强了系统的数据迁移和恢复能力，通过RESTORE_LOGIN阶段和放弃备份选项，为用户提供了更加灵活和安全的数据管理体验。这些改进使得用户能够在不同设备间迁移数据，或在数据丢失后恢复到之前的状态，大大提高了应用的可用性和用户满意度。
 
 该PIN管理界面为用户提供了安全可靠的隐私保护机制，是整个应用安全体系的重要组成部分。
