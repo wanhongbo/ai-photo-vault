@@ -118,13 +118,23 @@ class MlKitAnalyzer @Inject constructor(
             barcodeHit = barcodes.isNotEmpty(),
         ).toMutableSet()
 
-        // 清晰人脸：任意一张脸 bbox 短边 >= 128px（基于缩略图尺度）。
+        // 清晰人脸判定：任一张脸 bbox 短边 ≥ bitmap 短边 * FACE_CLEAR_MIN_RATIO。
+        // 原实现写死为 128px，而扫描输入是 256px 缩略图 → 仅当脸占画面 50%+ 才命中，
+        // 导致半身自拍 / 中景人像统速全落选，卡片始终 AllClear。
+        // 改为相对比例后：256px 缩略图下阈值约 64px，典型自拍（脸 25%~40%）均能命中，
+        // 而合影小脸 / 背景远景人脸依然被滤掉。
+        val bitmapMinSide = minOf(bitmap.width, bitmap.height)
+        val faceClearThreshold = (bitmapMinSide * FACE_CLEAR_MIN_RATIO).toInt().coerceAtLeast(1)
         val hasClearFace = faces.any { f ->
             val w = f.boundingBox.width()
             val h = f.boundingBox.height()
-            minOf(w, h) >= 128
+            minOf(w, h) >= faceClearThreshold
         }
         if (hasClearFace) kinds += SensitiveKind.FACE_CLEAR
+        android.util.Log.d(
+            TAG,
+            "sensitive faces=${faces.size} threshold=${faceClearThreshold}px hasClear=$hasClearFace kinds=$kinds",
+        )
 
         val sensitive = kinds.map { AiSensitiveHit(kind = it, confidence = 0.85f) }
 
@@ -161,5 +171,14 @@ class MlKitAnalyzer @Inject constructor(
 
     companion object {
         const val ENGINE_VERSION = "mlkit-v1"
+        private const val TAG = "MlKitAnalyzer"
+
+        /**
+         * 清晰人脸的短边占画面短边最小比例。
+         * 0.25 = 脸占画面 25%↑ 视为「主角过近 / 需打码」；
+         * 远比 0.50（原硬阈值 128px／256px缩略）宽容，用户常见自拍都能命中，
+         * 又足以过滤合影 / 旅游照里远景人群的连带人脸。
+         */
+        private const val FACE_CLEAR_MIN_RATIO = 0.25f
     }
 }
