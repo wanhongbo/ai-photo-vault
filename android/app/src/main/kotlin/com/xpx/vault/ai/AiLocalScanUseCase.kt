@@ -185,8 +185,14 @@ class AiLocalScanUseCase @Inject constructor(
                 ),
             )
         } else {
-            // 非截图：过滤低置信度 tag，避免 ML Kit 在模棱两可的误判污染分类 Tab。
-            merged.copy(tags = merged.tags.filter { it.confidence >= MIN_TAG_CONFIDENCE })
+            // 非截图：先过滤低置信度 tag，避免 ML Kit 在模棱两可的误判污染分类 Tab。
+            val filtered = merged.tags.filter { it.confidence >= MIN_TAG_CONFIDENCE }
+            // 同一张照片只归属一个分类：选出 "代表分类"，把所有 tag 的 category 统一到它。
+            // 避免一张风景照因为 ML Kit 同时输出 "tree" 和 "fruit" 两个 label，
+            // 而同时出现在 "风景" 和 "美食" 两个 Tab 里（两 Tab 应互斥）。
+            // label 本身保留不变，未来做搜索/细粒度展示仍可用。
+            val primary = pickPrimaryCategory(filtered)
+            merged.copy(tags = filtered.map { it.copy(category = primary) })
         }
         persist(merged)
         merged.phash?.let { p ->
@@ -311,6 +317,27 @@ class AiLocalScanUseCase @Inject constructor(
         val matchPortrait = approxEqual(w, screenW, tolerance) && approxEqual(h, screenH, tolerance)
         val matchLandscape = approxEqual(w, screenH, tolerance) && approxEqual(h, screenW, tolerance)
         matchPortrait || matchLandscape
+    }
+
+    /**
+     * 为一张照片挑选代表分类。
+     *
+     * 规则：
+     *  - 以 category 为单位聚合 tag，计算每个非 OTHER category 的总置信度之和，取最大者；
+     *  - 用 "类内总分" 而非 "单条最高 confidence"，可利用多标签冗余压制零散噪声 label；
+     *    例如 tree(0.70)+plant(0.68)+flower(0.65) 的 LANDSCAPE 会压过 fruit(0.72) 的 FOOD；
+     *  - 所有 tag 都是 OTHER 或 tags 为空时，归 OTHER。
+     *
+     *  SCREENSHOT 已在上游单独分支处理，此处不会被调用。
+     */
+    private fun pickPrimaryCategory(tags: List<CoreAiTag>): ClassifyCategory {
+        if (tags.isEmpty()) return ClassifyCategory.OTHER
+        val best = tags
+            .filter { it.category != ClassifyCategory.OTHER }
+            .groupBy { it.category }
+            .mapValues { (_, list) -> list.sumOf { it.confidence.toDouble() } }
+            .maxByOrNull { it.value }
+        return best?.key ?: ClassifyCategory.OTHER
     }
 
     private fun approxEqual(a: Int, b: Int, tolerance: Float): Boolean {
