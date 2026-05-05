@@ -130,7 +130,10 @@ class PrivacyRedactViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        runCatching { detector.close() }
+        // 注意：detector 是 @Singleton，进程内全局共享，这里绝对不能调 detector.close()：
+        // 内部 faceDetector / textRecognizer / barcodeScanner 都是 by lazy 只初始化一次，
+        // 一旦关闭再次使用会直接 Task 失败，导致“第二次进入共脱敏页不触发检测”的 bug。
+        // Singleton 的 client 由进程回收时 GC尾，无需手动关闭。
         originalBitmap?.recycle()
         originalBitmap = null
     }
