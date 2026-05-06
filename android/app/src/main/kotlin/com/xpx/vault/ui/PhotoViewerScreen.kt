@@ -1,7 +1,6 @@
 package com.xpx.vault.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,10 +20,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -65,7 +66,6 @@ fun PhotoViewerScreen(
     }
     var currentPath by remember(path) { mutableStateOf(path) }
     var orderedPaths by remember { mutableStateOf(listOf(path)) }
-    var horizontalDragOffset by remember { mutableStateOf(0f) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showPurgeDialog by remember { mutableStateOf(false) }
     var showInfoDialog by remember { mutableStateOf(false) }
@@ -73,14 +73,23 @@ fun PhotoViewerScreen(
     val currentIndex = remember(currentPath, orderedPaths) {
         orderedPaths.indexOf(currentPath).coerceAtLeast(0)
     }
-    val swipeTriggerPx = with(density) { 48.dp.toPx() }
 
-    fun showPrevious() {
-        if (currentIndex > 0) currentPath = orderedPaths[currentIndex - 1]
+    // HorizontalPager 状态，提供手指跟随 + 弹性翻页动画。
+    val pagerState = rememberPagerState(initialPage = 0) { orderedPaths.size }
+
+    // 当 orderedPaths / currentIndex 变化时，同步 pager 位置（无动画跳转）。
+    LaunchedEffect(currentIndex, orderedPaths.size) {
+        if (pagerState.currentPage != currentIndex && orderedPaths.isNotEmpty()) {
+            pagerState.scrollToPage(currentIndex)
+        }
     }
-
-    fun showNext() {
-        if (currentIndex < orderedPaths.lastIndex) currentPath = orderedPaths[currentIndex + 1]
+    // 当用户手动滑动 pager 切换页面时，同步更新 currentPath。
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            if (page in orderedPaths.indices) {
+                currentPath = orderedPaths[page]
+            }
+        }
     }
 
     fun removeCurrentFromList() {
@@ -159,37 +168,24 @@ fun PhotoViewerScreen(
             onDismiss = { showInfoDialog = false },
         )
         AppTopBar(title = stringResource(R.string.photo_viewer_title), onBack = onBack)
-        VaultProgressiveImage(
-            path = currentPath,
+        HorizontalPager(
+            state = pagerState,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth()
-                .pointerInput(currentPath, currentIndex, orderedPaths.size) {
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { _, dragAmount ->
-                            horizontalDragOffset += dragAmount
-                        },
-                        onDragEnd = {
-                            when {
-                                horizontalDragOffset > swipeTriggerPx -> showPrevious()
-                                horizontalDragOffset < -swipeTriggerPx -> showNext()
-                            }
-                            horizontalDragOffset = 0f
-                        },
-                        onDragCancel = { horizontalDragOffset = 0f },
-                    )
-                },
-            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-            thumbnailMaxPx = 1080,
-            loadHighQuality = true,
-            highQualityMaxPx = screenMaxPx,
-            loadedBackgroundColor = UiColors.Home.bgBottom,
-        )
-        Text(
-            text = "左右滑动可切换",
-            color = UiColors.Home.subtitle,
-            fontSize = UiTextSize.homeNavLabel,
-        )
+                .fillMaxWidth(),
+            beyondViewportPageCount = 1,
+        ) { page ->
+            val pagePath = orderedPaths.getOrElse(page) { currentPath }
+            VaultProgressiveImage(
+                path = pagePath,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                thumbnailMaxPx = 1080,
+                loadHighQuality = true,
+                highQualityMaxPx = screenMaxPx,
+                loadedBackgroundColor = UiColors.Home.bgBottom,
+            )
+        }
         if (isTrash) {
             Row(
                 modifier = Modifier

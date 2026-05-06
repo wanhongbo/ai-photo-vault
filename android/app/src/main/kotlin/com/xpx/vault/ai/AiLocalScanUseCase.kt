@@ -95,6 +95,9 @@ class AiLocalScanUseCase @Inject constructor(
      *   false 时走增量扫描，已扫过的 photoId 会被跳过。
      */
     fun requestScan(force: Boolean = false) {
+        // 同步置 running=true，让 ViewModel combine 立即派生 Scanning 状态，
+        // 避免 clearSnoozes 触发 versionFlow 时产生中间态闪烁。
+        _progress.value = AiScanProgress(running = true, total = 0, done = 0)
         appScope.launch { run(force) }
     }
 

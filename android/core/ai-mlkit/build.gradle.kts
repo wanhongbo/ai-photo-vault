@@ -31,7 +31,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    // ML Kit play-services variant：模型按需下载，GMS 不可用时 isReady() 返回 false 降级。
+    // ML Kit bundled variant：模型内置于 APK，无需 GMS 动态下载即可工作。
     implementation(libs.play.services.base)
     implementation(libs.mlkit.image.labeling)
     implementation(libs.mlkit.face.detection)

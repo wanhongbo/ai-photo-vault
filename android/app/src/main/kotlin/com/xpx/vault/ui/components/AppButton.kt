@@ -43,7 +43,7 @@ fun AppButton(
         else -> UiColors.Button.dangerContainer to UiColors.Button.dangerContent
     }
     val btnHeight = if (variant == AppButtonVariant.SECONDARY) UiSize.buttonHeightSecondary else UiSize.buttonHeight
-    val btnFontSize = if (variant == AppButtonVariant.SECONDARY) UiTextSize.buttonSecondary else UiTextSize.button
+    val btnFontSize = UiTextSize.button
     val btnCorner = if (variant == AppButtonVariant.SECONDARY) 14.dp else 16.dp
     Button(
         onClick = throttledOnClick,
