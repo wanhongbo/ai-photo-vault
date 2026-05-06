@@ -52,6 +52,7 @@
     <string name="ai_action_view_cleanup">查看可清理</string>
     <string name="ai_features_title">核心 AI 功能</string>
     <string name="ai_features_count">6 项功能</string>
+    <string name="ai_features_count_fmt">%1$d 项功能</string>
     <string name="ai_feat_classify">智能分类</string>
     <string name="ai_feat_classify_desc">自动归类，整理照片</string>
     <string name="ai_feat_search">语义搜索</string>

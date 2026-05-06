@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -41,6 +42,9 @@ import com.xpx.vault.ui.theme.UiColors
 
 /**
  * 与 AiFeature 卡片关联的逻辑标识，供跳转路由映射使用。
+ *
+ * 枚举保留 6 值，仅 [aiFeatures] 滤掉 SEARCH / COMPRESS，方便未来恢复时
+ * 无需改动 MainActivity 的 when 分支。
  */
 enum class AiFeatureKey { CLASSIFY, SEARCH, PRIVACY, COMPRESS, ENCRYPT, DEDUP }
 
@@ -55,6 +59,7 @@ fun AiHomeScreen(
     val viewModel: AiHomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val tabs = remember { homeTabs() }
+    val features = remember { aiFeatures() }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -63,24 +68,26 @@ fun AiHomeScreen(
             .padding(20.dp),
     ) {
         AiHeader()
-        LazyColumn(
+        Spacer(Modifier.height(16.dp))
+        // 建议卡片 wrap content；功能区拿剩余空间 weight(1f)，让 4 个卡片尽量铺满一屏。
+        // 不再用 LazyColumn：建议卡 + 4 功能卡不会溢出，也不需要滚动。
+        AiSuggestCard(
+            uiState = uiState,
+            onOpenPrivacy = { onOpenFeature(AiFeatureKey.PRIVACY) },
+            onOpenDedup = { onOpenFeature(AiFeatureKey.DEDUP) },
+            onRescan = viewModel::onRescan,
+            onSnooze = viewModel::onSnooze,
+        )
+        Spacer(Modifier.height(16.dp))
+        AiFeaturesHeader(count = features.size)
+        Spacer(Modifier.height(12.dp))
+        AiFeaturesGrid(
+            features = features,
+            onOpenFeature = onOpenFeature,
             modifier = Modifier
-                .weight(1f)
                 .fillMaxWidth()
-                .padding(top = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            item {
-                AiSuggestCard(
-                    uiState = uiState,
-                    onOpenPrivacy = { onOpenFeature(AiFeatureKey.PRIVACY) },
-                    onOpenDedup = { onOpenFeature(AiFeatureKey.DEDUP) },
-                    onRescan = viewModel::onRescan,
-                    onSnooze = viewModel::onSnooze,
-                )
-            }
-            item { AiFeaturesSection(onOpenFeature = onOpenFeature) }
-        }
+                .weight(1f),
+        )
         if (showBottomNav) {
             HomeBottomNav(tabs = tabs, selectedIndex = selectedTab.ordinal, onSelect = { onOpenTab(tabs[it].tab) })
         }
@@ -89,8 +96,8 @@ fun AiHomeScreen(
 
 @Composable
 private fun AiHeader() {
-    // 仅保留标题 / 副标题；原右侧的「筛选 / 帮助」两个圆形按钮为占位（onClick 为空），
-    // 因暂无实际功能且用户明确要求移除，整块 Row + AiHeaderButton 一并删掉。
+    // 仅保留标题。副标题（日期 + 「智能引擎已就绪」）被用户明确移除，
+    // ai_subtitle 串暂不删，保留兼容。
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.ai_title),
@@ -98,48 +105,60 @@ private fun AiHeader() {
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
         )
+    }
+}
+
+@Composable
+private fun AiFeaturesHeader(count: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
-            text = stringResource(R.string.ai_subtitle),
+            text = stringResource(R.string.ai_features_title),
+            color = Color(0xFFF0F4FF),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        // 「4 项功能」由运行时动态拼接（而非固定文案），跟随卡片数量变化。
+        Text(
+            text = stringResource(R.string.ai_features_count_fmt, count),
             color = Color(0xFF6B6B70),
             fontSize = 13.sp,
-            modifier = Modifier.padding(top = 4.dp),
         )
     }
 }
 
 @Composable
-private fun AiFeaturesSection(onOpenFeature: (AiFeatureKey) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.ai_features_title),
-                color = Color(0xFFF0F4FF),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = stringResource(R.string.ai_features_count),
-                color = Color(0xFF6B6B70),
-                fontSize = 13.sp,
-            )
-        }
-        val features = remember { aiFeatures() }
+private fun AiFeaturesGrid(
+    features: List<AiFeature>,
+    onOpenFeature: (AiFeatureKey) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // 2×2 宫格。每行均分父高度，每列均分行宽度，让 4 张卡自适应铺满剩余屏幕。
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         features.chunked(2).forEach { rowFeatures ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 rowFeatures.forEach { feature ->
                     AiFeatureCard(
                         feature = feature,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                         onClick = { onOpenFeature(feature.key) },
                     )
                 }
+                // 奇数卡片时补空占位（当前 4 个功能不会命中，但写成防御性防后续调整）。
+        if (rowFeatures.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }
@@ -154,7 +173,6 @@ private fun AiFeatureCard(
     val interaction = rememberFeedbackInteractionSource()
     Row(
         modifier = modifier
-            .height(106.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(UiColors.Ai.featureCardBg)
             .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(16.dp))
@@ -164,19 +182,19 @@ private fun AiFeatureCard(
         Box(
             modifier = Modifier
                 .width(4.dp)
-                .fillMaxSize()
+                .fillMaxHeight()
                 .background(feature.barColor),
         )
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 14.dp),
+                .padding(horizontal = 14.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(feature.iconBgColor),
                 contentAlignment = Alignment.Center,
             ) {
@@ -184,13 +202,14 @@ private fun AiFeatureCard(
                     painter = painterResource(feature.iconRes),
                     contentDescription = null,
                     tint = feature.barColor,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
+            // 不再用 Spacer(weight(1f)) 把文字推到底部，避免卡片高度不足时标题/描述被圆角裁切。
             Text(
                 text = stringResource(feature.nameRes),
                 color = UiColors.Ai.featureTitle,
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
@@ -220,14 +239,7 @@ private fun aiFeatures(): List<AiFeature> = listOf(
         barColor = UiColors.Ai.classifyBar,
         iconBgColor = UiColors.Ai.classifyIconBg,
     ),
-    AiFeature(
-        key = AiFeatureKey.SEARCH,
-        nameRes = R.string.ai_feat_search,
-        descRes = R.string.ai_feat_search_desc,
-        iconRes = R.drawable.ic_home_action_search,
-        barColor = UiColors.Ai.searchBar,
-        iconBgColor = UiColors.Ai.searchIconBg,
-    ),
+    // SEARCH（语义搜索）暂隐藏：当前实际路由同 CLASSIFY，没独立能力前无需暴露入口。
     AiFeature(
         key = AiFeatureKey.PRIVACY,
         nameRes = R.string.ai_feat_blur,
@@ -236,14 +248,7 @@ private fun aiFeatures(): List<AiFeature> = listOf(
         barColor = UiColors.Ai.blurBar,
         iconBgColor = UiColors.Ai.blurIconBg,
     ),
-    AiFeature(
-        key = AiFeatureKey.COMPRESS,
-        nameRes = R.string.ai_feat_compress,
-        descRes = R.string.ai_feat_compress_desc,
-        iconRes = R.drawable.ic_ai_image,
-        barColor = UiColors.Ai.compressBar,
-        iconBgColor = UiColors.Ai.compressIconBg,
-    ),
+    // COMPRESS（图片瘦身、实际路由同 DEDUP→垃圾清理页）移除：与智能去重重复。
     AiFeature(
         key = AiFeatureKey.ENCRYPT,
         nameRes = R.string.ai_feat_encrypt,
