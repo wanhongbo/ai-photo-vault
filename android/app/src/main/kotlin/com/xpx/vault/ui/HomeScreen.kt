@@ -301,7 +301,7 @@ fun HomeScreen(
                     Text(
                         text = stringResource(R.string.home_album_create_title),
                         color = UiColors.Dialog.title,
-                        fontSize = 20.sp,
+                        fontSize = UiTextSize.dialogTitle,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                     )

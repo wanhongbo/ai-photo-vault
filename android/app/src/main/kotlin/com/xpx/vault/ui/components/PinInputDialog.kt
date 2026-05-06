@@ -186,18 +186,14 @@ fun PinInputDialog(
                         onClick = onDismiss,
                         variant = AppButtonVariant.SECONDARY,
                         enabled = !busy,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
+                        modifier = Modifier.weight(1f),
                     )
                     AppButton(
                         text = confirmText,
                         onClick = { if (pin.length == pinLength) onConfirm(pin) },
                         variant = AppButtonVariant.PRIMARY,
                         enabled = !busy && pin.length == pinLength,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }

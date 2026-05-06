@@ -11,10 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.R
 import com.xpx.vault.ui.components.AppTopBar
+import com.xpx.vault.ui.components.AppDialog
 import com.xpx.vault.ui.export.ExportBatchResult
 import com.xpx.vault.ui.export.ExportRuntimeState
 import com.xpx.vault.ui.theme.UiColors
@@ -85,23 +84,19 @@ fun ExportProgressScreen(
         showCancelDialog = true
     }
     if (showCancelDialog) {
-        AlertDialog(
-            onDismissRequest = { showCancelDialog = false },
-            title = { Text(stringResource(R.string.export_cancel_title)) },
-            text = { Text(stringResource(R.string.export_cancel_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showCancelDialog = false
-                    exportJob?.cancel()
-                    ExportRuntimeState.clearPending()
-                    cancelled = true
-                }) { Text(stringResource(R.string.export_cancel_confirm)) }
+        AppDialog(
+            show = true,
+            title = stringResource(R.string.export_cancel_title),
+            message = stringResource(R.string.export_cancel_message),
+            confirmText = stringResource(R.string.export_cancel_confirm),
+            dismissText = stringResource(R.string.export_cancel_continue),
+            onConfirm = {
+                showCancelDialog = false
+                exportJob?.cancel()
+                ExportRuntimeState.clearPending()
+                cancelled = true
             },
-            dismissButton = {
-                TextButton(onClick = { showCancelDialog = false }) {
-                    Text(stringResource(R.string.export_cancel_continue))
-                }
-            },
+            onDismiss = { showCancelDialog = false },
         )
     }
 

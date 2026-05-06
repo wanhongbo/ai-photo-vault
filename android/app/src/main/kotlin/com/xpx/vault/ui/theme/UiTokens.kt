@@ -158,7 +158,8 @@ object UiRadius {
 }
 
 object UiSize {
-    val buttonHeight: Dp = 56.dp
+    val buttonHeight: Dp = 54.dp
+    val buttonHeightSecondary: Dp = 48.dp
     val loadingIndicator: Dp = 20.dp
     val homeNavBarHeight: Dp = 88.dp
     val homeNavIcon: Dp = 22.dp
@@ -229,9 +230,10 @@ object UiSize {
 }
 
 object UiTextSize {
-    val button: TextUnit = 18.sp
-    val dialogTitle: TextUnit = 22.sp
-    val dialogBody: TextUnit = 15.sp
+    val button: TextUnit = 16.sp
+    val buttonSecondary: TextUnit = 14.sp
+    val dialogTitle: TextUnit = 18.sp
+    val dialogBody: TextUnit = 14.sp
     val homeTitle: TextUnit = 24.sp
     val homeSubtitle: TextUnit = 14.sp
     val homeEmptyTitle: TextUnit = 20.sp

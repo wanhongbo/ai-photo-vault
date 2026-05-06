@@ -42,17 +42,20 @@ fun AppButton(
         variant == AppButtonVariant.SECONDARY -> UiColors.Button.secondaryContainer to UiColors.Button.secondaryContent
         else -> UiColors.Button.dangerContainer to UiColors.Button.dangerContent
     }
+    val btnHeight = if (variant == AppButtonVariant.SECONDARY) UiSize.buttonHeightSecondary else UiSize.buttonHeight
+    val btnFontSize = if (variant == AppButtonVariant.SECONDARY) UiTextSize.buttonSecondary else UiTextSize.button
+    val btnCorner = if (variant == AppButtonVariant.SECONDARY) 14.dp else 16.dp
     Button(
         onClick = throttledOnClick,
         enabled = enabled && !loading,
-        modifier = modifier.height(UiSize.buttonHeight),
+        modifier = modifier.height(btnHeight),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
             disabledContainerColor = UiColors.Button.disabledContainer,
             disabledContentColor = UiColors.Button.disabledContent,
         ),
-        shape = RoundedCornerShape(999.dp),
+        shape = RoundedCornerShape(btnCorner),
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (loading) {
@@ -62,7 +65,7 @@ fun AppButton(
                     color = contentColor,
                 )
             } else {
-                Text(text = text, fontSize = UiTextSize.button)
+                Text(text = text, fontSize = btnFontSize)
             }
         }
     }
