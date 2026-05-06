@@ -17,6 +17,8 @@ interface AiAnalysisRepository {
     // ---- Tags ----
     suspend fun upsertTags(photoId: Long, tags: List<AiTag>)
     fun observeTagsByCategory(category: String): Flow<List<AiTag>>
+    /** 统计某分类的去重照片数（一次性快照）。 */
+    suspend fun countPhotosByCategory(category: String): Int
 
     // ---- Perceptual Hash ----
     suspend fun upsertPerceptualHash(hash: AiPerceptualHash)

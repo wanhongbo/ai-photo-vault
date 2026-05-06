@@ -2,10 +2,10 @@ package com.xpx.vault.ui.ai
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -19,7 +19,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -34,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.annotation.DrawableRes
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xpx.vault.R
@@ -44,12 +46,13 @@ import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
+import com.xpx.vault.ui.theme.UiRadius
+import com.xpx.vault.ui.theme.UiSize
 
 /**
- * 智能分类页：按 6 大类浏览 AI 识别到的照片（以 tag 记录为索引）。
+ * 智能分类页：按 6 大类浏览 AI 识别到的照片。
  *
- * PR3 版：水平滚动 Tab + 列表信息行（photoId / label / confidence）。
- * 缩略图渲染留到 PR4 接入（与敏感审核的路径映射同步解决）。
+ * 新版：垂直分类卡片列表（类似保险箱页的相册列表样式），点击卡片进入对应分类的宫格详情。
  */
 @Composable
 fun AiClassifyScreen(
@@ -65,31 +68,42 @@ fun AiClassifyScreen(
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding(),
     ) {
-        AppTopBar(title = "\u667a\u80fd\u5206\u7c7b", onBack = onBack)
+        AppTopBar(title = "智能分类", onBack = onBack)
         ClassifySummary(scanning = state.scanning, onScan = viewModel::startScan)
-        ClassifyTabRow(selected = state.selected, onSelect = viewModel::select)
-        if (state.tags.isEmpty()) {
+
+        if (state.categoryCounts.isEmpty() && !state.scanning) {
             ClassifyEmptyState(scanning = state.scanning)
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+            LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(state.tags, key = { it.id }) { tag ->
-                    val path = state.pathByPhotoId[tag.photoId]
-                    ClassifyGridCell(
-                        tag = tag,
-                        path = path,
-                        onClick = if (path != null) ({ onOpenPhoto(path) }) else null,
-                    )
+                items(state.categoryCounts, key = { it.category.name }) { item ->
+                    if (item.count > 0) {
+                        ClassifyCategorySection(
+                            category = item.category,
+                            count = item.count,
+                            previewPaths = item.previewPaths,
+                            onOpenPhoto = { path -> onOpenPhoto(path) },
+                            onViewMore = { viewModel.select(item.category) },
+                        )
+                    }
                 }
             }
         }
+    }
+
+    // 当选中某个分类时，显示宫格详情（覆盖在分类列表之上）
+    if (state.selected != null && state.tags.isNotEmpty()) {
+        ClassifyCategoryDetail(
+            category = state.selected!!,
+            tags = state.tags,
+            pathByPhotoId = state.pathByPhotoId,
+            onOpenPhoto = onOpenPhoto,
+            onBack = viewModel::closeDetail,
+        )
     }
 }
 
@@ -158,38 +172,119 @@ private fun ClassifySummary(scanning: Boolean, onScan: () -> Unit) {
 }
 
 @Composable
-private fun ClassifyTabRow(selected: ClassifyCategory, onSelect: (ClassifyCategory) -> Unit) {
-    val tabs = remember { ClassifyCategory.values().toList() }
-    Row(
+private fun ClassifyCategorySection(
+    category: ClassifyCategory,
+    count: Int,
+    previewPaths: List<String>,
+    onOpenPhoto: (String) -> Unit,
+    onViewMore: () -> Unit,
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .clip(RoundedCornerShape(14.dp))
+            .background(UiColors.Home.sectionBg)
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(14.dp))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
-        tabs.forEach { cat ->
-            val isSelected = cat == selected
-            val bg = if (isSelected) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardBg
-            val border = if (isSelected) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardStroke
-            val fg = if (isSelected) UiColors.Ai.execBtnText else Color(0xFFB0B0B8)
-            val interaction = rememberFeedbackInteractionSource()
-            Box(
+        // 标题行
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(
+                text = labelFor(category),
+                color = UiColors.Home.title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = "查看更多",
+                color = UiColors.Home.navItemActive,
+                fontSize = 14.sp,
+                modifier = Modifier.throttledClickable(onClick = onViewMore),
+            )
+        }
+        // 缩略图宫格
+        val columns = if (count <= 3) previewPaths.size.coerceIn(1, 3) else 3
+        val gridHeight = if (count <= 3) UiSize.homeThumbSize else 240.dp
+        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(columns),
+            modifier = Modifier
+                .height(gridHeight)
+                .padding(top = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
+            verticalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
+        ) {
+            items(previewPaths.take(30), key = { it }) { path ->
+                PhotoThumb(path = path, onClick = { onOpenPhoto(path) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun PhotoThumb(
+    path: String,
+    onClick: () -> Unit,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    Box(
+        modifier = Modifier
+            .size(UiSize.homeThumbSize)
+            .clip(RoundedCornerShape(UiRadius.homeThumb))
+            .background(UiColors.Home.emptyIconBg)
+            .pressFeedback(interaction)
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
+    ) {
+        VaultProgressiveImage(
+            path = path,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            thumbnailMaxPx = 320,
+            showVideoIndicator = true,
+        )
+    }
+}
+
+@Composable
+private fun ClassifyCategoryDetail(
+    category: ClassifyCategory,
+    tags: List<com.xpx.vault.domain.model.AiTag>,
+    pathByPhotoId: Map<Long, String>,
+    onOpenPhoto: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 半透明背景
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xCC000000))
+                .throttledClickable(onClick = onBack),
+        )
+        // 宫格内容
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(UiColors.Home.bgBottom)
+                .safeDrawingPadding(),
+        ) {
+            AppTopBar(title = labelFor(category), onBack = onBack)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
                 modifier = Modifier
-                    .height(34.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(bg)
-                    .border(1.dp, border, RoundedCornerShape(10.dp))
-                    .pressFeedback(interaction)
-                    .throttledClickable(interactionSource = interaction, indication = null, onClick = { onSelect(cat) })
-                    .padding(horizontal = 14.dp),
-                contentAlignment = Alignment.Center,
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(vertical = 8.dp),
             ) {
-                Text(
-                    text = labelFor(cat),
-                    color = fg,
-                    fontSize = 13.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                )
+                items(tags, key = { it.id }) { tag ->
+                    val path = pathByPhotoId[tag.photoId]
+                    ClassifyGridCell(
+                        tag = tag,
+                        path = path,
+                        onClick = if (path != null) ({ onOpenPhoto(path) }) else null,
+                    )
+                }
             }
         }
     }
@@ -290,11 +385,17 @@ private fun ClassifyEmptyState(scanning: Boolean) {
 }
 
 private fun labelFor(category: ClassifyCategory): String = when (category) {
-    ClassifyCategory.SCREENSHOT -> "\u622a\u56fe"
-    ClassifyCategory.ID_CARD -> "\u8bc1\u4ef6"
-    ClassifyCategory.PORTRAIT -> "\u4eba\u50cf"
-    ClassifyCategory.LANDSCAPE -> "\u98ce\u666f"
-    ClassifyCategory.FOOD -> "\u7f8e\u98df"
-    ClassifyCategory.DOCUMENT -> "\u6587\u6863"
-    ClassifyCategory.OTHER -> "\u5176\u4ed6"
+    ClassifyCategory.SCREENSHOT -> "截图"
+    ClassifyCategory.ID_CARD -> "证件"
+    ClassifyCategory.PORTRAIT -> "人像"
+    ClassifyCategory.LANDSCAPE -> "风景"
+    ClassifyCategory.FOOD -> "美食"
+    ClassifyCategory.DOCUMENT -> "文档"
+    ClassifyCategory.OTHER -> "其他"
+}
+
+@DrawableRes
+private fun iconForCategory(category: ClassifyCategory): Int = when (category) {
+    // TODO: 后续接入各分类专属 icon，现统一用 layers 图标
+    else -> R.drawable.ic_ai_layers
 }

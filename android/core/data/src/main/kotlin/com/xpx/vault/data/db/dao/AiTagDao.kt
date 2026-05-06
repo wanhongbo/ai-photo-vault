@@ -17,4 +17,7 @@ interface AiTagDao {
 
     @Query("SELECT * FROM ai_tag WHERE category = :category ORDER BY confidence DESC")
     fun observeByCategory(category: String): Flow<List<AiTagEntity>>
+
+    @Query("SELECT COUNT(DISTINCT photo_id) FROM ai_tag WHERE category = :category")
+    suspend fun countDistinctPhotosByCategory(category: String): Int
 }

@@ -54,6 +54,9 @@ class AiAnalysisRepositoryImpl @Inject constructor(
                 .map { it.toDomain() }
         }
 
+    override suspend fun countPhotosByCategory(category: String): Int =
+        tagDao.countDistinctPhotosByCategory(category)
+
     override suspend fun upsertPerceptualHash(hash: AiPerceptualHash) {
         phashDao.upsert(AiPhashEntity(hash.photoId, hash.phash, hash.dhash))
     }
