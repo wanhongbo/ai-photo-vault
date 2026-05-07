@@ -3,7 +3,6 @@ package com.xpx.vault.ui
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.pm.ActivityInfo
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -156,14 +155,11 @@ fun VideoPlayerScreen(
 
     DisposableEffect(activity, localView) {
         val decorView = activity?.window?.decorView ?: localView
-        val originalOrientation = activity?.requestedOrientation
         val insetsController = activity?.window?.let { window -> WindowInsetsControllerCompat(window, decorView) }
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
         // Keep status bar visible across the entire app, including video playback.
         insetsController?.show(androidx.core.view.WindowInsetsCompat.Type.statusBars())
         onDispose {
             insetsController?.show(androidx.core.view.WindowInsetsCompat.Type.statusBars())
-            if (originalOrientation != null) activity.requestedOrientation = originalOrientation
         }
     }
 
