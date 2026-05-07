@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -202,25 +201,30 @@ private fun ClassifyCategorySection(
                 modifier = Modifier.throttledClickable(onClick = onViewMore),
             )
         }
-        // 缩略图宫格：≤3 张最多 1 行、最多 3 列；>3 张最多 2 行、最多 3 列（最多 6 张预览）
-        val maxPreview = if (count <= 3) minOf(count, 3) else minOf(count, 6)
-        val displayPaths = previewPaths.take(maxPreview)
-        val columns = if (count <= 3) displayPaths.size.coerceIn(1, 3) else 3
-        val gridHeight = if (count <= 3) {
-            UiSize.homeThumbSize
-        } else {
-            UiSize.homeThumbSize * 2 + UiSize.homeGridGap
-        }
-        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
-            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(columns),
+        // 固定 3 列、固定缩略图尺寸，不横向拉满整行；≤3 张 1 行，>3 张最多 2 行（最多 6 张预览）
+        val previewCols = 3
+        val maxImages = if (count <= 3) minOf(count, 3) else minOf(count, 6)
+        val displayPaths = previewPaths.take(maxImages)
+        val slotCount = if (count <= 3) previewCols else previewCols * 2
+        val slots = List(slotCount) { index -> displayPaths.getOrNull(index) }
+        val gridWidth =
+            UiSize.homeThumbSize * previewCols + UiSize.homeGridGap * (previewCols - 1)
+        Column(
             modifier = Modifier
-                .height(gridHeight)
-                .padding(top = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
+                .padding(top = 10.dp)
+                .width(gridWidth),
             verticalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
         ) {
-            items(displayPaths, key = { it }) { path ->
-                PhotoThumb(path = path, onClick = { onOpenPhoto(path) })
+            slots.chunked(previewCols).forEach { rowPaths ->
+                Row(horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap)) {
+                    rowPaths.forEach { pathOrNull ->
+                        if (pathOrNull != null) {
+                            PhotoThumb(path = pathOrNull, onClick = { onOpenPhoto(pathOrNull) })
+                        } else {
+                            Spacer(Modifier.size(UiSize.homeThumbSize))
+                        }
+                    }
+                }
             }
         }
     }
