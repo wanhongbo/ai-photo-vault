@@ -43,8 +43,7 @@ import com.xpx.vault.ui.theme.UiColors
 /**
  * 与 AiFeature 卡片关联的逻辑标识，供跳转路由映射使用。
  *
- * 枚举保留 6 值，仅 [aiFeatures] 滤掉 SEARCH / COMPRESS，方便未来恢复时
- * 无需改动 MainActivity 的 when 分支。
+ * 枚举保留 6 值（含 ENCRYPT 等），AI Tab 仅展示 [aiFeatures] 中的 3 项；MainActivity 路由 when 仍覆盖全部 key。
  */
 enum class AiFeatureKey { CLASSIFY, SEARCH, PRIVACY, COMPRESS, ENCRYPT, DEDUP }
 
@@ -69,8 +68,8 @@ fun AiHomeScreen(
     ) {
         AiHeader()
         Spacer(Modifier.height(16.dp))
-        // 建议卡片 wrap content；功能区拿剩余空间 weight(1f)，让 4 个卡片尽量铺满一屏。
-        // 不再用 LazyColumn：建议卡 + 4 功能卡不会溢出，也不需要滚动。
+        // 建议卡片 wrap content；功能区拿剩余空间 weight(1f)，3 张功能卡品字形铺满剩余区域。
+        // 不再用 LazyColumn：建议卡 + 功能卡不滚动。
         AiSuggestCard(
             uiState = uiState,
             onOpenPrivacy = { onOpenFeature(AiFeatureKey.PRIVACY) },
@@ -136,30 +135,43 @@ private fun AiFeaturesGrid(
     onOpenFeature: (AiFeatureKey) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // 2×2 宫格。每行均分父高度，每列均分行宽度，让 4 张卡自适应铺满剩余屏幕。
+    // 品字形：上排隐私打码横向占满；下排智能分类 + 智能去重各占一半。
+    require(features.size == 3) { "AI tab expects exactly 3 feature cards" }
+    val top = features[0]
+    val bottomLeft = features[1]
+    val bottomRight = features[2]
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        features.chunked(2).forEach { rowFeatures ->
-            Row(
+        AiFeatureCard(
+            feature = top,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            wideTopLayout = true,
+            onClick = { onOpenFeature(top.key) },
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            AiFeatureCard(
+                feature = bottomLeft,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                rowFeatures.forEach { feature ->
-                    AiFeatureCard(
-                        feature = feature,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        onClick = { onOpenFeature(feature.key) },
-                    )
-                }
-                // 奇数卡片时补空占位（当前 4 个功能不会命中，但写成防御性防后续调整）。
-        if (rowFeatures.size == 1) Spacer(Modifier.weight(1f))
-            }
+                    .weight(1f)
+                    .fillMaxHeight(),
+                onClick = { onOpenFeature(bottomLeft.key) },
+            )
+            AiFeatureCard(
+                feature = bottomRight,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                onClick = { onOpenFeature(bottomRight.key) },
+            )
         }
     }
 }
@@ -169,6 +181,7 @@ private fun AiFeatureCard(
     feature: AiFeature,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    wideTopLayout: Boolean = false,
 ) {
     val interaction = rememberFeedbackInteractionSource()
     Row(
@@ -185,38 +198,79 @@ private fun AiFeatureCard(
                 .fillMaxHeight()
                 .background(feature.barColor),
         )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 14.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Box(
+        if (wideTopLayout) {
+            Row(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(feature.iconBgColor),
-                contentAlignment = Alignment.Center,
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Icon(
-                    painter = painterResource(feature.iconRes),
-                    contentDescription = null,
-                    tint = feature.barColor,
-                    modifier = Modifier.size(20.dp),
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(feature.iconBgColor),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(feature.iconRes),
+                        contentDescription = null,
+                        tint = feature.barColor,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(feature.nameRes),
+                        color = UiColors.Ai.featureTitle,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = stringResource(feature.descRes),
+                        color = UiColors.Ai.featureDesc,
+                        fontSize = 12.sp,
+                    )
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(feature.iconBgColor),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(feature.iconRes),
+                        contentDescription = null,
+                        tint = feature.barColor,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                Text(
+                    text = stringResource(feature.nameRes),
+                    color = UiColors.Ai.featureTitle,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = stringResource(feature.descRes),
+                    color = UiColors.Ai.featureDesc,
+                    fontSize = 12.sp,
                 )
             }
-            // 不再用 Spacer(weight(1f)) 把文字推到底部，避免卡片高度不足时标题/描述被圆角裁切。
-            Text(
-                text = stringResource(feature.nameRes),
-                color = UiColors.Ai.featureTitle,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = stringResource(feature.descRes),
-                color = UiColors.Ai.featureDesc,
-                fontSize = 12.sp,
-            )
         }
     }
 }
@@ -230,16 +284,8 @@ data class AiFeature(
     val iconBgColor: Color,
 )
 
+/** 顺序与 [AiFeaturesGrid] 品字形布局绑定：上排、左下、右下。 */
 private fun aiFeatures(): List<AiFeature> = listOf(
-    AiFeature(
-        key = AiFeatureKey.CLASSIFY,
-        nameRes = R.string.ai_feat_classify,
-        descRes = R.string.ai_feat_classify_desc,
-        iconRes = R.drawable.ic_ai_layers,
-        barColor = UiColors.Ai.classifyBar,
-        iconBgColor = UiColors.Ai.classifyIconBg,
-    ),
-    // SEARCH（语义搜索）暂隐藏：当前实际路由同 CLASSIFY，没独立能力前无需暴露入口。
     AiFeature(
         key = AiFeatureKey.PRIVACY,
         nameRes = R.string.ai_feat_blur,
@@ -248,14 +294,13 @@ private fun aiFeatures(): List<AiFeature> = listOf(
         barColor = UiColors.Ai.blurBar,
         iconBgColor = UiColors.Ai.blurIconBg,
     ),
-    // COMPRESS（图片瘦身、实际路由同 DEDUP→垃圾清理页）移除：与智能去重重复。
     AiFeature(
-        key = AiFeatureKey.ENCRYPT,
-        nameRes = R.string.ai_feat_encrypt,
-        descRes = R.string.ai_feat_encrypt_desc,
-        iconRes = R.drawable.ic_ai_shield,
-        barColor = UiColors.Ai.encryptBar,
-        iconBgColor = UiColors.Ai.encryptIconBg,
+        key = AiFeatureKey.CLASSIFY,
+        nameRes = R.string.ai_feat_classify,
+        descRes = R.string.ai_feat_classify_desc,
+        iconRes = R.drawable.ic_ai_layers,
+        barColor = UiColors.Ai.classifyBar,
+        iconBgColor = UiColors.Ai.classifyIconBg,
     ),
     AiFeature(
         key = AiFeatureKey.DEDUP,
