@@ -202,9 +202,15 @@ private fun ClassifyCategorySection(
                 modifier = Modifier.throttledClickable(onClick = onViewMore),
             )
         }
-        // 缩略图宫格
-        val columns = if (count <= 3) previewPaths.size.coerceIn(1, 3) else 3
-        val gridHeight = if (count <= 3) UiSize.homeThumbSize else 240.dp
+        // 缩略图宫格：≤3 张最多 1 行、最多 3 列；>3 张最多 2 行、最多 3 列（最多 6 张预览）
+        val maxPreview = if (count <= 3) minOf(count, 3) else minOf(count, 6)
+        val displayPaths = previewPaths.take(maxPreview)
+        val columns = if (count <= 3) displayPaths.size.coerceIn(1, 3) else 3
+        val gridHeight = if (count <= 3) {
+            UiSize.homeThumbSize
+        } else {
+            UiSize.homeThumbSize * 2 + UiSize.homeGridGap
+        }
         androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
             columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(columns),
             modifier = Modifier
@@ -213,7 +219,7 @@ private fun ClassifyCategorySection(
             horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
             verticalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
         ) {
-            items(previewPaths.take(30), key = { it }) { path ->
+            items(displayPaths, key = { it }) { path ->
                 PhotoThumb(path = path, onClick = { onOpenPhoto(path) })
             }
         }
