@@ -41,6 +41,13 @@ import com.xpx.vault.ui.ai.AiFeaturePlaceholderScreen
 import com.xpx.vault.ui.ai.AiSensitiveReviewScreen
 import com.xpx.vault.ui.ai.PrivacyRedactScreen
 import com.xpx.vault.ui.LanguageSettingsScreen
+import com.xpx.vault.ui.SettingsHubDestination
+import com.xpx.vault.ui.settings.SettingsAboutSupportScreen
+import com.xpx.vault.ui.settings.SettingsBackupSyncScreen
+import com.xpx.vault.ui.settings.SettingsDataStorageScreen
+import com.xpx.vault.ui.settings.SettingsGeneralScreen
+import com.xpx.vault.ui.settings.SettingsSecurityPrivacyScreen
+import com.xpx.vault.ui.settings.SettingsSubscriptionPlaceholderScreen
 import com.xpx.vault.ui.PaywallScreen
 import com.xpx.vault.ui.PhotoViewerScreen
 import com.xpx.vault.ui.RecentPhotosScreen
@@ -172,26 +179,16 @@ class MainActivity : FragmentActivity() {
                                 onOpenRecentList = {
                                     navController.navigate(ROUTE_RECENT_LIST) { launchSingleTop = true }
                                 },
-                                onOpenBackupRestore = {
-                                    navController.navigate(ROUTE_BACKUP_RESTORE) { launchSingleTop = true }
-                                },
-                                onOpenBulkExport = {
-                                    navController.navigate(ROUTE_BULK_EXPORT) { launchSingleTop = true }
-                                },
-                                onOpenTrashBin = {
-                                    navController.navigate(ROUTE_TRASH_BIN) { launchSingleTop = true }
-                                },
-                                onOpenPaywall = {
-                                    navController.navigate(ROUTE_PAYWALL) { launchSingleTop = true }
-                                },
-                                onOpenChangePin = {
-                                    navController.navigate(ROUTE_CHANGE_PIN) { launchSingleTop = true }
-                                },
-                                onOpenStorageUsage = {
-                                    navController.navigate(ROUTE_STORAGE_USAGE) { launchSingleTop = true }
-                                },
-                                onOpenLanguageSettings = {
-                                    navController.navigate(ROUTE_LANGUAGE_SETTINGS) { launchSingleTop = true }
+                                onOpenSettingsHub = { dest ->
+                                    val route = when (dest) {
+                                        SettingsHubDestination.SUBSCRIPTION -> ROUTE_SETTINGS_SUBSCRIPTION
+                                        SettingsHubDestination.SECURITY_PRIVACY -> ROUTE_SETTINGS_SECURITY
+                                        SettingsHubDestination.BACKUP_SYNC -> ROUTE_SETTINGS_BACKUP_SYNC
+                                        SettingsHubDestination.DATA_STORAGE -> ROUTE_SETTINGS_DATA_STORAGE
+                                        SettingsHubDestination.GENERAL -> ROUTE_SETTINGS_GENERAL
+                                        SettingsHubDestination.ABOUT_SUPPORT -> ROUTE_SETTINGS_ABOUT
+                                    }
+                                    navController.navigate(route) { launchSingleTop = true }
                                 },
                                 onOpenAiFeature = { key ->
                                     val route = when (key) {
@@ -286,6 +283,57 @@ class MainActivity : FragmentActivity() {
                         }
                         composable(ROUTE_LANGUAGE_SETTINGS) {
                             LanguageSettingsScreen(
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_SETTINGS_SUBSCRIPTION) {
+                            SettingsSubscriptionPlaceholderScreen(
+                                onBack = { navController.popBackStack() },
+                                onOpenPaywall = {
+                                    navController.navigate(ROUTE_PAYWALL) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_SETTINGS_SECURITY) {
+                            SettingsSecurityPrivacyScreen(
+                                onBack = { navController.popBackStack() },
+                                onOpenChangePin = {
+                                    navController.navigate(ROUTE_CHANGE_PIN) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_SETTINGS_BACKUP_SYNC) {
+                            SettingsBackupSyncScreen(
+                                onBack = { navController.popBackStack() },
+                                onOpenBackupRestore = {
+                                    navController.navigate(ROUTE_BACKUP_RESTORE) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_SETTINGS_DATA_STORAGE) {
+                            SettingsDataStorageScreen(
+                                onBack = { navController.popBackStack() },
+                                onOpenStorageUsage = {
+                                    navController.navigate(ROUTE_STORAGE_USAGE) { launchSingleTop = true }
+                                },
+                                onOpenBulkExport = {
+                                    navController.navigate(ROUTE_BULK_EXPORT) { launchSingleTop = true }
+                                },
+                                onOpenTrashBin = {
+                                    navController.navigate(ROUTE_TRASH_BIN) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_SETTINGS_GENERAL) {
+                            SettingsGeneralScreen(
+                                onBack = { navController.popBackStack() },
+                                onOpenLanguageSettings = {
+                                    navController.navigate(ROUTE_LANGUAGE_SETTINGS) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_SETTINGS_ABOUT) {
+                            SettingsAboutSupportScreen(
                                 onBack = { navController.popBackStack() },
                             )
                         }
@@ -525,6 +573,12 @@ class MainActivity : FragmentActivity() {
         private const val ROUTE_CHANGE_PIN = "change_pin"
         private const val ROUTE_STORAGE_USAGE = "storage_usage"
         private const val ROUTE_LANGUAGE_SETTINGS = "language_settings"
+        private const val ROUTE_SETTINGS_SUBSCRIPTION = "settings_subscription"
+        private const val ROUTE_SETTINGS_SECURITY = "settings_security"
+        private const val ROUTE_SETTINGS_BACKUP_SYNC = "settings_backup_sync"
+        private const val ROUTE_SETTINGS_DATA_STORAGE = "settings_data_storage"
+        private const val ROUTE_SETTINGS_GENERAL = "settings_general"
+        private const val ROUTE_SETTINGS_ABOUT = "settings_about"
         private const val ROUTE_BULK_EXPORT = "bulk_export"
         private const val ROUTE_EXPORT_PROGRESS = "export_progress"
         private const val ROUTE_EXPORT_RESULT = "export_result"

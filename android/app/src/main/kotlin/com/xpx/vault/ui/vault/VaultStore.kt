@@ -283,6 +283,22 @@ object VaultStore {
         if (ok) finalFile.absolutePath else null
     }
 
+    /**
+     * 将保险库内全部照片/视频移入临时垃圾桶（与逐张删除相同逻辑），用于「清空私有相册」等危险操作。
+     * @return 成功移入垃圾桶的文件数量
+     */
+    suspend fun moveAllVaultPhotosToTrash(context: Context): Int = withContext(Dispatchers.IO) {
+        ensureInit(context)
+        val paths = listAllPhotos(context).map { it.path }
+        var moved = 0
+        for (path in paths) {
+            if (deletePhoto(context, path)) moved++
+        }
+        cachedSnapshot = null
+        cachedAlbumPhotos.clear()
+        moved
+    }
+
     suspend fun deletePhoto(context: Context, path: String): Boolean = withContext(Dispatchers.IO) {
         val file = File(path)
         if (!file.exists()) return@withContext false

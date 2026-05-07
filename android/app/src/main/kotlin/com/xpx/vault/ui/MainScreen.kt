@@ -19,13 +19,7 @@ fun MainScreen(
     onOpenPhotoViewer: (String) -> Unit,
     onOpenAlbumList: () -> Unit,
     onOpenRecentList: () -> Unit,
-    onOpenBackupRestore: () -> Unit,
-    onOpenBulkExport: () -> Unit,
-    onOpenTrashBin: () -> Unit,
-    onOpenPaywall: () -> Unit,
-    onOpenChangePin: () -> Unit,
-    onOpenStorageUsage: () -> Unit,
-    onOpenLanguageSettings: () -> Unit,
+    onOpenSettingsHub: (SettingsHubDestination) -> Unit,
     onOpenAiFeature: (AiFeatureKey) -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(HomeTab.VAULT) }
@@ -74,13 +68,7 @@ fun MainScreen(
         )
         SettingsHomeScreen(
             onOpenTab = onSelectTab,
-            onOpenBackupRestore = onOpenBackupRestore,
-            onOpenBulkExport = onOpenBulkExport,
-            onOpenTrashBin = onOpenTrashBin,
-            onOpenPaywall = onOpenPaywall,
-            onOpenChangePin = onOpenChangePin,
-            onOpenStorageUsage = onOpenStorageUsage,
-            onOpenLanguageSettings = onOpenLanguageSettings,
+            onOpenSettingsHub = onOpenSettingsHub,
             selectedTab = selectedTab,
             showBottomNav = selectedTab == HomeTab.SETTINGS,
             modifier = Modifier
@@ -90,4 +78,3 @@ fun MainScreen(
         )
     }
 }
-

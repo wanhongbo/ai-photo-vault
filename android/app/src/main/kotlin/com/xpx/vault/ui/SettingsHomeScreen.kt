@@ -2,12 +2,10 @@ package com.xpx.vault.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,27 +13,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Switch
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.xpx.vault.LanguageManager
+import androidx.compose.ui.unit.sp
 import com.xpx.vault.R
-import com.xpx.vault.ui.backup.AutoBackupScheduler
+import com.xpx.vault.ui.feedback.pressFeedback
+import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
+import com.xpx.vault.ui.settings.SettingsRowModel
+import com.xpx.vault.ui.settings.SettingsSimpleRow
+import com.xpx.vault.ui.settings.SettingsTrailing
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
@@ -44,120 +41,12 @@ import com.xpx.vault.ui.theme.UiTextSize
 @Composable
 fun SettingsHomeScreen(
     onOpenTab: (HomeTab) -> Unit,
-    onOpenBackupRestore: () -> Unit,
-    onOpenBulkExport: () -> Unit,
-    onOpenTrashBin: () -> Unit,
-    onOpenPaywall: () -> Unit,
-    onOpenChangePin: () -> Unit,
-    onOpenStorageUsage: () -> Unit,
-    onOpenLanguageSettings: () -> Unit,
+    onOpenSettingsHub: (SettingsHubDestination) -> Unit,
     selectedTab: HomeTab = HomeTab.SETTINGS,
     showBottomNav: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val tabs = remember { homeTabs() }
-    val context = LocalContext.current
-    var biometricEnabled by remember { mutableStateOf(true) }
-    var autoLockEnabled by remember { mutableStateOf(true) }
-    var autoBackupEnabled by remember { mutableStateOf(AutoBackupScheduler.isEnabled(context)) }
-    var autoBackupRequireCharging by remember { mutableStateOf(AutoBackupScheduler.isRequireCharging(context)) }
-    var autoBackupRequireIdle by remember { mutableStateOf(AutoBackupScheduler.isRequireIdle(context)) }
-    val currentLanguageCode = LanguageManager.getCurrentLanguage(context)
-    val languageDescRes = if (currentLanguageCode == LanguageManager.LANG_ZH) {
-        R.string.language_option_chinese
-    } else {
-        R.string.language_option_english
-    }
-    val securityItems = listOf(
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_change_pin),
-            desc = stringResource(R.string.settings_item_change_pin_desc),
-            trailing = SettingsTrailing.CHEVRON,
-            onClick = onOpenChangePin,
-        ),
-    )
-    val backupPolicyRows = listOf<@Composable () -> Unit>(
-        {
-            SettingsSwitchRow(
-                title = stringResource(R.string.settings_item_auto_backup),
-                desc = stringResource(R.string.settings_item_auto_backup_desc),
-                checked = autoBackupEnabled,
-                onChange = {
-                    autoBackupEnabled = it
-                    AutoBackupScheduler.setEnabled(context, it)
-                },
-            )
-        },
-        {
-            SettingsSwitchRow(
-                title = stringResource(R.string.settings_item_auto_backup_charging),
-                desc = stringResource(R.string.settings_item_auto_backup_charging_desc),
-                checked = autoBackupRequireCharging,
-                onChange = {
-                    autoBackupRequireCharging = it
-                    AutoBackupScheduler.setRequireCharging(context, it)
-                },
-            )
-        },
-        {
-            SettingsSwitchRow(
-                title = stringResource(R.string.settings_item_auto_backup_idle),
-                desc = stringResource(R.string.settings_item_auto_backup_idle_desc),
-                checked = autoBackupRequireIdle,
-                onChange = {
-                    autoBackupRequireIdle = it
-                    AutoBackupScheduler.setRequireIdle(context, it)
-                },
-            )
-        },
-    )
-    val generalItems = listOf(
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_language),
-            desc = stringResource(languageDescRes),
-            trailing = SettingsTrailing.CHEVRON,
-            onClick = onOpenLanguageSettings,
-        ),
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_storage),
-            desc = stringResource(R.string.settings_item_storage_desc),
-            trailing = SettingsTrailing.CHEVRON,
-            onClick = onOpenStorageUsage,
-        ),
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_backup_restore),
-            desc = stringResource(R.string.settings_item_backup_restore_desc),
-            trailing = SettingsTrailing.CHEVRON,
-            onClick = onOpenBackupRestore,
-        ),
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_bulk_export),
-            desc = stringResource(R.string.settings_item_bulk_export_desc),
-            trailing = SettingsTrailing.CHEVRON,
-            onClick = onOpenBulkExport,
-        ),
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_trash),
-            desc = stringResource(R.string.settings_item_trash_desc),
-            trailing = SettingsTrailing.CHEVRON,
-            onClick = onOpenTrashBin,
-        ),
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_paywall),
-            desc = stringResource(R.string.settings_item_paywall_desc),
-            trailing = SettingsTrailing.CHEVRON,
-            onClick = onOpenPaywall,
-        ),
-    )
-    val aboutItems = listOf(
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_version),
-            desc = stringResource(R.string.settings_item_version_desc),
-            trailing = SettingsTrailing.TEXT,
-            onClick = {},
-        ),
-    )
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -181,41 +70,46 @@ fun SettingsHomeScreen(
                 .padding(top = UiSize.settingsListTopGap),
             verticalArrangement = Arrangement.spacedBy(UiSize.settingsSectionGap),
         ) {
-            item { SettingsProfileCard() }
             item {
-                SettingsGroup(
-                    title = stringResource(R.string.settings_group_security),
-                    customRows = listOf(
-                        {
-                            SettingsSwitchRow(
-                                title = stringResource(R.string.settings_item_biometric),
-                                desc = stringResource(R.string.settings_item_biometric_desc),
-                                checked = biometricEnabled,
-                                onChange = { biometricEnabled = it },
-                            )
-                        },
-                        {
-                            SettingsSwitchRow(
-                                title = stringResource(R.string.settings_item_auto_lock),
-                                desc = stringResource(R.string.settings_item_auto_lock_desc),
-                                checked = autoLockEnabled,
-                                onChange = { autoLockEnabled = it },
-                            )
-                        },
-                    ),
-                    items = securityItems,
+                SettingsSubscriptionEntryCard(
+                    onClick = { onOpenSettingsHub(SettingsHubDestination.SUBSCRIPTION) },
                 )
             }
             item {
-                SettingsGroup(
-                    title = stringResource(R.string.settings_group_backup_policy),
-                    customRows = backupPolicyRows,
-                    items = emptyList(),
+                SettingsHubRow(
+                    title = stringResource(R.string.settings_l1_security),
+                    subtitle = stringResource(R.string.settings_l1_security_sub),
+                    onClick = { onOpenSettingsHub(SettingsHubDestination.SECURITY_PRIVACY) },
                 )
             }
-            item { SettingsGroup(title = stringResource(R.string.settings_group_general), items = generalItems) }
-            item { SettingsGroup(title = stringResource(R.string.settings_group_about), items = aboutItems) }
-            item { SettingsDangerCard() }
+            item {
+                SettingsHubRow(
+                    title = stringResource(R.string.settings_l1_backup),
+                    subtitle = stringResource(R.string.settings_l1_backup_sub),
+                    onClick = { onOpenSettingsHub(SettingsHubDestination.BACKUP_SYNC) },
+                )
+            }
+            item {
+                SettingsHubRow(
+                    title = stringResource(R.string.settings_l1_data),
+                    subtitle = stringResource(R.string.settings_l1_data_sub),
+                    onClick = { onOpenSettingsHub(SettingsHubDestination.DATA_STORAGE) },
+                )
+            }
+            item {
+                SettingsHubRow(
+                    title = stringResource(R.string.settings_l1_general),
+                    subtitle = stringResource(R.string.settings_l1_general_sub),
+                    onClick = { onOpenSettingsHub(SettingsHubDestination.GENERAL) },
+                )
+            }
+            item {
+                SettingsHubRow(
+                    title = stringResource(R.string.settings_l1_about),
+                    subtitle = stringResource(R.string.settings_l1_about_sub),
+                    onClick = { onOpenSettingsHub(SettingsHubDestination.ABOUT_SUPPORT) },
+                )
+            }
         }
         if (showBottomNav) {
             HomeBottomNav(
@@ -228,172 +122,72 @@ fun SettingsHomeScreen(
 }
 
 @Composable
-private fun SettingsProfileCard() {
+private fun SettingsSubscriptionEntryCard(onClick: () -> Unit) {
+    val interaction = rememberFeedbackInteractionSource()
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.sectionBg)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
+            .background(UiColors.Ai.featureCardBg)
+            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(UiRadius.homeCard))
+            .pressFeedback(interaction)
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
             .padding(UiSize.settingsCardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
+        BoxWithSubscriptionIcon()
+        Column(
             modifier = Modifier
-                .size(UiSize.settingsAvatarSize)
-                .background(UiColors.Home.navItemActiveBg, CircleShape),
-            contentAlignment = Alignment.Center,
+                .weight(1f)
+                .padding(start = UiSize.settingsAvatarGap),
         ) {
             Text(
-                text = "VS",
-                color = UiColors.Home.navItemActive,
+                text = stringResource(R.string.settings_l1_subscription),
+                color = UiColors.Ai.featureTitle,
                 fontWeight = FontWeight.Bold,
-                fontSize = UiTextSize.settingsAvatar,
-            )
-        }
-        Column(modifier = Modifier.padding(start = UiSize.settingsAvatarGap)) {
-            Text(
-                text = stringResource(R.string.settings_profile_name),
-                color = UiColors.Home.title,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 17.sp,
             )
             Text(
-                text = stringResource(R.string.settings_profile_desc),
-                color = UiColors.Home.subtitle,
-                fontSize = UiTextSize.settingsProfileDesc,
-                modifier = Modifier.padding(top = UiSize.settingsProfileDescTopGap),
-            )
-        }
-    }
-}
-
-@Composable
-private fun SettingsGroup(
-    title: String,
-    items: List<SettingsRowModel>,
-    customRows: List<@Composable () -> Unit> = emptyList(),
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.sectionBg)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
-            .padding(UiSize.settingsCardPadding),
-    ) {
-        Text(text = title, color = UiColors.Home.title, fontWeight = FontWeight.SemiBold)
-        customRows.forEachIndexed { index, row ->
-            Spacer(modifier = Modifier.height(if (index == 0) UiSize.settingsGroupTitleToRowsGap else UiSize.settingsRowGap))
-            row()
-        }
-        if (customRows.isNotEmpty() && items.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(UiSize.settingsRowGap))
-        }
-        items.forEachIndexed { index, item ->
-            SettingsSimpleRow(item)
-            if (index != items.lastIndex) Spacer(modifier = Modifier.height(UiSize.settingsRowGap))
-        }
-    }
-}
-
-@Composable
-private fun SettingsSwitchRow(
-    title: String,
-    desc: String,
-    checked: Boolean,
-    onChange: (Boolean) -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(UiRadius.settingsRow))
-            .background(UiColors.Home.emptyCardBg)
-            .padding(
-                horizontal = UiSize.settingsRowPaddingHorizontal,
-                vertical = UiSize.settingsRowPaddingVertical,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, color = UiColors.Home.emptyTitle, fontWeight = FontWeight.Medium)
-            Text(
-                text = desc,
-                color = UiColors.Home.emptyBody,
+                text = stringResource(R.string.settings_l1_subscription_sub),
+                color = UiColors.Ai.featureDesc,
                 fontSize = UiTextSize.settingsRowDesc,
                 modifier = Modifier.padding(top = UiSize.settingsProfileDescTopGap),
             )
         }
-        Switch(checked = checked, onCheckedChange = onChange)
+        Text(">", color = UiColors.Home.navItemActive, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-private fun SettingsSimpleRow(model: SettingsRowModel) {
-    Row(
+private fun BoxWithSubscriptionIcon() {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(UiRadius.settingsRow))
-            .background(UiColors.Home.emptyCardBg)
-            .throttledClickable(onClick = model.onClick)
-            .padding(
-                horizontal = UiSize.settingsRowPaddingHorizontal,
-                vertical = UiSize.settingsRowPaddingVertical,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
+            .size(UiSize.settingsAvatarSize)
+            .clip(RoundedCornerShape(12.dp))
+            .background(UiColors.Ai.execBtnBg),
+        contentAlignment = Alignment.Center,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = model.title, color = UiColors.Home.emptyTitle, fontWeight = FontWeight.Medium)
-            Text(
-                text = model.desc,
-                color = UiColors.Home.emptyBody,
-                fontSize = UiTextSize.settingsRowDesc,
-                modifier = Modifier.padding(top = UiSize.settingsProfileDescTopGap),
-            )
-        }
-        when (model.trailing) {
-            SettingsTrailing.CHEVRON -> Text(">", color = UiColors.Home.navItemIdle, fontWeight = FontWeight.Bold)
-            SettingsTrailing.TEXT -> Text(model.desc, color = UiColors.Home.subtitle, fontSize = UiTextSize.settingsRowDesc, fontStyle = FontStyle.Italic)
-        }
+        Icon(
+            painter = painterResource(R.drawable.ic_ai_zap),
+            contentDescription = null,
+            tint = UiColors.Ai.execBtnText,
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 
 @Composable
-private fun SettingsDangerCard() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.sectionBg)
-            .border(1.dp, UiColors.Lock.error, RoundedCornerShape(UiRadius.homeCard))
-            .padding(UiSize.settingsCardPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.settings_danger_reset),
-                color = UiColors.Lock.error,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = stringResource(R.string.settings_danger_reset_desc),
-                color = UiColors.Home.emptyBody,
-                fontSize = UiTextSize.settingsDangerDesc,
-                modifier = Modifier.padding(top = UiSize.settingsDangerDescTopGap),
-            )
-        }
-        Text(">", color = UiColors.Lock.error, fontWeight = FontWeight.Bold)
-    }
+private fun SettingsHubRow(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+) {
+    SettingsSimpleRow(
+        SettingsRowModel(
+            title = title,
+            desc = subtitle,
+            trailing = SettingsTrailing.CHEVRON,
+            onClick = onClick,
+        ),
+    )
 }
-
-private data class SettingsRowModel(
-    val title: String,
-    val desc: String,
-    val trailing: SettingsTrailing,
-    val onClick: () -> Unit,
-)
-
-private enum class SettingsTrailing {
-    CHEVRON,
-    TEXT,
-}
-
