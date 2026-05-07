@@ -124,6 +124,7 @@
     <string name="camera_control_grid_on">网格开</string>
     <string name="camera_control_lens_rear">后摄</string>
     <string name="camera_control_lens_front">前摄</string>
+    <string name="camera_flip_lens">切换前后摄像头</string>
     <string name="camera_control_exposure_value">曝光 %1$s</string>
     <string name="camera_control_exposure_auto">自动</string>
     <string name="camera_mode_photo">相机</string>
@@ -134,6 +135,17 @@
     <string name="camera_fps_auto">自动</string>
     <string name="camera_fps_30">30</string>
     <string name="camera_fps_60">60</string>
+    <string name="camera_settings_row_flash">闪光</string>
+    <string name="camera_settings_row_timer">定时</string>
+    <string name="camera_settings_row_grid">网格</string>
+    <string name="camera_settings_row_exposure">曝光</string>
+    <string name="camera_settings_row_resolution">分辨率</string>
+    <string name="camera_settings_row_fps">帧率</string>
+    <string name="camera_pill_off">关</string>
+    <string name="camera_pill_on">开</string>
+    <string name="camera_pill_auto">自动</string>
+    <string name="camera_timer_3s">3s</string>
+    <string name="camera_timer_10s">10s</string>
     <string name="photo_viewer_share">分享</string>
     <string name="photo_viewer_edit">编辑</string>
     <string name="photo_viewer_redact">打码</string>

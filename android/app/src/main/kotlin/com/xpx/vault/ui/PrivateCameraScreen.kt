@@ -45,20 +45,24 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -82,12 +86,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -98,7 +105,6 @@ import androidx.lifecycle.Observer
 import com.xpx.vault.R
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
-import androidx.compose.foundation.layout.RowScope
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.DEFAULT_ALBUM_NAME
@@ -417,7 +423,12 @@ fun PrivateCameraScreen(
             onClick = { showSettingsPanel = !showSettingsPanel },
             modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 16.dp, top = 8.dp).size(40.dp).background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp)),
         ) {
-            Icon(imageVector = if (showSettingsPanel) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null, tint = Color.White)
+            Icon(
+                painter = painterResource(R.drawable.ic_camera_menu_dots),
+                contentDescription = stringResource(R.string.camera_settings_title),
+                tint = Color.White,
+                modifier = Modifier.size(22.dp),
+            )
         }
         AnimatedVisibility(
             visible = showSettingsPanel,
@@ -456,7 +467,12 @@ fun PrivateCameraScreen(
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth().padding(horizontal = 48.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) CameraSelector.LENS_FACING_FRONT else CameraSelector.LENS_FACING_BACK }, enabled = hasCameraPermission, modifier = Modifier.size(48.dp).background(Color(0x33FFFFFF), RoundedCornerShape(24.dp))) {
-                    Text("⇄", color = Color.White, fontSize = 20.sp)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_camera_switch),
+                        contentDescription = stringResource(R.string.camera_flip_lens),
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     ShutterButton(enabled = hasCameraPermission && !capturing && if (captureMode == CameraCaptureMode.PHOTO) imageCapture != null else videoCapture != null, recording = isRecording, onClick = {
@@ -582,12 +598,37 @@ fun PrivateCameraScreen(
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Row(Modifier.background(Color(0x33FFFFFF), RoundedCornerShape(20.dp)).padding(horizontal = 8.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                val modes = listOf(CameraCaptureMode.PHOTO to R.string.camera_mode_photo, CameraCaptureMode.VIDEO to R.string.camera_mode_video)
-                modes.forEach { (mode, labelRes) ->
-                    val selected = captureMode == mode
-                    Box(Modifier.clickable { captureMode = mode }.background(if (selected) Color(0xFF4A9EFF) else Color.Transparent, RoundedCornerShape(14.dp)).padding(horizontal = 20.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
-                        Text(text = stringResource(labelRes), color = if (selected) Color.White else Color(0xFFEAF1FF), fontSize = 14.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
+            val modeBarScroll = rememberScrollState()
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Row(
+                    Modifier.horizontalScroll(modeBarScroll),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(
+                        Modifier.background(Color(0x33FFFFFF), RoundedCornerShape(20.dp)).padding(horizontal = 6.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val modes = listOf(CameraCaptureMode.PHOTO to R.string.camera_mode_photo, CameraCaptureMode.VIDEO to R.string.camera_mode_video)
+                        modes.forEach { (mode, labelRes) ->
+                            val selected = captureMode == mode
+                            Box(
+                                Modifier
+                                    .clickable { captureMode = mode }
+                                    .background(if (selected) Color(0xFF4A9EFF) else Color.Transparent, RoundedCornerShape(14.dp))
+                                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = stringResource(labelRes),
+                                    color = if (selected) Color.White else Color(0xFFEAF1FF),
+                                    fontSize = 13.sp,
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -1013,78 +1054,92 @@ private fun CameraSettingsPanel(
     onVideoFpsChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val panelScroll = rememberScrollState()
+    val maxPanelHeight = (LocalConfiguration.current.screenHeightDp * 0.48f).dp
     Column(
         modifier = modifier
             .background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .heightIn(max = maxPanelHeight)
+            .verticalScroll(panelScroll)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        Text(
+            text = stringResource(R.string.camera_settings_title),
+            color = Color(0xFF8EA2C0),
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         when (captureMode) {
             CameraCaptureMode.PHOTO -> {
-                SettingsRow(label = "闪光灯") {
-                    OptionPill(text = stringResource(R.string.camera_control_flash_off), selected = flashMode == FlashUiMode.OFF, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.OFF) })
-                    OptionPill(text = stringResource(R.string.camera_control_flash_auto), selected = flashMode == FlashUiMode.AUTO, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.AUTO) })
-                    OptionPill(text = stringResource(R.string.camera_control_flash_on), selected = flashMode == FlashUiMode.ON, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.ON) })
+                SettingsRow(label = stringResource(R.string.camera_settings_row_flash)) {
+                    OptionPill(text = stringResource(R.string.camera_pill_off), selected = flashMode == FlashUiMode.OFF, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.OFF) })
+                    OptionPill(text = stringResource(R.string.camera_pill_auto), selected = flashMode == FlashUiMode.AUTO, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.AUTO) })
+                    OptionPill(text = stringResource(R.string.camera_pill_on), selected = flashMode == FlashUiMode.ON, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.ON) })
                 }
-                SettingsRow(label = "定时器") {
-                    OptionPill(text = stringResource(R.string.camera_control_timer_off), selected = timerSeconds == 0, onClick = { onTimerSecondsChange(0) })
-                    OptionPill(text = "3s", selected = timerSeconds == 3, onClick = { onTimerSecondsChange(3) })
-                    OptionPill(text = "10s", selected = timerSeconds == 10, onClick = { onTimerSecondsChange(10) })
+                SettingsRow(label = stringResource(R.string.camera_settings_row_timer)) {
+                    OptionPill(text = stringResource(R.string.camera_pill_off), selected = timerSeconds == 0, onClick = { onTimerSecondsChange(0) })
+                    OptionPill(text = stringResource(R.string.camera_timer_3s), selected = timerSeconds == 3, onClick = { onTimerSecondsChange(3) })
+                    OptionPill(text = stringResource(R.string.camera_timer_10s), selected = timerSeconds == 10, onClick = { onTimerSecondsChange(10) })
                 }
-                SettingsRow(label = "网格") {
-                    OptionPill(text = stringResource(R.string.camera_control_grid_off), selected = !showGrid, onClick = { onShowGridChange(false) })
-                    OptionPill(text = stringResource(R.string.camera_control_grid_on), selected = showGrid, onClick = { onShowGridChange(true) })
+                SettingsRow(label = stringResource(R.string.camera_settings_row_grid)) {
+                    OptionPill(text = stringResource(R.string.camera_pill_off), selected = !showGrid, onClick = { onShowGridChange(false) })
+                    OptionPill(text = stringResource(R.string.camera_pill_on), selected = showGrid, onClick = { onShowGridChange(true) })
                 }
                 if (exposureRange.first != exposureRange.last) {
-                    SettingsRow(label = "曝光") {
-                        Text(
-                            text = if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
-                            color = UiColors.Home.subtitle,
-                            fontSize = 11.sp,
-                        )
-                        Slider(
-                            value = exposureIndex.toFloat(),
-                            onValueChange = { onExposureIndexChange(it.roundToInt().coerceIn(exposureRange.first, exposureRange.last)) },
-                            valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
-                            steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
-                            modifier = Modifier.width(100.dp).height(20.dp),
-                        )
-                        if (exposureIndex != 0) {
+                    SettingsRow(label = stringResource(R.string.camera_settings_row_exposure), horizontalScrollOptions = false) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
                             Text(
-                                text = stringResource(R.string.camera_control_exposure_auto),
-                                color = UiColors.Home.navItemActive,
+                                text = if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
+                                color = UiColors.Home.subtitle,
                                 fontSize = 11.sp,
-                                modifier = Modifier.clickable { onExposureIndexChange(0) },
+                                modifier = Modifier.widthIn(min = 28.dp),
                             )
+                            Slider(
+                                value = exposureIndex.toFloat(),
+                                onValueChange = { onExposureIndexChange(it.roundToInt().coerceIn(exposureRange.first, exposureRange.last)) },
+                                valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
+                                steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
+                                modifier = Modifier.weight(1f).height(24.dp),
+                            )
+                            if (exposureIndex != 0) {
+                                Text(
+                                    text = stringResource(R.string.camera_control_exposure_auto),
+                                    color = UiColors.Home.navItemActive,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .widthIn(max = 48.dp)
+                                        .clickable { onExposureIndexChange(0) },
+                                )
+                            } else {
+                                Spacer(Modifier.width(48.dp))
+                            }
                         }
                     }
                 }
             }
             CameraCaptureMode.VIDEO -> {
-                SettingsRow(label = "闪光灯") {
-                    OptionPill(text = stringResource(R.string.camera_control_flash_off), selected = flashMode == FlashUiMode.OFF, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.OFF) })
-                    OptionPill(text = stringResource(R.string.camera_control_flash_auto), selected = flashMode == FlashUiMode.AUTO, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.AUTO) })
-                    OptionPill(text = stringResource(R.string.camera_control_flash_on), selected = flashMode == FlashUiMode.ON, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.ON) })
+                SettingsRow(label = stringResource(R.string.camera_settings_row_flash)) {
+                    OptionPill(text = stringResource(R.string.camera_pill_off), selected = flashMode == FlashUiMode.OFF, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.OFF) })
+                    OptionPill(text = stringResource(R.string.camera_pill_auto), selected = flashMode == FlashUiMode.AUTO, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.AUTO) })
+                    OptionPill(text = stringResource(R.string.camera_pill_on), selected = flashMode == FlashUiMode.ON, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.ON) })
                 }
-                SettingsRow(label = "分辨率") {
+                SettingsRow(label = stringResource(R.string.camera_settings_row_resolution)) {
                     OptionPill(text = stringResource(R.string.camera_resolution_fhd), selected = videoResolution == "FHD", onClick = { onVideoResolutionChange("FHD") })
                     OptionPill(text = stringResource(R.string.camera_resolution_4k), selected = videoResolution == "4K", onClick = { onVideoResolutionChange("4K") })
                 }
-                SettingsRow(label = "帧率") {
+                SettingsRow(label = stringResource(R.string.camera_settings_row_fps)) {
                     OptionPill(text = stringResource(R.string.camera_fps_30), selected = videoFps == "30", onClick = { onVideoFpsChange("30") })
                     OptionPill(text = stringResource(R.string.camera_fps_60), selected = videoFps == "60", onClick = { onVideoFpsChange("60") })
                 }
             }
-        }
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-            Text(
-                text = stringResource(R.string.camera_settings_title),
-                color = Color(0xFF8EA2C0),
-                fontSize = 12.sp,
-                modifier = Modifier
-                    .background(Color(0x33FFFFFF), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-            )
         }
     }
 }
@@ -1092,23 +1147,32 @@ private fun CameraSettingsPanel(
 @Composable
 private fun SettingsRow(
     label: String,
-    content: @Composable RowScope.() -> Unit,
+    horizontalScrollOptions: Boolean = true,
+    content: @Composable () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    val rowScroll = rememberScrollState()
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
             color = Color(0xFFEAF1FF),
-            fontSize = 14.sp,
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            content = content,
-        )
+        Spacer(Modifier.height(6.dp))
+        if (horizontalScrollOptions) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rowScroll),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                content()
+            }
+        } else {
+            content()
+        }
     }
 }
 
@@ -1121,19 +1185,24 @@ private fun OptionPill(
 ) {
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .defaultMinSize(minHeight = 32.dp)
+            .heightIn(min = 32.dp)
+            .wrapContentWidth()
             .background(
                 if (!enabled) Color(0x1FFFFFFF) else if (selected) Color(0xFF4A9EFF) else Color(0x33FFFFFF),
-                RoundedCornerShape(20.dp),
+                RoundedCornerShape(16.dp),
             )
-            .clickable(enabled = enabled, onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
             color = if (!enabled) Color(0x66EAF1FF) else if (selected) Color.White else Color(0xFFEAF1FF),
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
