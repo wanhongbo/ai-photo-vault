@@ -162,7 +162,7 @@ object UiSize {
     val buttonHeightSecondary: Dp = 48.dp
     val loadingIndicator: Dp = 20.dp
     val homeNavBarHeight: Dp = 88.dp
-    val homeNavIcon: Dp = 22.dp
+    val homeNavIcon: Dp = 24.dp
     val homeEmptyIconWrap: Dp = 72.dp
     val homeEmptyIcon: Dp = 32.dp
     val homeSectionGap: Dp = 16.dp

@@ -203,8 +203,8 @@ private fun BulkExportTopBar(
             Icon(
                 painter = painterResource(R.drawable.ic_topbar_back),
                 contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(20.dp),
+                tint = UiColors.Home.title,
+                modifier = Modifier.size(22.dp),
             )
         }
         Text(

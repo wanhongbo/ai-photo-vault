@@ -632,7 +632,7 @@ private fun HomeAlbumPermissionState(
             Icon(
                 painter = painterResource(R.drawable.ic_home_album_permission),
                 contentDescription = null,
-                tint = Color.Unspecified,
+                tint = UiColors.Home.navItemActive,
                 modifier = Modifier.size(UiSize.permissionIcon),
             )
         }
@@ -811,8 +811,8 @@ fun HomeBottomNav(
                 .clip(RoundedCornerShape(UiRadius.homeNavBar))
                 .background(UiColors.Home.navBarBg)
                 .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(UiRadius.homeNavBar))
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             tabs.forEachIndexed { idx, tab ->
                 val selected = idx == selectedIndex
