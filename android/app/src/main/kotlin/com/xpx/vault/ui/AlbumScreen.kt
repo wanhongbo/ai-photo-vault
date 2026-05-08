@@ -538,6 +538,5 @@ private fun Modifier.plusPressFeedback(
     )
     return this
         .shadow(elevation = elevation.value, shape = shape, clip = false)
-        .then(Modifier.pressFeedback(interactionSource, extraHighlight = true))
         .then(Modifier.graphicsLayer(scaleX = scale.value, scaleY = scale.value))
 }

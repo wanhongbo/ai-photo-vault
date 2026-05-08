@@ -7,6 +7,7 @@ import android.os.Build
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.media.MediaActionSound
 import android.util.Log
 import android.view.OrientationEventListener
 import android.view.Surface
@@ -47,8 +48,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,15 +60,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -202,6 +205,12 @@ fun PrivateCameraScreen(
     var showSettingsPanel by remember { mutableStateOf(false) }
     var videoResolution by remember { mutableStateOf("FHD") }
     var videoFps by remember { mutableStateOf("30") }
+
+    val shutterSound = remember { MediaActionSound() }
+    DisposableEffect(Unit) {
+        shutterSound.load(MediaActionSound.SHUTTER_CLICK)
+        onDispose { shutterSound.release() }
+    }
 
     val orientationListener = remember {
         object : OrientationEventListener(context) {
@@ -400,7 +409,6 @@ fun PrivateCameraScreen(
                         Text(text = remaining.toString(), color = Color.White, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
                     }
                 }
-                if (capturing) CircularProgressIndicator(Modifier.align(Alignment.Center), color = UiColors.Home.navItemActive)
             }
         } else {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -532,7 +540,6 @@ fun PrivateCameraScreen(
                             return@ShutterButton
                         }
                         val capture = imageCapture ?: return@ShutterButton
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         message = null
                         scope.launch {
                             captureAttempts += 1
@@ -545,6 +552,7 @@ fun PrivateCameraScreen(
                                 }
                                 countdownRemaining = null
                             }
+                            shutterSound.play(MediaActionSound.SHUTTER_CLICK)
                             shutterOverlay = true
                             delay(90)
                             shutterOverlay = false
@@ -894,12 +902,19 @@ private fun ShutterButton(
         animationSpec = tween(220),
         label = "shutterInnerSize",
     )
+    val shutterInteraction = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(78.dp)
-            .background(if (enabled) Color(0xF2FFFFFF) else Color(0x66FFFFFF), RoundedCornerShape(42.dp))
-            .border(2.dp, Color(0xFFB5C8EE), RoundedCornerShape(42.dp))
-            .clickable(enabled = enabled, onClick = onClick),
+            .clip(CircleShape)
+            .background(if (enabled) Color(0xF2FFFFFF) else Color(0x66FFFFFF), CircleShape)
+            .border(2.dp, Color(0xFFB5C8EE), CircleShape)
+            .clickable(
+                interactionSource = shutterInteraction,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Box(
@@ -1035,6 +1050,23 @@ private fun maskedDeviceModel(): String {
     return "$prefix***${model.length}"
 }
 
+/** 相机设置浮层：左文案 + 圆形选项；选中态与全局主色（蓝）一致。 */
+private object CameraSettingsSheet {
+    val panelBg = Color(0xFF2C2C2E)
+    val panelStroke = Color(0x22FFFFFF)
+    val titleMuted = Color(0xFF9A9A9C)
+    val rowTitle = Color(0xFFF5F5F5)
+    val rowValue = Color(0xFFB8B8B8)
+    val circleIdle = Color(0xFF3A3A3C)
+    val circleSelected = UiColors.Button.primaryContainer
+    val iconIdle = Color(0xFFECECEC)
+    /** 选中项在品牌蓝底上使用主按钮前景色（白）。 */
+    val iconOnSelected = UiColors.Button.primaryContent
+    val accentSlider = UiColors.Button.primaryContainer
+    val linkAccent = UiColors.Home.navItemActive
+    val divider = Color(0x18FFFFFF)
+}
+
 @Composable
 private fun CameraSettingsPanel(
     captureMode: CameraCaptureMode,
@@ -1058,86 +1090,180 @@ private fun CameraSettingsPanel(
     val maxPanelHeight = (LocalConfiguration.current.screenHeightDp * 0.48f).dp
     Column(
         modifier = modifier
-            .background(Color(0xCC1A1A1A), RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(32.dp))
+            .background(CameraSettingsSheet.panelBg)
+            .border(1.dp, CameraSettingsSheet.panelStroke, RoundedCornerShape(32.dp))
             .heightIn(max = maxPanelHeight)
             .verticalScroll(panelScroll)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
         Text(
             text = stringResource(R.string.camera_settings_title),
-            color = Color(0xFF8EA2C0),
+            color = CameraSettingsSheet.titleMuted,
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        HorizontalDivider(
+            modifier = Modifier.padding(top = 10.dp, bottom = 4.dp),
+            thickness = 0.5.dp,
+            color = CameraSettingsSheet.divider,
+        )
         when (captureMode) {
             CameraCaptureMode.PHOTO -> {
-                SettingsRow(label = stringResource(R.string.camera_settings_row_flash)) {
-                    OptionPill(text = stringResource(R.string.camera_pill_off), selected = flashMode == FlashUiMode.OFF, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.OFF) })
-                    OptionPill(text = stringResource(R.string.camera_pill_auto), selected = flashMode == FlashUiMode.AUTO, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.AUTO) })
-                    OptionPill(text = stringResource(R.string.camera_pill_on), selected = flashMode == FlashUiMode.ON, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.ON) })
+                CameraSettingsOptionRow(
+                    title = stringResource(R.string.camera_settings_row_flash),
+                    value = flashSummary(flashMode, hasFlashUnit),
+                ) {
+                    CameraSettingIconCircle(
+                        selected = flashMode == FlashUiMode.OFF,
+                        enabled = hasFlashUnit,
+                        onClick = { onFlashModeChange(FlashUiMode.OFF) },
+                        painter = painterResource(R.drawable.ic_camera_flash_off),
+                        contentDescription = stringResource(R.string.camera_control_flash_off),
+                    )
+                    CameraSettingIconCircle(
+                        selected = flashMode == FlashUiMode.AUTO,
+                        enabled = hasFlashUnit,
+                        onClick = { onFlashModeChange(FlashUiMode.AUTO) },
+                        painter = painterResource(R.drawable.ic_camera_flash_auto),
+                        contentDescription = stringResource(R.string.camera_control_flash_auto),
+                    )
+                    CameraSettingIconCircle(
+                        selected = flashMode == FlashUiMode.ON,
+                        enabled = hasFlashUnit,
+                        onClick = { onFlashModeChange(FlashUiMode.ON) },
+                        painter = painterResource(R.drawable.ic_camera_flash_on),
+                        contentDescription = stringResource(R.string.camera_control_flash_on),
+                    )
                 }
-                SettingsRow(label = stringResource(R.string.camera_settings_row_timer)) {
-                    OptionPill(text = stringResource(R.string.camera_pill_off), selected = timerSeconds == 0, onClick = { onTimerSecondsChange(0) })
-                    OptionPill(text = stringResource(R.string.camera_timer_3s), selected = timerSeconds == 3, onClick = { onTimerSecondsChange(3) })
-                    OptionPill(text = stringResource(R.string.camera_timer_10s), selected = timerSeconds == 10, onClick = { onTimerSecondsChange(10) })
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    thickness = 0.5.dp,
+                    color = CameraSettingsSheet.divider,
+                )
+                CameraSettingsOptionRow(
+                    title = stringResource(R.string.camera_settings_row_timer),
+                    value = timerSummary(timerSeconds),
+                ) {
+                    CameraSettingIconCircle(
+                        selected = timerSeconds == 0,
+                        onClick = { onTimerSecondsChange(0) },
+                        painter = painterResource(R.drawable.ic_camera_timer_off),
+                        contentDescription = stringResource(R.string.camera_control_timer_off),
+                    )
+                    CameraSettingTextCircle(
+                        text = stringResource(R.string.camera_timer_3s),
+                        selected = timerSeconds == 3,
+                        onClick = { onTimerSecondsChange(3) },
+                    )
+                    CameraSettingTextCircle(
+                        text = stringResource(R.string.camera_timer_10s),
+                        selected = timerSeconds == 10,
+                        onClick = { onTimerSecondsChange(10) },
+                    )
                 }
-                SettingsRow(label = stringResource(R.string.camera_settings_row_grid)) {
-                    OptionPill(text = stringResource(R.string.camera_pill_off), selected = !showGrid, onClick = { onShowGridChange(false) })
-                    OptionPill(text = stringResource(R.string.camera_pill_on), selected = showGrid, onClick = { onShowGridChange(true) })
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    thickness = 0.5.dp,
+                    color = CameraSettingsSheet.divider,
+                )
+                CameraSettingsOptionRow(
+                    title = stringResource(R.string.camera_settings_row_grid),
+                    value = if (showGrid) stringResource(R.string.camera_control_grid_on) else stringResource(R.string.camera_control_grid_off),
+                ) {
+                    CameraSettingIconCircle(
+                        selected = !showGrid,
+                        onClick = { onShowGridChange(false) },
+                        painter = painterResource(R.drawable.ic_camera_grid_off),
+                        contentDescription = stringResource(R.string.camera_control_grid_off),
+                    )
+                    CameraSettingIconCircle(
+                        selected = showGrid,
+                        onClick = { onShowGridChange(true) },
+                        painter = painterResource(R.drawable.ic_camera_grid_on),
+                        contentDescription = stringResource(R.string.camera_control_grid_on),
+                    )
                 }
                 if (exposureRange.first != exposureRange.last) {
-                    SettingsRow(label = stringResource(R.string.camera_settings_row_exposure), horizontalScrollOptions = false) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
-                                color = UiColors.Home.subtitle,
-                                fontSize = 11.sp,
-                                modifier = Modifier.widthIn(min = 28.dp),
-                            )
-                            Slider(
-                                value = exposureIndex.toFloat(),
-                                onValueChange = { onExposureIndexChange(it.roundToInt().coerceIn(exposureRange.first, exposureRange.last)) },
-                                valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
-                                steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
-                                modifier = Modifier.weight(1f).height(24.dp),
-                            )
-                            if (exposureIndex != 0) {
-                                Text(
-                                    text = stringResource(R.string.camera_control_exposure_auto),
-                                    color = UiColors.Home.navItemActive,
-                                    fontSize = 11.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier
-                                        .widthIn(max = 48.dp)
-                                        .clickable { onExposureIndexChange(0) },
-                                )
-                            } else {
-                                Spacer(Modifier.width(48.dp))
-                            }
-                        }
-                    }
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        thickness = 0.5.dp,
+                        color = CameraSettingsSheet.divider,
+                    )
+                    CameraSettingsExposureBlock(
+                        exposureRange = exposureRange,
+                        exposureIndex = exposureIndex,
+                        onExposureIndexChange = onExposureIndexChange,
+                    )
                 }
             }
             CameraCaptureMode.VIDEO -> {
-                SettingsRow(label = stringResource(R.string.camera_settings_row_flash)) {
-                    OptionPill(text = stringResource(R.string.camera_pill_off), selected = flashMode == FlashUiMode.OFF, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.OFF) })
-                    OptionPill(text = stringResource(R.string.camera_pill_auto), selected = flashMode == FlashUiMode.AUTO, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.AUTO) })
-                    OptionPill(text = stringResource(R.string.camera_pill_on), selected = flashMode == FlashUiMode.ON, enabled = hasFlashUnit, onClick = { onFlashModeChange(FlashUiMode.ON) })
+                CameraSettingsOptionRow(
+                    title = stringResource(R.string.camera_settings_row_flash),
+                    value = flashSummary(flashMode, hasFlashUnit),
+                ) {
+                    CameraSettingIconCircle(
+                        selected = flashMode == FlashUiMode.OFF,
+                        enabled = hasFlashUnit,
+                        onClick = { onFlashModeChange(FlashUiMode.OFF) },
+                        painter = painterResource(R.drawable.ic_camera_flash_off),
+                        contentDescription = stringResource(R.string.camera_control_flash_off),
+                    )
+                    CameraSettingIconCircle(
+                        selected = flashMode == FlashUiMode.AUTO,
+                        enabled = hasFlashUnit,
+                        onClick = { onFlashModeChange(FlashUiMode.AUTO) },
+                        painter = painterResource(R.drawable.ic_camera_flash_auto),
+                        contentDescription = stringResource(R.string.camera_control_flash_auto),
+                    )
+                    CameraSettingIconCircle(
+                        selected = flashMode == FlashUiMode.ON,
+                        enabled = hasFlashUnit,
+                        onClick = { onFlashModeChange(FlashUiMode.ON) },
+                        painter = painterResource(R.drawable.ic_camera_flash_on),
+                        contentDescription = stringResource(R.string.camera_control_flash_on),
+                    )
                 }
-                SettingsRow(label = stringResource(R.string.camera_settings_row_resolution)) {
-                    OptionPill(text = stringResource(R.string.camera_resolution_fhd), selected = videoResolution == "FHD", onClick = { onVideoResolutionChange("FHD") })
-                    OptionPill(text = stringResource(R.string.camera_resolution_4k), selected = videoResolution == "4K", onClick = { onVideoResolutionChange("4K") })
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    thickness = 0.5.dp,
+                    color = CameraSettingsSheet.divider,
+                )
+                CameraSettingsOptionRow(
+                    title = stringResource(R.string.camera_settings_row_resolution),
+                    value = if (videoResolution == "4K") stringResource(R.string.camera_resolution_4k) else stringResource(R.string.camera_resolution_fhd),
+                ) {
+                    CameraSettingTextCircle(
+                        text = stringResource(R.string.camera_resolution_fhd),
+                        selected = videoResolution == "FHD",
+                        onClick = { onVideoResolutionChange("FHD") },
+                    )
+                    CameraSettingTextCircle(
+                        text = stringResource(R.string.camera_resolution_4k),
+                        selected = videoResolution == "4K",
+                        onClick = { onVideoResolutionChange("4K") },
+                    )
                 }
-                SettingsRow(label = stringResource(R.string.camera_settings_row_fps)) {
-                    OptionPill(text = stringResource(R.string.camera_fps_30), selected = videoFps == "30", onClick = { onVideoFpsChange("30") })
-                    OptionPill(text = stringResource(R.string.camera_fps_60), selected = videoFps == "60", onClick = { onVideoFpsChange("60") })
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    thickness = 0.5.dp,
+                    color = CameraSettingsSheet.divider,
+                )
+                CameraSettingsOptionRow(
+                    title = stringResource(R.string.camera_settings_row_fps),
+                    value = if (videoFps == "60") stringResource(R.string.camera_fps_60) else stringResource(R.string.camera_fps_30),
+                ) {
+                    CameraSettingTextCircle(
+                        text = stringResource(R.string.camera_fps_30),
+                        selected = videoFps == "30",
+                        onClick = { onVideoFpsChange("30") },
+                    )
+                    CameraSettingTextCircle(
+                        text = stringResource(R.string.camera_fps_60),
+                        selected = videoFps == "60",
+                        onClick = { onVideoFpsChange("60") },
+                    )
                 }
             }
         }
@@ -1145,65 +1271,190 @@ private fun CameraSettingsPanel(
 }
 
 @Composable
-private fun SettingsRow(
-    label: String,
-    horizontalScrollOptions: Boolean = true,
-    content: @Composable () -> Unit,
+private fun flashSummary(mode: FlashUiMode, hasFlash: Boolean): String = when {
+    !hasFlash -> stringResource(R.string.camera_pill_off)
+    mode == FlashUiMode.OFF -> stringResource(R.string.camera_pill_off)
+    mode == FlashUiMode.AUTO -> stringResource(R.string.camera_pill_auto)
+    else -> stringResource(R.string.camera_pill_on)
+}
+
+@Composable
+private fun timerSummary(seconds: Int): String = when (seconds) {
+    0 -> stringResource(R.string.camera_pill_off)
+    3 -> stringResource(R.string.camera_control_timer_seconds, 3)
+    10 -> stringResource(R.string.camera_control_timer_seconds, 10)
+    else -> stringResource(R.string.camera_control_timer_seconds, seconds)
+}
+
+@Composable
+private fun CameraSettingsOptionRow(
+    title: String,
+    value: String,
+    options: @Composable RowScope.() -> Unit,
 ) {
-    val rowScroll = rememberScrollState()
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            color = Color(0xFFEAF1FF),
-            fontSize = 13.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.height(6.dp))
-        if (horizontalScrollOptions) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rowScroll),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                content()
-            }
-        } else {
-            content()
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 10.dp),
+        ) {
+            Text(
+                text = title,
+                color = CameraSettingsSheet.rowTitle,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = value,
+                color = CameraSettingsSheet.rowValue,
+                fontSize = 13.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            content = options,
+        )
     }
 }
 
 @Composable
-private fun OptionPill(
-    text: String,
+private fun CameraSettingIconCircle(
     selected: Boolean,
     enabled: Boolean = true,
     onClick: () -> Unit,
+    painter: androidx.compose.ui.graphics.painter.Painter,
+    contentDescription: String?,
 ) {
+    val bg = when {
+        !enabled -> Color(0xFF2A2A2A)
+        selected -> CameraSettingsSheet.circleSelected
+        else -> CameraSettingsSheet.circleIdle
+    }
+    val tint = when {
+        !enabled -> CameraSettingsSheet.iconIdle.copy(alpha = 0.35f)
+        selected -> CameraSettingsSheet.iconOnSelected
+        else -> CameraSettingsSheet.iconIdle
+    }
     Box(
         modifier = Modifier
-            .defaultMinSize(minHeight = 32.dp)
-            .heightIn(min = 32.dp)
-            .wrapContentWidth()
-            .background(
-                if (!enabled) Color(0x1FFFFFFF) else if (selected) Color(0xFF4A9EFF) else Color(0x33FFFFFF),
-                RoundedCornerShape(16.dp),
-            )
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 7.dp),
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(bg)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(22.dp),
+            tint = tint,
+        )
+    }
+}
+
+@Composable
+private fun CameraSettingTextCircle(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val bg = if (selected) CameraSettingsSheet.circleSelected else CameraSettingsSheet.circleIdle
+    val fg = if (selected) CameraSettingsSheet.iconOnSelected else CameraSettingsSheet.iconIdle
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(bg)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
-            color = if (!enabled) Color(0x66EAF1FF) else if (selected) Color.White else Color(0xFFEAF1FF),
+            color = fg,
             fontSize = 11.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            fontWeight = FontWeight.SemiBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+@Composable
+private fun CameraSettingsExposureBlock(
+    exposureRange: IntRange,
+    exposureIndex: Int,
+    onExposureIndexChange: (Int) -> Unit,
+) {
+    val valueLabel = if (exposureIndex == 0) {
+        stringResource(R.string.camera_control_exposure_auto)
+    } else {
+        stringResource(R.string.camera_control_exposure_value, if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString())
+    }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.camera_settings_row_exposure),
+            color = CameraSettingsSheet.rowTitle,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+        )
+        Spacer(Modifier.height(3.dp))
+        Text(
+            text = valueLabel,
+            color = CameraSettingsSheet.rowValue,
+            fontSize = 13.sp,
+        )
+        Spacer(Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
+                color = CameraSettingsSheet.rowValue,
+                fontSize = 12.sp,
+                modifier = Modifier.widthIn(min = 28.dp),
+            )
+            Slider(
+                value = exposureIndex.toFloat(),
+                onValueChange = { onExposureIndexChange(it.roundToInt().coerceIn(exposureRange.first, exposureRange.last)) },
+                valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
+                steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(28.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = CameraSettingsSheet.accentSlider,
+                    activeTrackColor = CameraSettingsSheet.accentSlider,
+                    inactiveTrackColor = Color(0x33FFFFFF),
+                ),
+            )
+            if (exposureIndex != 0) {
+                Text(
+                    text = stringResource(R.string.camera_control_exposure_auto),
+                    color = CameraSettingsSheet.linkAccent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .widthIn(max = 44.dp)
+                        .clickable { onExposureIndexChange(0) },
+                )
+            } else {
+                Spacer(Modifier.width(44.dp))
+            }
+        }
     }
 }
 

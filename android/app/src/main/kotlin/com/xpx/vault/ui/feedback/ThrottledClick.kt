@@ -32,21 +32,34 @@ fun rememberThrottledClick(
     }
 }
 
+/** 带主题默认水波纹；不需要 ripple 时请用 [throttledClickable] 的重载并传入 [indication] = null。 */
 fun Modifier.throttledClickable(
     enabled: Boolean = true,
     intervalMs: Long = DEFAULT_THROTTLE_MS,
-    interactionSource: MutableInteractionSource? = null,
-    indication: Indication? = null,
     onClick: () -> Unit,
 ): Modifier = composed {
+    val interactionSource = remember { MutableInteractionSource() }
     val throttledOnClick = rememberThrottledClick(intervalMs = intervalMs, onClick = onClick)
-    val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val resolvedIndication = indication ?: LocalIndication.current
     clickable(
         enabled = enabled,
-        interactionSource = resolvedInteractionSource,
-        indication = resolvedIndication,
+        interactionSource = interactionSource,
+        indication = LocalIndication.current,
         onClick = throttledOnClick,
     )
 }
 
+fun Modifier.throttledClickable(
+    enabled: Boolean = true,
+    intervalMs: Long = DEFAULT_THROTTLE_MS,
+    interactionSource: MutableInteractionSource,
+    indication: Indication?,
+    onClick: () -> Unit,
+): Modifier = composed {
+    val throttledOnClick = rememberThrottledClick(intervalMs = intervalMs, onClick = onClick)
+    clickable(
+        enabled = enabled,
+        interactionSource = interactionSource,
+        indication = indication,
+        onClick = throttledOnClick,
+    )
+}

@@ -31,6 +31,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -455,16 +456,14 @@ private fun KeypadKey(
     Box(
         modifier = Modifier
             .size(86.dp)
-            .pressFeedback(
-                interactionSource = interactionSource,
-                extraHighlight = extraHighlight,
-            )
+            .clip(CircleShape)
             .background(UiColors.Lock.keypadSurface, CircleShape)
             .border(
                 width = if (extraHighlight) 1.5.dp else 1.dp,
                 color = if (extraHighlight) UiColors.Lock.brandBlue else UiColors.Lock.keypadStroke,
                 shape = CircleShape,
             )
+            .pressFeedback(interactionSource = interactionSource)
             .throttledClickable(
                 interactionSource = interactionSource,
                 indication = null,
