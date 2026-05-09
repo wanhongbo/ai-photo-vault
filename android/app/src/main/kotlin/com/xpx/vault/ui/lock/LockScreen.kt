@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.xpx.vault.R
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
@@ -400,7 +404,13 @@ private fun NumberPad(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            KeypadKey(label = "📷", extraHighlight = true, onClick = onQuickCapture)
+            KeypadKey(
+                label = "",
+                extraHighlight = true,
+                iconRes = R.drawable.ic_home_nav_camera,
+                contentDescription = stringResource(R.string.home_nav_camera),
+                onClick = onQuickCapture,
+            )
             KeypadKey(label = "0", extraHighlight = true, onClick = { onNumber(0) })
             KeypadKey(label = "⌫", extraHighlight = true, onClick = onDelete)
         }
@@ -451,6 +461,8 @@ private fun KeypadKey(
     label: String,
     extraHighlight: Boolean = false,
     onClick: () -> Unit,
+    iconRes: Int? = null,
+    contentDescription: String? = null,
 ) {
     val interactionSource = rememberFeedbackInteractionSource()
     Box(
@@ -471,6 +483,15 @@ private fun KeypadKey(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = UiColors.Lock.textMain, fontSize = 34.sp)
+        if (iconRes != null) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = contentDescription,
+                tint = UiColors.Lock.textMain,
+                modifier = Modifier.size(32.dp),
+            )
+        } else {
+            Text(label, color = UiColors.Lock.textMain, fontSize = 34.sp)
+        }
     }
 }
