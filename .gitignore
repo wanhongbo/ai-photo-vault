@@ -6,6 +6,9 @@
 **/build/
 .kotlin/
 android/local.properties
+android/keystore.properties
+android/*.jks
+android/*.keystore
 android/.idea/
 *.iml
 captures/

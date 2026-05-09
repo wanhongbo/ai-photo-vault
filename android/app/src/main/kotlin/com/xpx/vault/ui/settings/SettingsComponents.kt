@@ -2,27 +2,51 @@ package com.xpx.vault.ui.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.xpx.vault.R
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
+
+private val SettingsLeadingIconSlotSize = 44.dp
+private val SettingsLeadingIconGlyph = 24.dp
+
+@Composable
+fun SettingsListChevronIcon(
+    tint: Color = UiColors.Home.navItemIdle,
+    size: Dp = 22.dp,
+) {
+    Icon(
+        painter = painterResource(R.drawable.ic_chevron_right),
+        contentDescription = null,
+        tint = tint,
+        modifier = Modifier.size(size),
+    )
+}
 
 @Composable
 fun SettingsGroupCard(
@@ -115,10 +139,28 @@ fun SettingsSimpleRow(model: SettingsRowModel) {
             )
             .padding(
                 horizontal = UiSize.settingsRowPaddingHorizontal,
-                vertical = UiSize.settingsRowPaddingVertical,
+                vertical = UiSize.settingsRowPaddingVertical * model.rowVerticalPaddingScale,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (model.leadingIcon != null) {
+            Box(
+                modifier = Modifier
+                    .size(SettingsLeadingIconSlotSize)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(UiColors.Home.sectionBg)
+                    .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(model.leadingIcon),
+                    contentDescription = null,
+                    tint = UiColors.Home.navItemActive,
+                    modifier = Modifier.size(SettingsLeadingIconGlyph),
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(text = model.title, color = UiColors.Home.emptyTitle, fontWeight = FontWeight.Medium)
             Text(
@@ -129,7 +171,7 @@ fun SettingsSimpleRow(model: SettingsRowModel) {
             )
         }
         when (model.trailing) {
-            SettingsTrailing.CHEVRON -> Text(">", color = UiColors.Home.navItemIdle, fontWeight = FontWeight.Bold)
+            SettingsTrailing.CHEVRON -> SettingsListChevronIcon()
             SettingsTrailing.TEXT -> Text(
                 model.desc,
                 color = UiColors.Home.subtitle,
@@ -168,7 +210,7 @@ fun SettingsDangerRow(
                 modifier = Modifier.padding(top = UiSize.settingsDangerDescTopGap),
             )
         }
-        Text(">", color = UiColors.Lock.error, fontWeight = FontWeight.Bold)
+        SettingsListChevronIcon(tint = UiColors.Lock.error)
     }
 }
 
@@ -188,6 +230,10 @@ data class SettingsRowModel(
     val trailing: SettingsTrailing,
     val onClick: () -> Unit,
     val interactive: Boolean = true,
+    /** Leading row icon (`R.drawable.*`), Material-style glyphs preferred. */
+    val leadingIcon: Int? = null,
+    /** Multiplier for vertical padding only; title/desc font sizes unchanged. */
+    val rowVerticalPaddingScale: Float = 1f,
 )
 
 enum class SettingsTrailing {

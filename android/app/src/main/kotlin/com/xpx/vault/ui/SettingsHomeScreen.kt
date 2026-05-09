@@ -30,6 +30,7 @@ import com.xpx.vault.R
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
+import com.xpx.vault.ui.settings.SettingsListChevronIcon
 import com.xpx.vault.ui.settings.SettingsRowModel
 import com.xpx.vault.ui.settings.SettingsSimpleRow
 import com.xpx.vault.ui.settings.SettingsTrailing
@@ -79,6 +80,7 @@ fun SettingsHomeScreen(
                 SettingsHubRow(
                     title = stringResource(R.string.settings_l1_security),
                     subtitle = stringResource(R.string.settings_l1_security_sub),
+                    leadingIcon = R.drawable.ic_ai_shield,
                     onClick = { onOpenSettingsHub(SettingsHubDestination.SECURITY_PRIVACY) },
                 )
             }
@@ -86,6 +88,7 @@ fun SettingsHomeScreen(
                 SettingsHubRow(
                     title = stringResource(R.string.settings_l1_backup),
                     subtitle = stringResource(R.string.settings_l1_backup_sub),
+                    leadingIcon = R.drawable.ic_backup_restore,
                     onClick = { onOpenSettingsHub(SettingsHubDestination.BACKUP_SYNC) },
                 )
             }
@@ -93,6 +96,7 @@ fun SettingsHomeScreen(
                 SettingsHubRow(
                     title = stringResource(R.string.settings_l1_data),
                     subtitle = stringResource(R.string.settings_l1_data_sub),
+                    leadingIcon = R.drawable.ic_settings_data_storage,
                     onClick = { onOpenSettingsHub(SettingsHubDestination.DATA_STORAGE) },
                 )
             }
@@ -100,6 +104,7 @@ fun SettingsHomeScreen(
                 SettingsHubRow(
                     title = stringResource(R.string.settings_l1_general),
                     subtitle = stringResource(R.string.settings_l1_general_sub),
+                    leadingIcon = R.drawable.ic_settings_general,
                     onClick = { onOpenSettingsHub(SettingsHubDestination.GENERAL) },
                 )
             }
@@ -107,6 +112,7 @@ fun SettingsHomeScreen(
                 SettingsHubRow(
                     title = stringResource(R.string.settings_l1_about),
                     subtitle = stringResource(R.string.settings_l1_about_sub),
+                    leadingIcon = R.drawable.ic_ai_help,
                     onClick = { onOpenSettingsHub(SettingsHubDestination.ABOUT_SUPPORT) },
                 )
             }
@@ -132,14 +138,14 @@ private fun SettingsSubscriptionEntryCard(onClick: () -> Unit) {
             .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(UiRadius.homeCard))
             .pressFeedback(interaction)
             .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
-            .padding(UiSize.settingsCardPadding),
+            .padding(horizontal = UiSize.settingsCardPadding, vertical = UiSize.settingsCardPadding * 2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BoxWithSubscriptionIcon()
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = UiSize.settingsAvatarGap),
+                .padding(start = UiSize.settingsAvatarGap * 2),
         ) {
             Text(
                 text = stringResource(R.string.settings_l1_subscription),
@@ -154,24 +160,26 @@ private fun SettingsSubscriptionEntryCard(onClick: () -> Unit) {
                 modifier = Modifier.padding(top = UiSize.settingsProfileDescTopGap),
             )
         }
-        Text(">", color = UiColors.Home.navItemActive, fontWeight = FontWeight.Bold)
+        SettingsListChevronIcon(tint = UiColors.Home.navItemActive, size = 28.dp)
     }
 }
 
 @Composable
 private fun BoxWithSubscriptionIcon() {
+    val outer = UiSize.settingsAvatarSize * 2
+    val glyph = 44.dp
     Box(
         modifier = Modifier
-            .size(UiSize.settingsAvatarSize)
-            .clip(RoundedCornerShape(12.dp))
+            .size(outer)
+            .clip(RoundedCornerShape(16.dp))
             .background(UiColors.Ai.execBtnBg),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_ai_zap),
-            contentDescription = null,
+            painter = painterResource(R.drawable.ic_settings_subscription),
+            contentDescription = stringResource(R.string.settings_l1_subscription),
             tint = UiColors.Ai.execBtnText,
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(glyph),
         )
     }
 }
@@ -180,6 +188,7 @@ private fun BoxWithSubscriptionIcon() {
 private fun SettingsHubRow(
     title: String,
     subtitle: String,
+    leadingIcon: Int,
     onClick: () -> Unit,
 ) {
     SettingsSimpleRow(
@@ -188,6 +197,8 @@ private fun SettingsHubRow(
             desc = subtitle,
             trailing = SettingsTrailing.CHEVRON,
             onClick = onClick,
+            leadingIcon = leadingIcon,
+            rowVerticalPaddingScale = 1.2f,
         ),
     )
 }

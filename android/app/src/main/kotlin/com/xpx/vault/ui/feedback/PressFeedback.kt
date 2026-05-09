@@ -7,7 +7,8 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 
 private const val PRESS_SCALE = 0.9f
 private const val PRESS_IN_MS = 80
@@ -26,6 +27,12 @@ fun Modifier.pressFeedback(
         animationSpec = tween(durationMillis = if (pressed.value) PRESS_IN_MS else RELEASE_MS),
         label = "pressScale",
     )
-    return this.scale(scale.value)
+    // Use graphicsLayer so layout bounds stay full size; outer border/clip drawn earlier in the chain
+    // keeps stroke extent stable while only the inner content visually scales.
+    return this.graphicsLayer {
+        scaleX = scale.value
+        scaleY = scale.value
+        transformOrigin = TransformOrigin.Center
+    }
 }
 
