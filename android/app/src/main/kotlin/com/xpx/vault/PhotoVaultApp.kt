@@ -2,6 +2,7 @@ package com.xpx.vault
 
 import android.app.Application
 import android.content.Context
+import com.xpx.vault.billing.BillingBootstrap
 import com.xpx.vault.ui.backup.AutoBackupScheduler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -18,6 +19,7 @@ class PhotoVaultApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        BillingBootstrap.init(this)
         LanguageManager.initialize(this)
         AppLogger.install()
         installGlobalExceptionBoundary()

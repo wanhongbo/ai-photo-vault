@@ -29,6 +29,7 @@ mlkitFaceDetection = "16.1.7"
 mlkitTextRecognition = "16.0.1"
 mlkitBarcodeScanning = "17.3.0"
 playServicesBase = "18.5.0"
+revenuecatPurchases = "9.14.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -75,6 +76,7 @@ mlkit-face-detection = { group = "com.google.mlkit", name = "face-detection", ve
 mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
 mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkitBarcodeScanning" }
 play-services-base = { group = "com.google.android.gms", name = "play-services-base", version.ref = "playServicesBase" }
+revenuecat-purchases = { group = "com.revenuecat.purchases", name = "purchases", version.ref = "revenuecatPurchases" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

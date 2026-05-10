@@ -137,6 +137,34 @@ object UiColors {
         val encryptIconBg = Color(0x206366F1)
         val dedupIconBg = Color(0x20C850C0)
     }
+
+    /**
+     * Paywall / 会员页（Pixso：`item-id=4:449` 深色、蓝强调、金色皇冠与 BEST VALUE 徽章）。
+     */
+    object Paywall {
+        val bgTop = Color(0xFF070A10)
+        val bgBottom = Color(0xFF000000)
+        val crownRing = Color(0xFFE8C547)
+        val crownGlyph = Color(0xFFFFE08A)
+        val title = Color(0xFFF5F8FF)
+        val subtitle = Color(0xFF8A94A8)
+        val closeFill = Color(0xFF1A2230)
+        val closeStroke = Color(0xFF2E3A4D)
+        val cardBg = Color(0xFF10141D)
+        val cardStroke = Color(0xFF2A3140)
+        val cardStrokeSelected = Color(0xFF4A9EFF)
+        val priceSelected = Color(0xFF4A9EFF)
+        val priceIdle = Color(0xFFF5F8FF)
+        val badgeBg = Color(0xFF2563EB)
+        val badgeText = Color.White
+        val tierTitle = Color(0xFFF5F8FF)
+        val tierMeta = Color(0xFF7E8AA0)
+        val featureCheck = Color(0xFF32D583)
+        val featureCheckGold = Color(0xFFE8C547)
+        val featureCheckBlue = Color(0xFF4A9EFF)
+        val footer = Color(0xFF5C6578)
+        val error = Color(0xFFFF7A8A)
+    }
 }
 
 object UiRadius {
@@ -155,9 +183,11 @@ object UiRadius {
     val backupResultBadge: Dp = 28.dp
     val backupMetaCard: Dp = 14.dp
     val trashThumb: Dp = 10.dp
+    val paywallCard: Dp = 18.dp
 }
 
 object UiSize {
+    val paywallCrown: Dp = 56.dp
     val buttonHeight: Dp = 54.dp
     val buttonHeightSecondary: Dp = 48.dp
     val loadingIndicator: Dp = 20.dp

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Photo Vault</string>
+    <string name="share_image_watermark" translatable="false">LumaValut</string>
     <string name="home_placeholder">W1 · Local vault (shell)</string>
     <string name="splash_title">VaultSafe</string>
     <string name="splash_tagline">Private · Encrypted · Yours</string>
@@ -335,12 +336,33 @@
     <string name="trash_empty">No recoverable items</string>
     <string name="trash_purge_title">Delete permanently?</string>
     <string name="trash_purge_message">This action cannot be undone.</string>
+    <!-- Paywall: prices from RC/Play; strings are structural copy — see doc/android/支付功能-开发计划与配置清单.md -->
     <string name="paywall_title">Premium</string>
     <string name="paywall_subtitle">Unlock full privacy protection and AI features</string>
     <string name="paywall_feature_backup">Unlimited encrypted backup</string>
     <string name="paywall_feature_ai">AI smart classify and search</string>
     <string name="paywall_feature_ads">Ad-free experience</string>
     <string name="paywall_action_upgrade">Upgrade now</string>
+    <string name="paywall_close_cd">Close</string>
+    <string name="paywall_hero_title">Luma Vault Pro</string>
+    <string name="paywall_hero_subtitle">Unlock all privacy features</string>
+    <string name="paywall_hero_subtitle_active">You already have full premium access.</string>
+    <string name="paywall_best_value">BEST VALUE</string>
+    <string name="paywall_period_monthly">per month</string>
+    <string name="paywall_period_yearly">per year</string>
+    <string name="paywall_period_lifetime">one-time</string>
+    <string name="paywall_period_other">subscription</string>
+    <string name="paywall_feat_storage">Unlimited private photo storage</string>
+    <string name="paywall_feat_watermark">No watermarks on shared photos</string>
+    <string name="paywall_feat_ai">AI privacy scan &amp; cleanup (per plan limits)</string>
+    <string name="paywall_feat_backup">Local encrypted backup &amp; restore</string>
+    <string name="paywall_cta_continue">Continue</string>
+    <string name="paywall_restore">Restore purchases</string>
+    <string name="paywall_footer">Cancel anytime · GDPR compliant · No account required</string>
+    <string name="paywall_not_configured">RevenueCat API key is not configured. Add a valid key for this build flavor to load store prices.</string>
+    <string name="paywall_retry">Retry</string>
+    <string name="paywall_error_generic">Could not load membership plans</string>
+    <string name="paywall_premium_active">This account already has premium access.</string>
     <string name="language_settings_title">Language</string>
     <string name="language_settings_subtitle">Switch app language instantly without restarting.</string>
     <string name="language_option_english">English</string>

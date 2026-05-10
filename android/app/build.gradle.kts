@@ -129,6 +129,7 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.revenuecat.purchases)
     ksp(libs.hilt.compiler)
 
     debugImplementation(libs.androidx.compose.ui.tooling)

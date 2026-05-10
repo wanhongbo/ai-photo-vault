@@ -17,4 +17,5 @@
 | 08 | [08-多语言国际化.md](./08-多语言国际化.md) | strings.xml、Locale |
 | 09 | [09-备份与恢复.md](./09-备份与恢复.md) | ZIP、加密、SAF、WorkManager |
 | 10 | [10-内购付费.md](./10-内购付费.md) | RevenueCat（底层 Play Billing） |
+| — | [支付功能-开发计划与配置清单.md](./支付功能-开发计划与配置清单.md) | **Luma Vault**：支付排期、Play / RevenueCat / 工程 / 隐私清单（与 10 配套落地） |
 | 11 | [11-Firebase监控.md](./11-Firebase监控.md) | **一期暂缓**；后续可选 Crashlytics 等 |

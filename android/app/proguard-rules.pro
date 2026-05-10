@@ -1,5 +1,8 @@
 # 一期：保留 R8 映射供 Play 符号化；后续按依赖补充
 
+# RevenueCat（Play Billing 封装）
+-keep class com.revenuecat.purchases.** { *; }
+
 # Hilt / Room / 反射（按需收紧）
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
