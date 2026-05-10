@@ -1,6 +1,9 @@
 # OS
 .DS_Store
 
+# Local tooling venv (e.g. marketing asset scripts)
+.venv-screens/
+
 # Android / Gradle
 **/.gradle/
 **/build/
