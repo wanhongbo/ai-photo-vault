@@ -3,13 +3,21 @@ package com.xpx.vault.ui.export
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
+import com.xpx.vault.R
 import com.xpx.vault.data.crypto.VaultCipher
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import kotlin.math.max
+import kotlin.math.min
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -105,14 +113,21 @@ object MediaShareHelper {
             .ifBlank { "redacted" }
             .takeLast(24)
         val dest = File(shareRoot, "${System.nanoTime()}_${safeBase}.jpg")
+        val toEncode = runCatching {
+            bitmap.copy(Bitmap.Config.ARGB_8888, true).also { drawShareWatermark(context, it) }
+        }.getOrElse { bitmap }
         try {
             FileOutputStream(dest).use { output ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, output)
+                toEncode.compress(Bitmap.CompressFormat.JPEG, quality, output)
                 output.flush()
             }
         } catch (t: Throwable) {
             if (dest.exists()) dest.delete()
             return@withContext ShareOutcome.Failure(t.message ?: "encode_failed")
+        } finally {
+            if (toEncode !== bitmap && !toEncode.isRecycled) {
+                toEncode.recycle()
+            }
         }
         val authority = "${context.packageName}.fileprovider"
         val uri = try {
@@ -152,14 +167,26 @@ object MediaShareHelper {
             if (dest.exists()) dest.delete()
             return@withContext ShareOutcome.Failure(t.message ?: "decrypt_failed")
         }
+
+        var shareFile = dest
+        var shareMime = mimeType
+        if (mimeIsShareWatermarkedImage(mimeType)) {
+            val watermarked = File(shareRoot, "${System.nanoTime()}_${dest.nameWithoutExtension}_wm.jpg")
+            if (writeRasterWithWatermark(context, dest, watermarked)) {
+                runCatching { dest.delete() }
+                shareFile = watermarked
+                shareMime = "image/jpeg"
+            }
+        }
+
         val authority = "${context.packageName}.fileprovider"
         val uri = try {
-            FileProvider.getUriForFile(context, authority, dest)
+            FileProvider.getUriForFile(context, authority, shareFile)
         } catch (t: Throwable) {
-            dest.delete()
+            shareFile.delete()
             return@withContext ShareOutcome.Failure(t.message ?: "provider_uri_failed")
         }
-        ShareOutcome.Success(uri, mimeType)
+        ShareOutcome.Success(uri, shareMime)
     }
 
     private fun pickDisplayName(file: File): String {
@@ -179,6 +206,68 @@ object MediaShareHelper {
             if (entry.isFile && entry.lastModified() < expireAt) {
                 runCatching { entry.delete() }
             }
+        }
+    }
+
+    private fun mimeIsShareWatermarkedImage(mimeType: String): Boolean {
+        if (!mimeType.startsWith("image/", ignoreCase = true)) return false
+        if (mimeType.equals("image/gif", ignoreCase = true)) return false
+        if (mimeType.equals("image/svg+xml", ignoreCase = true)) return false
+        return true
+    }
+
+    private fun decodeBitmapForShareWatermark(file: File, maxSide: Int = 4500): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        var longSide = max(bounds.outWidth, bounds.outHeight)
+        while (longSide / sample > maxSide) sample *= 2
+        val opts = BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        return BitmapFactory.decodeFile(file.absolutePath, opts)
+    }
+
+    private fun drawShareWatermark(context: Context, bitmap: Bitmap) {
+        val w = bitmap.width.toFloat()
+        val h = bitmap.height.toFloat()
+        if (w < 4f || h < 4f) return
+        val canvas = Canvas(bitmap)
+        val text = context.getString(R.string.share_image_watermark)
+        val density = context.resources.displayMetrics.density
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
+            textAlign = Paint.Align.RIGHT
+            textSize = min(12.5f * density, max(9.5f * density, w * 0.0185f))
+            color = Color.argb(52, 225, 232, 245)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            setShadowLayer(1.2f * density, 0f, 0.6f * density, Color.argb(32, 0, 0, 0))
+        }
+        val padX = max(7f * density, w * 0.02f)
+        val padY = max(7f * density, h * 0.016f)
+        val fm = paint.fontMetrics
+        val baseline = h - padY - fm.descent
+        canvas.drawText(text, w - padX, baseline, paint)
+    }
+
+    private fun writeRasterWithWatermark(context: Context, source: File, jpegOut: File, jpegQuality: Int = 92): Boolean {
+        val decoded = decodeBitmapForShareWatermark(source) ?: return false
+        val working = if (decoded.isMutable) decoded else decoded.copy(Bitmap.Config.ARGB_8888, true)
+        if (working !== decoded) decoded.recycle()
+        return try {
+            drawShareWatermark(context, working)
+            FileOutputStream(jpegOut).use { fos ->
+                if (!working.compress(Bitmap.CompressFormat.JPEG, jpegQuality, fos)) {
+                    return false
+                }
+                fos.flush()
+            }
+            true
+        } catch (_: Throwable) {
+            false
+        } finally {
+            if (!working.isRecycled) working.recycle()
         }
     }
 
