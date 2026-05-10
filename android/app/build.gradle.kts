@@ -82,6 +82,22 @@ android {
     }
 }
 
+// 避免未配置 keystore.properties 时打出可误传到 Play 的未签名/调试签名 AAB
+tasks.matching { task ->
+    val n = task.name
+    n.startsWith("bundle") && n.endsWith("Release")
+}.configureEach {
+    doFirst {
+        if (!rootProject.file("keystore.properties").exists()) {
+            throw GradleException(
+                "缺少 ${rootProject.projectDir}/keystore.properties，无法为 Release 打 AAB。\n" +
+                    "请复制 keystore.properties.example 为 keystore.properties 并填写上传密钥信息；\n" +
+                    "上传到 Google Play 请使用 Play 应用签名（上传密钥仅用于向商店提交）。",
+            )
+        }
+    }
+}
+
 dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
