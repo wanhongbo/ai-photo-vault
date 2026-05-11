@@ -43,6 +43,7 @@ import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.data.crypto.PasswordHasher
 import com.xpx.vault.data.db.PhotoVaultDatabase
 import com.xpx.vault.data.db.entity.SecuritySettingEntity
+import com.xpx.vault.AppLockManager
 import com.xpx.vault.AppLogger
 import com.xpx.vault.data.crypto.BackupKeyManager
 import com.xpx.vault.ui.backup.AutoBackupScheduler
@@ -70,8 +71,20 @@ fun ChangePinScreen(
 
     AppDialog(
         show = state.showSuccessDialog,
-        title = stringResource(R.string.settings_pin_success_title),
-        message = stringResource(R.string.settings_pin_success_desc),
+        title = stringResource(
+            if (state.isInitialSetup) {
+                R.string.settings_pin_success_title_first
+            } else {
+                R.string.settings_pin_success_title
+            },
+        ),
+        message = stringResource(
+            if (state.isInitialSetup) {
+                R.string.settings_pin_success_desc_first
+            } else {
+                R.string.settings_pin_success_desc
+            },
+        ),
         confirmText = stringResource(R.string.settings_pin_success_action),
         onConfirm = {
             viewModel.dismissSuccessDialog()
@@ -95,9 +108,20 @@ fun ChangePinScreen(
             .padding(UiSize.settingsScreenHorizontalPad),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        AppTopBar(title = stringResource(R.string.settings_pin_title), onBack = onBack)
+        AppTopBar(
+            title = stringResource(
+                if (state.isInitialSetup) R.string.settings_pin_title_first else R.string.settings_pin_title,
+            ),
+            onBack = onBack,
+        )
         Text(
-            text = stringResource(R.string.settings_pin_subtitle),
+            text = stringResource(
+                if (state.isInitialSetup) {
+                    R.string.settings_pin_subtitle_first
+                } else {
+                    R.string.settings_pin_subtitle
+                },
+            ),
             color = UiColors.Home.subtitle,
             fontSize = UiTextSize.homeSubtitle,
         )
@@ -110,7 +134,11 @@ fun ChangePinScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
-                text = stringResource(R.string.settings_pin_step, state.stepIndex, 3),
+                text = stringResource(
+                    R.string.settings_pin_step,
+                    state.stepIndex,
+                    if (state.isInitialSetup) 2 else 3,
+                ),
                 color = UiColors.Home.navItemActive,
                 fontSize = UiTextSize.settingsRowDesc,
             )
@@ -181,7 +209,12 @@ fun ChangePinScreen(
                 when (state.step) {
                     ChangePinStep.VERIFY_OLD -> R.string.settings_pin_action_next
                     ChangePinStep.ENTER_NEW -> R.string.settings_pin_action_next
-                    ChangePinStep.CONFIRM_NEW -> R.string.settings_pin_action_confirm
+                    ChangePinStep.CONFIRM_NEW ->
+                        if (state.isInitialSetup) {
+                            R.string.settings_pin_action_confirm_first
+                        } else {
+                            R.string.settings_pin_action_confirm
+                        }
                 },
             ),
             onClick = {
@@ -199,6 +232,7 @@ fun ChangePinScreen(
 class ChangePinViewModel @Inject constructor(
     db: PhotoVaultDatabase,
     @ApplicationContext private val appContext: Context,
+    private val appLockManager: AppLockManager,
 ) : ViewModel() {
     private val dao = db.securitySettingDao()
     private val backupKeyManager = BackupKeyManager(appContext)
@@ -208,12 +242,14 @@ class ChangePinViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val setting = dao.getById()
-            if (setting?.pinHashHex.isNullOrBlank()) {
-                _state.value = _state.value.copy(
-                    fatalError = "未检测到已设置的 PIN，请先在解锁页完成 PIN 设置。",
+            if (setting == null || setting.pinHashHex.isNullOrBlank()) {
+                _state.value = ChangePinUiState(
+                    isInitialSetup = true,
+                    step = ChangePinStep.ENTER_NEW,
+                    existingSetting = null,
                 )
             } else {
-                _state.value = _state.value.copy(existingSetting = setting)
+                _state.value = ChangePinUiState(existingSetting = setting)
             }
         }
     }
@@ -263,12 +299,15 @@ class ChangePinViewModel @Inject constructor(
     }
 
     private fun captureNewPin(newPin: String) {
-        val oldHash = _state.value.existingSetting?.pinHashHex
-        if (oldHash == PasswordHasher.sha256HexOfUtf8(newPin)) {
-            _state.value = _state.value.copy(errorMessage = "新 PIN 不能与旧 PIN 相同。")
-            return
+        val s = _state.value
+        if (!s.isInitialSetup) {
+            val oldHash = s.existingSetting?.pinHashHex
+            if (oldHash == PasswordHasher.sha256HexOfUtf8(newPin)) {
+                _state.value = s.copy(errorMessage = "新 PIN 不能与旧 PIN 相同。")
+                return
+            }
         }
-        _state.value = _state.value.copy(
+        _state.value = s.copy(
             pendingNewPin = newPin,
             currentPinInput = "",
             step = ChangePinStep.CONFIRM_NEW,
@@ -287,6 +326,10 @@ class ChangePinViewModel @Inject constructor(
             )
             return
         }
+        if (s.isInitialSetup) {
+            confirmInitialPin(confirmPin)
+            return
+        }
         val setting = s.existingSetting ?: return
         viewModelScope.launch {
             _state.value = _state.value.copy(loading = true, errorMessage = null)
@@ -299,6 +342,7 @@ class ChangePinViewModel @Inject constructor(
                 )
             }.onSuccess {
                 refreshBackupKeyForPin(confirmPin)
+                appLockManager.setPinConfigured(true)
                 _state.value = _state.value.copy(
                     loading = false,
                     currentPinInput = "",
@@ -309,6 +353,37 @@ class ChangePinViewModel @Inject constructor(
                 _state.value = _state.value.copy(
                     loading = false,
                     fatalError = "PIN 修改失败，请稍后重试。",
+                )
+            }
+        }
+    }
+
+    private fun confirmInitialPin(confirmPin: String) {
+        val s = _state.value
+        viewModelScope.launch {
+            _state.value = s.copy(loading = true, errorMessage = null)
+            runCatching {
+                dao.upsert(
+                    SecuritySettingEntity(
+                        lockType = "PIN",
+                        pinHashHex = PasswordHasher.sha256HexOfUtf8(confirmPin),
+                        biometricEnabled = false,
+                        failCount = 0,
+                    ),
+                )
+            }.onSuccess {
+                refreshBackupKeyForPin(confirmPin)
+                appLockManager.setPinConfigured(true)
+                _state.value = _state.value.copy(
+                    loading = false,
+                    currentPinInput = "",
+                    pendingNewPin = null,
+                    showSuccessDialog = true,
+                )
+            }.onFailure {
+                _state.value = _state.value.copy(
+                    loading = false,
+                    fatalError = "PIN 设置失败，请稍后重试。",
                 )
             }
         }
@@ -342,6 +417,8 @@ enum class ChangePinStep {
 
 data class ChangePinUiState(
     val loading: Boolean = false,
+    /** 无本地 PIN 记录时，在设置页走「首次设置」两步流程。 */
+    val isInitialSetup: Boolean = false,
     val step: ChangePinStep = ChangePinStep.VERIFY_OLD,
     val existingSetting: SecuritySettingEntity? = null,
     val currentPinInput: String = "",
@@ -351,23 +428,32 @@ data class ChangePinUiState(
     val errorMessage: String? = null,
 ) {
     val stepIndex: Int
-        get() = when (step) {
-            ChangePinStep.VERIFY_OLD -> 1
-            ChangePinStep.ENTER_NEW -> 2
-            ChangePinStep.CONFIRM_NEW -> 3
+        get() = when {
+            isInitialSetup && step == ChangePinStep.ENTER_NEW -> 1
+            isInitialSetup && step == ChangePinStep.CONFIRM_NEW -> 2
+            step == ChangePinStep.VERIFY_OLD -> 1
+            step == ChangePinStep.ENTER_NEW -> 2
+            step == ChangePinStep.CONFIRM_NEW -> 3
+            else -> 1
         }
 
     val stepTitleRes: Int?
-        get() = when (step) {
-            ChangePinStep.VERIFY_OLD -> R.string.settings_pin_step_verify_title
-            ChangePinStep.ENTER_NEW -> R.string.settings_pin_step_new_title
-            ChangePinStep.CONFIRM_NEW -> R.string.settings_pin_step_confirm_title
+        get() = when {
+            isInitialSetup && step == ChangePinStep.ENTER_NEW -> R.string.settings_pin_initial_enter_title
+            isInitialSetup && step == ChangePinStep.CONFIRM_NEW -> R.string.settings_pin_initial_confirm_title
+            step == ChangePinStep.VERIFY_OLD -> R.string.settings_pin_step_verify_title
+            step == ChangePinStep.ENTER_NEW -> R.string.settings_pin_step_new_title
+            step == ChangePinStep.CONFIRM_NEW -> R.string.settings_pin_step_confirm_title
+            else -> null
         }
 
     val stepDescRes: Int?
-        get() = when (step) {
-            ChangePinStep.VERIFY_OLD -> R.string.settings_pin_step_verify_desc
-            ChangePinStep.ENTER_NEW -> R.string.settings_pin_step_new_desc
-            ChangePinStep.CONFIRM_NEW -> R.string.settings_pin_step_confirm_desc
+        get() = when {
+            isInitialSetup && step == ChangePinStep.ENTER_NEW -> R.string.settings_pin_initial_enter_desc
+            isInitialSetup && step == ChangePinStep.CONFIRM_NEW -> R.string.settings_pin_initial_confirm_desc
+            step == ChangePinStep.VERIFY_OLD -> R.string.settings_pin_step_verify_desc
+            step == ChangePinStep.ENTER_NEW -> R.string.settings_pin_step_new_desc
+            step == ChangePinStep.CONFIRM_NEW -> R.string.settings_pin_step_confirm_desc
+            else -> null
         }
 }

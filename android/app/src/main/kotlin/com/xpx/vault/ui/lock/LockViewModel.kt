@@ -12,6 +12,8 @@ import com.xpx.vault.ui.backup.AutoBackupScheduler
 import com.xpx.vault.ui.backup.BackupSecretsStore
 import com.xpx.vault.ui.backup.BackupTriggerReason
 import com.xpx.vault.ui.backup.LocalBackupMvpService
+import com.xpx.vault.AppLockManager
+import com.xpx.vault.R
 import com.xpx.vault.ui.setup.FirstLaunchRouter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,6 +33,7 @@ private const val TAG = "LockViewModel"
 class LockViewModel @Inject constructor(
     private val db: PhotoVaultDatabase,
     @ApplicationContext private val appContext: Context,
+    private val appLockManager: AppLockManager,
 ) : ViewModel() {
     private val dao = db.securitySettingDao()
     private val backupKeyManager = BackupKeyManager(appContext)
@@ -43,18 +46,25 @@ class LockViewModel @Inject constructor(
             when (FirstLaunchRouter.detect(appContext, db)) {
                 FirstLaunchRouter.Branch.Unlock -> {
                     val setting = dao.getById()
-                    _state.value = if (setting != null) toUnlockState(setting) else freshSetupState()
+                    _state.value = if (setting != null) {
+                        toUnlockState(setting)
+                    } else {
+                        // 不应出现：无 SecuritySetting 却判为 Unlock；直接视为未配置 PIN 并结束锁屏。
+                        appLockManager.setPinConfigured(false)
+                        LockUiState(loading = false, unlockSuccess = true)
+                    }
                 }
                 FirstLaunchRouter.Branch.Fresh -> {
-                    _state.value = freshSetupState()
+                    appLockManager.setPinConfigured(false)
+                    _state.value = LockUiState(loading = false, unlockSuccess = true)
                 }
                 FirstLaunchRouter.Branch.RestoreLogin -> {
                     _state.value = LockUiState(
                         stage = LockStage.RESTORE_LOGIN,
                         loading = false,
                         isSetup = false,
-                        title = "欢迎回来",
-                        subtitle = "检测到你的备份，请输入 AI Vault 密码",
+                        title = appContext.getString(R.string.lock_restore_title),
+                        subtitle = appContext.getString(R.string.lock_restore_subtitle),
                         stepLabel = null,
                     )
                 }
@@ -65,8 +75,8 @@ class LockViewModel @Inject constructor(
     private fun freshSetupState(): LockUiState = LockUiState(
         stage = LockStage.SETUP_ENTER,
         loading = false,
-        title = "设置 PIN 码",
-        subtitle = "请设置一个 6 位 PIN 码用于快速解锁",
+        title = appContext.getString(R.string.lock_setup_enter_title),
+        subtitle = appContext.getString(R.string.lock_setup_enter_subtitle),
         stepLabel = "1 / 2",
     )
 
@@ -82,18 +92,19 @@ class LockViewModel @Inject constructor(
                     stage = LockStage.SETUP_CONFIRM,
                     firstPinOrPattern = next,
                     enteredPin = "",
-                    title = "再次输入 PIN 码",
-                    subtitle = "请重新输入以确认您的 PIN 码",
+                    title = appContext.getString(R.string.lock_setup_confirm_title),
+                    subtitle = appContext.getString(R.string.lock_setup_confirm_subtitle),
                     stepLabel = "2 / 2",
-                    helper = "第一次 PIN 已设置",
+                    helper = appContext.getString(R.string.lock_setup_confirm_helper),
                 )
             } else if (s.stage == LockStage.SETUP_CONFIRM) {
                 if (next == s.firstPinOrPattern) {
                     persistSetting(LOCK_TYPE_PIN, next, onSaved = {
+                        appLockManager.setPinConfigured(true)
                         _state.value = s.copy(
                             success = true,
-                            title = "PIN 码设置成功",
-                            subtitle = "您的 PIN 码已安全加密存储在本设备",
+                            title = appContext.getString(R.string.lock_success_title),
+                            subtitle = appContext.getString(R.string.lock_success_subtitle),
                             enteredPin = "",
                             error = null,
                             biometricPromptAfterSetup = true,
@@ -103,9 +114,9 @@ class LockViewModel @Inject constructor(
                     _state.value = s.copy(
                         stage = LockStage.SETUP_CONFIRM_ERROR,
                         enteredPin = "",
-                        error = "两次 PIN 码输入不一致，请重新输入",
-                        title = "PIN 码不匹配",
-                        subtitle = "两次输入的 PIN 码不一致，请重新设置",
+                        error = appContext.getString(R.string.lock_error_mismatch),
+                        title = appContext.getString(R.string.lock_error_mismatch_title),
+                        subtitle = appContext.getString(R.string.lock_error_mismatch_subtitle),
                     )
                 }
             } else if (s.stage == LockStage.UNLOCK) {
@@ -132,8 +143,8 @@ class LockViewModel @Inject constructor(
             helper = null,
             error = null,
             success = false,
-            title = "设置 PIN 码",
-            subtitle = "请设置一个 6 位 PIN 码用于快速解锁",
+            title = appContext.getString(R.string.lock_setup_enter_title),
+            subtitle = appContext.getString(R.string.lock_setup_enter_subtitle),
             stepLabel = "1 / 2",
         )
     }
@@ -212,7 +223,7 @@ class LockViewModel @Inject constructor(
                 dao.upsert(setting.copy(failCount = nextFail))
                 _state.value = _state.value.copy(
                     enteredPin = "",
-                    error = "PIN 错误，请重试（已失败 $nextFail 次）",
+                    error = appContext.getString(R.string.lock_error_wrong_pin, nextFail),
                 )
             }
         }
@@ -255,8 +266,8 @@ class LockViewModel @Inject constructor(
             loading = false,
             isSetup = false,
             biometricEnabled = setting.biometricEnabled,
-            title = "输入 PIN 解锁",
-            subtitle = "请输入 6 位 PIN 码解锁",
+            title = appContext.getString(R.string.lock_unlock_title),
+            subtitle = appContext.getString(R.string.lock_unlock_subtitle),
             stepLabel = null,
         )
     }
@@ -284,6 +295,7 @@ class LockViewModel @Inject constructor(
                         failCount = 0,
                     ),
                 )
+                appLockManager.setPinConfigured(true)
                 // 2) 缓存 BackupKey
                 launchRefreshBackupKey(pin, triggerAutoBackup = false, force = true)
                 _state.value = _state.value.copy(
@@ -306,10 +318,10 @@ class LockViewModel @Inject constructor(
         }
     }
 
-    /** 放弃外部备份，回到正常的 SETUP_ENTER 新建相册流程。 */
+    /** 放弃外部备份，进入未设置 PIN 的主页（与首启「全新安装」一致）。 */
     fun abandonBackupAndCreateFresh() {
-        // 不删除外部 backup.dat（防反悔）；下次设置 PIN 后的自动备份会 FULL 覆盖。
-        _state.value = freshSetupState()
+        appLockManager.setPinConfigured(false)
+        _state.value = LockUiState(loading = false, unlockSuccess = true, stage = LockStage.UNLOCK)
     }
 }
 

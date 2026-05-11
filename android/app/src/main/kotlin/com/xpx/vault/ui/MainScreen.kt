@@ -13,6 +13,7 @@ import androidx.compose.ui.zIndex
 
 @Composable
 fun MainScreen(
+    onOpenChangePin: () -> Unit,
     onOpenPrivateCamera: () -> Unit,
     onOpenSearch: () -> Unit,
     onOpenAlbum: (String) -> Unit,
@@ -33,6 +34,7 @@ fun MainScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         HomeScreen(
+            onOpenPinSettings = onOpenChangePin,
             onOpenPrivateCamera = onOpenPrivateCamera,
             onOpenTab = onSelectTab,
             selectedTab = selectedTab,

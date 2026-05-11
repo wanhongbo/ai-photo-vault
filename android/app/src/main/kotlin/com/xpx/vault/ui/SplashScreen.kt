@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,28 +37,19 @@ import com.xpx.vault.R
 import com.xpx.vault.ui.theme.XpxVaultTheme
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
-import kotlinx.coroutines.delay
-
-private const val SplashHoldMs = 1_600L
 private const val ProgressAnimMs = 1_200
 
 /**
  * 闪屏（对齐 Pixso node `4:2` 布局）。盾牌位图可替换为 `drawable-nodpi` 下导出的高清 PNG，并改 [R.drawable.ic_splash_shield] 引用。
+ * 首启后的跳转由 [SplashViewModel] 与 [MainActivity] 的导航逻辑负责。
  */
 @Composable
-fun SplashScreen(
-    onFinished: () -> Unit,
-) {
+fun SplashScreen() {
     val progressTarget by animateFloatAsState(
         targetValue = 1f,
         animationSpec = tween(durationMillis = ProgressAnimMs),
         label = "splashProgress",
     )
-
-    LaunchedEffect(Unit) {
-        delay(SplashHoldMs)
-        onFinished()
-    }
 
     val glowRadiusPx = with(LocalDensity.current) { 140.dp.toPx() }
 
@@ -172,6 +162,6 @@ private fun SplashProgressBar(
 @Composable
 private fun SplashScreenPreview() {
     XpxVaultTheme {
-        SplashScreen(onFinished = {})
+        SplashScreen()
     }
 }

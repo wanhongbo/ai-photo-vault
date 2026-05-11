@@ -107,7 +107,7 @@ fun LockScreen(
         }
         val activity = hostActivity ?: run {
             if (userInitiated) {
-                viewModel.onBiometricUnlockFailed("当前页面无法启动生物识别认证，请使用 PIN 解锁")
+                viewModel.onBiometricUnlockFailed(context.getString(R.string.lock_biometric_cannot_start))
             }
             return
         }
@@ -127,19 +127,21 @@ fun LockScreen(
                     // 用户主动取消：记录时间戳，避免下次 ON_RESUME 立即再弹
                     lastBiometricDismissedAt = System.currentTimeMillis()
                 } else {
-                    viewModel.onBiometricUnlockFailed("生物识别失败：$errString")
+                    viewModel.onBiometricUnlockFailed(
+                        context.getString(R.string.lock_biometric_failed_with_reason, errString),
+                    )
                 }
             }
 
             override fun onAuthenticationFailed() {
-                viewModel.onBiometricUnlockFailed("生物识别未通过，请重试或改用 PIN 解锁")
+                viewModel.onBiometricUnlockFailed(context.getString(R.string.lock_biometric_failed_use_pin))
             }
         }
         biometricInFlight = true
         val prompt = BiometricPrompt(activity, executor, callback)
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("生物识别解锁")
-            .setSubtitle("验证后可快速进入私密相册")
+            .setTitle(context.getString(R.string.lock_biometric_prompt_title))
+            .setSubtitle(context.getString(R.string.lock_biometric_prompt_subtitle))
             .setAllowedAuthenticators(biometricAuthenticator)
             .build()
         prompt.authenticate(promptInfo)
@@ -169,7 +171,7 @@ fun LockScreen(
     Surface(modifier = Modifier.fillMaxSize(), color = UiColors.Lock.bg) {
         if (state.loading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("加载中...", color = UiColors.Lock.textSub)
+                Text(stringResource(R.string.lock_loading), color = UiColors.Lock.textSub)
             }
         } else if (state.success) {
             LockSuccessContent(onContinue = onUnlockSuccess)
@@ -182,9 +184,9 @@ fun LockScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                state.stepLabel?.let {
+                state.stepLabel?.let { step ->
                     Text(
-                        text = "安全设置  $it",
+                        text = stringResource(R.string.lock_screen_step_prefix, step),
                         color = UiColors.Lock.textSub,
                         fontSize = 16.sp,
                         modifier = Modifier.padding(bottom = 24.dp),
@@ -236,7 +238,7 @@ fun LockScreen(
                 if (state.stage == LockStage.SETUP_CONFIRM_ERROR) {
                     val resetInteraction = rememberFeedbackInteractionSource()
                     AppButton(
-                        text = "重新设置 PIN 码",
+                        text = stringResource(R.string.lock_setup_reset_password),
                         onClick = viewModel::resetSetup,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -248,7 +250,7 @@ fun LockScreen(
                 } else if (state.stage == LockStage.RESTORE_LOGIN && state.showAbandonBackupEntry) {
                     val abandonInteraction = rememberFeedbackInteractionSource()
                     AppButton(
-                        text = "放弃备份，创建新相册",
+                        text = stringResource(R.string.lock_abandon_button),
                         onClick = { showAbandonBackupDialog = true },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -264,10 +266,10 @@ fun LockScreen(
 
     AppDialog(
         show = showAbandonBackupDialog,
-        title = "确认放弃备份？",
-        message = "此操作会忽略设备上已有的备份文件，并创建一个全新的空相册。\n原备份文件不会被删除，但新相册将无法读取其中的照片。\n\n确定继续吗？",
-        confirmText = "确认放弃",
-        dismissText = "再试一次",
+        title = stringResource(R.string.lock_abandon_backup_title),
+        message = stringResource(R.string.lock_abandon_backup_message),
+        confirmText = stringResource(R.string.lock_abandon_confirm),
+        dismissText = stringResource(R.string.lock_abandon_retry),
         onConfirm = {
             showAbandonBackupDialog = false
             viewModel.abandonBackupAndCreateFresh()
@@ -277,10 +279,10 @@ fun LockScreen(
 
     AppDialog(
         show = state.success && state.biometricPromptAfterSetup && biometricAvailable,
-        title = "开启生物识别解锁",
-        message = "开启后可通过指纹或面容快速解锁；失败时仍可使用 PIN。",
-        confirmText = "立即开启",
-        dismissText = "暂不开启",
+        title = stringResource(R.string.lock_biometric_setup_title),
+        message = stringResource(R.string.lock_biometric_setup_message),
+        confirmText = stringResource(R.string.lock_biometric_setup_confirm),
+        dismissText = stringResource(R.string.lock_biometric_setup_later),
         onConfirm = {
             viewModel.setBiometricEnabled(true)
             launchBiometricPrompt()
@@ -293,9 +295,7 @@ fun LockScreen(
 }
 
 @Composable
-private fun LockSuccessContent(
-    onContinue: () -> Unit,
-) {
+private fun LockSuccessContent(onContinue: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -313,13 +313,17 @@ private fun LockSuccessContent(
             Text("✓", color = UiColors.Lock.success, fontSize = 40.sp, fontWeight = FontWeight.Bold)
         }
         Text(
-            "PIN 码设置成功",
+            stringResource(R.string.lock_success_title),
             color = UiColors.Lock.textMain,
             fontSize = 38.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 24.dp),
         )
-        Text("您的 PIN 码已安全加密存储在本设备", color = UiColors.Lock.textSub, modifier = Modifier.padding(top = 10.dp))
+        Text(
+            stringResource(R.string.lock_success_subtitle),
+            color = UiColors.Lock.textSub,
+            modifier = Modifier.padding(top = 10.dp),
+        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -328,15 +332,27 @@ private fun LockSuccessContent(
                 .background(UiColors.Lock.hintPanel, RoundedCornerShape(UiRadius.hintCard))
                 .padding(16.dp),
         ) {
-            Text("PIN 安全须知", color = UiColors.Lock.textMain, fontWeight = FontWeight.SemiBold)
+            Text(
+                stringResource(R.string.lock_success_notice_title),
+                color = UiColors.Lock.textMain,
+                fontWeight = FontWeight.SemiBold,
+            )
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = UiColors.Lock.keypadStroke)
-            Text("• PIN 码仅存储在您的设备本地，不会上传至云端", color = UiColors.Lock.textSub)
-            Text("• 忘记 PIN 码时，可通过主密码重置", color = UiColors.Lock.textSub, modifier = Modifier.padding(top = 8.dp))
-            Text("• 连续 5 次错误后账户将临时锁定", color = UiColors.Lock.textSub, modifier = Modifier.padding(top = 8.dp))
+            Text(stringResource(R.string.lock_success_notice_1), color = UiColors.Lock.textSub)
+            Text(
+                stringResource(R.string.lock_success_notice_2),
+                color = UiColors.Lock.textSub,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Text(
+                stringResource(R.string.lock_success_notice_3),
+                color = UiColors.Lock.textSub,
+                modifier = Modifier.padding(top = 8.dp),
+            )
         }
         val continueInteraction = rememberFeedbackInteractionSource()
         AppButton(
-            text = "开始使用 VaultSafe",
+            text = stringResource(R.string.lock_success_start),
             onClick = onContinue,
             modifier = Modifier
                 .fillMaxWidth()
@@ -417,7 +433,7 @@ private fun NumberPad(
         if (showBiometric) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Text(
-                    text = "使用生物识别重试",
+                    text = stringResource(R.string.lock_biometric_retry),
                     color = UiColors.Lock.brandBlue,
                     modifier = Modifier.throttledClickable(onClick = onBiometric).padding(top = 2.dp),
                 )
@@ -444,15 +460,15 @@ private fun resolveBiometricAvailability(
     return when (BiometricManager.from(context).canAuthenticate(authenticators)) {
         BiometricManager.BIOMETRIC_SUCCESS -> BiometricAvailability(true, "")
         BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-            BiometricAvailability(false, "系统未录入生物识别，请先在系统设置中录入后再试")
+            BiometricAvailability(false, context.getString(R.string.lock_biometric_system_not_enrolled))
         }
         BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
-            BiometricAvailability(false, "当前设备生物识别硬件暂不可用，请稍后重试")
+            BiometricAvailability(false, context.getString(R.string.lock_biometric_hw_unavailable))
         }
         BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
-            BiometricAvailability(false, "当前设备不支持生物识别，请使用 PIN 解锁")
+            BiometricAvailability(false, context.getString(R.string.lock_biometric_no_hardware))
         }
-        else -> BiometricAvailability(false, "当前系统不支持生物识别，请使用 PIN 解锁")
+        else -> BiometricAvailability(false, context.getString(R.string.lock_biometric_system_generic))
     }
 }
 

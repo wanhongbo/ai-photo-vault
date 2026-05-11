@@ -44,6 +44,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,8 +62,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
@@ -85,6 +86,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
+    onOpenPinSettings: () -> Unit = {},
     onOpenPrivateCamera: () -> Unit = {},
     onOpenTab: (HomeTab) -> Unit = {},
     selectedTab: HomeTab = HomeTab.VAULT,
@@ -96,6 +98,8 @@ fun HomeScreen(
     onOpenRecentList: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val pinStatusVm: PinSetupStatusViewModel = hiltViewModel()
+    val hasPin by pinStatusVm.hasPin.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val hostActivity = remember(context) { context.findActivity() }
@@ -211,6 +215,14 @@ fun HomeScreen(
             onSearch = onOpenSearch,
             onCreateAlbum = { creatingAlbum = true },
         )
+        if (selectedTab == HomeTab.VAULT && !hasPin) {
+            HomePinSetupBanner(
+                message = stringResource(R.string.home_pin_banner_message),
+                actionLabel = stringResource(R.string.home_pin_banner_action),
+                onClick = onOpenPinSettings,
+                modifier = Modifier.padding(top = 10.dp),
+            )
+        }
         importTip?.let { tip ->
             Text(
                 text = tip.message,
@@ -363,6 +375,39 @@ fun HomeScreen(
                     }
                 }
             },
+        )
+    }
+}
+
+@Composable
+private fun HomePinSetupBanner(
+    message: String,
+    actionLabel: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(UiRadius.homeCard))
+            .background(UiColors.Home.sectionBg)
+            .border(1.dp, UiColors.Lock.error.copy(alpha = 0.45f), RoundedCornerShape(UiRadius.homeCard))
+            .throttledClickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = message,
+            color = UiColors.Home.title,
+            fontSize = UiTextSize.settingsRowDesc,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = actionLabel,
+            color = UiColors.Home.navItemActive,
+            fontSize = UiTextSize.settingsRowDesc,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

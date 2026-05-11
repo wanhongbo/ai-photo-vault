@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -54,6 +55,7 @@ import com.xpx.vault.ui.RecentPhotosScreen
 import com.xpx.vault.ui.RestoreProgressScreen
 import com.xpx.vault.ui.RestoreResultScreen
 import com.xpx.vault.ui.SplashScreen
+import com.xpx.vault.ui.SplashViewModel
 import com.xpx.vault.ui.StorageUsagePlaceholderScreen
 import com.xpx.vault.ui.TrashBinScreen
 import com.xpx.vault.ui.VideoPlayerScreen
@@ -112,6 +114,7 @@ class MainActivity : FragmentActivity() {
                         val shouldSkipLock =
                             isBackupRestoreRoute(latestRoute) || isBackupRestoreRoute(previousRouteState.value)
                         if (latestRoute != null &&
+                            latestRoute != ROUTE_SPLASH &&
                             latestRoute != ROUTE_LOCK &&
                             latestRoute != ROUTE_PRIVATE_CAMERA &&
                             !shouldSkipLock
@@ -132,14 +135,25 @@ class MainActivity : FragmentActivity() {
                         startDestination = ROUTE_SPLASH,
                     ) {
                         composable(ROUTE_SPLASH) {
-                            SplashScreen(
-                                onFinished = {
+                            val splashVm: SplashViewModel = hiltViewModel()
+                            val splashState by splashVm.state.collectAsState()
+                            SplashScreen()
+                            LaunchedEffect(splashState.ready, splashState.skipLockToMain) {
+                                if (!splashState.ready) return@LaunchedEffect
+                                if (splashState.skipLockToMain) {
+                                    appLockManager.setPinConfigured(false)
+                                    appLockManager.onUnlockSucceeded()
+                                    navController.navigate(ROUTE_MAIN) {
+                                        popUpTo(ROUTE_SPLASH) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                } else {
                                     navController.navigate(ROUTE_LOCK) {
                                         popUpTo(ROUTE_SPLASH) { inclusive = true }
                                         launchSingleTop = true
                                     }
-                                },
-                            )
+                                }
+                            }
                         }
                         composable(ROUTE_LOCK) {
                             LockScreen(
@@ -159,6 +173,9 @@ class MainActivity : FragmentActivity() {
                         }
                         composable(ROUTE_MAIN) {
                             MainScreen(
+                                onOpenChangePin = {
+                                    navController.navigate(ROUTE_CHANGE_PIN) { launchSingleTop = true }
+                                },
                                 onOpenPrivateCamera = {
                                     navController.navigate(ROUTE_PRIVATE_CAMERA) {
                                         launchSingleTop = true
