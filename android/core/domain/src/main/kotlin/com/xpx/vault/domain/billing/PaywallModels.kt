@@ -25,9 +25,6 @@ data class PaywallPackageOffer(
 sealed interface PaywallOfferingsState {
     data object Loading : PaywallOfferingsState
 
-    /** `REVENUECAT_API_KEY` 仍为占位或尚未在 Application 中 configure 时 */
-    data object NotConfigured : PaywallOfferingsState
-
     data class Ready(
         val packages: List<PaywallPackageOffer>,
         val defaultSelectedIndex: Int,

@@ -48,6 +48,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xpx.vault.R
+import com.xpx.vault.billing.RevenueCatSubscriptionRepository
 import com.xpx.vault.domain.billing.PaywallOfferingsState
 import com.xpx.vault.domain.billing.PaywallPackageOffer
 import com.xpx.vault.domain.billing.PaywallPlanKind
@@ -143,26 +144,16 @@ fun PaywallScreen(
                     }
                 }
 
-                PaywallOfferingsState.NotConfigured -> {
-                    Text(
-                        text = stringResource(R.string.paywall_not_configured),
-                        color = UiColors.Paywall.subtitle,
-                        fontSize = 15.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    AppButton(
-                        text = stringResource(R.string.paywall_retry),
-                        onClick = { viewModel.refresh() },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-
                 is PaywallOfferingsState.Error -> {
+                    val keyMissing = s.message == RevenueCatSubscriptionRepository.ERROR_CODE_RC_KEY_MISSING
+                    val msg = if (keyMissing) {
+                        stringResource(R.string.paywall_not_configured)
+                    } else {
+                        s.message ?: stringResource(R.string.paywall_error_generic)
+                    }
                     Text(
-                        text = s.message ?: stringResource(R.string.paywall_error_generic),
-                        color = UiColors.Paywall.error,
+                        text = msg,
+                        color = if (keyMissing) UiColors.Paywall.subtitle else UiColors.Paywall.error,
                         fontSize = 15.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),

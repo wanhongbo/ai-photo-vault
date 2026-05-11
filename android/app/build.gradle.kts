@@ -8,6 +8,22 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// RevenueCat Android Public API Key：写在 android/local.properties（勿提交），与 CI 环境变量注入二选一。
+private val localPropertiesFile = rootProject.file("local.properties")
+private val localProperties = Properties().apply {
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+private val revenueCatAndroidApiKey: String =
+    localProperties.getProperty("revenuecat.apiKey.android")?.trim().orEmpty()
+
+private fun escapeForBuildConfigString(value: String): String =
+    value.replace("\\", "\\\\").replace("\"", "\\\"")
+
+private val revenueCatBuildConfigField: String =
+    "\"${escapeForBuildConfigString(revenueCatAndroidApiKey)}\""
+
 android {
     namespace = "com.xpx.vault"
     compileSdk = 35
@@ -43,12 +59,12 @@ android {
         create("dev") {
             dimension = "env"
             buildConfigField("boolean", "DEV_TOOLS", "true")
-            buildConfigField("String", "REVENUECAT_API_KEY", "\"REPLACE_DEV_RC_KEY\"")
+            buildConfigField("String", "REVENUECAT_API_KEY", revenueCatBuildConfigField)
         }
         create("prod") {
             dimension = "env"
             buildConfigField("boolean", "DEV_TOOLS", "false")
-            buildConfigField("String", "REVENUECAT_API_KEY", "\"REPLACE_PROD_RC_KEY\"")
+            buildConfigField("String", "REVENUECAT_API_KEY", revenueCatBuildConfigField)
         }
     }
 

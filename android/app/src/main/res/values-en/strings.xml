@@ -359,7 +359,7 @@
     <string name="paywall_cta_continue">Continue</string>
     <string name="paywall_restore">Restore purchases</string>
     <string name="paywall_footer">Cancel anytime · GDPR compliant · No account required</string>
-    <string name="paywall_not_configured">RevenueCat API key is not configured. Add a valid key for this build flavor to load store prices.</string>
+    <string name="paywall_not_configured">No RevenueCat key found. Set revenuecat.apiKey.android in android/local.properties and rebuild, or inject BuildConfig.REVENUECAT_API_KEY in CI.</string>
     <string name="paywall_retry">Retry</string>
     <string name="paywall_error_generic">Could not load membership plans</string>
     <string name="paywall_premium_active">This account already has premium access.</string>

@@ -29,6 +29,11 @@ import kotlin.coroutines.resume
 @Singleton
 class RevenueCatSubscriptionRepository @Inject constructor() : SubscriptionRepository {
 
+    companion object {
+        /** 与 UI 层 [stringResource] 映射，表示未配置 RevenueCat Key。 */
+        const val ERROR_CODE_RC_KEY_MISSING: String = "RC_KEY_MISSING"
+    }
+
     private val _offeringsState = MutableStateFlow<PaywallOfferingsState>(PaywallOfferingsState.Loading)
     override val offeringsState: StateFlow<PaywallOfferingsState> = _offeringsState.asStateFlow()
 
@@ -60,7 +65,7 @@ class RevenueCatSubscriptionRepository @Inject constructor() : SubscriptionRepos
 
     override suspend fun refreshCatalog() {
         if (!BillingBootstrap.isConfigured) {
-            _offeringsState.value = PaywallOfferingsState.NotConfigured
+            _offeringsState.value = PaywallOfferingsState.Error(ERROR_CODE_RC_KEY_MISSING)
             return
         }
         _offeringsState.value = PaywallOfferingsState.Loading

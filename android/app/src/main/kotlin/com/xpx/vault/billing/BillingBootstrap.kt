@@ -7,7 +7,7 @@ import com.revenuecat.purchases.PurchasesConfiguration
 import com.xpx.vault.BuildConfig
 
 /**
- * RevenueCat 初始化；占位 API Key 时跳过，避免开发环境崩溃。
+ * RevenueCat 初始化；[BuildConfig.REVENUECAT_API_KEY] 为空时跳过（例如 CI 未注入 `local.properties`）。
  */
 object BillingBootstrap {
     @Volatile
@@ -16,7 +16,7 @@ object BillingBootstrap {
 
     fun init(application: Application) {
         val key = BuildConfig.REVENUECAT_API_KEY
-        if (key.isBlank() || key.startsWith("REPLACE_")) {
+        if (key.isBlank()) {
             return
         }
         Purchases.logLevel = if (BuildConfig.DEV_TOOLS) LogLevel.DEBUG else LogLevel.ERROR

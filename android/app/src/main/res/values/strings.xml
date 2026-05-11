@@ -360,7 +360,7 @@
     <string name="paywall_cta_continue">继续购买</string>
     <string name="paywall_restore">恢复购买</string>
     <string name="paywall_footer">可随时取消订阅 · 符合 GDPR · 无需注册账号</string>
-    <string name="paywall_not_configured">尚未配置 RevenueCat API Key，无法拉取商店价格。请在 dev/prod 风味中填入有效 Key 后重试。</string>
+    <string name="paywall_not_configured">未检测到 RevenueCat Key。请在 android/local.properties 中设置 revenuecat.apiKey.android=… 后重新编译，或由 CI 注入 BuildConfig.REVENUECAT_API_KEY。</string>
     <string name="paywall_retry">重试</string>
     <string name="paywall_error_generic">无法加载会员方案</string>
     <string name="paywall_premium_active">当前账号已享有高级版权益。</string>
