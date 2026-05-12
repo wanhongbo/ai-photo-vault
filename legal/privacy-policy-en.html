@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="LumaVault Privacy Policy — on-device photo safe. We do not collect, upload, or store your photos. AES-256 encryption, zero cloud, full offline." />
+  <meta name="author" content="LumaVault Team" />
+  <meta property="og:title" content="Privacy Policy · LumaVault" />
+  <meta property="og:description" content="Your photos never leave your device. Read how LumaVault protects your privacy." />
+  <meta property="og:type" content="website" />
+  <link rel="alternate" hreflang="en" href="https://lumavault.app/privacy" />
+  <link rel="alternate" hreflang="zh-CN" href="https://lumavault.app/privacy/zh-CN" />
+  <title>Privacy Policy · LumaVault</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1a1d24;
+      --muted: #5b6270;
+      --accent: #2b7fff;
+      --border: #e6e8ec;
+      --code-bg: #f4f5f7;
+      --table-stripe: #fafbfc;
+      --callout-bg: #eef5ff;
+      --callout-border: #b7d4ff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1115;
+        --fg: #e5e7eb;
+        --muted: #9ba3af;
+        --accent: #6aa7ff;
+        --border: #2a2e37;
+        --code-bg: #1a1d24;
+        --table-stripe: #161a21;
+        --callout-bg: #10263f;
+        --callout-border: #1d4780;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 48px 24px 96px;
+    }
+    header.hero {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    header.hero h1 {
+      font-size: 2.2rem;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    header.hero p.lede {
+      color: var(--muted);
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .lang-switch {
+      display: inline-flex;
+      gap: 6px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+    }
+    .lang-switch a {
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .lang-switch a.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 6px 16px;
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin: 16px 0 0;
+    }
+    .meta dt { font-weight: 600; }
+    .meta dd { margin: 0; }
+    .meta code {
+      background: var(--code-bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin: 48px 0 12px;
+      letter-spacing: -0.01em;
+      border-top: 1px solid var(--border);
+      padding-top: 32px;
+    }
+    h2:first-of-type { border-top: 0; padding-top: 0; margin-top: 32px; }
+    h3 { font-size: 1.1rem; margin: 28px 0 8px; }
+    h4 { font-size: 1rem; margin: 20px 0 6px; }
+    p { margin: 10px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 22px; }
+    li { margin: 4px 0; }
+    code, kbd {
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.94rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      background: var(--table-stripe);
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: var(--table-stripe); }
+    .callout {
+      background: var(--callout-bg);
+      border-left: 3px solid var(--callout-border);
+      padding: 14px 18px;
+      border-radius: 6px;
+      margin: 20px 0;
+      color: var(--fg);
+    }
+    .toc {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      background: var(--table-stripe);
+      margin: 24px 0 32px;
+    }
+    .toc strong { display: block; margin-bottom: 6px; }
+    .toc ol { margin: 0; padding-left: 22px; }
+    .toc a { color: var(--fg); }
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: var(--callout-bg);
+      color: var(--accent);
+      border: 1px solid var(--callout-border);
+    }
+    .no { color: #c0392b; }
+    .yes { color: #2e8b57; }
+    @media (max-width: 600px) {
+      .container { padding: 28px 18px 64px; }
+      header.hero h1 { font-size: 1.65rem; }
+      h2 { font-size: 1.2rem; }
+      table { font-size: 0.88rem; }
+      th, td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>Privacy Policy</h1>
+      <p class="lede">LumaVault is a zero-cloud, fully offline photo safe. Your photos never leave your device — and neither does our respect for your privacy.</p>
+      <div class="lang-switch" role="navigation" aria-label="Language">
+        <a href="./privacy-policy-en.html" class="active" aria-current="page">English</a>
+        <a href="./privacy-policy-zh.html">简体中文</a>
+      </div>
+      <dl class="meta">
+        <dt>App</dt><dd>LumaVault: Private Photo Safe</dd>
+        <dt>Package</dt><dd><code>com.xpx.vault</code></dd>
+        <dt>Controller</dt><dd>LumaVault Team</dd>
+        <dt>Contact</dt><dd><a href="mailto:support@lumavault.app">support@lumavault.app</a></dd>
+        <dt>Effective date</dt><dd>2026-05-12</dd>
+        <dt>Last updated</dt><dd>2026-05-12</dd>
+        <dt>Version</dt><dd>1.0</dd>
+      </dl>
+    </header>
+
+    <nav class="toc" aria-label="Table of contents">
+      <strong>Contents</strong>
+      <ol>
+        <li><a href="#s1">Introduction</a></li>
+        <li><a href="#s2">Our Role under Privacy Laws</a></li>
+        <li><a href="#s3">What We Collect</a></li>
+        <li><a href="#s4">What We Do NOT Collect</a></li>
+        <li><a href="#s5">Permissions &amp; Why</a></li>
+        <li><a href="#s6">Third-Party Services</a></li>
+        <li><a href="#s7">Data Security</a></li>
+        <li><a href="#s8">Data Retention &amp; Deletion</a></li>
+        <li><a href="#s9">Children's Privacy</a></li>
+        <li><a href="#s10">International Data Transfers</a></li>
+        <li><a href="#s11">Your Rights</a></li>
+        <li><a href="#s12">Changes to this Policy</a></li>
+        <li><a href="#s13">Contact Us</a></li>
+      </ol>
+    </nav>
+
+    <section id="s1">
+      <h2>1. Introduction</h2>
+      <p>LumaVault ("<strong>we</strong>", "<strong>our</strong>", "<strong>the app</strong>") is a privacy-first, on-device photo safe. This Privacy Policy explains what information we collect (spoiler: almost nothing), what we do <strong>not</strong> collect, and the choices you have. By using LumaVault, you agree to the practices described below.</p>
+      <p>LumaVault is designed around a single principle: <strong>your photos never leave your device</strong>. We do not operate any servers that receive, store, or process your media. We do not have a cloud. We cannot see your vault — not even if we wanted to.</p>
+    </section>
+
+    <section id="s2">
+      <h2>2. Our Role under Privacy Laws</h2>
+      <p>For purposes of the EU GDPR, UK GDPR, and analogous laws, the <strong>LumaVault Team</strong> is the Data Controller for the very limited processing described below. For California residents under the CCPA/CPRA, LumaVault is the <strong>Business</strong>. Where we use third-party processors (see §6), they act on our documented instructions.</p>
+    </section>
+
+    <section id="s3">
+      <h2>3. What We Collect</h2>
+
+      <h3>3.1 Data the app handles <em>only on your device</em> (we do NOT receive this)</h3>
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Examples</th><th>Where it lives</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Photos &amp; videos</td><td>Media you import or capture in-app</td><td>Encrypted (AES-256) in the app's private storage on your device</td></tr>
+          <tr><td>Albums &amp; metadata</td><td>Album names, covers, photo counts, timestamps</td><td>Local Room database, device-only</td></tr>
+          <tr><td>Lock credentials</td><td>6-digit PIN</td><td>Stored <strong>only</strong> as a SHA-256 hash on device; master key sealed inside Android Keystore</td></tr>
+          <tr><td>Biometric templates</td><td>Fingerprint / face</td><td><strong>Never accessed or stored by us</strong> — handled entirely by Android's <code>BiometricPrompt</code></td></tr>
+          <tr><td>AI inference inputs/outputs</td><td>On-device face detection, blur masks</td><td>Processed in-memory by TensorFlow Lite; never uploaded</td></tr>
+          <tr><td>Backup archives</td><td>Encrypted ZIP files you create</td><td>Saved to a location <strong>you</strong> pick (e.g., Google Drive, SD card) via Android's Storage Access Framework. We never see the file</td></tr>
+        </tbody>
+      </table>
+      <p>We do <strong>not</strong> transmit any of the above over the network.</p>
+
+      <h3>3.2 Data we genuinely collect</h3>
+      <p><strong>None, with one narrow exception</strong>: if you choose to purchase Premium, our payment processor (Google Play via RevenueCat, see §6) processes a minimal set of subscription-related identifiers. We receive only <strong>aggregate entitlement status</strong> ("premium: active / inactive") — never your payment details, name, email, or address.</p>
+    </section>
+
+    <section id="s4">
+      <h2>4. What We Do <em>NOT</em> Collect</h2>
+      <ul>
+        <li><span class="no">✕</span> We do not collect your photos, videos, or thumbnails</li>
+        <li><span class="no">✕</span> We do not collect contacts, call logs, SMS, or browsing history</li>
+        <li><span class="no">✕</span> We do not collect precise or coarse location</li>
+        <li><span class="no">✕</span> We do not collect your name, email, phone number, or mailing address</li>
+        <li><span class="no">✕</span> We do not use advertising identifiers, nor serve ads</li>
+        <li><span class="no">✕</span> We do not integrate Firebase Analytics, Google Analytics, Meta SDK, AppsFlyer, or comparable trackers (v1.x)</li>
+        <li><span class="no">✕</span> We do not build profiles, infer demographics, or engage in behavioral advertising</li>
+      </ul>
+    </section>
+
+    <section id="s5">
+      <h2>5. Permissions &amp; Why</h2>
+      <p>LumaVault requests <strong>only</strong> the permissions needed to deliver the feature you tapped:</p>
+      <table>
+        <thead>
+          <tr><th>Permission</th><th>Purpose</th><th>Triggered by</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAMERA</code></td><td>Shoot photos/videos directly into your encrypted vault</td><td>Opening the in-app camera</td></tr>
+          <tr><td><code>READ_MEDIA_IMAGES</code> / <code>READ_MEDIA_VIDEO</code></td><td>Import from your system gallery into the vault (API 33+)</td><td>Tapping "Import from gallery"</td></tr>
+          <tr><td><code>READ_EXTERNAL_STORAGE</code> (maxSdkVersion=32)</td><td>Legacy equivalent of the above on Android ≤ 12</td><td>Same as above, legacy devices</td></tr>
+          <tr><td>Biometric <em>(runtime)</em></td><td>Unlock the vault with fingerprint/face</td><td>You enable biometrics in Settings</td></tr>
+          <tr><td>SAF document picker <em>(per-use)</em></td><td>Save/read encrypted backup archives to a location you choose</td><td>Tapping Backup or Restore</td></tr>
+        </tbody>
+      </table>
+      <p>We do <strong>not</strong> request: internet-always permissions beyond what the payment SDK needs, location, contacts, SMS, or microphone.</p>
+    </section>
+
+    <section id="s6">
+      <h2>6. Third-Party Services</h2>
+
+      <h3>6.1 Google Play Billing</h3>
+      <p>If you purchase a subscription or lifetime upgrade, Google Play processes the payment under <strong>Google's</strong> privacy policy (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">https://policies.google.com/privacy</a>). We never receive your credit card, bank account, or identity details.</p>
+
+      <h3>6.2 RevenueCat</h3>
+      <p>We use <strong>RevenueCat, Inc.</strong> ("RevenueCat") to reconcile subscription status and support "Restore purchases" across reinstalls. RevenueCat acts as our data processor under a signed Data Processing Addendum.</p>
+      <ul>
+        <li><strong>Data shared with RevenueCat</strong>: an anonymous App User ID (generated on your device), the product ID you purchased, and Google Play's subscription receipt</li>
+        <li><strong>Not shared</strong>: your photos, videos, name, email, precise location, or any vault content</li>
+        <li><strong>Purpose</strong>: deliver, validate, and restore your Premium entitlement</li>
+        <li><strong>Retention</strong>: as long as your entitlement is active, plus audit periods required by law</li>
+        <li><strong>RevenueCat's privacy policy</strong>: <a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">https://www.revenuecat.com/privacy</a></li>
+      </ul>
+      <p>No other third-party SDKs, trackers, or ad networks are embedded in v1.</p>
+    </section>
+
+    <section id="s7">
+      <h2>7. Data Security</h2>
+      <ul>
+        <li><strong>AES-256-CBC</strong> encryption for every photo and video, applied at import time</li>
+        <li>Master encryption key generated and sealed inside <strong>Android Keystore</strong> (hardware-backed on devices that support StrongBox) — the key is not exportable by LumaVault or by us</li>
+        <li>PIN stored as a <strong>SHA-256</strong> hash; plaintext never persisted</li>
+        <li>Auto-lock when the app is backgrounded; app icon hidden from recent-task thumbnails where supported</li>
+        <li>No plaintext photos are written outside the app's private directory; temporary files created for sharing are deleted immediately after the share completes</li>
+        <li>We do not operate servers that could be breached to expose your media, because we do not operate any such servers</li>
+      </ul>
+      <div class="callout">No method of storage or processing is 100% secure; we encourage you to keep your device updated, use a strong PIN, and protect your backup archive password.</div>
+    </section>
+
+    <section id="s8">
+      <h2>8. Data Retention &amp; Deletion</h2>
+      <p>Because your vault lives on your device, <strong>you</strong> control retention:</p>
+      <ul>
+        <li><strong>Delete a photo</strong>: move to Trash → permanent delete (or auto-purge after 30 days)</li>
+        <li><strong>Delete all local data</strong>: uninstall LumaVault — Android removes the app's private directory in full</li>
+        <li><strong>Subscription records at RevenueCat</strong>: email <a href="mailto:support@lumavault.app">support@lumavault.app</a> referencing your anonymous App User ID (visible in Settings → About) and we will forward your deletion request to RevenueCat</li>
+      </ul>
+    </section>
+
+    <section id="s9">
+      <h2>9. Children's Privacy</h2>
+      <p>LumaVault is <strong>not directed to children under 18</strong> and we do not knowingly collect information from anyone under 18. If you believe a minor has used the app, contact us and we will act accordingly.</p>
+    </section>
+
+    <section id="s10">
+      <h2>10. International Data Transfers</h2>
+      <p>The only data that crosses borders in the course of using LumaVault is the subscription metadata handled by Google and RevenueCat. Both rely on <strong>Standard Contractual Clauses</strong> and comparable safeguards for transfers out of the EEA/UK/Switzerland. We ourselves do not transfer any personal data internationally because we do not collect any.</p>
+    </section>
+
+    <section id="s11">
+      <h2>11. Your Rights</h2>
+
+      <h3>11.1 EEA / UK / Swiss residents (GDPR / UK GDPR)</h3>
+      <p>You have the right to <strong>access</strong>, <strong>rectify</strong>, <strong>erase</strong>, <strong>restrict</strong>, <strong>port</strong>, and <strong>object to</strong> processing of your personal data, and to lodge a complaint with a supervisory authority. Since the data we hold is limited to anonymous purchase metadata, most requests will be forwarded to our processors (RevenueCat, Google).</p>
+
+      <h3>11.2 California residents (CCPA / CPRA)</h3>
+      <p>You may request to <strong>know</strong>, <strong>delete</strong>, or <strong>correct</strong> the limited personal information we process, and to <strong>opt-out of the sale or sharing</strong> of personal information. <span class="badge">We do not sell or share personal information.</span> We will not discriminate against you for exercising these rights.</p>
+
+      <h3>11.3 How to exercise</h3>
+      <p>Email <a href="mailto:support@lumavault.app">support@lumavault.app</a>. We will respond within <strong>30 days</strong> (GDPR) or <strong>45 days</strong> (CCPA), and may extend by another period as permitted by law.</p>
+    </section>
+
+    <section id="s12">
+      <h2>12. Changes to this Policy</h2>
+      <p>We may update this Policy to reflect product, legal, or operational changes. The "Last updated" date at the top always reflects the current revision. Material changes will be announced in-app before they take effect. Continued use after the effective date of an update constitutes acceptance.</p>
+    </section>
+
+    <section id="s13">
+      <h2>13. Contact Us</h2>
+      <div class="callout">
+        <strong>LumaVault Team</strong><br />
+        Email: <a href="mailto:support@lumavault.app">support@lumavault.app</a><br />
+        Response target: within 5 business days
+      </div>
+    </section>
+
+    <footer>
+      © 2026 LumaVault Team. All rights reserved.<br />
+      <a href="./privacy-policy-zh.html">简体中文版</a>
+    </footer>
+  </div>
+</body>
+</html>

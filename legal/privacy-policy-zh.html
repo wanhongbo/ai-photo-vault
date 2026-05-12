@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="LumaVault 隐私政策 —— 全程本地处理的隐私相册保险箱。我们不收集、不上传、不存储你的照片。AES-256 加密，零云端，全程离线。" />
+  <meta name="author" content="LumaVault Team" />
+  <meta property="og:title" content="隐私政策 · LumaVault" />
+  <meta property="og:description" content="你的照片永远不离开你的设备。了解 LumaVault 如何守护你的隐私。" />
+  <meta property="og:type" content="website" />
+  <link rel="alternate" hreflang="en" href="https://lumavault.app/privacy" />
+  <link rel="alternate" hreflang="zh-CN" href="https://lumavault.app/privacy/zh-CN" />
+  <title>隐私政策 · LumaVault</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1a1d24;
+      --muted: #5b6270;
+      --accent: #2b7fff;
+      --border: #e6e8ec;
+      --code-bg: #f4f5f7;
+      --table-stripe: #fafbfc;
+      --callout-bg: #eef5ff;
+      --callout-border: #b7d4ff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1115;
+        --fg: #e5e7eb;
+        --muted: #9ba3af;
+        --accent: #6aa7ff;
+        --border: #2a2e37;
+        --code-bg: #1a1d24;
+        --table-stripe: #161a21;
+        --callout-bg: #10263f;
+        --callout-border: #1d4780;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 48px 24px 96px;
+    }
+    header.hero {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    header.hero h1 {
+      font-size: 2.2rem;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+    header.hero p.lede {
+      color: var(--muted);
+      margin: 0;
+      font-size: 1.05rem;
+    }
+    .lang-switch {
+      display: inline-flex;
+      gap: 6px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+    }
+    .lang-switch a {
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .lang-switch a.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 6px 16px;
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin: 16px 0 0;
+    }
+    .meta dt { font-weight: 600; }
+    .meta dd { margin: 0; }
+    .meta code {
+      background: var(--code-bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin: 48px 0 12px;
+      letter-spacing: -0.01em;
+      border-top: 1px solid var(--border);
+      padding-top: 32px;
+    }
+    h2:first-of-type { border-top: 0; padding-top: 0; margin-top: 32px; }
+    h3 { font-size: 1.1rem; margin: 28px 0 8px; }
+    h4 { font-size: 1rem; margin: 20px 0 6px; }
+    p { margin: 10px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 22px; }
+    li { margin: 4px 0; }
+    code, kbd {
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.94rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      background: var(--table-stripe);
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: var(--table-stripe); }
+    .callout {
+      background: var(--callout-bg);
+      border-left: 3px solid var(--callout-border);
+      padding: 14px 18px;
+      border-radius: 6px;
+      margin: 20px 0;
+      color: var(--fg);
+    }
+    .toc {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      background: var(--table-stripe);
+      margin: 24px 0 32px;
+    }
+    .toc strong { display: block; margin-bottom: 6px; }
+    .toc ol { margin: 0; padding-left: 22px; }
+    .toc a { color: var(--fg); }
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: var(--callout-bg);
+      color: var(--accent);
+      border: 1px solid var(--callout-border);
+    }
+    .no { color: #c0392b; }
+    .yes { color: #2e8b57; }
+    @media (max-width: 600px) {
+      .container { padding: 28px 18px 64px; }
+      header.hero h1 { font-size: 1.65rem; }
+      h2 { font-size: 1.2rem; }
+      table { font-size: 0.88rem; }
+      th, td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>隐私政策</h1>
+      <p class="lede">LumaVault 是一款零云端、完全离线的隐私相册保险箱。你的照片永远不离开设备 —— 我们对你的隐私也一样保持敬畏。</p>
+      <div class="lang-switch" role="navigation" aria-label="语言切换">
+        <a href="./privacy-policy-en.html">English</a>
+        <a href="./privacy-policy-zh.html" class="active" aria-current="page">简体中文</a>
+      </div>
+      <dl class="meta">
+        <dt>应用</dt><dd>LumaVault：隐私相册保险箱</dd>
+        <dt>包名</dt><dd><code>com.xpx.vault</code></dd>
+        <dt>控制者</dt><dd>LumaVault Team</dd>
+        <dt>联系方式</dt><dd><a href="mailto:support@lumavault.app">support@lumavault.app</a></dd>
+        <dt>生效日期</dt><dd>2026-05-12</dd>
+        <dt>最后更新</dt><dd>2026-05-12</dd>
+        <dt>版本</dt><dd>1.0</dd>
+      </dl>
+    </header>
+
+    <nav class="toc" aria-label="目录">
+      <strong>目录</strong>
+      <ol>
+        <li><a href="#s1">引言</a></li>
+        <li><a href="#s2">我们的法律身份</a></li>
+        <li><a href="#s3">我们会处理哪些数据</a></li>
+        <li><a href="#s4">我们不会收集的数据</a></li>
+        <li><a href="#s5">权限说明</a></li>
+        <li><a href="#s6">第三方服务</a></li>
+        <li><a href="#s7">数据安全措施</a></li>
+        <li><a href="#s8">数据留存与删除</a></li>
+        <li><a href="#s9">儿童隐私</a></li>
+        <li><a href="#s10">跨境数据传输</a></li>
+        <li><a href="#s11">你的权利</a></li>
+        <li><a href="#s12">本政策的变更</a></li>
+        <li><a href="#s13">联系我们</a></li>
+      </ol>
+    </nav>
+
+    <section id="s1">
+      <h2>1. 引言</h2>
+      <p>LumaVault（以下简称"<strong>我们</strong>"、"<strong>本应用</strong>"）是一款以隐私为核心的本地照片保险箱。本隐私政策用来说明我们<strong>收集什么信息</strong>（剧透：几乎什么都不收）、<strong>不收集什么</strong>、以及你享有哪些选择权。使用 LumaVault 即表示你同意下述做法。</p>
+      <p>LumaVault 只围绕一条原则设计：<strong>你的照片永远不离开你的设备</strong>。我们没有任何接收、存储或处理你媒体内容的服务器。我们没有云端。即便我们想，也看不到你保险箱里的内容。</p>
+    </section>
+
+    <section id="s2">
+      <h2>2. 我们的法律身份</h2>
+      <p>就欧盟《通用数据保护条例》（GDPR）、英国 UK GDPR 及类似法律而言，<strong>LumaVault Team</strong> 是下文所述有限处理活动的<strong>数据控制者（Data Controller）</strong>。就美国加利福尼亚州 CCPA/CPRA 而言，LumaVault 是 <strong>Business</strong>。我们使用的第三方处理方（见第 6 节）均根据书面指示行事。</p>
+    </section>
+
+    <section id="s3">
+      <h2>3. 我们会处理哪些数据</h2>
+
+      <h3>3.1 仅在你的设备上本地处理（<em>我们不会收到</em>）</h3>
+      <table>
+        <thead>
+          <tr><th>类别</th><th>示例</th><th>存储位置</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>照片与视频</td><td>你导入或在应用内拍摄的媒体</td><td>使用 AES-256 加密，保存在本应用的私有目录内</td></tr>
+          <tr><td>相册与元数据</td><td>相册名、封面、照片计数、时间戳</td><td>本地 Room 数据库，仅设备可见</td></tr>
+          <tr><td>解锁凭据</td><td>6 位 PIN</td><td><strong>仅以 SHA-256 哈希</strong>形式存储；主密钥封存于 Android Keystore</td></tr>
+          <tr><td>生物识别模板</td><td>指纹 / 面容</td><td><strong>我们从不访问或存储</strong> —— 完全由 Android 的 <code>BiometricPrompt</code> 系统接管</td></tr>
+          <tr><td>AI 推理输入/输出</td><td>本地人脸检测、打码遮罩</td><td>仅由 TensorFlow Lite 在内存中处理，绝不上传</td></tr>
+          <tr><td>备份归档</td><td>你创建的加密 ZIP 文件</td><td>通过 Android 存储访问框架保存到<strong>你选择的位置</strong>（如 Google Drive、SD 卡）。我们从未看到这些文件</td></tr>
+        </tbody>
+      </table>
+      <p>以上内容<strong>不会</strong>经由我们传输到网络上。</p>
+
+      <h3>3.2 我们真正会收到的数据</h3>
+      <p><strong>基本没有，除一个狭窄例外</strong>：若你选择购买 Premium，我们的付费处理方（Google Play，经由 RevenueCat，见第 6 节）会处理与订阅相关的最小标识符集合。我们接收到的仅是<strong>聚合权益状态</strong>（"premium: active / inactive"），<strong>不会</strong>接收你的付款信息、姓名、邮箱或地址。</p>
+    </section>
+
+    <section id="s4">
+      <h2>4. 我们<em>不会</em>收集的数据</h2>
+      <ul>
+        <li><span class="no">✕</span> 不收集你的照片、视频或缩略图</li>
+        <li><span class="no">✕</span> 不收集通讯录、通话记录、短信或浏览历史</li>
+        <li><span class="no">✕</span> 不收集精确或粗略位置</li>
+        <li><span class="no">✕</span> 不收集你的姓名、邮箱、电话或邮寄地址</li>
+        <li><span class="no">✕</span> 不使用广告标识符，也不投放广告</li>
+        <li><span class="no">✕</span> 不集成 Firebase Analytics、Google Analytics、Meta SDK、AppsFlyer 等追踪 SDK（v1.x 阶段）</li>
+        <li><span class="no">✕</span> 不构建用户画像，不做人群推断，不进行行为广告</li>
+      </ul>
+    </section>
+
+    <section id="s5">
+      <h2>5. 权限说明</h2>
+      <p>LumaVault <strong>仅</strong>申请你所点功能真正需要的权限：</p>
+      <table>
+        <thead>
+          <tr><th>权限</th><th>用途</th><th>触发时机</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CAMERA</code></td><td>在应用内拍摄，直接进入加密保险箱</td><td>打开"私密相机"入口</td></tr>
+          <tr><td><code>READ_MEDIA_IMAGES</code> / <code>READ_MEDIA_VIDEO</code></td><td>从系统相册导入照片/视频到保险箱（API 33+）</td><td>点击"从相册导入"</td></tr>
+          <tr><td><code>READ_EXTERNAL_STORAGE</code>（maxSdkVersion=32）</td><td>Android ≤ 12 上述功能的兼容实现</td><td>同上，仅老版本设备</td></tr>
+          <tr><td>生物识别（运行时）</td><td>以指纹/面容解锁保险箱</td><td>你在设置中启用生物识别</td></tr>
+          <tr><td>SAF 文档选择器（每次使用）</td><td>读/写加密备份归档到你选择的位置</td><td>点击"备份"或"恢复"</td></tr>
+        </tbody>
+      </table>
+      <p>我们<strong>不会</strong>申请：超过支付 SDK 所需的常联网权限、位置、通讯录、短信、麦克风等。</p>
+    </section>
+
+    <section id="s6">
+      <h2>6. 第三方服务</h2>
+
+      <h3>6.1 Google Play Billing（谷歌支付）</h3>
+      <p>当你购买订阅或终身买断时，Google Play 会按 <strong>Google 自身的隐私政策</strong>（<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">https://policies.google.com/privacy</a>）处理付款。我们绝不会收到你的银行卡、银行账户或身份信息。</p>
+
+      <h3>6.2 RevenueCat</h3>
+      <p>我们使用 <strong>RevenueCat, Inc.</strong>（以下简称"RevenueCat"）核对订阅状态、支持用户在重装应用后"恢复购买"。RevenueCat 作为我们的数据处理方，依据已签署的《数据处理附录》履行义务。</p>
+      <ul>
+        <li><strong>与 RevenueCat 共享</strong>：设备生成的匿名 App User ID、你购买的商品 ID、Google Play 的订阅收据</li>
+        <li><strong>不共享</strong>：你的照片、视频、姓名、邮箱、精确位置以及保险箱内的任何内容</li>
+        <li><strong>目的</strong>：交付、校验并恢复你的 Premium 权益</li>
+        <li><strong>留存期</strong>：权益有效期间，加上法律要求的审计期</li>
+        <li><strong>RevenueCat 隐私政策</strong>：<a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">https://www.revenuecat.com/privacy</a></li>
+      </ul>
+      <p>v1 版本中不嵌入任何其他第三方 SDK、追踪器或广告网络。</p>
+    </section>
+
+    <section id="s7">
+      <h2>7. 数据安全措施</h2>
+      <ul>
+        <li>每一张照片和视频在导入时即以 <strong>AES-256-CBC</strong> 加密</li>
+        <li>主加密密钥由 <strong>Android Keystore</strong> 生成并托管（在支持 StrongBox 的设备上有硬件级支撑）—— LumaVault 与我们本人均无法导出该密钥</li>
+        <li>PIN 仅以 <strong>SHA-256</strong> 哈希形式存储，明文永不落盘</li>
+        <li>应用退至后台即自动上锁；在系统支持的设备上，应用图标会在最近任务缩略图中被隐藏</li>
+        <li>明文照片不会写出到应用私有目录以外；为分享而临时解密的文件，会在分享完成后立即擦除</li>
+        <li>我们不运营任何可能泄露你媒体的服务器，因为我们根本没有服务器</li>
+      </ul>
+      <div class="callout">任何存储或处理方式都无法声称 100% 安全；我们建议你保持设备系统更新、设置强 PIN、并妥善保管备份归档的密码。</div>
+    </section>
+
+    <section id="s8">
+      <h2>8. 数据留存与删除</h2>
+      <p>由于保险箱位于你的设备上，<strong>留存由你控制</strong>：</p>
+      <ul>
+        <li><strong>删除单张照片</strong>：移入回收站 → 彻底删除（或 30 天后自动清除）</li>
+        <li><strong>删除全部本地数据</strong>：卸载 LumaVault —— Android 会一并移除应用私有目录</li>
+        <li><strong>RevenueCat 处的订阅记录</strong>：可将你的匿名 App User ID（"设置 → 关于"可见）发送至 <a href="mailto:support@lumavault.app">support@lumavault.app</a>，我们将代你向 RevenueCat 转发删除请求</li>
+      </ul>
+    </section>
+
+    <section id="s9">
+      <h2>9. 儿童隐私</h2>
+      <p>LumaVault <strong>并非面向 18 岁以下用户</strong>，我们也不会明知故犯地收集 18 岁以下用户的任何信息。若你认为未成年人使用了本应用，请联系我们，我们将妥善处理。</p>
+    </section>
+
+    <section id="s10">
+      <h2>10. 跨境数据传输</h2>
+      <p>使用 LumaVault 过程中唯一跨境的数据，是由 Google 与 RevenueCat 处理的订阅元数据。二者在将数据传出欧盟/英国/瑞士时均采用<strong>标准合同条款（SCCs）</strong>等同等保护措施。我们自身不跨境传输任何个人数据 —— 因为我们根本不收集这些数据。</p>
+    </section>
+
+    <section id="s11">
+      <h2>11. 你的权利</h2>
+
+      <h3>11.1 欧盟 / 英国 / 瑞士用户（GDPR / UK GDPR）</h3>
+      <p>你享有对个人数据的<strong>访问、更正、删除、限制处理、可携带、反对处理</strong>的权利，以及向监管机构<strong>投诉</strong>的权利。由于我们实际持有的数据仅限匿名的购买元数据，大多数请求将被转发至我们的处理方（RevenueCat、Google）。</p>
+
+      <h3>11.2 美国加州用户（CCPA / CPRA）</h3>
+      <p>你可以请求<strong>知晓、删除、更正</strong>我们处理的有限个人信息，并<strong>选择退出出售或共享</strong>个人信息。<span class="badge">我们不出售、不共享你的个人信息。</span>我们不会因为你行使权利而对你进行任何歧视性对待。</p>
+
+      <h3>11.3 中国大陆用户（PIPL）</h3>
+      <p>你对个人信息享有知情、决定、查阅、复制、更正、删除、撤回同意、注销账户（如适用）等权利。由于本应用的处理活动极其有限，请通过下方邮箱联系我们，我们会在法定期限内回复。</p>
+
+      <h3>11.4 行权方式</h3>
+      <p>发送邮件至 <a href="mailto:support@lumavault.app">support@lumavault.app</a>。我们将在 <strong>30 日内</strong>（GDPR）或 <strong>45 日内</strong>（CCPA）回复，必要时按法律允许的期限延长。</p>
+    </section>
+
+    <section id="s12">
+      <h2>12. 本政策的变更</h2>
+      <p>我们可能基于产品、法律或运营调整而更新本政策。页首的"最后更新"日期始终反映当前版本。发生重大变更时，我们会在应用内提前公告。生效日期之后继续使用本应用，即视为接受变更。</p>
+    </section>
+
+    <section id="s13">
+      <h2>13. 联系我们</h2>
+      <div class="callout">
+        <strong>LumaVault Team</strong><br />
+        邮箱：<a href="mailto:support@lumavault.app">support@lumavault.app</a><br />
+        响应时效：5 个工作日内
+      </div>
+    </section>
+
+    <footer>
+      © 2026 LumaVault Team. 版权所有。<br />
+      <a href="./privacy-policy-en.html">English version</a>
+    </footer>
+  </div>
+</body>
+</html>

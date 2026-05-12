@@ -19,3 +19,4 @@ captures/
 *.aab
 *.dex
 *.class
+android/core/domain/bin/
