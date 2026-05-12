@@ -20,6 +20,10 @@ data class PaywallPackageOffer(
     val priceSecondary: String?,
     val periodShortLabel: String?,
     val showBestValueBadge: Boolean,
+    /** 如 "7 天免费试用"  — 从 RevenueCat introductoryPrice/freeTrialPeriod 读取，null 表示无试用。 */
+    val freeTrialLabel: String? = null,
+    /** 相对于月订的节省百分比，如 50，null 表示不展示。 */
+    val savingsPercent: Int? = null,
 )
 
 sealed interface PaywallOfferingsState {
