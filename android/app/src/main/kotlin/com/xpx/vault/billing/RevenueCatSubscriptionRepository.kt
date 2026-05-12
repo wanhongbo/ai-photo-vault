@@ -81,14 +81,27 @@ class RevenueCatSubscriptionRepository @Inject constructor() : SubscriptionRepos
                 val mapped = current.availablePackages
                     .sortedBy { sortOrder(it) }
                     .map { it.toPaywallOffer() }
+                // 计算年订相对于月订的节省百分比
+                val monthlyPriceMicros = current.availablePackages
+                    .firstOrNull { it.packageType == PackageType.MONTHLY }
+                    ?.product?.price?.amountMicros
+                val enriched = mapped.map { offer ->
+                    if (offer.kind == PaywallPlanKind.ANNUAL && monthlyPriceMicros != null && monthlyPriceMicros > 0) {
+                        val annualPkg = current.availablePackages.firstOrNull { it.packageType == PackageType.ANNUAL }
+                        val annualMicros = annualPkg?.product?.price?.amountMicros ?: 0
+                        val yearlyEquiv = monthlyPriceMicros * 12
+                        val savings = ((yearlyEquiv - annualMicros) * 100 / yearlyEquiv).toInt()
+                        if (savings > 0) offer.copy(savingsPercent = savings) else offer
+                    } else offer
+                }
                 packageCache.clear()
                 current.availablePackages.forEach { pkg ->
                     packageCache[pkg.identifier] = pkg
                 }
-                val defaultIdx = mapped.indexOfFirst { it.kind == PaywallPlanKind.ANNUAL }
+                val defaultIdx = enriched.indexOfFirst { it.kind == PaywallPlanKind.ANNUAL }
                     .let { if (it >= 0) it else 0 }
                 _offeringsState.value = PaywallOfferingsState.Ready(
-                    packages = mapped,
+                    packages = enriched,
                     defaultSelectedIndex = defaultIdx,
                     isPremium = _isPremium.value,
                 )
@@ -199,6 +212,18 @@ class RevenueCatSubscriptionRepository @Inject constructor() : SubscriptionRepos
 
     private fun Package.toPaywallOffer(): PaywallPackageOffer {
         val sp = product
+        val trialLabel = sp.subscriptionOptions
+            ?.freeTrial
+            ?.freePhase
+            ?.billingPeriod
+            ?.let { period ->
+                when {
+                    period.years > 0 -> "${period.years} 年免费试用"
+                    period.months > 0 -> "${period.months} 个月免费试用"
+                    period.days > 0 -> "${period.days} 天免费试用"
+                    else -> null
+                }
+            }
         return PaywallPackageOffer(
             kind = toPlanKind(),
             packageIdentifier = identifier,
@@ -208,6 +233,7 @@ class RevenueCatSubscriptionRepository @Inject constructor() : SubscriptionRepos
             priceSecondary = null,
             periodShortLabel = null,
             showBestValueBadge = packageType == PackageType.ANNUAL,
+            freeTrialLabel = trialLabel,
         )
     }
 }
