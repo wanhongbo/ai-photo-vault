@@ -14,6 +14,9 @@ interface BackupRecordDao {
     @Query("SELECT * FROM backup_records ORDER BY created_at_ms DESC LIMIT :limit")
     suspend fun latest(limit: Int): List<BackupRecordEntity>
 
+    @Query("SELECT COUNT(*) FROM backup_records")
+    suspend fun count(): Int
+
     @Query("DELETE FROM backup_records WHERE id IN (:ids)")
     suspend fun deleteByIds(ids: List<Long>)
 }

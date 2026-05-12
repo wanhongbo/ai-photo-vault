@@ -11,6 +11,10 @@ import com.xpx.vault.data.db.dao.AiPhashDao
 import com.xpx.vault.data.db.dao.AiQualityDao
 import com.xpx.vault.data.db.dao.AiSensitiveDao
 import com.xpx.vault.data.db.dao.AiTagDao
+import com.xpx.vault.data.db.dao.BackupRecordDao
+import com.xpx.vault.data.db.dao.QuotaUsageDao
+import com.xpx.vault.data.quota.QuotaManagerImpl
+import com.xpx.vault.domain.quota.QuotaManager
 import com.xpx.vault.domain.repo.AiAnalysisRepository
 import dagger.Binds
 import dagger.Module
@@ -59,6 +63,12 @@ object DataModule {
 
     @Provides @Singleton
     fun provideAiSensitiveDao(db: PhotoVaultDatabase): AiSensitiveDao = db.aiSensitiveDao()
+
+    @Provides @Singleton
+    fun provideQuotaUsageDao(db: PhotoVaultDatabase): QuotaUsageDao = db.quotaUsageDao()
+
+    @Provides @Singleton
+    fun provideBackupRecordDao(db: PhotoVaultDatabase): BackupRecordDao = db.backupRecordDao()
 }
 
 /** 接口与实现绑定：@Binds 比 @Provides 更高效、代码量更少。 */
@@ -70,4 +80,10 @@ abstract class DataBindsModule {
     abstract fun bindAiAnalysisRepository(
         impl: AiAnalysisRepositoryImpl,
     ): AiAnalysisRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindQuotaManager(
+        impl: QuotaManagerImpl,
+    ): QuotaManager
 }
