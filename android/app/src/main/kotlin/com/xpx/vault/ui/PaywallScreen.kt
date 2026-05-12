@@ -3,6 +3,7 @@ package com.xpx.vault.ui
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -53,20 +54,27 @@ import com.xpx.vault.domain.billing.PaywallOfferingsState
 import com.xpx.vault.domain.billing.PaywallPackageOffer
 import com.xpx.vault.domain.billing.PaywallPlanKind
 import com.xpx.vault.domain.billing.PurchaseActivityHost
+import com.xpx.vault.domain.quota.PaywallTrigger
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
+import kotlinx.coroutines.delay
 
 /**
  * 会员购买页。视觉对齐 Pixso `item-id=4:449`：深色渐变、金色皇冠、蓝强调选中态与 **BEST VALUE** 徽章。
  *
  * **套餐价签、商品标题/说明**来自 RevenueCat → Play 的 [PaywallPackageOffer]；本页仅结构文案走 `strings.xml`。
+ *
+ * @param dismissable 为 false 时隐藏关闭按钮（硬墙模式），用户必须购买或按系统返回。
+ * @param source 触发来源标识，用于埋点。
  */
 @Composable
 fun PaywallScreen(
     onBack: () -> Unit,
+    dismissable: Boolean = true,
+    source: String = "manual",
     viewModel: PaywallViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -79,6 +87,33 @@ fun PaywallScreen(
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     var selectionTouched by rememberSaveable { mutableStateOf(false) }
 
+    // 观察购买结果事件：成功自动关闭，恢复给 Toast 反馈
+    LaunchedEffect(Unit) {
+        viewModel.purchaseResult.collect { result ->
+            when (result) {
+                is PurchaseResult.Success -> {
+                    Toast.makeText(context, context.getString(R.string.paywall_purchase_success), Toast.LENGTH_SHORT).show()
+                    delay(600) // 短暂延迟让用户看到成功提示
+                    onBack()
+                }
+                is PurchaseResult.RestoreSuccess -> {
+                    if (result.isPremium) {
+                        Toast.makeText(context, context.getString(R.string.paywall_restore_success), Toast.LENGTH_SHORT).show()
+                        delay(600)
+                        onBack()
+                    } else {
+                        Toast.makeText(context, context.getString(R.string.paywall_restore_no_purchase), Toast.LENGTH_SHORT).show()
+                    }
+                }
+                is PurchaseResult.RestoreFailed -> {
+                    Toast.makeText(context, context.getString(R.string.paywall_restore_failed), Toast.LENGTH_SHORT).show()
+                }
+                is PurchaseResult.Cancelled,
+                is PurchaseResult.Failed -> { /* surfaceError 已处理 */ }
+            }
+        }
+    }
+
     LaunchedEffect(offerings) {
         val ready = offerings as? PaywallOfferingsState.Ready ?: return@LaunchedEffect
         if (!selectionTouched) {
@@ -89,6 +124,15 @@ fun PaywallScreen(
     val scroll = rememberScrollState()
     val purchaseHost = remember(activity) {
         PurchaseActivityHost { activity }
+    }
+
+    // 埋点：记录支付墙展示
+    val paywallAnalytics = remember {
+        activity?.let { com.xpx.vault.billing.PaywallAnalyticsProvider.get(context) }
+    }
+    LaunchedEffect(Unit) {
+        val trigger = if (dismissable) PaywallTrigger.ONBOARDING_SOFT else PaywallTrigger.QUOTA_HARD
+        paywallAnalytics?.trackPaywallShown(source, trigger)
     }
 
     Box(
@@ -111,21 +155,26 @@ fun PaywallScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(UiColors.Paywall.closeFill)
-                        .border(1.dp, UiColors.Paywall.closeStroke, CircleShape)
-                        .clickable(onClick = onBack),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "×",
-                        color = UiColors.Paywall.subtitle,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
+                if (dismissable) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(UiColors.Paywall.closeFill)
+                            .border(1.dp, UiColors.Paywall.closeStroke, CircleShape)
+                            .clickable(onClick = {
+                                paywallAnalytics?.trackPaywallDismissed(source)
+                                onBack()
+                            }),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "×",
+                            color = UiColors.Paywall.subtitle,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -311,10 +360,15 @@ private fun PaywallTierCard(
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    if (offer.showBestValueBadge) {
+                    if (offer.showBestValueBadge || offer.savingsPercent != null) {
                         Spacer(Modifier.width(8.dp))
+                        val badgeText = if (offer.savingsPercent != null) {
+                            stringResource(R.string.paywall_best_value) + " -${offer.savingsPercent}%"
+                        } else {
+                            stringResource(R.string.paywall_best_value)
+                        }
                         Text(
-                            text = stringResource(R.string.paywall_best_value),
+                            text = badgeText,
                             color = UiColors.Paywall.badgeText,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
@@ -333,6 +387,15 @@ private fun PaywallTierCard(
                         fontSize = 12.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                offer.freeTrialLabel?.let { trial ->
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = trial,
+                        color = UiColors.Paywall.priceSelected,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             }
@@ -383,6 +446,80 @@ private fun PaywallFeatureList() {
                     text = stringResource(str),
                     color = UiColors.Paywall.tierTitle,
                     fontSize = 14.sp,
+                )
+            }
+        }
+    }
+    Spacer(Modifier.height(16.dp))
+    // Free vs Pro 对比表
+    PaywallComparisonTable()
+}
+
+@Composable
+private fun PaywallComparisonTable() {
+    val comparisons = listOf(
+        Triple(stringResource(R.string.paywall_compare_storage), "50", "∞"),
+        Triple(stringResource(R.string.paywall_compare_ai), "10/月", "∞"),
+        Triple(stringResource(R.string.paywall_compare_backup), "1次", "∞"),
+        Triple(stringResource(R.string.paywall_compare_watermark), "✗", "✓"),
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(UiColors.Paywall.cardBg)
+            .padding(12.dp),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "",
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = "Free",
+                color = UiColors.Paywall.tierMeta,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(56.dp),
+            )
+            Text(
+                text = "Pro",
+                color = UiColors.Paywall.priceSelected,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(56.dp),
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        comparisons.forEach { (label, free, pro) ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = label,
+                    color = UiColors.Paywall.tierTitle,
+                    fontSize = 13.sp,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = free,
+                    color = UiColors.Paywall.tierMeta,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width(56.dp),
+                )
+                Text(
+                    text = pro,
+                    color = UiColors.Paywall.priceSelected,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width(56.dp),
                 )
             }
         }

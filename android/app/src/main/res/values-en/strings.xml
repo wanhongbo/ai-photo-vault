@@ -335,6 +335,10 @@
     <string name="settings_subscription_title">My Subscription</string>
     <string name="settings_subscription_placeholder">Subscription status and benefits will appear here. You can open the membership page for now.</string>
     <string name="settings_subscription_cta">View membership</string>
+    <string name="settings_subscription_active">Premium Active</string>
+    <string name="settings_subscription_all_unlocked">You have unlocked all premium features including unlimited storage, AI, and watermark-free export.</string>
+    <string name="settings_subscription_free">Free Plan</string>
+    <string name="settings_subscription_manage">Manage Subscription</string>
     <string name="settings_about_privacy">Privacy Policy</string>
     <string name="settings_about_privacy_desc">How we handle your data</string>
     <string name="settings_about_terms">Terms of Service</string>
@@ -414,7 +418,15 @@
     <string name="paywall_feat_backup">Local encrypted backup &amp; restore</string>
     <string name="paywall_cta_continue">Continue</string>
     <string name="paywall_restore">Restore purchases</string>
+        <string name="paywall_purchase_success">Purchase successful, Premium unlocked!</string>
+        <string name="paywall_restore_success">Restored successfully, Premium activated</string>
+        <string name="paywall_restore_no_purchase">No previous purchase found</string>
+        <string name="paywall_restore_failed">Restore failed, please try again later</string>
     <string name="paywall_footer">Cancel anytime · GDPR compliant · No account required</string>
+    <string name="paywall_compare_storage">Private Storage</string>
+    <string name="paywall_compare_ai">AI Features</string>
+    <string name="paywall_compare_backup">Encrypted Backup</string>
+    <string name="paywall_compare_watermark">Export without watermark</string>
     <string name="paywall_not_configured">No RevenueCat key found. Set revenuecat.apiKey.android in android/local.properties and rebuild, or inject BuildConfig.REVENUECAT_API_KEY in CI.</string>
     <string name="paywall_retry">Retry</string>
     <string name="paywall_error_generic">Could not load membership plans</string>
