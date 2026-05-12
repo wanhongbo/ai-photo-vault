@@ -96,6 +96,7 @@ fun HomeScreen(
     onOpenPhotoViewer: (String) -> Unit = {},
     onOpenAlbumList: () -> Unit = {},
     onOpenRecentList: () -> Unit = {},
+    onPaywallRequired: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val pinStatusVm: PinSetupStatusViewModel = hiltViewModel()
@@ -130,6 +131,8 @@ fun HomeScreen(
         if (imageCount != snapshot.imageCount) imageCount = snapshot.imageCount
         if (videoCount != snapshot.videoCount) videoCount = snapshot.videoCount
         vaultLoaded = true
+        // 推送 vault 计数给 QuotaManager，确保配额硬墙能正确触发
+        com.xpx.vault.billing.QuotaManagerProvider.get(context)?.updateVaultCount(snapshot.totalCount)
     }
 
     LaunchedEffect(Unit) { refreshVault() }
@@ -189,7 +192,11 @@ fun HomeScreen(
     }
 
     val triggerImportFromLibrary = {
-        if (!hasAlbumPermission) {
+        val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+        val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
+        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+            onPaywallRequired()
+        } else if (!hasAlbumPermission) {
             permissionLauncher.launch(requiredAlbumPermissions())
         } else if (!importing) {
             importTip = null

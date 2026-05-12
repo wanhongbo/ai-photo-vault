@@ -91,6 +91,7 @@ fun BackupRestoreScreen(
     onOpenBackupProgress: (String) -> Unit,
     onOpenRestoreProgress: (String) -> Unit,
     onBack: () -> Unit,
+    onPaywallRequired: () -> Unit = {},
     viewModel: BackupRestoreViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -541,9 +542,17 @@ private fun formatSize(bytes: Long): String {
 @HiltViewModel
 class BackupRestoreViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val paywallGatekeeper: com.xpx.vault.billing.PaywallGatekeeper,
 ) : ViewModel() {
     private val _state = MutableStateFlow(BackupRestoreUiState())
     val state: StateFlow<BackupRestoreUiState> = _state.asStateFlow()
+
+    /** 备份配额是否已耗尽，UI 层观察此值决定是否弹支付墙。 */
+    val backupQuotaExhausted: Boolean
+        get() {
+            val gate = paywallGatekeeper.checkAccess(com.xpx.vault.domain.quota.ProFeature.BACKUP_CREATE)
+            return gate is com.xpx.vault.billing.GateResult.HardWall
+        }
 
     fun refresh() {
         viewModelScope.launch {

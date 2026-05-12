@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.xpx.vault.ai.AiLocalScanUseCase
 import com.xpx.vault.ai.util.PhotoIdentity
 import com.xpx.vault.domain.model.AiQualityRecord
+import com.xpx.vault.domain.quota.QuotaManager
 import com.xpx.vault.domain.repo.AiAnalysisRepository
 import com.xpx.vault.ui.vault.VaultStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,6 +61,7 @@ class AiCleanupViewModel @Inject constructor(
     private val app: Application,
     private val repository: AiAnalysisRepository,
     private val scanUseCase: AiLocalScanUseCase,
+    private val quotaManager: QuotaManager,
 ) : ViewModel() {
 
     private val pathMap = MutableStateFlow<Map<Long, String>>(emptyMap())
@@ -109,6 +111,7 @@ class AiCleanupViewModel @Inject constructor(
      */
     fun cleanupRedundant() {
         viewModelScope.launch {
+            quotaManager.incrementAiUsage()
             _cleaning.value = true
             val state = uiState.value
             val blurryIds = state.blurry.map { it.photoId }.toSet()

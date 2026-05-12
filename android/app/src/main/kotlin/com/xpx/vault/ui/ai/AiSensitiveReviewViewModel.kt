@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.xpx.vault.ai.AiLocalScanUseCase
 import com.xpx.vault.ai.util.PhotoIdentity
 import com.xpx.vault.domain.model.AiSensitiveRecord
+import com.xpx.vault.domain.quota.QuotaManager
 import com.xpx.vault.domain.repo.AiAnalysisRepository
 import com.xpx.vault.ui.vault.VaultStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +32,7 @@ class AiSensitiveReviewViewModel @Inject constructor(
     private val app: Application,
     private val repository: AiAnalysisRepository,
     private val scanUseCase: AiLocalScanUseCase,
+    private val quotaManager: QuotaManager,
 ) : ViewModel() {
 
     private val pathMap = MutableStateFlow<Map<Long, String>>(emptyMap())
@@ -57,6 +59,7 @@ class AiSensitiveReviewViewModel @Inject constructor(
 
     fun startScan() {
         viewModelScope.launch {
+            quotaManager.incrementAiUsage()
             scanUseCase.run()
             refreshPathMap()
         }

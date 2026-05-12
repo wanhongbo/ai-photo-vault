@@ -23,6 +23,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -77,6 +78,12 @@ class MainActivity : FragmentActivity() {
     @Inject
     lateinit var aiLocalScanUseCase: com.xpx.vault.ai.AiLocalScanUseCase
 
+    @Inject
+    lateinit var onboardingPaywallManager: com.xpx.vault.billing.OnboardingPaywallManager
+
+    @Inject
+    lateinit var paywallGatekeeper: com.xpx.vault.billing.PaywallGatekeeper
+
     override fun attachBaseContext(newBase: Context) {
         // 将持久化的应用内语言应用到 Activity Context，覆盖所有 API 级别
         super.attachBaseContext(LanguageManager.wrapContext(newBase))
@@ -100,7 +107,16 @@ class MainActivity : FragmentActivity() {
 
                     // 解锁后自动启动一次增量 AI 扫描（增量扫描、mutex 去重，安全反复触发）。
                     LaunchedEffect(requireUnlock) {
-                        if (!requireUnlock) aiLocalScanUseCase.requestScan()
+                        if (!requireUnlock) {
+                            aiLocalScanUseCase.requestScan()
+                            // 首启软墙：解锁后尝试展示一次可跳过的 Paywall
+                            if (onboardingPaywallManager.shouldShow()) {
+                                onboardingPaywallManager.markSeen()
+                                navController.navigate(
+                                    "$ROUTE_PAYWALL?dismissable=true&source=onboarding",
+                                ) { launchSingleTop = true }
+                            }
+                        }
                     }
 
                     // 用 rememberUpdatedState 保障 LaunchedEffect 内能读到最新值，避免闭包过期。
@@ -238,13 +254,31 @@ class MainActivity : FragmentActivity() {
                                     navController.navigate(route) { launchSingleTop = true }
                                 },
                                 onOpenAiFeature = { key ->
-                                    val route = when (key) {
-                                        AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> ROUTE_AI_CLASSIFY
-                                        AiFeatureKey.PRIVACY -> ROUTE_RECENT_LIST
-                                        AiFeatureKey.ENCRYPT -> ROUTE_AI_SENSITIVE
-                                        AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> ROUTE_AI_CLEANUP
+                                    val feature = when (key) {
+                                        AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> com.xpx.vault.domain.quota.ProFeature.AI_CLASSIFY
+                                        AiFeatureKey.PRIVACY -> com.xpx.vault.domain.quota.ProFeature.AI_PRIVACY
+                                        AiFeatureKey.ENCRYPT -> com.xpx.vault.domain.quota.ProFeature.AI_SENSITIVE
+                                        AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> com.xpx.vault.domain.quota.ProFeature.AI_CLEANUP
                                     }
-                                    navController.navigate(route) { launchSingleTop = true }
+                                    val gate = paywallGatekeeper.checkAccess(feature)
+                                    if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+                                        navController.navigate(
+                                            "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
+                                        ) { launchSingleTop = true }
+                                    } else {
+                                        val route = when (key) {
+                                            AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> ROUTE_AI_CLASSIFY
+                                            AiFeatureKey.PRIVACY -> ROUTE_RECENT_LIST
+                                            AiFeatureKey.ENCRYPT -> ROUTE_AI_SENSITIVE
+                                            AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> ROUTE_AI_CLEANUP
+                                        }
+                                        navController.navigate(route) { launchSingleTop = true }
+                                    }
+                                },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_vault",
+                                    ) { launchSingleTop = true }
                                 },
                             )
                         }
@@ -257,6 +291,11 @@ class MainActivity : FragmentActivity() {
                                     navController.navigate("$ROUTE_RESTORE_PROGRESS/$inputUri") { launchSingleTop = true }
                                 },
                                 onBack = { navController.popBackStack() },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_backup",
+                                    ) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(
@@ -313,9 +352,19 @@ class MainActivity : FragmentActivity() {
                                 onBack = { navController.popBackStack() },
                             )
                         }
-                        composable(ROUTE_PAYWALL) {
+                        composable(
+                            "$ROUTE_PAYWALL?dismissable={dismissable}&source={source}",
+                            arguments = listOf(
+                                navArgument("dismissable") { defaultValue = true; type = NavType.BoolType },
+                                navArgument("source") { defaultValue = "manual"; type = NavType.StringType },
+                            ),
+                        ) { entry ->
+                            val dismissable = entry.arguments?.getBoolean("dismissable") ?: true
+                            val source = entry.arguments?.getString("source") ?: "manual"
                             PaywallScreen(
                                 onBack = { navController.popBackStack() },
+                                dismissable = dismissable,
+                                source = source,
                             )
                         }
                         composable(ROUTE_CHANGE_PIN) {

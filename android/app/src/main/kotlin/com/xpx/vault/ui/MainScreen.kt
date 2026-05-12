@@ -22,6 +22,7 @@ fun MainScreen(
     onOpenRecentList: () -> Unit,
     onOpenSettingsHub: (SettingsHubDestination) -> Unit,
     onOpenAiFeature: (AiFeatureKey) -> Unit,
+    onPaywallRequired: () -> Unit = {},
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(HomeTab.VAULT) }
     val onSelectTab: (HomeTab) -> Unit = { tab ->
@@ -44,6 +45,7 @@ fun MainScreen(
             onOpenPhotoViewer = onOpenPhotoViewer,
             onOpenAlbumList = onOpenAlbumList,
             onOpenRecentList = onOpenRecentList,
+            onPaywallRequired = onPaywallRequired,
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(if (selectedTab == HomeTab.VAULT) 1f else 0f)
