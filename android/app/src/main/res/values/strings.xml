@@ -431,6 +431,8 @@
     <string name="album_select_all">全选</string>
     <string name="album_deselect_all">取消全选</string>
     <string name="album_action_select">选择</string>
+        <string name="album_action_add">添加照片</string>
+        <string name="camera_view_last_media">查看最近拍摄</string>
     <string name="album_action_camera_roll">导出到相册</string>
     <string name="settings_item_bulk_export">批量导出到相册</string>
     <string name="settings_item_bulk_export_desc">选择多张图片或视频保存到系统相册</string>

@@ -430,6 +430,8 @@
     <string name="album_select_all">Select all</string>
     <string name="album_deselect_all">Deselect all</string>
     <string name="album_action_select">Select</string>
+        <string name="album_action_add">Add photos</string>
+        <string name="camera_view_last_media">View last capture</string>
     <string name="album_action_camera_roll">Export to Camera Roll</string>
     <string name="settings_item_bulk_export">Bulk export to Camera Roll</string>
     <string name="settings_item_bulk_export_desc">Select multiple photos or videos to export</string>

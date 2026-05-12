@@ -5,6 +5,10 @@ import android.net.Uri
 import android.content.Context
 import androidx.activity.compose.setContent
 import androidx.fragment.app.FragmentActivity
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -133,6 +137,32 @@ class MainActivity : FragmentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = ROUTE_SPLASH,
+                        // 全局路由过渡动画：横向 slide + fade，符合 Android 系统级导航候观感。
+                        // 用 tween(260/220) 而非默认 700ms，页面切换更干脆，不阻碍操作。
+                        enterTransition = {
+                            slideIntoContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(durationMillis = 260),
+                            ) + fadeIn(animationSpec = tween(durationMillis = 220))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(durationMillis = 260),
+                            ) + fadeOut(animationSpec = tween(durationMillis = 220))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(durationMillis = 260),
+                            ) + fadeIn(animationSpec = tween(durationMillis = 220))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(durationMillis = 260),
+                            ) + fadeOut(animationSpec = tween(durationMillis = 220))
+                        },
                     ) {
                         composable(ROUTE_SPLASH) {
                             val splashVm: SplashViewModel = hiltViewModel()

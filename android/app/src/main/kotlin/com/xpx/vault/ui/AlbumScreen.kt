@@ -64,6 +64,7 @@ import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
+import com.xpx.vault.ui.theme.UiTouch
 import com.xpx.vault.ui.vault.VaultPhoto
 import com.xpx.vault.ui.vault.VaultStore
 import kotlinx.coroutines.launch
@@ -189,7 +190,7 @@ fun AlbumScreen(
                         },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(painter = painterResource(R.drawable.ic_home_action_add), contentDescription = null, tint = UiColors.Home.navItemActive)
+                    Icon(painter = painterResource(R.drawable.ic_home_action_add), contentDescription = stringResource(R.string.album_action_add), tint = UiColors.Home.navItemActive)
                 }
                 Text(
                     text = stringResource(R.string.album_empty_title),
@@ -246,7 +247,7 @@ fun AlbumScreen(
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_home_action_add),
-                                    contentDescription = null,
+                                    contentDescription = stringResource(R.string.album_action_add),
                                     tint = UiColors.Home.navItemActive,
                                 )
                             }
@@ -311,8 +312,7 @@ private fun AlbumTopBar(
     ) {
         Row(
             modifier = Modifier
-                .width(38.dp)
-                .height(36.dp)
+                .size(UiTouch.minTarget)
                 .clip(RoundedCornerShape(10.dp))
                 .background(UiColors.Home.navBarBg)
                 .throttledClickable(onClick = onBack),
@@ -321,7 +321,7 @@ private fun AlbumTopBar(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_topbar_back),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.common_back),
                 tint = UiColors.Home.title,
                 modifier = Modifier.size(22.dp),
             )
@@ -350,8 +350,7 @@ private fun AlbumTopBar(
         } else {
             Row(
                 modifier = Modifier
-                    .width(38.dp)
-                    .height(36.dp)
+                    .size(UiTouch.minTarget)
                     .clip(RoundedCornerShape(10.dp))
                     .background(UiColors.Home.navBarBg)
                     .throttledClickable(onClick = onToggleSelection),

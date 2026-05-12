@@ -599,7 +599,7 @@ fun PrivateCameraScreen(
                     lastMediaPreview?.let { preview ->
                         Image(
                             bitmap = preview.asImageBitmap(),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.camera_view_last_media),
                             modifier = Modifier.size(40.dp),
                         )
                     } ?: Box(modifier = Modifier.size(36.dp).background(Color(0x66FFFFFF), RoundedCornerShape(18.dp)))

@@ -186,6 +186,27 @@ object UiRadius {
     val paywallCard: Dp = 18.dp
 }
 
+/**
+ * 卡片/浮层层级。深色场景下 elevation 阴影不如亮色直观，建议作为
+ * 阴影颜色着色（ambient/spot = primary.copy(alpha=0.12)）配合使用，
+ * 也可直接作为 Material3 Surface tonalElevation 输入。
+ */
+object UiElevation {
+    val level0: Dp = 0.dp
+    val level1: Dp = 1.dp   // 基础卡片轻描阴影
+    val level2: Dp = 3.dp   // 可交互卡片
+    val level3: Dp = 6.dp   // Dialog / BottomSheet
+    val level4: Dp = 12.dp  // 临时浮层 / FAB
+}
+
+/**
+ * 最小触控面积（Material Accessibility）。业务中 Icon-only 点击区若小于此尺寸，
+ * 应通过 padding 或 Modifier.minimumInteractiveComponentSize() 扩展。
+ */
+object UiTouch {
+    val minTarget: Dp = 44.dp
+}
+
 object UiSize {
     val paywallCrown: Dp = 56.dp
     val buttonHeight: Dp = 54.dp
