@@ -49,6 +49,7 @@ import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.VaultStore
 import com.xpx.vault.ui.vault.isVaultImage
+import com.xpx.vault.billing.SubscriptionRepoProvider
 
 @Composable
 fun PhotoViewerScreen(
@@ -224,13 +225,17 @@ fun PhotoViewerScreen(
             ) {
                 val shareChooserTitle = stringResource(R.string.photo_viewer_share_chooser)
                 val shareFailedMsg = stringResource(R.string.photo_viewer_share_failed)
+                val isPremium = remember {
+                    SubscriptionRepoProvider.get(context)?.isPremium
+                }
                 PhotoViewerActionButton(
                     iconRes = R.drawable.ic_photo_share,
                     label = stringResource(R.string.photo_viewer_share),
                     onClick = {
                         val pathSnapshot = currentPath
+                        val skipWatermark = isPremium?.value ?: false
                         scope.launch {
-                            val result = MediaShareHelper.shareFile(context, pathSnapshot, shareChooserTitle)
+                            val result = MediaShareHelper.shareFile(context, pathSnapshot, shareChooserTitle, skipWatermark)
                             if (result is MediaShareHelper.ShareOutcome.Failure) {
                                 Toast.makeText(context, shareFailedMsg, Toast.LENGTH_SHORT).show()
                             }

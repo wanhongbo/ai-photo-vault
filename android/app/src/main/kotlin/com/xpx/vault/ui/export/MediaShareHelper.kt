@@ -46,13 +46,15 @@ object MediaShareHelper {
      * @param context Activity/Application Context 均可
      * @param sourcePath vault 中密文文件的绝对路径
      * @param chooserTitle 系统选择器标题
+     * @param skipWatermark 是否跳过水印（付费用户为 true）
      */
     suspend fun shareFile(
         context: Context,
         sourcePath: String,
         chooserTitle: String,
+        skipWatermark: Boolean = false,
     ): ShareOutcome {
-        val prepared = prepare(context, sourcePath)
+        val prepared = prepare(context, sourcePath, skipWatermark)
         if (prepared is ShareOutcome.Failure) return prepared
         prepared as ShareOutcome.Success
         return launchShareIntent(context, prepared, chooserTitle)
@@ -70,8 +72,9 @@ object MediaShareHelper {
         baseName: String,
         chooserTitle: String,
         quality: Int = 95,
+        skipWatermark: Boolean = false,
     ): ShareOutcome {
-        val prepared = prepareBitmap(context, bitmap, baseName, quality)
+        val prepared = prepareBitmap(context, bitmap, baseName, quality, skipWatermark)
         if (prepared is ShareOutcome.Failure) return prepared
         prepared as ShareOutcome.Success
         return launchShareIntent(context, prepared, chooserTitle)
@@ -105,6 +108,7 @@ object MediaShareHelper {
         bitmap: Bitmap,
         baseName: String,
         quality: Int,
+        skipWatermark: Boolean = false,
     ): ShareOutcome = withContext(Dispatchers.IO) {
         if (bitmap.isRecycled) return@withContext ShareOutcome.Failure("bitmap_recycled")
         val shareRoot = File(context.cacheDir, SHARE_SUB_DIR).apply { mkdirs() }
@@ -113,9 +117,13 @@ object MediaShareHelper {
             .ifBlank { "redacted" }
             .takeLast(24)
         val dest = File(shareRoot, "${System.nanoTime()}_${safeBase}.jpg")
-        val toEncode = runCatching {
-            bitmap.copy(Bitmap.Config.ARGB_8888, true).also { drawShareWatermark(context, it) }
-        }.getOrElse { bitmap }
+        val toEncode = if (skipWatermark) {
+            bitmap
+        } else {
+            runCatching {
+                bitmap.copy(Bitmap.Config.ARGB_8888, true).also { drawShareWatermark(context, it) }
+            }.getOrElse { bitmap }
+        }
         try {
             FileOutputStream(dest).use { output ->
                 toEncode.compress(Bitmap.CompressFormat.JPEG, quality, output)
@@ -139,7 +147,7 @@ object MediaShareHelper {
         ShareOutcome.Success(uri, "image/jpeg")
     }
 
-    private suspend fun prepare(context: Context, sourcePath: String): ShareOutcome = withContext(Dispatchers.IO) {
+    private suspend fun prepare(context: Context, sourcePath: String, skipWatermark: Boolean): ShareOutcome = withContext(Dispatchers.IO) {
         val src = File(sourcePath)
         if (!src.exists() || !src.isFile) {
             return@withContext ShareOutcome.Failure("file_not_found")
@@ -170,7 +178,7 @@ object MediaShareHelper {
 
         var shareFile = dest
         var shareMime = mimeType
-        if (mimeIsShareWatermarkedImage(mimeType)) {
+        if (!skipWatermark && mimeIsShareWatermarkedImage(mimeType)) {
             val watermarked = File(shareRoot, "${System.nanoTime()}_${dest.nameWithoutExtension}_wm.jpg")
             if (writeRasterWithWatermark(context, dest, watermarked)) {
                 runCatching { dest.delete() }

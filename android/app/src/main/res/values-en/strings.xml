@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Photo Vault</string>
-    <string name="share_image_watermark" translatable="false">LumaValut</string>
+    <string name="share_image_watermark" translatable="false">LumaVault</string>
     <string name="home_placeholder">W1 · Local vault (shell)</string>
     <string name="splash_title">VaultSafe</string>
     <string name="splash_tagline">Private · Encrypted · Yours</string>

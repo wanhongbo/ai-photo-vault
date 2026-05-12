@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Photo Vault</string>
     <!-- 分享图片右下角品牌水印（刻意低调；品牌拼写按产品要求） -->
-    <string name="share_image_watermark" translatable="false">LumaValut</string>
+    <string name="share_image_watermark" translatable="false">LumaVault</string>
     <string name="home_placeholder">W1 · Local vault (shell)</string>
     <string name="splash_title">VaultSafe</string>
     <string name="splash_tagline">Private · Encrypted · Yours</string>
