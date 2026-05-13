@@ -332,9 +332,6 @@ fun SettingsDataStorageScreen(
     onOpenBulkExport: () -> Unit,
     onOpenTrashBin: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var showClearDialog by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -378,36 +375,8 @@ fun SettingsDataStorageScreen(
                     ),
                 ),
             )
-            SettingsGroupCard(title = stringResource(R.string.settings_danger_reset)) {
-                Spacer(Modifier.height(UiSize.settingsGroupTitleToRowsGap))
-                SettingsDangerRow(
-                    title = stringResource(R.string.settings_danger_reset),
-                    desc = stringResource(R.string.settings_danger_reset_desc),
-                    onClick = { showClearDialog = true },
-                )
-            }
         }
     }
-    AppDialog(
-        show = showClearDialog,
-        title = stringResource(R.string.settings_clear_vault_dialog_title),
-        message = stringResource(R.string.settings_clear_vault_dialog_message),
-        confirmText = stringResource(R.string.settings_clear_vault_confirm),
-        dismissText = stringResource(R.string.settings_clear_vault_cancel),
-        onConfirm = {
-            showClearDialog = false
-            scope.launch {
-                val n = VaultStore.moveAllVaultPhotosToTrash(context)
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.settings_clear_vault_done, n),
-                    Toast.LENGTH_SHORT,
-                ).show()
-            }
-        },
-        onDismiss = { showClearDialog = false },
-        confirmVariant = AppButtonVariant.DANGER,
-    )
 }
 
 @Composable

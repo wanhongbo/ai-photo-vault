@@ -308,6 +308,7 @@
     <string name="settings_danger_reset">Clear private album</string>
     <string name="settings_danger_reset_desc">Deleted data cannot be recovered, proceed carefully</string>
     <string name="settings_l1_subscription">My Subscription</string>
+        <string name="settings_backup_banner">Album files cannot be recovered after deleting the app. Please back up your files in time.</string>
     <string name="settings_l1_subscription_sub">See your plan and renewal</string>
     <string name="settings_l1_security">Security &amp; Privacy</string>
     <string name="settings_l1_security_sub">Unlock, PIN, and privacy options</string>

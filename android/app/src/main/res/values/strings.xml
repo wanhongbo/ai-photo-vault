@@ -309,6 +309,7 @@
     <string name="settings_danger_reset">清空私有相册</string>
     <string name="settings_danger_reset_desc">删除后无法恢复，请谨慎操作</string>
     <string name="settings_l1_subscription">我的订阅</string>
+    <string name="settings_backup_banner">删除 App 后相册文件无法找回，请及时备份文件</string>
     <string name="settings_l1_subscription_sub">查看付费状态与续费</string>
     <string name="settings_l1_security">安全与隐私</string>
     <string name="settings_l1_security_sub">应用锁、生物识别与隐私选项</string>

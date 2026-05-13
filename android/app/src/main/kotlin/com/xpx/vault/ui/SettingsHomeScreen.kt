@@ -72,6 +72,9 @@ fun SettingsHomeScreen(
             verticalArrangement = Arrangement.spacedBy(UiSize.settingsSectionGap),
         ) {
             item {
+                SettingsBackupBanner()
+            }
+            item {
                 SettingsSubscriptionEntryCard(
                     onClick = { onOpenSettingsHub(SettingsHubDestination.SUBSCRIPTION) },
                 )
@@ -201,4 +204,31 @@ private fun SettingsHubRow(
             rowVerticalPaddingScale = 1.2f,
         ),
     )
+}
+
+@Composable
+private fun SettingsBackupBanner() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(UiRadius.homeCard))
+            .background(UiColors.Home.sectionBg)
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_ai_shield),
+            contentDescription = null,
+            tint = UiColors.Home.navItemActive,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = stringResource(R.string.settings_backup_banner),
+            color = UiColors.Home.emptyBody,
+            fontSize = UiTextSize.settingsRowDesc,
+            lineHeight = (UiTextSize.settingsRowDesc.value * 1.45).sp,
+        )
+    }
 }
