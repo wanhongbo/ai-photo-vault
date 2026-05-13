@@ -171,7 +171,7 @@ object UiRadius {
     val splashIcon: Dp = 22.dp
     val errorBanner: Dp = 12.dp
     val hintCard: Dp = 16.dp
-    val dialog: Dp = 20.dp
+    val dialog: Dp = 22.dp
     val homeCard: Dp = 20.dp
     val homeThumb: Dp = 12.dp
     val homeAlbumCard: Dp = 14.dp
@@ -211,6 +211,12 @@ object UiSize {
     val paywallCrown: Dp = 56.dp
     val buttonHeight: Dp = 54.dp
     val buttonHeightSecondary: Dp = 48.dp
+    val dialogMaxWidth: Dp = 308.dp
+    val dialogPadding: Dp = 22.dp
+    val dialogBodyTopGap: Dp = 11.dp
+    val dialogButtonTopGap: Dp = 22.dp
+    val dialogButtonSpacing: Dp = 12.dp
+    val dialogButtonHeight: Dp = 54.dp
     val loadingIndicator: Dp = 20.dp
     val homeNavBarHeight: Dp = 88.dp
     val homeNavIcon: Dp = 24.dp

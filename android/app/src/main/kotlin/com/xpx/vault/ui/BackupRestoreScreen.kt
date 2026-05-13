@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -456,11 +457,12 @@ private fun BackupRestoreProgressOverlay(message: String) {
     ) {
         Column(
             modifier = Modifier
+                .widthIn(max = UiSize.dialogMaxWidth)
                 .fillMaxWidth()
                 .padding(horizontal = 28.dp)
                 .background(UiColors.Dialog.bg, RoundedCornerShape(UiRadius.dialog))
                 .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.dialog))
-                .padding(horizontal = 20.dp, vertical = 22.dp),
+                .padding(horizontal = UiSize.dialogPadding, vertical = UiSize.dialogPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {

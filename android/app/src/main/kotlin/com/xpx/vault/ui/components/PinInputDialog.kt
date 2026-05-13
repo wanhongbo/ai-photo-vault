@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
+import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
 
 /**
@@ -43,6 +45,8 @@ import com.xpx.vault.ui.theme.UiTextSize
  * - 使用不可见输入框接收数字键盘输入，以 6 个圆点展示当前输入进度。
  * - 满 6 位时会自动回调 [onConfirm]，并在 busy 状态下显示进度指示。
  * - 外层切换 [show] 为 false 会清空内部输入。
+ *
+ * 视觉与 [AppDialog] 保持一致（同色板/同圆角/同边框/同按钮高度）。
  */
 @Composable
 fun PinInputDialog(
@@ -73,12 +77,15 @@ fun PinInputDialog(
             if (!busy) onDismiss()
         },
         containerColor = Color.Transparent,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
         text = {
             Column(
                 modifier = Modifier
+                    .widthIn(max = UiSize.dialogMaxWidth)
                     .fillMaxWidth()
                     .background(UiColors.Dialog.bg, RoundedCornerShape(UiRadius.dialog))
-                    .padding(20.dp),
+                    .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.dialog))
+                    .padding(UiSize.dialogPadding),
             ) {
                 Text(
                     text = title,
@@ -91,7 +98,7 @@ fun PinInputDialog(
                     color = UiColors.Dialog.body,
                     fontSize = UiTextSize.dialogBody,
                     textAlign = TextAlign.Start,
-                    modifier = Modifier.padding(top = 10.dp),
+                    modifier = Modifier.padding(top = UiSize.dialogBodyTopGap),
                 )
 
                 // 隐藏输入框 + 显式 Dots
@@ -178,22 +185,26 @@ fun PinInputDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(top = UiSize.dialogButtonTopGap),
+                    horizontalArrangement = Arrangement.spacedBy(UiSize.dialogButtonSpacing),
                 ) {
                     AppButton(
                         text = dismissText,
                         onClick = onDismiss,
                         variant = AppButtonVariant.SECONDARY,
                         enabled = !busy,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(UiSize.dialogButtonHeight),
                     )
                     AppButton(
                         text = confirmText,
                         onClick = { if (pin.length == pinLength) onConfirm(pin) },
                         variant = AppButtonVariant.PRIMARY,
                         enabled = !busy && pin.length == pinLength,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(UiSize.dialogButtonHeight),
                     )
                 }
             }

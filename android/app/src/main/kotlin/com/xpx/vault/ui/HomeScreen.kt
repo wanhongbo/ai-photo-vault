@@ -34,13 +34,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -69,6 +65,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
+import com.xpx.vault.ui.components.AppInputDialog
 import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
@@ -304,87 +301,28 @@ fun HomeScreen(
         }
     }
 
-    if (creatingAlbum) {
-        AlertDialog(
-            onDismissRequest = { creatingAlbum = false },
-            containerColor = Color.Transparent,
-            confirmButton = {},
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(UiColors.Dialog.bg)
-                        .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(24.dp))
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_album_create_title),
-                        color = UiColors.Dialog.title,
-                        fontSize = UiTextSize.dialogTitle,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                    )
-                    TextField(
-                        value = newAlbumName,
-                        onValueChange = { newAlbumName = it },
-                        singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp)
-                            .height(52.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(14.dp)),
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            color = UiColors.Dialog.title,
-                            fontSize = UiTextSize.homeEmptyBody,
-                        ),
-                        placeholder = {
-                            Text(
-                                text = stringResource(R.string.home_album_create_input_hint),
-                                color = UiColors.Home.subtitle,
-                                fontSize = UiTextSize.homeEmptyBody,
-                            )
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = UiColors.Home.emptyCardBg,
-                            unfocusedContainerColor = UiColors.Home.emptyCardBg,
-                            disabledContainerColor = UiColors.Home.emptyCardBg,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = UiColors.Home.navItemActive,
-                        ),
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 18.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        AppButton(
-                            text = stringResource(R.string.common_cancel),
-                            onClick = { creatingAlbum = false },
-                            variant = AppButtonVariant.SECONDARY,
-                            modifier = Modifier.weight(1f),
-                        )
-                        AppButton(
-                            text = stringResource(R.string.home_album_create_confirm),
-                            onClick = {
-                                scope.launch {
-                                    val name = VaultStore.createAlbum(context, newAlbumName)
-                                    newAlbumName = ""
-                                    creatingAlbum = false
-                                    refreshVault()
-                                    onOpenAlbum(name)
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-            },
-        )
-    }
+    AppInputDialog(
+        show = creatingAlbum,
+        title = stringResource(R.string.home_album_create_title),
+        value = newAlbumName,
+        onValueChange = { newAlbumName = it },
+        placeholder = stringResource(R.string.home_album_create_input_hint),
+        confirmText = stringResource(R.string.home_album_create_confirm),
+        onConfirm = {
+            scope.launch {
+                val name = VaultStore.createAlbum(context, newAlbumName)
+                newAlbumName = ""
+                creatingAlbum = false
+                refreshVault()
+                onOpenAlbum(name)
+            }
+        },
+        dismissText = stringResource(R.string.common_cancel),
+        onDismiss = {
+            newAlbumName = ""
+            creatingAlbum = false
+        },
+    )
 }
 
 @Composable
