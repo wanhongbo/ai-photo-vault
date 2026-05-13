@@ -559,15 +559,10 @@ private fun CreateAlbumCard(
             .width(UiSize.homeAlbumCardWidth)
             .clip(RoundedCornerShape(UiRadius.homeAlbumCard))
             .background(UiColors.Home.bgBottom)
-            .border(
-                width = 1.dp,
-                color = UiColors.Home.navItemActive,
-                shape = RoundedCornerShape(UiRadius.homeAlbumCard),
-            )
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeAlbumCard))
             .pressFeedback(interaction)
             .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
             .padding(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
@@ -581,14 +576,13 @@ private fun CreateAlbumCard(
                 painter = painterResource(R.drawable.ic_home_action_add),
                 contentDescription = null,
                 tint = UiColors.Home.navItemActive,
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
         Text(
             text = stringResource(R.string.home_album_create_title),
-            color = UiColors.Home.navItemActive,
+            color = UiColors.Home.emptyTitle,
             modifier = Modifier.padding(top = 6.dp),
-            fontWeight = FontWeight.SemiBold,
         )
     }
 }
