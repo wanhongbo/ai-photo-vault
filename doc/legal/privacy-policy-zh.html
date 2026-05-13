@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>隐私政策 — Photo Vault</title>
+  <meta name="description" content="Photo Vault（com.xpx.vault）Android 应用隐私政策。" />
+  <style>
+    :root {
+      --text: #1a1a1a;
+      --muted: #5c5c5c;
+      --border: #e8e8e8;
+      --accent: #2563eb;
+      --bg: #fafafa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+      background: #fff;
+      min-height: 100vh;
+      box-shadow: 0 0 0 1px var(--border);
+    }
+    .alt-lang {
+      font-size: 0.9rem;
+      margin-bottom: 1.25rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h2 {
+      font-size: 1.15rem;
+      margin: 2rem 0 0.75rem;
+      color: var(--text);
+      border-left: 4px solid var(--accent);
+      padding-left: 0.65rem;
+    }
+    p { margin: 0 0 0.85rem; }
+    ul { margin: 0 0 0.85rem; padding-left: 1.25rem; }
+    li { margin-bottom: 0.35rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 0.5rem 0 1rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.6rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f4f6f8; }
+    .notice {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin: 1rem 0 2rem;
+    }
+    a { color: var(--accent); }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="alt-lang"><a href="privacy-policy-en.html" hreflang="en">English version</a></p>
+    <h1>隐私政策</h1>
+    <p class="meta">
+      应用名称：Photo Vault<br />
+      应用包名：<code>com.xpx.vault</code><br />
+      生效日期：<time datetime="2026-05-10">2026-05-10</time> · 文档版本：1.0（随合并清单与功能迭代更新）
+    </p>
+
+    <div class="notice">
+      <strong>提示</strong>：本文件为基于当前工程权限与依赖整理的说明性模板，不构成法律意见。上架前请将文中「运营主体」「联系方式」等占位信息替换为贵司真实信息，并由法务审阅。
+    </div>
+
+    <section>
+      <h2>1. 引言</h2>
+      <p>欢迎使用 Photo Vault（以下简称「本应用」）。本隐私政策说明在您使用本应用时，我们如何处理与照片、视频、设备能力相关的信息，以及与 Android 系统权限的对应关系。</p>
+      <p>本应用定位为<strong>本地私密相册与加密保管</strong>：您导入或拍摄的内容主要在设备本地加密与展示；我们不会将您的相册原图作为「云相册」上传至我方服务器用于存储（若未来产品形态变更，我们将更新本政策并依法重新征得同意）。</p>
+    </section>
+
+    <section>
+      <h2>2. 运营主体与适用范围</h2>
+      <p><strong>运营主体</strong>：[请填写公司法定全称]。本政策适用于您通过官方渠道下载、安装的 Android 版 Photo Vault（<code>com.xpx.vault</code>）。若您使用其他平台版本，请以该平台公示的隐私政策为准。</p>
+    </section>
+
+    <section>
+      <h2>3. 我们处理的信息类型</h2>
+      <ul>
+        <li><strong>您主动提供或选择的内容</strong>：从系统相册导入的照片/视频；使用应用内相机拍摄的影像（按产品设计可不入系统公开相册）。</li>
+        <li><strong>加密与元数据</strong>：为提供保险库、相册管理、备份与恢复等功能，在本地生成的加密文件、缩略图、数据库记录等。</li>
+        <li><strong>解锁与安全相关</strong>：您设置的 PIN/图案等凭证的<strong>安全摘要</strong>（非明文存储于可逆形式）；若您启用系统生物识别解锁，生物特征模板由操作系统管理，本应用无法读取您的指纹或人脸原始图像。</li>
+        <li><strong>设备与网络状态（非内容级）</strong>：如网络可达性等，用于依赖库（如机器学习模型组件、任务调度）的正常工作，详见下文权限说明。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Android 权限与用途（与合并清单一致）</h2>
+      <p>下列权限来自本应用 <code>AndroidManifest.xml</code> 及当前依赖库合并后的清单（如 Google ML Kit、AndroidX WorkManager、Biometric 等）。实际弹窗以系统为准；部分权限仅在您使用对应功能时才会被请求。</p>
+      <table>
+        <thead>
+          <tr><th>权限</th><th>用途说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>READ_MEDIA_IMAGES</code> / <code>READ_MEDIA_VIDEO</code></td><td>在 Android 13+ 读取您选择的图片与视频媒体，用于导入至本地加密保险库。</td></tr>
+          <tr><td><code>READ_EXTERNAL_STORAGE</code>（≤ API 32）</td><td>在较低系统版本上读取外部存储中的媒体文件，用于导入。</td></tr>
+          <tr><td><code>CAMERA</code></td><td>使用应用内相机进行私密拍摄。</td></tr>
+          <tr><td><code>USE_BIOMETRIC</code> / <code>USE_FINGERPRINT</code></td><td>可选：调用系统生物识别完成解锁；生物数据由系统托管。</td></tr>
+          <tr><td><code>INTERNET</code></td><td>由 Google Play 服务 / ML Kit 等组件用于<strong>模型或组件资源的分发与更新</strong>等；不用于将您的保险库明文批量上传至我方自有服务器（当前架构）。</td></tr>
+          <tr><td><code>ACCESS_NETWORK_STATE</code></td><td>检测网络状态以配合上述组件与后台任务调度。</td></tr>
+          <tr><td><code>WAKE_LOCK</code></td><td>在必要时间内保持设备唤醒以完成后台任务（如备份、模型相关处理）。</td></tr>
+          <tr><td><code>RECEIVE_BOOT_COMPLETED</code></td><td>在设备重启后由系统重新调度已登记的定时/约束型后台任务（如自动备份计划）。</td></tr>
+          <tr><td><code>FOREGROUND_SERVICE</code></td><td>在符合系统要求时，以前台服务形式执行耗时或需用户感知的后台操作（由 WorkManager 等库按条件触发）。</td></tr>
+        </tbody>
+      </table>
+      <p><strong>分享</strong>：当您主动使用「分享」类功能时，本应用可能通过系统 <code>FileProvider</code> 向目标应用授予<strong>临时读取</strong>解密后文件的 URI 权限；该行为由您发起，且通常限于当时选定的接收方应用。</p>
+    </section>
+
+    <section>
+      <h2>5. 设备端智能（ML Kit）</h2>
+      <p>本工程集成了 Google ML Kit 相关能力（如图像标签、人脸检测、文字识别、条码扫描等模块的依赖配置），用于在设备端或受控环境下辅助功能（例如隐私风险提示、打码建议等）。处理应尽量在本地完成；涉及 Google 服务与模型下发时，请同时参阅 <a href="https://developers.google.com/ml-kit/terms" rel="noopener noreferrer">ML Kit 条款</a> 与 <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google 隐私权政策</a>。</p>
+    </section>
+
+    <section>
+      <h2>6. 第三方与开源组件</h2>
+      <p>除上述 Google 相关组件外，本应用还使用 AndroidX（如 CameraX、Biometric、WorkManager、Room 等）等常规系统/支持库。若后续接入应用内购买（如 Google Play Billing / RevenueCat 等），我们将在本政策与商店资料中补充相应数据实践说明。</p>
+    </section>
+
+    <section>
+      <h2>7. 存储、备份与安全保留</h2>
+      <p>加密内容默认保存在应用私有存储空间；若您使用导出、备份或用户指定的外部位置（如通过系统文档选择器授权的文件夹），数据将按您的操作写入相应位置。您可通过应用内删除、卸载应用（注意卸载将清除应用私有数据）等方式控制保留期限。</p>
+    </section>
+
+    <section>
+      <h2>8. 未成年人</h2>
+      <p>若您为未成年人，请在监护人指导下阅读本政策并使用本应用。我们不会明知收集儿童个人信息而不遵守适用法律要求的同意机制。</p>
+    </section>
+
+    <section>
+      <h2>9. 您的权利与联系我们</h2>
+      <p>在适用法律允许的范围内，您可查阅、更正、删除与您相关的个人信息，或撤回同意、注销服务（如产品提供相应入口）。咨询与投诉请联系：<strong>[请填写邮箱或工单入口]</strong>。</p>
+    </section>
+
+    <section>
+      <h2>10. 政策更新</h2>
+      <p>我们可能因功能、法律或监管要求更新本政策。重大变更将通过应用内提示或官网公告等合理方式告知。更新后的生效日期将在文首修订。</p>
+    </section>
+
+    <footer>
+      <p>© [请填写年份与运营主体] Photo Vault · <code>doc/legal/privacy-policy-zh.html</code></p>
+    </footer>
+  </div>
+</body>
+</html>

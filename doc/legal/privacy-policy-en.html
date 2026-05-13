@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy — Photo Vault</title>
+  <meta name="description" content="Privacy Policy for Photo Vault (com.xpx.vault) on Android." />
+  <style>
+    :root {
+      --text: #1a1a1a;
+      --muted: #5c5c5c;
+      --border: #e8e8e8;
+      --accent: #2563eb;
+      --bg: #fafafa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+      background: #fff;
+      min-height: 100vh;
+      box-shadow: 0 0 0 1px var(--border);
+    }
+    .alt-lang {
+      font-size: 0.9rem;
+      margin-bottom: 1.25rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h2 {
+      font-size: 1.15rem;
+      margin: 2rem 0 0.75rem;
+      color: var(--text);
+      border-left: 4px solid var(--accent);
+      padding-left: 0.65rem;
+    }
+    p { margin: 0 0 0.85rem; }
+    ul { margin: 0 0 0.85rem; padding-left: 1.25rem; }
+    li { margin-bottom: 0.35rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 0.5rem 0 1rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.6rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f4f6f8; }
+    .notice {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin: 1rem 0 2rem;
+    }
+    a { color: var(--accent); }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="alt-lang"><a href="privacy-policy-zh.html" hreflang="zh-Hans">中文版</a></p>
+    <h1>Privacy Policy</h1>
+    <p class="meta">
+      App name: Photo Vault<br />
+      Package name: <code>com.xpx.vault</code><br />
+      Effective date: <time datetime="2026-05-10">2026-05-10</time> · Document version: 1.0 (updated as the merged manifest and features evolve)
+    </p>
+
+    <div class="notice">
+      <strong>Note</strong>: This document is a descriptive template based on the project’s declared permissions and dependencies. It is not legal advice. Replace placeholders (legal entity, contact) and have counsel review before publication or store submission.
+    </div>
+
+    <section>
+      <h2>1. Introduction</h2>
+      <p>Welcome to Photo Vault (“the App”). This Privacy Policy explains how we handle information related to your photos, videos, and device capabilities when you use the App, and how this maps to Android permissions.</p>
+      <p>The App is designed as a <strong>local private vault</strong>: imported or captured content is primarily encrypted and displayed on your device. We do not upload your original gallery media to our servers for cloud storage as part of the current product design (if this changes, we will update this Policy and obtain consent as required by law).</p>
+    </section>
+
+    <section>
+      <h2>2. Controller &amp; scope</h2>
+      <p><strong>Controller</strong>: [Insert your legal entity name]. This Policy applies to the Android distribution of Photo Vault (<code>com.xpx.vault</code>) obtained through official channels. Other platform builds may have separate notices.</p>
+    </section>
+
+    <section>
+      <h2>3. Types of information we process</h2>
+      <ul>
+        <li><strong>Content you import or capture</strong>: photos/videos from the system gallery; media captured with the in-app camera (may be kept out of the public gallery per product behavior).</li>
+        <li><strong>Encrypted payloads and metadata</strong>: locally stored encrypted files, thumbnails, database records needed for vault, library management, backup/restore, etc.</li>
+        <li><strong>Unlock &amp; security</strong>: secure representations of PIN/pattern (not stored in reversible plaintext). If you enable biometric unlock, templates are managed by the OS; the App cannot read raw fingerprint or face images.</li>
+        <li><strong>Device/network state (non-content)</strong>: e.g. connectivity signals used by bundled components (ML model delivery, job scheduling), as described under permissions below.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Android permissions &amp; purposes (aligned with merged manifest)</h2>
+      <p>The following permissions originate from the App manifest and the merged manifest of current dependencies (e.g., Google ML Kit, AndroidX WorkManager, Biometric). System dialogs govern runtime grants; some permissions are requested only when you use related features.</p>
+      <table>
+        <thead>
+          <tr><th>Permission</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>READ_MEDIA_IMAGES</code> / <code>READ_MEDIA_VIDEO</code></td><td>On Android 13+, read images/videos you choose to import into the local encrypted vault.</td></tr>
+          <tr><td><code>READ_EXTERNAL_STORAGE</code> (≤ API 32)</td><td>On older versions, read media from external storage for import.</td></tr>
+          <tr><td><code>CAMERA</code></td><td>In-app private capture.</td></tr>
+          <tr><td><code>USE_BIOMETRIC</code> / <code>USE_FINGERPRINT</code></td><td>Optional: system biometric unlock; templates are held by the OS.</td></tr>
+          <tr><td><code>INTERNET</code></td><td>Used by Google Play services / ML Kit components for <strong>model or component delivery/updates</strong>, etc.; not used to bulk-upload vault plaintext to our servers under the current architecture.</td></tr>
+          <tr><td><code>ACCESS_NETWORK_STATE</code></td><td>Observe connectivity for the above components and job scheduling.</td></tr>
+          <tr><td><code>WAKE_LOCK</code></td><td>Keep the device awake briefly to complete background work (e.g., backup, ML-related processing).</td></tr>
+          <tr><td><code>RECEIVE_BOOT_COMPLETED</code></td><td>Reschedule constrained background jobs after reboot (e.g., automatic backup schedules).</td></tr>
+          <tr><td><code>FOREGROUND_SERVICE</code></td><td>Run longer or user-visible background operations as a foreground service when required by the OS (via WorkManager under eligible conditions).</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Sharing</strong>: When you initiate share/export, the App may grant other apps <strong>temporary read</strong> access to URIs via <code>FileProvider</code>; this is user-directed and typically scoped to the recipient you select.</p>
+    </section>
+
+    <section>
+      <h2>5. On-device intelligence (ML Kit)</h2>
+      <p>The project integrates Google ML Kit modules (e.g., labeling, face detection, text recognition, barcode scanning) to assist on-device features such as privacy suggestions or redaction hints. Processing is intended to occur on-device where possible; where Google services deliver models, please also review the <a href="https://developers.google.com/ml-kit/terms" rel="noopener noreferrer">ML Kit Terms</a> and <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google Privacy Policy</a>.</p>
+    </section>
+
+    <section>
+      <h2>6. Third parties &amp; SDKs</h2>
+      <p>Beyond Google components, the App uses standard AndroidX libraries (e.g., CameraX, Biometric, WorkManager, Room). If in-app purchases (e.g., Play Billing / RevenueCat) are added later, we will update this Policy and store listings accordingly.</p>
+    </section>
+
+    <section>
+      <h2>7. Storage, backup &amp; retention</h2>
+      <p>Encrypted content is stored in app-private storage by default. If you export, back up, or save to a user-chosen location (e.g., via the system document picker), data is written per your action. You control retention via in-app deletion or uninstall (note: uninstall removes private app data).</p>
+    </section>
+
+    <section>
+      <h2>8. Minors</h2>
+      <p>If you are a minor, please review this Policy with a guardian. We do not knowingly collect children’s personal information without complying with applicable consent requirements.</p>
+    </section>
+
+    <section>
+      <h2>9. Your rights &amp; contact</h2>
+      <p>Where applicable law provides, you may access, correct, delete personal information, withdraw consent, or cancel the service via in-product controls when available. Contact us at: <strong>[Insert email or support URL]</strong>.</p>
+    </section>
+
+    <section>
+      <h2>10. Changes</h2>
+      <p>We may update this Policy for new features, legal, or regulatory reasons. Material changes will be communicated by reasonable means (e.g., in-app notice or website posting). The effective date at the top will be revised accordingly.</p>
+    </section>
+
+    <footer>
+      <p>© [Year &amp; legal entity] Photo Vault · <code>doc/legal/privacy-policy-en.html</code></p>
+    </footer>
+  </div>
+</body>
+</html>
