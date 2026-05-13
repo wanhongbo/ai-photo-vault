@@ -48,6 +48,7 @@ import com.xpx.vault.ui.ai.AiSensitiveReviewScreen
 import com.xpx.vault.ui.ai.PrivacyRedactScreen
 import com.xpx.vault.ui.LanguageSettingsScreen
 import com.xpx.vault.ui.SettingsHubDestination
+import com.xpx.vault.ui.settings.LegalWebViewScreen
 import com.xpx.vault.ui.settings.SettingsAboutSupportScreen
 import com.xpx.vault.ui.settings.SettingsBackupSyncScreen
 import com.xpx.vault.ui.settings.SettingsDataStorageScreen
@@ -431,6 +432,46 @@ class MainActivity : FragmentActivity() {
                         composable(ROUTE_SETTINGS_ABOUT) {
                             SettingsAboutSupportScreen(
                                 onBack = { navController.popBackStack() },
+                                onOpenPrivacyPolicy = {
+                                    navController.navigate(ROUTE_PRIVACY_POLICY) { launchSingleTop = true }
+                                },
+                                onOpenTermsOfService = {
+                                    navController.navigate(ROUTE_TERMS_OF_SERVICE) { launchSingleTop = true }
+                                },
+                                onContactUs = {
+                                    val intent = Intent(
+                                        Intent.ACTION_SENDTO,
+                                        Uri.parse("mailto:service@xipengxin.com"),
+                                    ).apply {
+                                        putExtra(Intent.EXTRA_SUBJECT, "LumaVault Support")
+                                    }
+                                    try {
+                                        startActivity(intent)
+                                    } catch (_: Exception) {
+                                        // 没有邮件客户端时回退到浏览器
+                                        val fallback = Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://xipengxin.com"),
+                                        )
+                                        startActivity(fallback)
+                                    }
+                                },
+                            )
+                        }
+                        composable(ROUTE_PRIVACY_POLICY) {
+                            val rawResId = if (isChineseLocale()) R.raw.privacy_policy_zh else R.raw.privacy_policy_en
+                            LegalWebViewScreen(
+                                titleResId = R.string.settings_about_privacy,
+                                rawResId = rawResId,
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable(ROUTE_TERMS_OF_SERVICE) {
+                            val rawResId = if (isChineseLocale()) R.raw.terms_of_service_zh else R.raw.terms_of_service_en
+                            LegalWebViewScreen(
+                                titleResId = R.string.settings_about_terms,
+                                rawResId = rawResId,
+                                onBack = { navController.popBackStack() },
                             )
                         }
                         composable(ROUTE_AI_CLEANUP) {
@@ -649,6 +690,11 @@ class MainActivity : FragmentActivity() {
             route.startsWith(ROUTE_RESTORE_PROGRESS)
     }
 
+    private fun isChineseLocale(): Boolean {
+        val locale = resources.configuration.locales[0]
+        return locale.language == "zh"
+    }
+
     companion object {
         private const val ROUTE_SPLASH = "splash"
         private const val ROUTE_LOCK = "lock"
@@ -675,6 +721,8 @@ class MainActivity : FragmentActivity() {
         private const val ROUTE_SETTINGS_DATA_STORAGE = "settings_data_storage"
         private const val ROUTE_SETTINGS_GENERAL = "settings_general"
         private const val ROUTE_SETTINGS_ABOUT = "settings_about"
+        private const val ROUTE_PRIVACY_POLICY = "privacy_policy"
+        private const val ROUTE_TERMS_OF_SERVICE = "terms_of_service"
         private const val ROUTE_BULK_EXPORT = "bulk_export"
         private const val ROUTE_EXPORT_PROGRESS = "export_progress"
         private const val ROUTE_EXPORT_RESULT = "export_result"

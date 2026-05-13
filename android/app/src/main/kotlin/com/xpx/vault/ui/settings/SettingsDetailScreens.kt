@@ -426,6 +426,9 @@ fun SettingsGeneralScreen(
 @Composable
 fun SettingsAboutSupportScreen(
     onBack: () -> Unit,
+    onOpenPrivacyPolicy: () -> Unit = {},
+    onOpenTermsOfService: () -> Unit = {},
+    onContactUs: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val version = BuildConfig.VERSION_NAME
@@ -456,25 +459,19 @@ fun SettingsAboutSupportScreen(
                         title = stringResource(R.string.settings_about_privacy),
                         desc = stringResource(R.string.settings_about_privacy_desc),
                         trailing = SettingsTrailing.CHEVRON,
-                        onClick = {
-                            Toast.makeText(context, context.getString(R.string.settings_link_coming_soon), Toast.LENGTH_SHORT).show()
-                        },
+                        onClick = onOpenPrivacyPolicy,
                     ),
                     SettingsRowModel(
                         title = stringResource(R.string.settings_about_terms),
                         desc = stringResource(R.string.settings_about_terms_desc),
                         trailing = SettingsTrailing.CHEVRON,
-                        onClick = {
-                            Toast.makeText(context, context.getString(R.string.settings_link_coming_soon), Toast.LENGTH_SHORT).show()
-                        },
+                        onClick = onOpenTermsOfService,
                     ),
                     SettingsRowModel(
                         title = stringResource(R.string.settings_about_contact),
                         desc = stringResource(R.string.settings_about_contact_desc),
                         trailing = SettingsTrailing.CHEVRON,
-                        onClick = {
-                            Toast.makeText(context, context.getString(R.string.settings_link_coming_soon), Toast.LENGTH_SHORT).show()
-                        },
+                        onClick = onContactUs,
                     ),
                 ),
             )
