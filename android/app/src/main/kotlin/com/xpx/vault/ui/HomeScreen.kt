@@ -220,7 +220,7 @@ fun HomeScreen(
             imageCount = imageCount,
             videoCount = videoCount,
             onSearch = onOpenSearch,
-            onCreateAlbum = { creatingAlbum = true },
+            onImport = triggerImportFromLibrary,
         )
         if (selectedTab == HomeTab.VAULT && !hasPin) {
             HomePinSetupBanner(
@@ -282,6 +282,7 @@ fun HomeScreen(
                         albums = albums,
                         onOpenAlbum = onOpenAlbum,
                         onViewAll = onOpenAlbumList,
+                        onCreateAlbum = { creatingAlbum = true },
                     )
                 }
                 item {
@@ -425,7 +426,7 @@ private fun VaultHeader(
     imageCount: Int,
     videoCount: Int,
     onSearch: () -> Unit,
-    onCreateAlbum: () -> Unit,
+    onImport: () -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column(modifier = Modifier.weight(1f)) {
@@ -451,8 +452,8 @@ private fun VaultHeader(
         }
         HeaderActionButton(
             iconRes = R.drawable.ic_home_action_add,
-            contentDesc = stringResource(R.string.home_action_add),
-            onClick = onCreateAlbum,
+            contentDesc = stringResource(R.string.home_vault_empty_action),
+            onClick = onImport,
         )
     }
 }
@@ -462,6 +463,7 @@ private fun AlbumsSection(
     albums: List<VaultAlbum>,
     onOpenAlbum: (String) -> Unit,
     onViewAll: () -> Unit,
+    onCreateAlbum: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -489,6 +491,9 @@ private fun AlbumsSection(
         ) {
             items(albums, key = { it.name }) { album ->
                 AlbumCard(album = album, onClick = { onOpenAlbum(album.name) })
+            }
+            item(key = "__create_album__") {
+                CreateAlbumCard(onClick = onCreateAlbum)
             }
         }
     }
@@ -540,6 +545,50 @@ private fun AlbumCard(
             text = stringResource(R.string.home_album_photo_count, album.photoCount),
             color = UiColors.Home.emptyBody,
             fontSize = UiTextSize.homeNavLabel,
+        )
+    }
+}
+
+@Composable
+private fun CreateAlbumCard(
+    onClick: () -> Unit,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    Column(
+        modifier = Modifier
+            .width(UiSize.homeAlbumCardWidth)
+            .clip(RoundedCornerShape(UiRadius.homeAlbumCard))
+            .background(UiColors.Home.bgBottom)
+            .border(
+                width = 1.dp,
+                color = UiColors.Home.navItemActive,
+                shape = RoundedCornerShape(UiRadius.homeAlbumCard),
+            )
+            .pressFeedback(interaction)
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(UiSize.homeAlbumCoverHeight)
+                .clip(RoundedCornerShape(UiRadius.homeThumb))
+                .background(UiColors.Home.emptyIconBg),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_home_action_add),
+                contentDescription = null,
+                tint = UiColors.Home.navItemActive,
+                modifier = Modifier.size(28.dp),
+            )
+        }
+        Text(
+            text = stringResource(R.string.home_album_create_title),
+            color = UiColors.Home.navItemActive,
+            modifier = Modifier.padding(top = 6.dp),
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

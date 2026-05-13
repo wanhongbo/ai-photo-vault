@@ -16,13 +16,19 @@ private val localProperties = Properties().apply {
     }
 }
 private val revenueCatAndroidApiKey: String =
-    localProperties.getProperty("revenuecat.apiKey.android")?.trim().orEmpty()
+    localProperties.getProperty("revenuecat.apiKey.android")?.trim()?.ifBlank { null }
+        ?: localProperties.getProperty("revenuecat.apiKey.dev")?.trim().orEmpty()
+
+private val revenueCatProdApiKey: String =
+    localProperties.getProperty("revenuecat.apiKey.prod")?.trim().orEmpty()
 
 private fun escapeForBuildConfigString(value: String): String =
     value.replace("\\", "\\\\").replace("\"", "\\\"")
 
-private val revenueCatBuildConfigField: String =
+private val revenueCatDevBuildConfigField: String =
     "\"${escapeForBuildConfigString(revenueCatAndroidApiKey)}\""
+private val revenueCatProdBuildConfigField: String =
+    "\"${escapeForBuildConfigString(revenueCatProdApiKey)}\""
 
 android {
     namespace = "com.xpx.vault"
@@ -59,12 +65,12 @@ android {
         create("dev") {
             dimension = "env"
             buildConfigField("boolean", "DEV_TOOLS", "true")
-            buildConfigField("String", "REVENUECAT_API_KEY", revenueCatBuildConfigField)
+            buildConfigField("String", "REVENUECAT_API_KEY", revenueCatDevBuildConfigField)
         }
         create("prod") {
             dimension = "env"
             buildConfigField("boolean", "DEV_TOOLS", "false")
-            buildConfigField("String", "REVENUECAT_API_KEY", revenueCatBuildConfigField)
+            buildConfigField("String", "REVENUECAT_API_KEY", revenueCatProdBuildConfigField)
         }
     }
 
