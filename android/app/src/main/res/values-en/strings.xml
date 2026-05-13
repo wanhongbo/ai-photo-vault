@@ -321,7 +321,7 @@
     <string name="settings_sec_privacy_hint">Coming later: decoy mode, intruder capture, anti-screenshot, etc.</string>
     <string name="settings_sec_autobackup">Auto backup</string>
     <string name="settings_sec_manual_backup">Manual backup &amp; restore</string>
-    <string name="settings_item_backup_local_cloud">Backup to local / cloud</string>
+    <string name="settings_item_backup_local_cloud">Backup to local</string>
     <string name="settings_item_backup_local_cloud_desc">Create an encrypted backup package</string>
     <string name="settings_item_restore_from_backup">Restore from backup</string>
     <string name="settings_item_restore_from_backup_desc">Pick a backup file to restore</string>

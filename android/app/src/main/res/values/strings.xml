@@ -322,7 +322,7 @@
     <string name="settings_sec_privacy_hint">后续可扩展：伪装模式、入侵者抓拍、防截图等</string>
     <string name="settings_sec_autobackup">自动备份设置</string>
     <string name="settings_sec_manual_backup">手动备份与恢复</string>
-    <string name="settings_item_backup_local_cloud">备份到本地 / 云端</string>
+    <string name="settings_item_backup_local_cloud">备份到本地</string>
     <string name="settings_item_backup_local_cloud_desc">创建加密备份包</string>
     <string name="settings_item_restore_from_backup">从备份恢复</string>
     <string name="settings_item_restore_from_backup_desc">选择历史备份文件还原</string>

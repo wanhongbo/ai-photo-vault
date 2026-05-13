@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -47,8 +46,6 @@ import com.xpx.vault.ui.components.AppInputDialog
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.R
 import com.xpx.vault.ui.components.VaultProgressiveImage
-import com.xpx.vault.ui.feedback.pressFeedback
-import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
@@ -217,21 +214,14 @@ private fun FilterTag(text: String, selected: Boolean) {
 private fun CreateAlbumGridItem(
     onClick: () -> Unit,
 ) {
-    val interaction = rememberFeedbackInteractionSource()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(UiRadius.homeCard))
             .background(UiColors.Home.sectionBg)
-            .border(
-                width = 1.dp,
-                color = UiColors.Home.navItemActive,
-                shape = RoundedCornerShape(UiRadius.homeCard),
-            )
-            .pressFeedback(interaction)
-            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
+            .throttledClickable(onClick = onClick)
             .padding(UiSize.homeCardPadding),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
@@ -243,17 +233,20 @@ private fun CreateAlbumGridItem(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_home_action_add),
-                contentDescription = null,
-                tint = UiColors.Home.navItemActive,
-                modifier = Modifier.size(32.dp),
+                contentDescription = stringResource(R.string.home_album_create_title),
+                tint = UiColors.Home.subtitle,
+                modifier = Modifier.size(24.dp),
             )
         }
         Text(
             text = stringResource(R.string.home_album_create_title),
-            color = UiColors.Home.navItemActive,
+            color = UiColors.Home.title,
             modifier = Modifier.padding(top = 8.dp),
+        )
+        Text(
+            text = " ",
+            color = UiColors.Home.subtitle,
             fontSize = UiTextSize.homeNavLabel,
-            fontWeight = FontWeight.SemiBold,
         )
     }
 }
