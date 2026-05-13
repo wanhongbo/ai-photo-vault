@@ -217,11 +217,12 @@ class RevenueCatSubscriptionRepository @Inject constructor() : SubscriptionRepos
             ?.freePhase
             ?.billingPeriod
             ?.let { period ->
-                when {
-                    period.years > 0 -> "${period.years} 年免费试用"
-                    period.months > 0 -> "${period.months} 个月免费试用"
-                    period.days > 0 -> "${period.days} 天免费试用"
-                    else -> null
+                when (period.unit) {
+                    com.revenuecat.purchases.models.Period.Unit.YEAR -> "${period.value} 年免费试用"
+                    com.revenuecat.purchases.models.Period.Unit.MONTH -> "${period.value} 个月免费试用"
+                    com.revenuecat.purchases.models.Period.Unit.WEEK -> "${period.value} 周免费试用"
+                    com.revenuecat.purchases.models.Period.Unit.DAY -> "${period.value} 天免费试用"
+                    com.revenuecat.purchases.models.Period.Unit.UNKNOWN -> null
                 }
             }
         return PaywallPackageOffer(
