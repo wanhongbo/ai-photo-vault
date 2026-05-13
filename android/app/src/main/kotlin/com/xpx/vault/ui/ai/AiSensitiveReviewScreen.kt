@@ -1,5 +1,6 @@
 package com.xpx.vault.ui.ai
 
+import android.content.res.Resources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -186,6 +189,7 @@ private fun SensitiveGridCell(
     cell: SensitiveGridItem,
     onClick: (() -> Unit)?,
 ) {
+    val resources = LocalContext.current.resources
     val interaction = rememberFeedbackInteractionSource()
     val clickModifier = if (onClick != null) {
         Modifier
@@ -234,7 +238,7 @@ private fun SensitiveGridCell(
             }
         }
         // 左上角浮标：多 kind 用「·」拼接，与清理页「模糊·重复」一致的视觉风格。
-        val badgeText = cell.kinds.joinToString("\u00b7") { kindLabel(it) }
+        val badgeText = cell.kinds.joinToString("\u00b7") { kindLabel(resources, it) }
         if (badgeText.isNotEmpty()) {
             Box(
                 modifier = Modifier
@@ -278,13 +282,12 @@ private fun SensitiveEmptyState(scanning: Boolean) {
     }
 }
 
-@Composable
-private fun kindLabel(kind: String): String = when (kind) {
-    "ID_CARD" -> stringResource(R.string.ai_sensitive_kind_id_card)
-    "BANK_CARD" -> stringResource(R.string.ai_sensitive_kind_bank_card)
-    "PHONE_NUMBER" -> stringResource(R.string.ai_sensitive_kind_phone)
-    "QR_CODE" -> stringResource(R.string.ai_sensitive_kind_qr_code)
-    "FACE_CLEAR" -> stringResource(R.string.ai_sensitive_kind_face)
-    "PRIVATE_CHAT" -> stringResource(R.string.ai_sensitive_kind_chat)
+private fun kindLabel(resources: Resources, kind: String): String = when (kind) {
+    "ID_CARD" -> resources.getString(R.string.ai_sensitive_kind_id_card)
+    "BANK_CARD" -> resources.getString(R.string.ai_sensitive_kind_bank_card)
+    "PHONE_NUMBER" -> resources.getString(R.string.ai_sensitive_kind_phone)
+    "QR_CODE" -> resources.getString(R.string.ai_sensitive_kind_qr_code)
+    "FACE_CLEAR" -> resources.getString(R.string.ai_sensitive_kind_face)
+    "PRIVATE_CHAT" -> resources.getString(R.string.ai_sensitive_kind_chat)
     else -> kind
 }

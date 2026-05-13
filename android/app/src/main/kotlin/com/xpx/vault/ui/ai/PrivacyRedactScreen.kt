@@ -45,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -109,8 +110,9 @@ fun PrivacyRedactScreen(
                     }
                 }
                 state.errorMessage != null -> {
+                    val errMsg = state.errorMessage!!
                     Text(
-                        text = stringResource(R.string.privacy_redact_open_failed, state.errorMessage),
+                        text = stringResource(R.string.privacy_redact_open_failed, errMsg),
                         color = Color(0xFFF07878),
                         fontSize = 13.sp,
                     )
@@ -195,7 +197,7 @@ fun PrivacyRedactScreen(
                 enabled = state.ready && state.preview != null && !state.sharing && !state.saving && !state.exporting,
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    viewModel.shareRedacted(chooserTitle = stringResource(R.string.privacy_redact_share_chooser)) { success, msg ->
+                    viewModel.shareRedacted(chooserTitle = context.getString(R.string.privacy_redact_share_chooser)) { success, msg ->
                         if (!success) {
                             Toast.makeText(context, context.getString(R.string.privacy_redact_share_failed, msg), Toast.LENGTH_SHORT).show()
                         }

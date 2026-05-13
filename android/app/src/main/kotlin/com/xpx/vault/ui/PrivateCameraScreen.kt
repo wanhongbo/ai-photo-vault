@@ -1400,59 +1400,80 @@ private fun CameraSettingsExposureBlock(
     } else {
         stringResource(R.string.camera_control_exposure_value, if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString())
     }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.camera_settings_row_exposure),
-            color = CameraSettingsSheet.rowTitle,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-        )
-        Spacer(Modifier.height(3.dp))
-        Text(
-            text = valueLabel,
-            color = CameraSettingsSheet.rowValue,
-            fontSize = 13.sp,
-        )
-        Spacer(Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+    // 与闪光/定时行一致：左侧标题+状态，右侧控件；滑条与「曝光」同一行，避免整块换行。
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = 88.dp)
+                .padding(end = 8.dp),
         ) {
             Text(
-                text = if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
+                text = stringResource(R.string.camera_settings_row_exposure),
+                color = CameraSettingsSheet.rowTitle,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = valueLabel,
                 color = CameraSettingsSheet.rowValue,
-                fontSize = 12.sp,
-                modifier = Modifier.widthIn(min = 28.dp),
+                fontSize = 13.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
-            Slider(
-                value = exposureIndex.toFloat(),
-                onValueChange = { onExposureIndexChange(it.roundToInt().coerceIn(exposureRange.first, exposureRange.last)) },
-                valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
-                steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(28.dp),
-                colors = SliderDefaults.colors(
-                    thumbColor = CameraSettingsSheet.accentSlider,
-                    activeTrackColor = CameraSettingsSheet.accentSlider,
-                    inactiveTrackColor = Color(0x33FFFFFF),
-                ),
-            )
-            if (exposureIndex != 0) {
+        }
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Spacer(Modifier.weight(1f))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 Text(
-                    text = stringResource(R.string.camera_control_exposure_auto),
-                    color = CameraSettingsSheet.linkAccent,
+                    text = if (exposureIndex > 0) "+$exposureIndex" else exposureIndex.toString(),
+                    color = CameraSettingsSheet.rowValue,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .widthIn(max = 44.dp)
-                        .clickable { onExposureIndexChange(0) },
+                    modifier = Modifier.widthIn(min = 28.dp),
                 )
-            } else {
-                Spacer(Modifier.width(44.dp))
+                Slider(
+                    value = exposureIndex.toFloat(),
+                    onValueChange = { onExposureIndexChange(it.roundToInt().coerceIn(exposureRange.first, exposureRange.last)) },
+                    valueRange = exposureRange.first.toFloat()..exposureRange.last.toFloat(),
+                    steps = (exposureRange.last - exposureRange.first - 1).coerceAtLeast(0),
+                    modifier = Modifier
+                        .widthIn(min = 132.dp, max = 268.dp)
+                        .height(28.dp),
+                    colors = SliderDefaults.colors(
+                        thumbColor = CameraSettingsSheet.accentSlider,
+                        activeTrackColor = CameraSettingsSheet.accentSlider,
+                        inactiveTrackColor = Color(0x33FFFFFF),
+                    ),
+                )
+                if (exposureIndex != 0) {
+                    Text(
+                        text = stringResource(R.string.camera_control_exposure_auto),
+                        color = CameraSettingsSheet.linkAccent,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .widthIn(max = 44.dp)
+                            .clickable { onExposureIndexChange(0) },
+                    )
+                } else {
+                    Spacer(Modifier.width(44.dp))
+                }
             }
         }
     }

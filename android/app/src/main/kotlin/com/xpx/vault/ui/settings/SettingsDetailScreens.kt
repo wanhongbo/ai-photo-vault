@@ -244,8 +244,6 @@ fun SettingsBackupSyncScreen(
 ) {
     val context = LocalContext.current
     var autoBackupEnabled by remember { mutableStateOf(AutoBackupScheduler.isEnabled(context)) }
-    var autoBackupRequireCharging by remember { mutableStateOf(AutoBackupScheduler.isRequireCharging(context)) }
-    var autoBackupRequireIdle by remember { mutableStateOf(AutoBackupScheduler.isRequireIdle(context)) }
     val backupSwitches = listOf<@Composable () -> Unit>(
         {
             SettingsSwitchRow(
@@ -255,28 +253,6 @@ fun SettingsBackupSyncScreen(
                 onChange = {
                     autoBackupEnabled = it
                     AutoBackupScheduler.setEnabled(context, it)
-                },
-            )
-        },
-        {
-            SettingsSwitchRow(
-                title = stringResource(R.string.settings_item_auto_backup_charging),
-                desc = stringResource(R.string.settings_item_auto_backup_charging_desc),
-                checked = autoBackupRequireCharging,
-                onChange = {
-                    autoBackupRequireCharging = it
-                    AutoBackupScheduler.setRequireCharging(context, it)
-                },
-            )
-        },
-        {
-            SettingsSwitchRow(
-                title = stringResource(R.string.settings_item_auto_backup_idle),
-                desc = stringResource(R.string.settings_item_auto_backup_idle_desc),
-                checked = autoBackupRequireIdle,
-                onChange = {
-                    autoBackupRequireIdle = it
-                    AutoBackupScheduler.setRequireIdle(context, it)
                 },
             )
         },

@@ -14,6 +14,8 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -237,7 +239,17 @@ fun HomeScreen(
         }
 
         if (!hasAlbumPermission) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            val vaultBodyTapSink = remember { MutableInteractionSource() }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clickable(
+                        interactionSource = vaultBodyTapSink,
+                        indication = null,
+                    ) { },
+                contentAlignment = Alignment.Center,
+            ) {
                 HomeAlbumPermissionState(
                     onGrant = { permissionLauncher.launch(requiredAlbumPermissions()) },
                     onOpenSettings = { openAppSettings(context) },
@@ -245,19 +257,29 @@ fun HomeScreen(
                 )
             }
         } else if (!vaultLoaded) {
+            val vaultBodyTapSink = remember { MutableInteractionSource() }
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .clickable(
+                        interactionSource = vaultBodyTapSink,
+                        indication = null,
+                    ) { },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(text = stringResource(R.string.common_loading), color = UiColors.Home.subtitle)
             }
         } else if (isVaultEmpty) {
+            val vaultBodyTapSink = remember { MutableInteractionSource() }
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .clickable(
+                        interactionSource = vaultBodyTapSink,
+                        indication = null,
+                    ) { },
                 contentAlignment = Alignment.Center,
             ) {
                 VaultEmptyState(

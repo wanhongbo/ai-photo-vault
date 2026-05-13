@@ -196,12 +196,8 @@
     <string name="settings_item_biometric_desc">Use fingerprint or face unlock first</string>
     <string name="settings_item_auto_lock">Auto lock</string>
     <string name="settings_item_auto_lock_desc">Lock immediately when app goes background</string>
-    <string name="settings_item_auto_backup">Auto backup (24h)</string>
+    <string name="settings_item_auto_backup">Auto backup</string>
     <string name="settings_item_auto_backup_desc">Enabled by default, backs up changed files only</string>
-    <string name="settings_item_auto_backup_charging">Auto backup only while charging</string>
-    <string name="settings_item_auto_backup_charging_desc">Backups run only when device is charging</string>
-    <string name="settings_item_auto_backup_idle">Auto backup only when device is idle</string>
-    <string name="settings_item_auto_backup_idle_desc">Backups run only when device is idle</string>
     <string name="settings_item_change_pin">Change app lock password</string>
     <string name="settings_item_change_pin_desc">Update your 6-digit app lock password</string>
     <string name="home_pin_banner_message">App lock is not set. Background lock and encrypted backup are unavailable.</string>

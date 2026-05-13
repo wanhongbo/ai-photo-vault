@@ -20,9 +20,9 @@ enum class BackupTriggerReason { PASSWORD_CHANGED, MANUAL_RESTORE_SYNC, USER_MAN
 
 private const val AUTO_BACKUP_PREFS = "auto_backup_prefs"
 private const val KEY_AUTO_BACKUP_ENABLED = "auto_backup_enabled"
-private const val KEY_AUTO_BACKUP_REQUIRE_CHARGING = "auto_backup_require_charging"
-private const val KEY_AUTO_BACKUP_REQUIRE_IDLE = "auto_backup_require_idle"
-private const val AUTO_BACKUP_UNIQUE_WORK = "auto_incremental_backup_work"
+private const val AUTO_BACKUP_UNIQUE_WORK = "auto_incremental_backup_work_v2"
+/** 旧版唯一名（曾含充电/空闲约束）；升级后取消以免沿用旧约束。 */
+private const val LEGACY_AUTO_BACKUP_UNIQUE_WORK = "auto_incremental_backup_work"
 private const val AUTO_BACKUP_ONE_TIME_WORK = "auto_incremental_backup_once"
 private const val AUTO_BACKUP_COLD_START_WORK = "auto_incremental_backup_cold_start"
 private const val TAG = "AutoBackupScheduler"
@@ -56,48 +56,18 @@ object AutoBackupScheduler {
         context.getSharedPreferences(AUTO_BACKUP_PREFS, Context.MODE_PRIVATE)
             .getBoolean(KEY_AUTO_BACKUP_ENABLED, true)
 
-    fun isRequireCharging(context: Context): Boolean =
-        context.getSharedPreferences(AUTO_BACKUP_PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_AUTO_BACKUP_REQUIRE_CHARGING, false)
-
-    fun isRequireIdle(context: Context): Boolean =
-        context.getSharedPreferences(AUTO_BACKUP_PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_AUTO_BACKUP_REQUIRE_IDLE, false)
-
-    fun setRequireCharging(context: Context, requireCharging: Boolean) {
-        context.getSharedPreferences(AUTO_BACKUP_PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(KEY_AUTO_BACKUP_REQUIRE_CHARGING, requireCharging)
-            .apply()
-        // 约束变动需重新排队：先 cancel 再 schedule。
-        cancel(context)
-        ensureScheduled(context)
-    }
-
-    fun setRequireIdle(context: Context, requireIdle: Boolean) {
-        context.getSharedPreferences(AUTO_BACKUP_PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(KEY_AUTO_BACKUP_REQUIRE_IDLE, requireIdle)
-            .apply()
-        cancel(context)
-        ensureScheduled(context)
-    }
-
     private fun schedule(context: Context) {
-        val requireCharging = isRequireCharging(context)
-        val requireIdle = isRequireIdle(context)
+        val wm = WorkManager.getInstance(context)
+        wm.cancelUniqueWork(LEGACY_AUTO_BACKUP_UNIQUE_WORK)
         val request = PeriodicWorkRequestBuilder<AutoIncrementalBackupWorker>(24, TimeUnit.HOURS)
             .setConstraints(
                 Constraints.Builder()
                     .setRequiresBatteryNotLow(true)
-                    .setRequiresCharging(requireCharging)
-                    .setRequiresDeviceIdle(requireIdle)
                     .build(),
             )
             .build()
         // KEEP: 冷启不重置 nextRunTime；仅当不存在时第一次排队。
-        // 若约束改了（requireCharging/requireIdle），由 setRequireCharging/setRequireIdle 显式 cancel+schedule 来刷新。
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        wm.enqueueUniquePeriodicWork(
             AUTO_BACKUP_UNIQUE_WORK,
             ExistingPeriodicWorkPolicy.KEEP,
             request,
@@ -106,6 +76,7 @@ object AutoBackupScheduler {
 
     private fun cancel(context: Context) {
         WorkManager.getInstance(context).cancelUniqueWork(AUTO_BACKUP_UNIQUE_WORK)
+        WorkManager.getInstance(context).cancelUniqueWork(LEGACY_AUTO_BACKUP_UNIQUE_WORK)
     }
 
     /**

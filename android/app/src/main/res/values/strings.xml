@@ -197,12 +197,8 @@
     <string name="settings_item_biometric_desc">优先使用指纹或面容快速解锁</string>
     <string name="settings_item_auto_lock">自动锁定</string>
     <string name="settings_item_auto_lock_desc">切后台后立即锁定</string>
-    <string name="settings_item_auto_backup">自动备份（24 小时）</string>
+    <string name="settings_item_auto_backup">自动备份</string>
     <string name="settings_item_auto_backup_desc">默认开启，仅备份新增或变更文件</string>
-    <string name="settings_item_auto_backup_charging">仅充电时自动备份</string>
-    <string name="settings_item_auto_backup_charging_desc">开启后将在设备充电状态下执行自动备份</string>
-    <string name="settings_item_auto_backup_idle">仅设备空闲时自动备份</string>
-    <string name="settings_item_auto_backup_idle_desc">开启后将在设备空闲时执行自动备份</string>
     <string name="settings_item_change_pin">修改应用锁密码</string>
     <string name="settings_item_change_pin_desc">更新 6 位应用锁解锁密码</string>
     <string name="home_pin_banner_message">尚未设置应用锁，切后台锁定与备份加密将不可用</string>
