@@ -146,10 +146,10 @@ fun BackupRestoreScreen(
 
     PinInputDialog(
         show = state.showPinDialog,
-        title = "输入 AI Vault 密码",
-        subtitle = "请输入创建此备份时使用的 6 位密码。恢复成功后，当前相册将被覆盖为备份内容。",
-        confirmText = "开始恢复",
-        dismissText = "取消",
+        title = stringResource(R.string.backup_restore_pin_title),
+        subtitle = stringResource(R.string.backup_restore_pin_subtitle),
+        confirmText = stringResource(R.string.backup_restore_pin_confirm),
+        dismissText = stringResource(R.string.common_cancel),
         errorMessage = state.pinErrorMessage,
         busy = state.restoring,
         onConfirm = { pin ->
@@ -168,18 +168,18 @@ fun BackupRestoreScreen(
 
     AppDialog(
         show = state.showRestoreSuccess,
-        title = "恢复成功",
-        message = "备份已恢复。后台将立即触发一次自动备份以对齐设备上的备份文件。",
-        confirmText = "好的",
+        title = stringResource(R.string.restore_result_success),
+        message = stringResource(R.string.backup_restore_success_message),
+        confirmText = stringResource(R.string.common_ok),
         onConfirm = { viewModel.consumeRestoreSuccess() },
     )
 
     val backupSuccessContext = LocalContext.current
     AppDialog(
         show = state.showBackupSuccess,
-        title = "备份成功",
-        message = "已成功备份 ${state.backupSuccessAssetCount} 个文件，共 ${Formatter.formatShortFileSize(backupSuccessContext, state.backupSuccessSizeBytes)}。",
-        confirmText = "好的",
+        title = stringResource(R.string.backup_result_success),
+        message = stringResource(R.string.backup_success_message_fmt, state.backupSuccessAssetCount, Formatter.formatShortFileSize(backupSuccessContext, state.backupSuccessSizeBytes)),
+        confirmText = stringResource(R.string.common_ok),
         onConfirm = { viewModel.consumeBackupSuccess() },
     )
 
@@ -265,7 +265,7 @@ fun BackupRestoreScreen(
             // 历史记录
             item {
                 Text(
-                    text = "手动备份历史",
+                    text = stringResource(R.string.backup_manual_history_title),
                     color = UiColors.Home.title,
                     fontSize = UiTextSize.homeSubtitle,
                     fontWeight = FontWeight.SemiBold,
@@ -274,7 +274,7 @@ fun BackupRestoreScreen(
             if (state.manualHistory.isEmpty()) {
                 item {
                     Text(
-                        text = "还没有手动备份记录。点击上方“创建手动备份”即可保存一份带时间戳的快照。",
+                        text = stringResource(R.string.backup_manual_history_empty),
                         color = UiColors.Home.emptyBody,
                         fontSize = UiTextSize.settingsRowDesc,
                     )
@@ -313,7 +313,7 @@ private fun SafAuthorizationCard(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text(
-            text = if (authorized) "备份目录：已授权" else "备份目录：尚未授权",
+            text = if (authorized) stringResource(R.string.backup_dir_authorized) else stringResource(R.string.backup_dir_unauthorized),
             color = if (authorized) UiColors.Home.title else UiColors.Lock.error,
             fontWeight = FontWeight.SemiBold,
         )
@@ -321,14 +321,14 @@ private fun SafAuthorizationCard(
             text = if (authorized) {
                 treeUri ?: "Documents/AIVault"
             } else {
-                "为了让自动备份写入到设备的 Documents/AIVault/ 目录并在重装或还原后恢复，需要授权一个持久目录。"
+                stringResource(R.string.backup_dir_auth_desc)
             },
             color = UiColors.Home.emptyBody,
             fontSize = UiTextSize.settingsRowDesc,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             AppButton(
-                text = if (authorized) "更换目录" else "选择备份目录",
+                text = if (authorized) stringResource(R.string.backup_dir_change) else stringResource(R.string.backup_dir_select),
                 onClick = onPickTree,
                 variant = AppButtonVariant.PRIMARY,
                 modifier = Modifier
@@ -337,7 +337,7 @@ private fun SafAuthorizationCard(
             )
             if (authorized) {
                 AppButton(
-                    text = "解除授权",
+                    text = stringResource(R.string.backup_dir_revoke),
                     onClick = onClearTree,
                     variant = AppButtonVariant.SECONDARY,
                     modifier = Modifier
@@ -365,39 +365,39 @@ private fun AutoBackupStatusCard(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            text = "自动备份状态",
+            text = stringResource(R.string.backup_auto_status),
             color = UiColors.Home.title,
             fontWeight = FontWeight.SemiBold,
         )
         if (lastBackupAtMs == null || lastBackupAtMs <= 0L) {
             Text(
-                text = "暂无自动备份记录。满足运行条件后会在后台生成。",
+                text = stringResource(R.string.backup_auto_no_record),
                 color = UiColors.Home.emptyBody,
                 fontSize = UiTextSize.settingsRowDesc,
             )
         } else {
             Text(
-                text = "最近一次：${formatStamp(lastBackupAtMs)}",
+                text = stringResource(R.string.backup_auto_last_at, formatStamp(lastBackupAtMs)),
                 color = UiColors.Home.emptyTitle,
                 fontSize = UiTextSize.settingsRowDesc,
             )
             if (!fingerprintHex.isNullOrBlank()) {
                 Text(
-                    text = "密钥指纹：${fingerprintHex.take(16)}…",
+                    text = stringResource(R.string.backup_auto_key_fingerprint, fingerprintHex.take(16)),
                     color = UiColors.Home.emptyBody,
                     fontSize = UiTextSize.settingsRowDesc,
                 )
             }
             if (!externalPathHint.isNullOrBlank()) {
                 Text(
-                    text = "外部位置：$externalPathHint",
+                    text = stringResource(R.string.backup_auto_external_path, externalPathHint),
                     color = UiColors.Home.emptyBody,
                     fontSize = UiTextSize.settingsRowDesc,
                 )
             }
         }
         AppButton(
-            text = "立即运行一次",
+            text = stringResource(R.string.backup_run_now),
             onClick = onTriggerNow,
             variant = AppButtonVariant.SECONDARY,
             modifier = Modifier
@@ -428,7 +428,7 @@ private fun ManualHistoryRow(
                 fontWeight = FontWeight.Medium,
             )
             Text(
-                text = "大小：${formatSize(entry.sizeBytes)}" +
+                text = stringResource(R.string.backup_history_size, formatSize(entry.sizeBytes)) +
                     (entry.note?.let { " · $it" } ?: ""),
                 color = UiColors.Home.emptyBody,
                 fontSize = UiTextSize.settingsRowDesc,
@@ -440,7 +440,7 @@ private fun ManualHistoryRow(
             )
         }
         Text(
-            text = "恢复",
+            text = stringResource(R.string.trash_recover),
             color = UiColors.Home.navItemActive,
             fontWeight = FontWeight.SemiBold,
         )
@@ -631,22 +631,22 @@ class BackupRestoreViewModel @Inject constructor(
         viewModelScope.launch {
             val safOk = withContext(Dispatchers.IO) { ExternalBackupLocation.isWritable(context) }
             if (!safOk) {
-                Toast.makeText(context, "请先在上方授权备份目录", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.backup_toast_authorize_first), Toast.LENGTH_SHORT).show()
                 return@launch
             }
             val keyOk = withContext(Dispatchers.IO) { BackupSecretsStore.hasCached(context) }
             if (!keyOk) {
-                Toast.makeText(context, "备份密钥尚未缓存，请先解锁一次应用", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.backup_toast_unlock_first), Toast.LENGTH_SHORT).show()
                 return@launch
             }
             runCatching {
                 AutoBackupScheduler.runOnceNow(context, BackupTriggerReason.USER_MANUAL_BUTTON)
             }.onSuccess {
                 AppLogger.d("BackupUI", "runOnceNow(USER_MANUAL_BUTTON) enqueued")
-                Toast.makeText(context, "已加入后台队列，完成后请刷新页面查看", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.backup_toast_queued), Toast.LENGTH_LONG).show()
             }.onFailure {
                 AppLogger.e("BackupUI", "runOnceNow failed: ${it.message}")
-                Toast.makeText(context, "触发失败：${it.message ?: "未知异常"}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.backup_toast_trigger_failed, it.message ?: context.getString(R.string.common_unknown_error)), Toast.LENGTH_SHORT).show()
             }
         }
     }

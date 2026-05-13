@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.StatFs
 import com.xpx.vault.AppLogger
+import com.xpx.vault.R
 import com.xpx.vault.data.crypto.BackupKeyManager
 import com.xpx.vault.data.crypto.VaultCipher
 import java.io.File
@@ -49,14 +50,14 @@ object LocalBackupMvpService {
     ): BackupExecutionResult = withContext(Dispatchers.IO) {
         if (!mutex.tryLock()) {
             AppLogger.w(TAG, "createBackup rejected: already running")
-            return@withContext BackupExecutionResult.alreadyRunning()
+            return@withContext BackupExecutionResult.alreadyRunning(context)
         }
         try {
             when (trigger) {
                 BackupTrigger.AUTO -> doAutoBackup(context)
                 BackupTrigger.MANUAL -> {
                     val uri = targetUri
-                        ?: return@withContext BackupExecutionResult.failure("手动备份缺少目标位置。")
+                        ?: return@withContext BackupExecutionResult.failure(context.getString(R.string.backup_error_no_target))
                     doManualBackup(context, uri)
                 }
             }
@@ -67,12 +68,12 @@ object LocalBackupMvpService {
 
     private suspend fun doAutoBackup(context: Context): BackupExecutionResult {
         val vaultRoot = File(context.filesDir, VAULT_ROOT_DIR)
-        if (!vaultRoot.exists()) return BackupExecutionResult.failure("保险箱目录不存在，无法创建备份。")
+        if (!vaultRoot.exists()) return BackupExecutionResult.failure(context.getString(R.string.backup_error_no_vault_dir))
         if (!ExternalBackupLocation.isWritable(context)) {
-            return BackupExecutionResult.failure("未授权外部备份目录，无法写入。")
+            return BackupExecutionResult.failure(context.getString(R.string.backup_error_no_saf_dir))
         }
         val backupKey = BackupSecretsStore.loadCached(context)
-            ?: return BackupExecutionResult.failure("备份密钥尚未缓存，请先解锁后再试。")
+            ?: return BackupExecutionResult.failure(context.getString(R.string.backup_error_no_key))
         val keyManager = backupKeyManager(context)
         val fingerprint = keyManager.fingerprint(backupKey)
         val kdfParams = keyManager.getOrCreateKdfParams()
@@ -95,7 +96,7 @@ object LocalBackupMvpService {
         // 空间预估：估算 = 2 × vault 总大小；不足则提前失败。
         val estimatedBytes = assets.sumOf { it.sizeBytes }
         if (!hasEnoughSpace(context, estimatedBytes * 2)) {
-            return BackupExecutionResult.failure("本机磁盘空间不足，无法生成备份临时文件。")
+            return BackupExecutionResult.failure(context.getString(R.string.backup_error_no_space))
         }
 
         val tmpDir = File(context.filesDir, BACKUP_TMP_DIR).apply { mkdirs() }
@@ -145,6 +146,7 @@ object LocalBackupMvpService {
             )
 
             val result = BackupExecutionResult.success(
+                context,
                 backupId = backupId,
                 backupKind = mode,
                 outputPath = "auto:backup.dat",
@@ -161,7 +163,7 @@ object LocalBackupMvpService {
             result
         }.getOrElse {
             AppLogger.e(TAG, "auto backup failed: ${it.javaClass.simpleName} ${it.message}", it)
-            BackupExecutionResult.failure("备份失败：${it.message ?: "未知异常"}")
+            BackupExecutionResult.failure(context.getString(R.string.backup_error_failed_fmt, it.message ?: context.getString(R.string.common_unknown_error)))
         }.also {
             bodyFile.delete()
             writingFile.delete()
@@ -173,23 +175,23 @@ object LocalBackupMvpService {
         targetUri: Uri,
     ): BackupExecutionResult {
         val vaultRoot = File(context.filesDir, VAULT_ROOT_DIR)
-        if (!vaultRoot.exists()) return BackupExecutionResult.failure("保险箱目录不存在，无法创建备份。")
+        if (!vaultRoot.exists()) return BackupExecutionResult.failure(context.getString(R.string.backup_error_no_vault_dir))
         val backupKey = BackupSecretsStore.loadCached(context)
-            ?: return BackupExecutionResult.failure("备份密钥尚未缓存，请先解锁后再试。")
+            ?: return BackupExecutionResult.failure(context.getString(R.string.backup_error_no_key))
         val keyManager = backupKeyManager(context)
         val fingerprint = keyManager.fingerprint(backupKey)
         val kdfParams = keyManager.getOrCreateKdfParams()
 
         val assets = scanVaultAssets(context, vaultRoot)
         if (assets.isEmpty()) {
-            return BackupExecutionResult.failure("保险箱为空，没有可备份的内容。")
+            return BackupExecutionResult.failure(context.getString(R.string.backup_error_vault_empty))
         }
         val now = System.currentTimeMillis()
         val backupId = newBackupId(now)
 
         val estimatedBytes = assets.sumOf { it.sizeBytes }
         if (!hasEnoughSpace(context, estimatedBytes * 2)) {
-            return BackupExecutionResult.failure("本机磁盘空间不足，无法生成备份临时文件。")
+            return BackupExecutionResult.failure(context.getString(R.string.backup_error_no_space))
         }
 
         val tmpDir = File(context.filesDir, BACKUP_TMP_DIR).apply { mkdirs() }
@@ -233,9 +235,9 @@ object LocalBackupMvpService {
             }
             // 读回校验 MD5
             val remoteMd5 = context.contentResolver.openInputStream(targetUri)?.use { streamMd5Hex(it) }
-                ?: error("无法读回目标文件进行校验")
+                ?: error(context.getString(R.string.backup_error_verify_readback))
             if (remoteMd5 != localMd5) {
-                error("目标文件校验不一致，请重试。")
+                error(context.getString(R.string.backup_error_verify_mismatch))
             }
 
             // 追加到 manualHistory
@@ -250,6 +252,7 @@ object LocalBackupMvpService {
             )
 
             val result = BackupExecutionResult.success(
+                context,
                 backupId = backupId,
                 backupKind = BackupKind.FULL,
                 outputPath = targetUri.toString(),
@@ -263,7 +266,7 @@ object LocalBackupMvpService {
             result
         }.getOrElse {
             AppLogger.e(TAG, "manual backup failed: ${it.message}", it)
-            BackupExecutionResult.failure("备份失败：${it.message ?: "未知异常"}")
+            BackupExecutionResult.failure(context.getString(R.string.backup_error_failed_fmt, it.message ?: context.getString(R.string.common_unknown_error)))
         }.also {
             bodyFile.delete()
             writingFile.delete()
@@ -277,12 +280,12 @@ object LocalBackupMvpService {
         pin: CharArray,
     ): RestoreExecutionResult = withContext(Dispatchers.IO) {
         val autoFile = ExternalBackupLocation.findAuto(context)
-            ?: return@withContext RestoreExecutionResult.failure("外部未发现可恢复的自动备份。").also {
+            ?: return@withContext RestoreExecutionResult.failure(context.getString(R.string.restore_error_no_auto_backup)).also {
                 pin.fill(0.toChar())
             }
         val input = runCatching { context.contentResolver.openInputStream(autoFile.uri) }
             .getOrNull()
-            ?: return@withContext RestoreExecutionResult.failure("无法打开外部自动备份文件。").also {
+            ?: return@withContext RestoreExecutionResult.failure(context.getString(R.string.restore_error_cannot_open_auto)).also {
                 pin.fill(0.toChar())
             }
         input.use { stream ->
@@ -297,7 +300,7 @@ object LocalBackupMvpService {
     ): RestoreExecutionResult = withContext(Dispatchers.IO) {
         val input = runCatching { context.contentResolver.openInputStream(fileUri) }
             .getOrNull()
-            ?: return@withContext RestoreExecutionResult.failure("无法读取所选备份文件。").also {
+            ?: return@withContext RestoreExecutionResult.failure(context.getString(R.string.restore_error_cannot_read_file)).also {
                 pin.fill(0.toChar())
             }
         input.use { stream ->
@@ -329,7 +332,7 @@ object LocalBackupMvpService {
             )
             val material = keyManager.deriveKey(pin, params)
             if (material.fingerprintHex != header.keyFingerprintHex) {
-                return RestoreExecutionResult.failure("密码不正确，请重试。")
+                return RestoreExecutionResult.failure(context.getString(R.string.restore_error_wrong_pin))
             }
             backupKey = material.key
         } finally {
@@ -384,7 +387,7 @@ object LocalBackupMvpService {
                 AppLogger.e(TAG, "restore asset failed: ${asset.relativePath} ${it.message}")
             }
         }
-        val result = RestoreExecutionResult.success(restored, skipped, failed, header.backupId)
+        val result = RestoreExecutionResult.success(context, restored, skipped, failed, header.backupId)
         BackupRuntimeState.lastRestoreResult = result
         AppLogger.d(
             TAG,
@@ -645,6 +648,7 @@ data class BackupExecutionResult(
 ) {
     companion object {
         fun success(
+            context: Context,
             backupId: String,
             backupKind: BackupKind,
             outputPath: String,
@@ -654,7 +658,7 @@ data class BackupExecutionResult(
             volumeCount: Int,
         ) = BackupExecutionResult(
             success = true,
-            message = "备份完成",
+            message = context.getString(R.string.backup_result_success_done),
             backupId = backupId,
             backupKind = backupKind,
             outputPath = outputPath,
@@ -666,9 +670,9 @@ data class BackupExecutionResult(
 
         fun failure(message: String) = BackupExecutionResult(success = false, message = message)
 
-        fun alreadyRunning() = BackupExecutionResult(
+        fun alreadyRunning(context: Context) = BackupExecutionResult(
             success = false,
-            message = "已有备份任务在进行中。",
+            message = context.getString(R.string.backup_result_already_running),
             alreadyRunning = true,
         )
     }
@@ -683,9 +687,9 @@ data class RestoreExecutionResult(
     val sourceBackupId: String = "",
 ) {
     companion object {
-        fun success(restored: Int, skipped: Int, failed: Int, sourceBackupId: String) = RestoreExecutionResult(
+        fun success(context: Context, restored: Int, skipped: Int, failed: Int, sourceBackupId: String) = RestoreExecutionResult(
             success = true,
-            message = "恢复完成",
+            message = context.getString(R.string.restore_result_success_done),
             restored = restored,
             skipped = skipped,
             failed = failed,

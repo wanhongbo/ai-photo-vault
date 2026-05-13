@@ -251,7 +251,7 @@ fun HomeScreen(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(text = "加载中...", color = UiColors.Home.subtitle)
+                Text(text = stringResource(R.string.common_loading), color = UiColors.Home.subtitle)
             }
         } else if (isVaultEmpty) {
             Box(

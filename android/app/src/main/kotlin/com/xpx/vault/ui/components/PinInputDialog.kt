@@ -53,8 +53,8 @@ fun PinInputDialog(
     show: Boolean,
     title: String,
     subtitle: String,
-    confirmText: String = "确认",
-    dismissText: String = "取消",
+    confirmText: String,
+    dismissText: String,
     errorMessage: String? = null,
     busy: Boolean = false,
     pinLength: Int = 6,
@@ -164,7 +164,7 @@ fun PinInputDialog(
                             strokeWidth = 2.dp,
                         )
                         Text(
-                            text = "正在处理…",
+                            text = stringResource(R.string.common_processing),
                             color = UiColors.Dialog.body,
                             fontSize = 13.sp,
                             modifier = Modifier.padding(start = 10.dp),

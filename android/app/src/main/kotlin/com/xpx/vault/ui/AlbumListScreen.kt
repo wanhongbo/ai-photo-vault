@@ -130,7 +130,7 @@ fun AlbumListScreen(
         if (!loaded) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                 Text(
-                    text = "加载中...",
+                    text = stringResource(R.string.common_loading),
                     color = UiColors.Home.subtitle,
                 )
             }

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.R
+import androidx.compose.ui.res.stringResource
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiTextSize
@@ -37,7 +38,7 @@ fun CameraHomeScreen(
             .safeDrawingPadding()
             .padding(20.dp),
     ) {
-        Text("相机", color = UiColors.Home.title, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.camera_mode_photo), color = UiColors.Home.title, fontSize = UiTextSize.homeTitle, fontWeight = FontWeight.Bold)
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -47,7 +48,7 @@ fun CameraHomeScreen(
                 .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard)),
             contentAlignment = Alignment.Center,
         ) {
-            Text("相机页空状态", color = UiColors.Home.emptyBody)
+            Text(stringResource(R.string.home_camera_empty_title), color = UiColors.Home.emptyBody)
         }
         if (showBottomNav) {
             HomeBottomNav(tabs = tabs, selectedIndex = selectedTab.ordinal, onSelect = { onOpenTab(tabs[it].tab) })

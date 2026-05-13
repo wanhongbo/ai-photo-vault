@@ -70,9 +70,9 @@ fun BackupProgressScreen(
     val successContext = LocalContext.current
     AppDialog(
         show = state.showBackupSuccess,
-        title = "备份成功",
-        message = "已成功备份 ${state.backupSuccessAssetCount} 个文件，共 ${Formatter.formatShortFileSize(successContext, state.backupSuccessSizeBytes)}。",
-        confirmText = "好的",
+        title = stringResource(R.string.backup_result_success),
+        message = stringResource(R.string.backup_success_message_fmt, state.backupSuccessAssetCount, Formatter.formatShortFileSize(successContext, state.backupSuccessSizeBytes)),
+        confirmText = stringResource(R.string.common_ok),
         onConfirm = { viewModel.consumeBackupSuccess() },
     )
 

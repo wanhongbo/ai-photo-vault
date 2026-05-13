@@ -465,8 +465,8 @@ class MainActivity : FragmentActivity() {
                         }
                         composable(ROUTE_AI_PRIVACY) {
                             AiFeaturePlaceholderScreen(
-                                title = "\u9690\u79c1\u8131\u654f",
-                                description = "Canvas \u5b9e\u65f6\u9a6c\u8d5b\u514b / \u9ad8\u65af\u6a21\u7cca / \u9ed1\u6761\u9884\u89c8\u4e0e\u5bfc\u51fa\uff0c\u4e0d\u6539\u539f\u56fe\u3002",
+                                title = stringResource(R.string.privacy_redact_title),
+                                description = stringResource(R.string.ai_privacy_redact_desc),
                                 onBack = { navController.popBackStack() },
                             )
                         }

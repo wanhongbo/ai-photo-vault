@@ -79,7 +79,7 @@ fun AiSensitiveReviewScreen(
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding(),
     ) {
-        AppTopBar(title = "\u654f\u611f\u5ba1\u6838", onBack = onBack)
+        AppTopBar(title = stringResource(R.string.ai_sensitive_review_title), onBack = onBack)
         SensitiveSummary(
             photoCount = cells.size,
             scanning = state.scanning,
@@ -140,13 +140,13 @@ private fun SensitiveSummary(photoCount: Int, scanning: Boolean, onScan: () -> U
             }
             Column {
                 Text(
-                    text = "\u5f85\u5ba1\u6838 $photoCount \u5f20",
+                    text = stringResource(R.string.ai_sensitive_review_pending_count, photoCount),
                     color = Color(0xFFF0F4FF),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    text = "\u5df2\u547d\u4e2d\u8eab\u4efd\u8bc1/\u94f6\u884c\u5361/\u624b\u673a\u53f7/\u4e8c\u7ef4\u7801/\u4eba\u8138 \u7b49",
+                    text = stringResource(R.string.ai_sensitive_review_hit_desc),
                     color = Color(0xFF8A8A90),
                     fontSize = 12.sp,
                 )
@@ -172,7 +172,7 @@ private fun SensitiveSummary(photoCount: Int, scanning: Boolean, onScan: () -> U
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = if (scanning) "\u6b63\u5728\u626b\u63cf\u2026" else "\u91cd\u65b0\u626b\u63cf",
+                text = if (scanning) stringResource(R.string.ai_sensitive_review_scanning) else stringResource(R.string.ai_action_rescan),
                 color = UiColors.Ai.execBtnText,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -263,14 +263,14 @@ private fun SensitiveEmptyState(scanning: Boolean) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = if (scanning) "\u626b\u63cf\u4e2d\u2026" else "\u6682\u65e0\u5f85\u5ba1\u6838\u9879",
+                text = if (scanning) stringResource(R.string.ai_sensitive_review_empty_scanning) else stringResource(R.string.ai_sensitive_review_empty_none),
                 color = Color(0xFFF0F4FF),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "\u70b9\u51fb\u4e0a\u65b9\u300c\u91cd\u65b0\u626b\u63cf\u300d\uff0cAI \u5c06\u8bc6\u522b\u8eab\u4efd\u8bc1\u3001\u94f6\u884c\u5361\u3001\u4e8c\u7ef4\u7801\u7b49\u654f\u611f\u5185\u5bb9\u3002",
+                text = stringResource(R.string.ai_sensitive_review_scan_hint),
                 color = Color(0xFF8A8A90),
                 fontSize = 13.sp,
             )
@@ -278,12 +278,13 @@ private fun SensitiveEmptyState(scanning: Boolean) {
     }
 }
 
+@Composable
 private fun kindLabel(kind: String): String = when (kind) {
-    "ID_CARD" -> "\u8eab\u4efd\u8bc1"
-    "BANK_CARD" -> "\u94f6\u884c\u5361"
-    "PHONE_NUMBER" -> "\u624b\u673a\u53f7"
-    "QR_CODE" -> "\u4e8c\u7ef4\u7801"
-    "FACE_CLEAR" -> "\u4eba\u8138"
-    "PRIVATE_CHAT" -> "\u804a\u5929"
+    "ID_CARD" -> stringResource(R.string.ai_sensitive_kind_id_card)
+    "BANK_CARD" -> stringResource(R.string.ai_sensitive_kind_bank_card)
+    "PHONE_NUMBER" -> stringResource(R.string.ai_sensitive_kind_phone)
+    "QR_CODE" -> stringResource(R.string.ai_sensitive_kind_qr_code)
+    "FACE_CLEAR" -> stringResource(R.string.ai_sensitive_kind_face)
+    "PRIVATE_CHAT" -> stringResource(R.string.ai_sensitive_kind_chat)
     else -> kind
 }

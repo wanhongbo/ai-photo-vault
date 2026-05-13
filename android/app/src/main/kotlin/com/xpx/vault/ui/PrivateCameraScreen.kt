@@ -234,7 +234,7 @@ fun PrivateCameraScreen(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
         hasCameraPermission = granted
-        if (!granted) message = "未授予相机权限，无法拍照"
+        if (!granted) message = context.getString(R.string.camera_permission_denied)
     }
 
     LaunchedEffect(Unit) {
@@ -274,7 +274,7 @@ fun PrivateCameraScreen(
         val stateObserver = Observer<androidx.camera.core.CameraState> { cameraState ->
             val error = cameraState.error ?: return@Observer
             bindRetryCount += 1
-            message = "相机暂时不可用，正在自动恢复..."
+            message = context.getString(R.string.camera_unavailable_recovering)
             Log.w(
                 CAMERA_DIAG_TAG,
                 "event=bind_camera_error code=${error.code} retry=$bindRetryCount",
@@ -331,12 +331,12 @@ fun PrivateCameraScreen(
             },
             onFallbackLens = { fallbackLens ->
                 lensFacing = fallbackLens
-                message = "当前镜头不可用，已切换到可用镜头"
+                message = context.getString(R.string.camera_lens_switched)
                 Log.w(CAMERA_DIAG_TAG, "event=bind_lens_fallback to=$fallbackLens")
             },
             onBindFailed = { throwable ->
                 bindRetryCount += 1
-                message = "相机启动失败，正在尝试恢复..."
+                message = context.getString(R.string.camera_start_failed)
                 Log.e(CAMERA_DIAG_TAG, "event=bind_failed retry=$bindRetryCount", throwable)
                 if (bindRetryCount <= 3) rebindTick += 1
             },
@@ -412,7 +412,7 @@ fun PrivateCameraScreen(
             }
         } else {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("等待相机权限授权…", color = UiColors.Home.subtitle, fontSize = UiTextSize.homeEmptyBody)
+                Text(stringResource(R.string.camera_permission_waiting), color = UiColors.Home.subtitle, fontSize = UiTextSize.homeEmptyBody)
             }
         }
 
@@ -519,18 +519,18 @@ fun PrivateCameraScreen(
                                                     val vaultPath = VaultStore.finalizeCameraCapture(context, outputFile)
                                                     if (vaultPath != null) {
                                                         lastMediaPath = vaultPath
-                                                        message = "视频已保存到保险箱"
+                                                        message = context.getString(R.string.camera_video_saved)
                                                         Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
                                                         // 录像入库后触发一次增量 AI 扫描（视频当前仅用于 Cleanup/停止笖选，对分类影响小）。
                                                         com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
                                                     } else {
-                                                        message = "视频入库失败，请重试"
+                                                        message = context.getString(R.string.camera_video_import_failed)
                                                         Log.e(CAMERA_DIAG_TAG, "event=video_finalize_failed")
                                                     }
                                                 }
                                             } else {
                                                 outputFile.delete()
-                                                message = "录像失败，请重试"
+                                                message = context.getString(R.string.camera_record_failed)
                                                 Log.e(CAMERA_DIAG_TAG, "event=video_record_failed code=${event.error}")
                                             }
                                         }
@@ -566,18 +566,18 @@ fun PrivateCameraScreen(
                                 val vaultPath = savePendingToVault(context, result.path)
                                 if (vaultPath != null) {
                                     lastMediaPath = vaultPath
-                                    message = "已保存到保险箱"
+                                    message = context.getString(R.string.camera_photo_saved)
                                     // 拍照入库后触发一次增量 AI 扫描。
                                     com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
                                 } else {
-                                    message = "保存失败（存储错误），请重试"
+                                    message = context.getString(R.string.camera_save_failed_storage)
                                 }
                                 Log.i(CAMERA_DIAG_TAG, "event=capture_success elapsed_ms=$elapsed success=$captureSuccessCount fail=$captureFailureCount peak_mem_mb=$peakMemoryMb")
                             } else {
                                 captureFailureCount += 1
                                 val failRate = (captureFailureCount * 100f / captureAttempts).roundToInt()
                                 val code = result.errorCode ?: CaptureErrorCode.UNKNOWN
-                                message = captureErrorMessage(code)
+                                message = captureErrorMessage(context, code)
                                 Log.e(CAMERA_DIAG_TAG, "event=capture_failed code=$code elapsed_ms=$elapsed fail_rate_pct=$failRate success=$captureSuccessCount fail=$captureFailureCount")
                             }
                         }
@@ -999,14 +999,14 @@ private fun PendingCapturePreview(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             AppButton(
-                text = "重拍",
+                text = stringResource(R.string.camera_retake),
                 onClick = onRetake,
                 variant = AppButtonVariant.SECONDARY,
                 enabled = !saving,
                 modifier = Modifier.weight(1f),
             )
             AppButton(
-                text = if (saving) "保存中…" else "保存到保险箱",
+                text = if (saving) stringResource(R.string.camera_saving) else stringResource(R.string.camera_save_to_vault),
                 onClick = onSave,
                 enabled = !saving,
                 modifier = Modifier.weight(1f),
@@ -1027,12 +1027,12 @@ private fun formatRecordingDuration(durationMs: Long): String {
     return String.format("%02d:%02d", minutes, seconds)
 }
 
-private fun captureErrorMessage(code: CaptureErrorCode): String = when (code) {
-    CaptureErrorCode.PERMISSION -> "缺少相机权限，请重新授权"
-    CaptureErrorCode.HARDWARE -> "拍照失败（相机忙或被占用），请重试"
-    CaptureErrorCode.IO -> "拍照失败（存储异常），请重试"
-    CaptureErrorCode.TIMEOUT -> "拍照超时，请检查设备状态后重试"
-    CaptureErrorCode.UNKNOWN -> "拍照失败，请稍后重试"
+private fun captureErrorMessage(context: Context, code: CaptureErrorCode): String = when (code) {
+    CaptureErrorCode.PERMISSION -> context.getString(R.string.camera_error_permission)
+    CaptureErrorCode.HARDWARE -> context.getString(R.string.camera_error_hardware)
+    CaptureErrorCode.IO -> context.getString(R.string.camera_error_io)
+    CaptureErrorCode.TIMEOUT -> context.getString(R.string.camera_error_timeout)
+    CaptureErrorCode.UNKNOWN -> context.getString(R.string.camera_error_unknown)
 }
 
 private fun updatePeakMemoryMb(currentPeakMb: Long): Long = maxOf(currentPeakMb, currentMemoryUsageMb())

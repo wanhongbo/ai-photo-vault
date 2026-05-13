@@ -459,8 +459,8 @@ private fun PaywallFeatureList() {
 private fun PaywallComparisonTable() {
     val comparisons = listOf(
         Triple(stringResource(R.string.paywall_compare_storage), "50", "∞"),
-        Triple(stringResource(R.string.paywall_compare_ai), "10/月", "∞"),
-        Triple(stringResource(R.string.paywall_compare_backup), "1次", "∞"),
+        Triple(stringResource(R.string.paywall_compare_ai), stringResource(R.string.paywall_compare_ai_free), "∞"),
+        Triple(stringResource(R.string.paywall_compare_backup), stringResource(R.string.paywall_compare_backup_free), "∞"),
         Triple(stringResource(R.string.paywall_compare_watermark), "✗", "✓"),
     )
     Column(
@@ -476,7 +476,7 @@ private fun PaywallComparisonTable() {
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = "Free",
+                text = stringResource(R.string.paywall_plan_free),
                 color = UiColors.Paywall.tierMeta,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
@@ -484,7 +484,7 @@ private fun PaywallComparisonTable() {
                 modifier = Modifier.width(56.dp),
             )
             Text(
-                text = "Pro",
+                text = stringResource(R.string.paywall_hero_title),
                 color = UiColors.Paywall.priceSelected,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,

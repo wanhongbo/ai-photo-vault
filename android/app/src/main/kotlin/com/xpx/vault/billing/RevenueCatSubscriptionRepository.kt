@@ -1,5 +1,6 @@
 package com.xpx.vault.billing
 
+import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Package
@@ -11,6 +12,7 @@ import com.revenuecat.purchases.interfaces.PurchaseCallback
 import com.revenuecat.purchases.interfaces.ReceiveCustomerInfoCallback
 import com.revenuecat.purchases.interfaces.UpdatedCustomerInfoListener
 import com.revenuecat.purchases.models.StoreTransaction
+import com.xpx.vault.R
 import com.xpx.vault.domain.billing.PaywallOfferingsState
 import com.xpx.vault.domain.billing.PaywallPackageOffer
 import com.xpx.vault.domain.billing.PaywallPlanKind
@@ -27,7 +29,9 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Singleton
-class RevenueCatSubscriptionRepository @Inject constructor() : SubscriptionRepository {
+class RevenueCatSubscriptionRepository @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
+) : SubscriptionRepository {
 
     companion object {
         /** 与 UI 层 [stringResource] 映射，表示未配置 RevenueCat Key。 */
@@ -218,10 +222,10 @@ class RevenueCatSubscriptionRepository @Inject constructor() : SubscriptionRepos
             ?.billingPeriod
             ?.let { period ->
                 when (period.unit) {
-                    com.revenuecat.purchases.models.Period.Unit.YEAR -> "${period.value} 年免费试用"
-                    com.revenuecat.purchases.models.Period.Unit.MONTH -> "${period.value} 个月免费试用"
-                    com.revenuecat.purchases.models.Period.Unit.WEEK -> "${period.value} 周免费试用"
-                    com.revenuecat.purchases.models.Period.Unit.DAY -> "${period.value} 天免费试用"
+                    com.revenuecat.purchases.models.Period.Unit.YEAR -> context.getString(R.string.paywall_trial_year, period.value)
+                    com.revenuecat.purchases.models.Period.Unit.MONTH -> context.getString(R.string.paywall_trial_month, period.value)
+                    com.revenuecat.purchases.models.Period.Unit.WEEK -> context.getString(R.string.paywall_trial_week, period.value)
+                    com.revenuecat.purchases.models.Period.Unit.DAY -> context.getString(R.string.paywall_trial_day, period.value)
                     com.revenuecat.purchases.models.Period.Unit.UNKNOWN -> null
                 }
             }

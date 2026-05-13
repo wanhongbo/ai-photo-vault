@@ -75,7 +75,7 @@ fun AiCleanupScreen(
     // 清理完成后弹 Toast
     LaunchedEffect(state.lastCleanedCount) {
         if (state.lastCleanedCount >= 0) {
-            Toast.makeText(context, "已清理 ${state.lastCleanedCount} 张冗余照片", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.ai_cleanup_toast_cleaned, state.lastCleanedCount), Toast.LENGTH_SHORT).show()
             viewModel.consumeCleanedCount()
         }
     }
@@ -86,7 +86,7 @@ fun AiCleanupScreen(
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding(),
     ) {
-        AppTopBar(title = "垃圾清理", onBack = onBack)
+        AppTopBar(title = stringResource(R.string.ai_cleanup_title), onBack = onBack)
 
         CleanupSummary(
             state = state,
@@ -117,10 +117,10 @@ fun AiCleanupScreen(
     // 确认弹窗
     AppDialog(
         show = showConfirmDialog,
-        title = "一键清理",
-        message = "将把 ${state.redundantCount} 张冗余照片（模糊 + 重复组的非最清晰照片）移入垃圾桶，30 天后自动彻底删除。",
-        confirmText = "确认清理",
-        dismissText = "取消",
+        title = stringResource(R.string.ai_action_cleanup),
+        message = stringResource(R.string.ai_cleanup_confirm_message, state.redundantCount),
+        confirmText = stringResource(R.string.ai_cleanup_confirm_clean),
+        dismissText = stringResource(R.string.common_cancel),
         onConfirm = {
             showConfirmDialog = false
             viewModel.cleanupRedundant()
@@ -130,10 +130,10 @@ fun AiCleanupScreen(
     )
 }
 
-private enum class CleanupTab(val labelZh: String) {
-    ALL("\u5168\u90e8"),
-    BLURRY("\u6a21\u7cca"),
-    DUPLICATE("\u91cd\u590d"),
+private enum class CleanupTab(@StringRes val labelRes: Int) {
+    ALL(R.string.bulk_export_filter_all),
+    BLURRY(R.string.ai_cleanup_tab_blurry),
+    DUPLICATE(R.string.ai_cleanup_tab_duplicate),
 }
 
 @Composable
@@ -164,13 +164,13 @@ private fun CleanupSummary(state: AiCleanupUiState, onScan: () -> Unit, onCleanu
             }
             Column {
                 Text(
-                    text = "检测到 ${state.totalCount} 张可清理照片",
+                    text = stringResource(R.string.ai_cleanup_detected_count, state.totalCount),
                     color = Color(0xFFF0F4FF),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    text = "模糊 ${state.blurry.size}  ·  重复 ${state.duplicates.size}",
+                    text = stringResource(R.string.ai_cleanup_blurry_dup_count, state.blurry.size, state.duplicates.size),
                     color = Color(0xFF8A8A90),
                     fontSize = 12.sp,
                 )
@@ -205,7 +205,7 @@ private fun CleanupSummary(state: AiCleanupUiState, onScan: () -> Unit, onCleanu
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = if (state.scanning) "正在扫描…" else "立即扫描",
+                    text = if (state.scanning) stringResource(R.string.ai_cleanup_scanning) else stringResource(R.string.ai_cleanup_scan_now),
                     color = UiColors.Ai.execBtnText,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -237,7 +237,7 @@ private fun CleanupSummary(state: AiCleanupUiState, onScan: () -> Unit, onCleanu
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "清理 ${state.redundantCount} 张",
+                        text = stringResource(R.string.ai_cleanup_action_clean, state.redundantCount),
                         color = Color.White,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -291,7 +291,7 @@ private fun CleanupTabRow(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "${tab.labelZh} ${countFor(tab)}",
+                    text = "${stringResource(tab.labelRes)} ${countFor(tab)}",
                     color = fg,
                     fontSize = 13.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
@@ -309,14 +309,14 @@ private fun EmptyState() {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "\u5c1a\u672a\u626b\u63cf",
+                text = stringResource(R.string.ai_cleanup_not_scanned),
                 color = Color(0xFFF0F4FF),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "\u70b9\u51fb\u4e0a\u65b9\u300c\u7acb\u5373\u626b\u63cf\u300d\uff0cAI \u5c06\u5206\u6790\u4f60\u7684\u4fdd\u9669\u7bb1\u7167\u7247\uff0c\u627e\u51fa\u53ef\u6e05\u7406\u7684\u6a21\u7cca\u548c\u91cd\u590d\u9879\u3002",
+                text = stringResource(R.string.ai_cleanup_scan_hint),
                 color = Color(0xFF8A8A90),
                 fontSize = 13.sp,
             )
@@ -443,9 +443,9 @@ private fun CleanupGridCell(
         }
         // 左上角征标：模糊 / 重复 / 模糊+重复
         val badgeText = when {
-            cell.isBlurry && cell.isDuplicate -> "模糊·重复"
-            cell.isBlurry -> "模糊"
-            cell.isDuplicate -> "重复"
+            cell.isBlurry && cell.isDuplicate -> stringResource(R.string.ai_cleanup_badge_blur_dup)
+            cell.isBlurry -> stringResource(R.string.ai_cleanup_badge_blur)
+            cell.isDuplicate -> stringResource(R.string.ai_cleanup_badge_dup)
             else -> null
         }
         val badgeColor = when {
@@ -481,9 +481,9 @@ private fun TabEmptyState(tab: CleanupTab) {
         contentAlignment = Alignment.Center,
     ) {
         val desc = when (tab) {
-            CleanupTab.ALL -> "暂无可清理照片"
-            CleanupTab.BLURRY -> "未发现模糊照片"
-            CleanupTab.DUPLICATE -> "未发现重复照片"
+            CleanupTab.ALL -> stringResource(R.string.ai_cleanup_empty)
+            CleanupTab.BLURRY -> stringResource(R.string.ai_cleanup_empty_blurry)
+            CleanupTab.DUPLICATE -> stringResource(R.string.ai_cleanup_empty_duplicate)
         }
         Text(text = desc, color = Color(0xFFB0B0B8), fontSize = 14.sp)
     }

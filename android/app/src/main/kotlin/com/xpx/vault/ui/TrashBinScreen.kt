@@ -91,7 +91,7 @@ fun TrashBinScreen(
         )
         if (!loaded) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "加载中...", color = UiColors.Home.subtitle)
+                Text(text = stringResource(R.string.common_loading), color = UiColors.Home.subtitle)
             }
         } else if (items.isEmpty()) {
             Box(

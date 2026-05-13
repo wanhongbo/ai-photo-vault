@@ -67,7 +67,7 @@ fun AiClassifyScreen(
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding(),
     ) {
-        AppTopBar(title = "智能分类", onBack = onBack)
+        AppTopBar(title = stringResource(R.string.ai_classify_title), onBack = onBack)
         ClassifySummary(scanning = state.scanning, onScan = viewModel::startScan)
 
         if (state.categoryCounts.isEmpty() && !state.scanning) {
@@ -131,13 +131,13 @@ private fun ClassifySummary(scanning: Boolean, onScan: () -> Unit) {
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "\u6309\u5185\u5bb9\u7c7b\u522b\u6d4f\u89c8",
+                text = stringResource(R.string.ai_classify_browse_by_category),
                 color = Color(0xFFF0F4FF),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "AI \u4e3a\u4f60\u7684\u4fdd\u9669\u7bb1\u7167\u7247\u81ea\u52a8\u6253\u6807",
+                text = stringResource(R.string.ai_classify_auto_tag_desc),
                 color = Color(0xFF8A8A90),
                 fontSize = 12.sp,
             )
@@ -161,7 +161,7 @@ private fun ClassifySummary(scanning: Boolean, onScan: () -> Unit) {
             )
             Spacer(Modifier.width(4.dp))
             Text(
-                text = if (scanning) "\u626b\u63cf\u4e2d" else "\u626b\u63cf",
+                text = if (scanning) stringResource(R.string.ai_classify_scanning) else stringResource(R.string.ai_classify_scan),
                 color = UiColors.Ai.execBtnText,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -195,7 +195,7 @@ private fun ClassifyCategorySection(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "查看更多",
+                text = stringResource(R.string.ai_classify_view_more),
                 color = UiColors.Home.navItemActive,
                 fontSize = 14.sp,
                 modifier = Modifier.throttledClickable(onClick = onViewMore),
@@ -379,14 +379,14 @@ private fun ClassifyEmptyState(scanning: Boolean) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = if (scanning) "\u626b\u63cf\u4e2d\u2026" else "\u8be5\u5206\u7c7b\u6682\u65e0\u6570\u636e",
+                text = if (scanning) stringResource(R.string.ai_classify_empty_scanning) else stringResource(R.string.ai_classify_empty_no_data),
                 color = Color(0xFFF0F4FF),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "\u70b9\u51fb\u4e0a\u65b9\u300c\u626b\u63cf\u300d\u6309\u94ae\uff0cAI \u5c06\u4e3a\u4f60\u7684\u7167\u7247\u81ea\u52a8\u6253\u6807\u5206\u7c7b\u3002",
+                text = stringResource(R.string.ai_classify_scan_hint),
                 color = Color(0xFF8A8A90),
                 fontSize = 13.sp,
             )
@@ -394,14 +394,15 @@ private fun ClassifyEmptyState(scanning: Boolean) {
     }
 }
 
+@Composable
 private fun labelFor(category: ClassifyCategory): String = when (category) {
-    ClassifyCategory.SCREENSHOT -> "截图"
-    ClassifyCategory.ID_CARD -> "证件"
-    ClassifyCategory.PORTRAIT -> "人像"
-    ClassifyCategory.LANDSCAPE -> "风景"
-    ClassifyCategory.FOOD -> "美食"
-    ClassifyCategory.DOCUMENT -> "文档"
-    ClassifyCategory.OTHER -> "其他"
+    ClassifyCategory.SCREENSHOT -> stringResource(R.string.ai_classify_screenshot)
+    ClassifyCategory.ID_CARD -> stringResource(R.string.ai_classify_id_card)
+    ClassifyCategory.PORTRAIT -> stringResource(R.string.ai_classify_portrait)
+    ClassifyCategory.LANDSCAPE -> stringResource(R.string.ai_classify_scenery)
+    ClassifyCategory.FOOD -> stringResource(R.string.ai_classify_food)
+    ClassifyCategory.DOCUMENT -> stringResource(R.string.ai_classify_document)
+    ClassifyCategory.OTHER -> stringResource(R.string.ai_classify_other)
 }
 
 @DrawableRes

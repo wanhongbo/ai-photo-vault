@@ -475,4 +475,184 @@
     <string name="export_cancel_confirm">Cancel export</string>
     <string name="export_cancel_continue">Continue</string>
     <string name="export_fail_insufficient_space">Insufficient storage space</string>
+
+    <!-- ========== Common ========== -->
+    <string name="common_loading">Loading…</string>
+    <string name="common_processing">Processing…</string>
+    <string name="common_ok">OK</string>
+    <string name="common_unknown_error">Unknown error</string>
+    <string name="common_coming_soon">Coming soon</string>
+
+    <!-- ========== Camera ========== -->
+    <string name="camera_permission_denied">Camera permission denied</string>
+    <string name="camera_unavailable_recovering">Camera unavailable, recovering…</string>
+    <string name="camera_lens_switched">Current lens unavailable, switched to available lens</string>
+    <string name="camera_start_failed">Camera start failed, retrying…</string>
+    <string name="camera_video_saved">Video saved to vault</string>
+    <string name="camera_video_import_failed">Video import failed, please retry</string>
+    <string name="camera_record_failed">Recording failed, please retry</string>
+    <string name="camera_photo_saved">Saved to vault</string>
+    <string name="camera_save_failed_storage">Save failed (storage error), please retry</string>
+    <string name="camera_retake">Retake</string>
+    <string name="camera_permission_waiting">Waiting for camera permission…</string>
+    <string name="camera_saving">Saving…</string>
+    <string name="camera_save_to_vault">Save to vault</string>
+    <string name="camera_error_permission">Camera permission missing, please grant</string>
+    <string name="camera_error_hardware">Capture failed (camera busy), please retry</string>
+    <string name="camera_error_io">Capture failed (storage error), please retry</string>
+    <string name="camera_error_timeout">Capture timeout, please check device status</string>
+    <string name="camera_error_unknown">Capture failed, please retry later</string>
+
+    <!-- ========== Privacy Redact ========== -->
+    <string name="privacy_redact_title">Privacy Redact</string>
+    <string name="privacy_redact_decrypting">Decrypting original image and detecting sensitive areas…</string>
+    <string name="privacy_redact_open_failed">Open failed: %1$s</string>
+    <string name="privacy_redact_saving">Saving…</string>
+    <string name="privacy_redact_save_to_album">Save to secure album</string>
+    <string name="privacy_redact_saved">Saved to secure album</string>
+    <string name="privacy_redact_save_failed">Save failed: %1$s</string>
+    <string name="privacy_redact_exporting">Exporting…</string>
+    <string name="privacy_redact_export_system">Export to system gallery</string>
+    <string name="privacy_redact_exported">Exported to Redacted folder: %1$s</string>
+    <string name="privacy_redact_export_failed">Export failed: %1$s</string>
+    <string name="privacy_redact_sharing">Sharing…</string>
+    <string name="privacy_redact_share_chooser">Share redacted image</string>
+    <string name="privacy_redact_share_failed">Share failed: %1$s</string>
+    <string name="privacy_redact_detecting">Detecting…</string>
+    <string name="privacy_redact_play_unavailable">Play services unavailable, manual selection allowed</string>
+    <string name="privacy_redact_no_sensitive">No sensitive areas detected, manual selection allowed</string>
+    <string name="privacy_redact_regions_found">%1$d sensitive areas detected</string>
+    <string name="privacy_redact_manual_regions">%1$d areas marked manually</string>
+    <string name="privacy_redact_auto_manual">Auto %1$d · Manual %2$d</string>
+    <string name="privacy_redact_done">Done</string>
+    <string name="privacy_redact_manual_add">+ Manual</string>
+    <string name="privacy_redact_added_count">Added %1$d</string>
+    <string name="privacy_redact_undo">Undo</string>
+    <string name="privacy_redact_clear">Clear</string>
+    <string name="privacy_redact_style_mosaic">Mosaic</string>
+    <string name="privacy_redact_style_blur">Gaussian Blur</string>
+    <string name="privacy_redact_style_bar">Black Bar</string>
+    <string name="privacy_redact_style_white_bar">White Bar</string>
+    <string name="privacy_redact_style_oval_blur">Oval Blur</string>
+    <string name="privacy_redact_preview_cd">Redacted preview</string>
+    <string name="privacy_redact_drag_hint">Drag to frame sensitive areas</string>
+
+    <!-- ========== AI Cleanup ========== -->
+    <string name="ai_cleanup_title">Cleanup</string>
+    <string name="ai_cleanup_toast_cleaned">Cleaned %1$d redundant photos</string>
+    <string name="ai_cleanup_confirm_message">%1$d redundant photos (blurry + non-best duplicates) will be moved to trash and permanently deleted after 30 days.</string>
+    <string name="ai_cleanup_confirm_clean">Confirm cleanup</string>
+    <string name="ai_cleanup_tab_blurry">Blurry</string>
+    <string name="ai_cleanup_tab_duplicate">Duplicate</string>
+    <string name="ai_cleanup_detected_count">%1$d cleanable photos detected</string>
+    <string name="ai_cleanup_blurry_dup_count">Blurry %1$d  ·  Duplicate %2$d</string>
+    <string name="ai_cleanup_scanning">Scanning…</string>
+    <string name="ai_cleanup_scan_now">Scan now</string>
+    <string name="ai_cleanup_action_clean">Clean %1$d photos</string>
+    <string name="ai_cleanup_not_scanned">Not scanned yet</string>
+    <string name="ai_cleanup_scan_hint">Tap "Scan now" above to let AI analyze your vault and find blurry and duplicate items.</string>
+    <string name="ai_cleanup_badge_blur_dup">Blurry·Duplicate</string>
+    <string name="ai_cleanup_badge_blur">Blurry</string>
+    <string name="ai_cleanup_badge_dup">Duplicate</string>
+    <string name="ai_cleanup_empty">No cleanable photos</string>
+    <string name="ai_cleanup_empty_blurry">No blurry photos found</string>
+    <string name="ai_cleanup_empty_duplicate">No duplicate photos found</string>
+
+    <!-- ========== AI Classify ========== -->
+    <string name="ai_classify_title">Smart Classify</string>
+    <string name="ai_classify_browse_by_category">Browse by category</string>
+    <string name="ai_classify_auto_tag_desc">AI auto-tags your vault photos</string>
+    <string name="ai_classify_scanning">Scanning</string>
+    <string name="ai_classify_scan">Scan</string>
+    <string name="ai_classify_view_more">View more</string>
+    <string name="ai_classify_empty_scanning">Scanning…</string>
+    <string name="ai_classify_empty_no_data">No data in this category</string>
+    <string name="ai_classify_scan_hint">Tap the "Scan" button above to let AI auto-tag and classify your photos.</string>
+    <string name="ai_classify_screenshot">Screenshot</string>
+    <string name="ai_classify_id_card">ID</string>
+    <string name="ai_classify_portrait">Portrait</string>
+    <string name="ai_classify_scenery">Scenery</string>
+    <string name="ai_classify_food">Food</string>
+    <string name="ai_classify_document">Document</string>
+    <string name="ai_classify_other">Other</string>
+
+    <!-- ========== AI Sensitive Review ========== -->
+    <string name="ai_sensitive_review_title">Sensitive Review</string>
+    <string name="ai_sensitive_review_pending_count">%1$d pending review</string>
+    <string name="ai_sensitive_review_hit_desc">Matched ID/bank card/phone/QR code/face etc.</string>
+    <string name="ai_sensitive_review_scanning">Scanning…</string>
+    <string name="ai_sensitive_review_empty_scanning">Scanning…</string>
+    <string name="ai_sensitive_review_empty_none">No pending items</string>
+    <string name="ai_sensitive_review_scan_hint">Tap "Rescan" above to let AI identify ID cards, bank cards, QR codes and other sensitive content.</string>
+    <string name="ai_sensitive_kind_id_card">ID Card</string>
+    <string name="ai_sensitive_kind_bank_card">Bank Card</string>
+    <string name="ai_sensitive_kind_phone">Phone</string>
+    <string name="ai_sensitive_kind_qr_code">QR Code</string>
+    <string name="ai_sensitive_kind_face">Face</string>
+    <string name="ai_sensitive_kind_chat">Chat</string>
+
+    <!-- ========== Backup & Restore ========== -->
+    <string name="backup_restore_pin_title">Enter AI Vault password</string>
+    <string name="backup_restore_pin_subtitle">Enter the 6-digit password used when creating this backup. After restore, current vault will be overwritten.</string>
+    <string name="backup_restore_pin_confirm">Start restore</string>
+    <string name="backup_restore_success_message">Backup restored. An auto-backup will be triggered in background to align backup files.</string>
+    <string name="backup_success_message_fmt">Successfully backed up %1$d files, total %2$s.</string>
+    <string name="backup_manual_history_title">Manual backup history</string>
+    <string name="backup_manual_history_empty">No manual backups yet. Tap "Create manual backup" above to save a timestamped snapshot.</string>
+    <string name="backup_dir_authorized">Backup directory: authorized</string>
+    <string name="backup_dir_unauthorized">Backup directory: not authorized</string>
+    <string name="backup_dir_auth_desc">To allow auto-backup to write to Documents/AIVault/ and survive reinstallation, please authorize a persistent directory.</string>
+    <string name="backup_dir_change">Change directory</string>
+    <string name="backup_dir_select">Select backup directory</string>
+    <string name="backup_dir_revoke">Revoke authorization</string>
+    <string name="backup_auto_status">Auto backup status</string>
+    <string name="backup_auto_no_record">No auto-backup yet. Will run in background when conditions are met.</string>
+    <string name="backup_auto_last_at">Last: %1$s</string>
+    <string name="backup_auto_key_fingerprint">Key fingerprint: %1$s…</string>
+    <string name="backup_auto_external_path">External path: %1$s</string>
+    <string name="backup_run_now">Run now</string>
+    <string name="backup_history_size">Size: %1$s</string>
+    <string name="backup_toast_authorize_first">Please authorize a backup directory first</string>
+    <string name="backup_toast_unlock_first">Backup key not cached, please unlock the app first</string>
+    <string name="backup_toast_queued">Queued in background. Refresh this page later to check status.</string>
+    <string name="backup_toast_trigger_failed">Trigger failed: %1$s</string>
+    <string name="backup_result_success_done">Backup complete</string>
+    <string name="backup_result_already_running">A backup task is already running.</string>
+    <string name="restore_result_success_done">Restore complete</string>
+
+    <!-- ========== RevenueCat / Paywall ========== -->
+    <string name="paywall_trial_year">%1$s-year free trial</string>
+    <string name="paywall_trial_month">%1$s-month free trial</string>
+    <string name="paywall_trial_week">%1$s-week free trial</string>
+    <string name="paywall_trial_day">%1$s-day free trial</string>
+    <string name="paywall_plan_free">Free</string>
+
+    <!-- ========== MainActivity AI Placeholder ========== -->
+    <string name="ai_privacy_redact_desc">Canvas real-time mosaic / Gaussian blur / black-bar preview and export without altering the original.</string>
+
+    <!-- ========== PIN Error Messages ========== -->
+    <string name="pin_error_input_6_digit">Please enter a 6-digit PIN</string>
+    <string name="pin_error_old_verify_failed">Old PIN verification failed, please retry.</string>
+    <string name="pin_error_new_same_as_old">New PIN must be different from old PIN.</string>
+    <string name="pin_error_new_mismatch">New PINs do not match, please re-enter.</string>
+    <string name="pin_error_change_failed">PIN change failed, please try again later.</string>
+    <string name="pin_error_setup_failed">PIN setup failed, please try again later.</string>
+
+    <!-- ========== Backup Error Messages ========== -->
+    <string name="backup_error_no_target">Manual backup requires a target location.</string>
+    <string name="backup_error_no_vault_dir">Vault directory does not exist, cannot create backup.</string>
+    <string name="backup_error_no_saf_dir">External backup directory not authorized, cannot write.</string>
+    <string name="backup_error_no_key">Backup key not cached, please unlock first.</string>
+    <string name="backup_error_no_space">Insufficient disk space to create backup temp file.</string>
+    <string name="backup_error_vault_empty">Vault is empty, nothing to backup.</string>
+    <string name="backup_error_failed_fmt">Backup failed: %1$s</string>
+    <string name="backup_error_verify_readback">Cannot read back target file for verification</string>
+    <string name="backup_error_verify_mismatch">Target file checksum mismatch, please retry.</string>
+    <string name="restore_error_no_auto_backup">No auto backup found for restore.</string>
+    <string name="restore_error_cannot_open_auto">Cannot open external auto backup file.</string>
+    <string name="restore_error_cannot_read_file">Cannot read the selected backup file.</string>
+    <string name="restore_error_wrong_pin">Incorrect password, please retry.</string>
+    <string name="restore_result_stats_fmt">Restored %1$d, skipped %2$d, failed %3$d</string>
+    <string name="paywall_compare_ai_free">10/mo</string>
+    <string name="paywall_compare_backup_free">1 time</string>
 </resources>

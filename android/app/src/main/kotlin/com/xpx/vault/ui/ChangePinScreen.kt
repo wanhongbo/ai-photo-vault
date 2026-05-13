@@ -263,7 +263,7 @@ class ChangePinViewModel @Inject constructor(
         val s = _state.value
         if (s.loading) return
         if (s.currentPinInput.length != CHANGE_PIN_LENGTH) {
-            _state.value = s.copy(errorMessage = "请输入 6 位 PIN")
+            _state.value = s.copy(errorMessage = appContext.getString(R.string.pin_error_input_6_digit))
             return
         }
         when (s.step) {
@@ -287,7 +287,7 @@ class ChangePinViewModel @Inject constructor(
         if (setting.pinHashHex != oldHash) {
             _state.value = _state.value.copy(
                 currentPinInput = "",
-                errorMessage = "原 PIN 验证失败，请重试。",
+                errorMessage = appContext.getString(R.string.pin_error_old_verify_failed),
             )
             return
         }
@@ -303,7 +303,7 @@ class ChangePinViewModel @Inject constructor(
         if (!s.isInitialSetup) {
             val oldHash = s.existingSetting?.pinHashHex
             if (oldHash == PasswordHasher.sha256HexOfUtf8(newPin)) {
-                _state.value = s.copy(errorMessage = "新 PIN 不能与旧 PIN 相同。")
+                _state.value = s.copy(errorMessage = appContext.getString(R.string.pin_error_new_same_as_old))
                 return
             }
         }
@@ -322,7 +322,7 @@ class ChangePinViewModel @Inject constructor(
                 step = ChangePinStep.ENTER_NEW,
                 pendingNewPin = null,
                 currentPinInput = "",
-                errorMessage = "两次新 PIN 不一致，请重新输入。",
+                errorMessage = appContext.getString(R.string.pin_error_new_mismatch),
             )
             return
         }
@@ -352,7 +352,7 @@ class ChangePinViewModel @Inject constructor(
             }.onFailure {
                 _state.value = _state.value.copy(
                     loading = false,
-                    fatalError = "PIN 修改失败，请稍后重试。",
+                    fatalError = appContext.getString(R.string.pin_error_change_failed),
                 )
             }
         }
@@ -383,7 +383,7 @@ class ChangePinViewModel @Inject constructor(
             }.onFailure {
                 _state.value = _state.value.copy(
                     loading = false,
-                    fatalError = "PIN 设置失败，请稍后重试。",
+                    fatalError = appContext.getString(R.string.pin_error_setup_failed),
                 )
             }
         }

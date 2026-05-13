@@ -85,7 +85,7 @@ fun PrivacyRedactScreen(
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding(),
     ) {
-        AppTopBar(title = "\u9690\u79c1\u8131\u654f", onBack = onBack)
+        AppTopBar(title = stringResource(R.string.privacy_redact_title), onBack = onBack)
 
         Box(
             modifier = Modifier
@@ -102,7 +102,7 @@ fun PrivacyRedactScreen(
                         CircularProgressIndicator(color = UiColors.Ai.execBtnBg)
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "\u6b63\u5728\u89e3\u5bc6\u539f\u56fe\u5e76\u68c0\u6d4b\u654f\u611f\u533a\u57df\u2026",
+                            text = stringResource(R.string.privacy_redact_decrypting),
                             color = Color(0xFFB0B0B8),
                             fontSize = 13.sp,
                         )
@@ -110,7 +110,7 @@ fun PrivacyRedactScreen(
                 }
                 state.errorMessage != null -> {
                     Text(
-                        text = "\u6253\u5f00\u5931\u8d25\uff1a${state.errorMessage}",
+                        text = stringResource(R.string.privacy_redact_open_failed, state.errorMessage),
                         color = Color(0xFFF07878),
                         fontSize = 13.sp,
                     )
@@ -153,11 +153,11 @@ fun PrivacyRedactScreen(
         // 主按钮：保存到安全相册（加密入库，与原图共存）
         PrimaryActionButton(
             iconRes = R.drawable.ic_ai_shield,
-            label = if (state.saving) "保存中…" else "保存到安全相册",
+            label = if (state.saving) stringResource(R.string.privacy_redact_saving) else stringResource(R.string.privacy_redact_save_to_album),
             enabled = state.ready && state.preview != null && !state.saving && !state.exporting && !state.sharing,
             onClick = {
                 viewModel.saveToVault { success, msg ->
-                    val text = if (success) "已保存到安全相册" else "保存失败：$msg"
+                    val text = if (success) context.getString(R.string.privacy_redact_saved) else context.getString(R.string.privacy_redact_save_failed, msg)
                     Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
                 }
             },
@@ -175,15 +175,15 @@ fun PrivacyRedactScreen(
         ) {
             SecondaryActionButton(
                 iconRes = R.drawable.ic_photo_save,
-                label = if (state.exporting) "导出中…" else "导出系统相册",
+                label = if (state.exporting) stringResource(R.string.privacy_redact_exporting) else stringResource(R.string.privacy_redact_export_system),
                 enabled = state.ready && state.preview != null && !state.exporting && !state.saving && !state.sharing,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     viewModel.exportRedacted { success, msg ->
                         val text = if (success) {
-                            "已导出到系统相册 Redacted 目录：$msg"
+                            context.getString(R.string.privacy_redact_exported, msg)
                         } else {
-                            "导出失败：$msg"
+                            context.getString(R.string.privacy_redact_export_failed, msg)
                         }
                         Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
                     }
@@ -191,13 +191,13 @@ fun PrivacyRedactScreen(
             )
             SecondaryActionButton(
                 iconRes = R.drawable.ic_photo_share,
-                label = if (state.sharing) "分享中…" else "分享",
+                label = if (state.sharing) stringResource(R.string.privacy_redact_sharing) else stringResource(R.string.privacy_redact_share_chooser),
                 enabled = state.ready && state.preview != null && !state.sharing && !state.saving && !state.exporting,
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    viewModel.shareRedacted(chooserTitle = "分享脱敏后的图片") { success, msg ->
+                    viewModel.shareRedacted(chooserTitle = stringResource(R.string.privacy_redact_share_chooser)) { success, msg ->
                         if (!success) {
-                            Toast.makeText(context, "分享失败：$msg", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.privacy_redact_share_failed, msg), Toast.LENGTH_SHORT).show()
                         }
                     }
                 },
@@ -217,12 +217,12 @@ private fun StatusLine(
     // 统一精简文案，能在一行里与“+ 手动” chip 共存不溢行。
     val totalCount = state.regionCount + state.manualRegions.size
     val desc = when {
-        state.loading -> "检测中…"
-        !state.mlKitReady -> "Play 服务不可用，可手动框选"
-        totalCount == 0 -> "未检测到敏感区域，可手动框选"
-        state.manualRegions.isEmpty() -> "已识别 ${state.regionCount} 个敏感区域"
-        state.regionCount == 0 -> "手动标记 ${state.manualRegions.size} 个区域"
-        else -> "自动 ${state.regionCount} · 手动 ${state.manualRegions.size}"
+        state.loading -> stringResource(R.string.privacy_redact_detecting)
+        !state.mlKitReady -> stringResource(R.string.privacy_redact_play_unavailable)
+        totalCount == 0 -> stringResource(R.string.privacy_redact_no_sensitive)
+        state.manualRegions.isEmpty() -> stringResource(R.string.privacy_redact_regions_found, state.regionCount)
+        state.regionCount == 0 -> stringResource(R.string.privacy_redact_manual_regions, state.manualRegions.size)
+        else -> stringResource(R.string.privacy_redact_auto_manual, state.regionCount, state.manualRegions.size)
     }
     val dot = when {
         state.loading -> Color(0xFF707078)
@@ -261,7 +261,7 @@ private fun StatusLine(
         }
         // 右侧：手动框选开关
         ManualChip(
-            label = if (state.manualMode) "完成" else "+ 手动",
+            label = if (state.manualMode) stringResource(R.string.privacy_redact_done) else stringResource(R.string.privacy_redact_manual_add),
             active = state.manualMode,
             enabled = enabled,
             onClick = onToggleManual,
@@ -284,13 +284,13 @@ private fun ManualOpsRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "已添加 $count",
+            text = stringResource(R.string.privacy_redact_added_count, count),
             color = Color(0xFFB0B0B8),
             fontSize = 11.sp,
             modifier = Modifier.weight(1f),
         )
-        ManualChip(label = "撤销", active = false, enabled = true, onClick = onUndo)
-        ManualChip(label = "清空", active = false, enabled = true, onClick = onClear)
+        ManualChip(label = stringResource(R.string.privacy_redact_undo), active = false, enabled = true, onClick = onUndo)
+        ManualChip(label = stringResource(R.string.privacy_redact_clear), active = false, enabled = true, onClick = onClear)
     }
 }
 
@@ -342,11 +342,11 @@ private fun StylePill(
     onClick: () -> Unit,
 ) {
     val label = when (style) {
-        RedactionStyle.MOSAIC -> "马赛克"
-        RedactionStyle.BLUR -> "高斯模糊"
-        RedactionStyle.BAR -> "黑条"
-        RedactionStyle.WHITE_BAR -> "白条"
-        RedactionStyle.OVAL_BLUR -> "椭圆模糊"
+        RedactionStyle.MOSAIC -> stringResource(R.string.privacy_redact_style_mosaic)
+        RedactionStyle.BLUR -> stringResource(R.string.privacy_redact_style_blur)
+        RedactionStyle.BAR -> stringResource(R.string.privacy_redact_style_bar)
+        RedactionStyle.WHITE_BAR -> stringResource(R.string.privacy_redact_style_white_bar)
+        RedactionStyle.OVAL_BLUR -> stringResource(R.string.privacy_redact_style_oval_blur)
         RedactionStyle.EMOJI -> "Emoji"
     }
     val bg = if (isSelected) UiColors.Ai.execBtnBg else UiColors.Ai.featureCardBg
@@ -508,7 +508,7 @@ private fun PreviewWithManualOverlay(
         Box(modifier = Modifier.size(fitWDp, fitHDp)) {
             Image(
                 bitmap = preview.asImageBitmap(),
-                contentDescription = "脱敏预览",
+                contentDescription = stringResource(R.string.privacy_redact_preview_cd),
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -532,7 +532,7 @@ private fun PreviewWithManualOverlay(
                         .padding(horizontal = 10.dp, vertical = 5.dp),
                 ) {
                     Text(
-                        text = "拖动框选敏感区域",
+                        text = stringResource(R.string.privacy_redact_drag_hint),
                         color = Color(0xFFEAEAF0),
                         fontSize = 11.sp,
                     )

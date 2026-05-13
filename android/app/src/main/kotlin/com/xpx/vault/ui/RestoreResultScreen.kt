@@ -65,7 +65,7 @@ fun RestoreResultScreen(onDone: () -> Unit) {
                 modifier = Modifier.padding(top = UiSize.backupResultInfoTopGap),
             )
             RestoreStatsRow(
-                statsText = result?.let { "恢复 ${it.restored}，跳过 ${it.skipped}，失败 ${it.failed}" }
+                statsText = result?.let { stringResource(R.string.restore_result_stats_fmt, it.restored, it.skipped, it.failed) }
                     ?: stringResource(R.string.restore_result_stats),
             )
         }

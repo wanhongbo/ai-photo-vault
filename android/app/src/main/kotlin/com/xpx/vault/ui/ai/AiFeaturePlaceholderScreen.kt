@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.xpx.vault.R
+import androidx.compose.ui.res.stringResource
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.theme.UiColors
 
@@ -48,7 +50,7 @@ fun AiFeaturePlaceholderScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(modifier = Modifier.size(8.dp))
                 Text(
-                    text = "\u5373\u5c06\u4e0a\u7ebf",
+                    text = stringResource(R.string.common_coming_soon),
                     color = Color(0xFFF0F4FF),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,

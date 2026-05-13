@@ -476,4 +476,184 @@
     <string name="export_cancel_confirm">取消导出</string>
     <string name="export_cancel_continue">继续导出</string>
     <string name="export_fail_insufficient_space">存储空间不足</string>
+
+    <!-- ========== 通用 ========== -->
+    <string name="common_loading">加载中…</string>
+    <string name="common_processing">正在处理…</string>
+    <string name="common_ok">好的</string>
+    <string name="common_unknown_error">未知异常</string>
+    <string name="common_coming_soon">即将上线</string>
+
+    <!-- ========== 相机 ========== -->
+    <string name="camera_permission_denied">未授予相机权限，无法拍照</string>
+    <string name="camera_unavailable_recovering">相机暂时不可用，正在自动恢复…</string>
+    <string name="camera_lens_switched">当前镜头不可用，已切换到可用镜头</string>
+    <string name="camera_start_failed">相机启动失败，正在尝试恢复…</string>
+    <string name="camera_video_saved">视频已保存到保险箱</string>
+    <string name="camera_video_import_failed">视频入库失败，请重试</string>
+    <string name="camera_record_failed">录像失败，请重试</string>
+    <string name="camera_photo_saved">已保存到保险箱</string>
+    <string name="camera_save_failed_storage">保存失败（存储错误），请重试</string>
+    <string name="camera_retake">重拍</string>
+    <string name="camera_permission_waiting">等待相机权限授权…</string>
+    <string name="camera_saving">保存中…</string>
+    <string name="camera_save_to_vault">保存到保险箱</string>
+    <string name="camera_error_permission">缺少相机权限，请重新授权</string>
+    <string name="camera_error_hardware">拍照失败（相机忙或被占用），请重试</string>
+    <string name="camera_error_io">拍照失败（存储异常），请重试</string>
+    <string name="camera_error_timeout">拍照超时，请检查设备状态后重试</string>
+    <string name="camera_error_unknown">拍照失败，请稍后重试</string>
+
+    <!-- ========== 隐私脱敏 ========== -->
+    <string name="privacy_redact_title">隐私脱敏</string>
+    <string name="privacy_redact_decrypting">正在解密原图并检测敏感区域…</string>
+    <string name="privacy_redact_open_failed">打开失败：%1$s</string>
+    <string name="privacy_redact_saving">保存中…</string>
+    <string name="privacy_redact_save_to_album">保存到安全相册</string>
+    <string name="privacy_redact_saved">已保存到安全相册</string>
+    <string name="privacy_redact_save_failed">保存失败：%1$s</string>
+    <string name="privacy_redact_exporting">导出中…</string>
+    <string name="privacy_redact_export_system">导出系统相册</string>
+    <string name="privacy_redact_exported">已导出到系统相册 Redacted 目录：%1$s</string>
+    <string name="privacy_redact_export_failed">导出失败：%1$s</string>
+    <string name="privacy_redact_sharing">分享中…</string>
+    <string name="privacy_redact_share_chooser">分享脱敏后的图片</string>
+    <string name="privacy_redact_share_failed">分享失败：%1$s</string>
+    <string name="privacy_redact_detecting">检测中…</string>
+    <string name="privacy_redact_play_unavailable">Play 服务不可用，可手动框选</string>
+    <string name="privacy_redact_no_sensitive">未检测到敏感区域，可手动框选</string>
+    <string name="privacy_redact_regions_found">已识别 %1$d 个敏感区域</string>
+    <string name="privacy_redact_manual_regions">手动标记 %1$d 个区域</string>
+    <string name="privacy_redact_auto_manual">自动 %1$d · 手动 %2$d</string>
+    <string name="privacy_redact_done">完成</string>
+    <string name="privacy_redact_manual_add">+ 手动</string>
+    <string name="privacy_redact_added_count">已添加 %1$d</string>
+    <string name="privacy_redact_undo">撤销</string>
+    <string name="privacy_redact_clear">清空</string>
+    <string name="privacy_redact_style_mosaic">马赛克</string>
+    <string name="privacy_redact_style_blur">高斯模糊</string>
+    <string name="privacy_redact_style_bar">黑条</string>
+    <string name="privacy_redact_style_white_bar">白条</string>
+    <string name="privacy_redact_style_oval_blur">椭圆模糊</string>
+    <string name="privacy_redact_preview_cd">脱敏预览</string>
+    <string name="privacy_redact_drag_hint">拖动框选敏感区域</string>
+
+    <!-- ========== AI 清理 ========== -->
+    <string name="ai_cleanup_title">垃圾清理</string>
+    <string name="ai_cleanup_toast_cleaned">已清理 %1$d 张冗余照片</string>
+    <string name="ai_cleanup_confirm_message">将把 %1$d 张冗余照片（模糊 + 重复组的非最清晰照片）移入垃圾桶，30 天后自动彻底删除。</string>
+    <string name="ai_cleanup_confirm_clean">确认清理</string>
+    <string name="ai_cleanup_tab_blurry">模糊</string>
+    <string name="ai_cleanup_tab_duplicate">重复</string>
+    <string name="ai_cleanup_detected_count">检测到 %1$d 张可清理照片</string>
+    <string name="ai_cleanup_blurry_dup_count">模糊 %1$d  ·  重复 %2$d</string>
+    <string name="ai_cleanup_scanning">正在扫描…</string>
+    <string name="ai_cleanup_scan_now">立即扫描</string>
+    <string name="ai_cleanup_action_clean">清理 %1$d 张</string>
+    <string name="ai_cleanup_not_scanned">尚未扫描</string>
+    <string name="ai_cleanup_scan_hint">点击上方「立即扫描」，AI 将分析你的保险箱照片，找出可清理的模糊和重复项。</string>
+    <string name="ai_cleanup_badge_blur_dup">模糊·重复</string>
+    <string name="ai_cleanup_badge_blur">模糊</string>
+    <string name="ai_cleanup_badge_dup">重复</string>
+    <string name="ai_cleanup_empty">暂无可清理照片</string>
+    <string name="ai_cleanup_empty_blurry">未发现模糊照片</string>
+    <string name="ai_cleanup_empty_duplicate">未发现重复照片</string>
+
+    <!-- ========== AI 分类 ========== -->
+    <string name="ai_classify_title">智能分类</string>
+    <string name="ai_classify_browse_by_category">按内容类别浏览</string>
+    <string name="ai_classify_auto_tag_desc">AI 为你的保险箱照片自动打标</string>
+    <string name="ai_classify_scanning">扫描中</string>
+    <string name="ai_classify_scan">扫描</string>
+    <string name="ai_classify_view_more">查看更多</string>
+    <string name="ai_classify_empty_scanning">扫描中…</string>
+    <string name="ai_classify_empty_no_data">该分类暂无数据</string>
+    <string name="ai_classify_scan_hint">点击上方「扫描」按钮，AI 将为你的照片自动打标分类。</string>
+    <string name="ai_classify_screenshot">截图</string>
+    <string name="ai_classify_id_card">证件</string>
+    <string name="ai_classify_portrait">人像</string>
+    <string name="ai_classify_scenery">风景</string>
+    <string name="ai_classify_food">美食</string>
+    <string name="ai_classify_document">文档</string>
+    <string name="ai_classify_other">其他</string>
+
+    <!-- ========== AI 敏感审核 ========== -->
+    <string name="ai_sensitive_review_title">敏感审核</string>
+    <string name="ai_sensitive_review_pending_count">待审核 %1$d 张</string>
+    <string name="ai_sensitive_review_hit_desc">已命中身份证/银行卡/手机号/二维码/人脸 等</string>
+    <string name="ai_sensitive_review_scanning">正在扫描…</string>
+    <string name="ai_sensitive_review_empty_scanning">扫描中…</string>
+    <string name="ai_sensitive_review_empty_none">暂无待审核项</string>
+    <string name="ai_sensitive_review_scan_hint">点击上方「重新扫描」，AI 将识别身份证、银行卡、二维码等敏感内容。</string>
+    <string name="ai_sensitive_kind_id_card">身份证</string>
+    <string name="ai_sensitive_kind_bank_card">银行卡</string>
+    <string name="ai_sensitive_kind_phone">手机号</string>
+    <string name="ai_sensitive_kind_qr_code">二维码</string>
+    <string name="ai_sensitive_kind_face">人脸</string>
+    <string name="ai_sensitive_kind_chat">聊天</string>
+
+    <!-- ========== 备份恢复 ========== -->
+    <string name="backup_restore_pin_title">输入 AI Vault 密码</string>
+    <string name="backup_restore_pin_subtitle">请输入创建此备份时使用的 6 位密码。恢复成功后，当前相册将被覆盖为备份内容。</string>
+    <string name="backup_restore_pin_confirm">开始恢复</string>
+    <string name="backup_restore_success_message">备份已恢复。后台将立即触发一次自动备份以对齐设备上的备份文件。</string>
+    <string name="backup_success_message_fmt">已成功备份 %1$d 个文件，共 %2$s。</string>
+    <string name="backup_manual_history_title">手动备份历史</string>
+    <string name="backup_manual_history_empty">还没有手动备份记录。点击上方「创建手动备份」即可保存一份带时间戳的快照。</string>
+    <string name="backup_dir_authorized">备份目录：已授权</string>
+    <string name="backup_dir_unauthorized">备份目录：尚未授权</string>
+    <string name="backup_dir_auth_desc">为了让自动备份写入到设备的 Documents/AIVault/ 目录并在重装或还原后恢复，需要授权一个持久目录。</string>
+    <string name="backup_dir_change">更换目录</string>
+    <string name="backup_dir_select">选择备份目录</string>
+    <string name="backup_dir_revoke">解除授权</string>
+    <string name="backup_auto_status">自动备份状态</string>
+    <string name="backup_auto_no_record">暂无自动备份记录。满足运行条件后会在后台生成。</string>
+    <string name="backup_auto_last_at">最近一次：%1$s</string>
+    <string name="backup_auto_key_fingerprint">密钥指纹：%1$s…</string>
+    <string name="backup_auto_external_path">外部位置：%1$s</string>
+    <string name="backup_run_now">立即运行一次</string>
+    <string name="backup_history_size">大小：%1$s</string>
+    <string name="backup_toast_authorize_first">请先在上方授权备份目录</string>
+    <string name="backup_toast_unlock_first">备份密钥尚未缓存，请先解锁一次应用</string>
+    <string name="backup_toast_queued">已加入后台队列，完成后请刷新页面查看</string>
+    <string name="backup_toast_trigger_failed">触发失败：%1$s</string>
+    <string name="backup_result_success_done">备份完成</string>
+    <string name="backup_result_already_running">已有备份任务在进行中。</string>
+    <string name="restore_result_success_done">恢复完成</string>
+
+    <!-- ========== RevenueCat / Paywall ========== -->
+    <string name="paywall_trial_year">%1$s 年免费试用</string>
+    <string name="paywall_trial_month">%1$s 个月免费试用</string>
+    <string name="paywall_trial_week">%1$s 周免费试用</string>
+    <string name="paywall_trial_day">%1$s 天免费试用</string>
+    <string name="paywall_plan_free">Free</string>
+
+    <!-- ========== MainActivity AI Placeholder ========== -->
+    <string name="ai_privacy_redact_desc">Canvas 实时马赛克 / 高斯模糊 / 黑条预览与导出，不改原图。</string>
+
+    <!-- ========== PIN 错误消息 ========== -->
+    <string name="pin_error_input_6_digit">请输入 6 位 PIN</string>
+    <string name="pin_error_old_verify_failed">原 PIN 验证失败，请重试。</string>
+    <string name="pin_error_new_same_as_old">新 PIN 不能与旧 PIN 相同。</string>
+    <string name="pin_error_new_mismatch">两次新 PIN 不一致，请重新输入。</string>
+    <string name="pin_error_change_failed">PIN 修改失败，请稍后重试。</string>
+    <string name="pin_error_setup_failed">PIN 设置失败，请稍后重试。</string>
+
+    <!-- ========== 备份错误消息 ========== -->
+    <string name="backup_error_no_target">手动备份缺少目标位置。</string>
+    <string name="backup_error_no_vault_dir">保险箱目录不存在，无法创建备份。</string>
+    <string name="backup_error_no_saf_dir">未授权外部备份目录，无法写入。</string>
+    <string name="backup_error_no_key">备份密钥尚未缓存，请先解锁后再试。</string>
+    <string name="backup_error_no_space">本机磁盘空间不足，无法生成备份临时文件。</string>
+    <string name="backup_error_vault_empty">保险箱为空，没有可备份的内容。</string>
+    <string name="backup_error_failed_fmt">备份失败：%1$s</string>
+    <string name="backup_error_verify_readback">无法读回目标文件进行校验</string>
+    <string name="backup_error_verify_mismatch">目标文件校验不一致，请重试。</string>
+    <string name="restore_error_no_auto_backup">外部未发现可恢复的自动备份。</string>
+    <string name="restore_error_cannot_open_auto">无法打开外部自动备份文件。</string>
+    <string name="restore_error_cannot_read_file">无法读取所选备份文件。</string>
+    <string name="restore_error_wrong_pin">密码不正确，请重试。</string>
+    <string name="restore_result_stats_fmt">恢复 %1$d，跳过 %2$d，失败 %3$d</string>
+    <string name="paywall_compare_ai_free">10/月</string>
+    <string name="paywall_compare_backup_free">1次</string>
 </resources>
