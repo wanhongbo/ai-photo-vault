@@ -450,12 +450,6 @@ private fun VaultHeader(
             }
         }
         HeaderActionButton(
-            iconRes = R.drawable.ic_home_action_search,
-            contentDesc = stringResource(R.string.home_action_search),
-            onClick = onSearch,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        HeaderActionButton(
             iconRes = R.drawable.ic_home_action_add,
             contentDesc = stringResource(R.string.home_action_add),
             onClick = onCreateAlbum,
