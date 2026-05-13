@@ -1,6 +1,7 @@
 package com.xpx.vault.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.ui.feedback.rememberThrottledClick
 import com.xpx.vault.ui.theme.UiColors
@@ -56,6 +58,7 @@ fun AppButton(
             disabledContentColor = UiColors.Button.disabledContent,
         ),
         shape = RoundedCornerShape(btnCorner),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (loading) {
@@ -65,7 +68,12 @@ fun AppButton(
                     color = contentColor,
                 )
             } else {
-                Text(text = text, fontSize = btnFontSize)
+                Text(
+                    text = text,
+                    fontSize = btnFontSize,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }
