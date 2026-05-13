@@ -277,7 +277,8 @@ fun AlbumScreen(
                     onShare = { /* TODO: share selected */ },
                     onExport = {
                         if (selected.isNotEmpty()) {
-                            ExportRuntimeState.enqueue(selected.toList())
+                            val isPremium = com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
+                            ExportRuntimeState.enqueue(selected.toList(), skipWatermark = isPremium)
                             onOpenExportProgress()
                             // Exit selection so returning to album is clean.
                             exitSelection()

@@ -39,6 +39,7 @@ import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
+import com.xpx.vault.ui.theme.UiRadius
 
 /**
  * 与 AiFeature 卡片关联的逻辑标识，供跳转路由映射使用。
@@ -186,9 +187,9 @@ private fun AiFeatureCard(
     val interaction = rememberFeedbackInteractionSource()
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(UiColors.Ai.featureCardBg)
-            .border(1.dp, UiColors.Ai.featureCardStroke, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(UiRadius.homeCard))
+            .background(UiColors.Home.sectionBg)
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
             .pressFeedback(interaction)
             .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
     ) {
@@ -227,13 +228,13 @@ private fun AiFeatureCard(
                 ) {
                     Text(
                         text = stringResource(feature.nameRes),
-                        color = UiColors.Ai.featureTitle,
+                        color = UiColors.Home.title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = stringResource(feature.descRes),
-                        color = UiColors.Ai.featureDesc,
+                        color = UiColors.Home.emptyBody,
                         fontSize = 12.sp,
                     )
                 }
@@ -261,13 +262,13 @@ private fun AiFeatureCard(
                 }
                 Text(
                     text = stringResource(feature.nameRes),
-                    color = UiColors.Ai.featureTitle,
+                    color = UiColors.Home.title,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
                     text = stringResource(feature.descRes),
-                    color = UiColors.Ai.featureDesc,
+                    color = UiColors.Home.emptyBody,
                     fontSize = 12.sp,
                 )
             }

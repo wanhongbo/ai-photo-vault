@@ -3,6 +3,7 @@ package com.xpx.vault.ui.export
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -15,6 +16,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -23,13 +25,13 @@ import kotlinx.coroutines.withContext
  *
  * 策略：
  * - Android 10+: 使用 MediaStore + RELATIVE_PATH + IS_PENDING 事务写入。
- * - Android 9 及以下：直接写入 Environment.DIRECTORY_PICTURES/MOVIES 下的 AIPhotoVault 目录，
+ * - Android 9 及以下：直接写入 Environment.DIRECTORY_PICTURES/MOVIES 下的 LumaVaultAlbum 目录，
  *   然后通过 MediaScannerConnection 触发扫描（此路径仅在声明 WRITE_EXTERNAL_STORAGE 后生效）。
  */
 object MediaExporter {
 
-    private const val EXPORT_SUB_DIR = "AIPhotoVault"
-    private const val REDACTED_SUB_DIR = "AIPhotoVault/Redacted"
+    private const val EXPORT_SUB_DIR = "LumaVaultAlbum"
+    private const val REDACTED_SUB_DIR = "LumaVaultAlbum/Redacted"
 
     sealed class ExportOutcome {
         data class Success(val uri: Uri, val displayName: String) : ExportOutcome()
@@ -46,12 +48,20 @@ object MediaExporter {
         context: Context,
         bitmap: Bitmap,
         displayName: String,
+        skipWatermark: Boolean = false,
     ): ExportOutcome = withContext(Dispatchers.IO) {
         val safeName = if (displayName.endsWith(".jpg", ignoreCase = true)) displayName else "$displayName.jpg"
-        return@withContext if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            exportBitmapViaMediaStore(context, bitmap, safeName)
+        val toExport = if (skipWatermark) {
+            bitmap
         } else {
-            exportBitmapViaLegacy(context, bitmap, safeName)
+            runCatching {
+                bitmap.copy(Bitmap.Config.ARGB_8888, true).also { MediaShareHelper.drawShareWatermark(context, it) }
+            }.getOrElse { bitmap }
+        }
+        return@withContext if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            exportBitmapViaMediaStore(context, toExport, safeName)
+        } else {
+            exportBitmapViaLegacy(context, toExport, safeName)
         }
     }
 
@@ -121,7 +131,72 @@ object MediaExporter {
         }
     }
 
-    suspend fun exportFile(context: Context, sourcePath: String): ExportOutcome = withContext(Dispatchers.IO) {
+    private fun decodeForWatermark(file: File, maxSide: Int = 4500): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        var longSide = max(bounds.outWidth, bounds.outHeight)
+        while (longSide / sample > maxSide) sample *= 2
+        val opts = BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        return BitmapFactory.decodeFile(file.absolutePath, opts)
+    }
+
+    private fun decryptToTempFile(context: Context, src: File): File? {
+        val temp = File.createTempFile("export_", ".${src.extension}", context.cacheDir)
+        return try {
+            FileInputStream(src).buffered(256 * 1024).use { input ->
+                FileOutputStream(temp).use { output ->
+                    VaultCipher.get(context).decryptStream(input) { data, offset, length ->
+                        output.write(data, offset, length)
+                    }
+                    output.flush()
+                }
+            }
+            temp
+        } catch (t: Throwable) {
+            temp.delete()
+            null
+        }
+    }
+
+    /**
+     * 图片导出 + 水印（流式解密到临时文件再解码）。
+     */
+    private suspend fun exportImageWithWatermark(
+        context: Context,
+        file: File,
+        mimeType: String,
+    ): ExportOutcome = withContext(Dispatchers.IO) {
+        // 解密到临时文件
+        val tempFile = decryptToTempFile(context, file) ?: return@withContext ExportOutcome.Failure("decrypt_failed")
+        try {
+            val bitmap = decodeForWatermark(tempFile) ?: return@withContext ExportOutcome.Failure("decode_failed")
+            val working = if (bitmap.isMutable) bitmap else bitmap.copy(Bitmap.Config.ARGB_8888, true)
+            if (working !== bitmap) bitmap.recycle()
+            MediaShareHelper.drawShareWatermark(context, working)
+            val displayName = pickDisplayName(file).replaceAfterLast('.', "jpg")
+            val safeName = if (displayName.endsWith(".jpg", ignoreCase = true)) displayName else "$displayName.jpg"
+            val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                exportBitmapViaMediaStore(context, working, safeName)
+            } else {
+                exportBitmapViaLegacy(context, working, safeName)
+            }
+            if (!working.isRecycled) working.recycle()
+            result
+        } finally {
+            tempFile.delete()
+        }
+    }
+
+    suspend fun exportFile(
+        context: Context,
+        sourcePath: String,
+        skipWatermark: Boolean = false,
+    ): ExportOutcome = withContext(Dispatchers.IO) {
         val file = File(sourcePath)
         if (!file.exists() || !file.isFile) {
             return@withContext ExportOutcome.Failure("file_not_found")
@@ -130,6 +205,12 @@ object MediaExporter {
         val mimeType = resolveMimeType(ext) ?: return@withContext ExportOutcome.Failure("unknown_mime")
         val kind = kindOf(mimeType)
         if (kind == Kind.UNKNOWN) return@withContext ExportOutcome.Failure("unsupported_type")
+
+        // 图片且需加水印：走 bitmap 中转路径
+        if (!skipWatermark && kind == Kind.IMAGE && !mimeType.equals("image/gif", ignoreCase = true)) {
+            return@withContext exportImageWithWatermark(context, file, mimeType)
+        }
+
         return@withContext if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             exportViaMediaStore(context, file, mimeType, kind)
         } else {
@@ -232,7 +313,7 @@ object MediaExporter {
         return if (name.startsWith("asset_") || name.startsWith("camera_") || name.startsWith("tmp_")) {
             val ext = file.extension.ifBlank { "bin" }
             val tail = file.nameWithoutExtension.takeLast(8).ifBlank { System.currentTimeMillis().toString() }
-            "AIPhotoVault_$tail.$ext"
+            "LumaVault_$tail.$ext"
         } else {
             name
         }

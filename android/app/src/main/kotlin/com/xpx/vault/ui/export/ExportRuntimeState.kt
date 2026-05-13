@@ -30,6 +30,10 @@ object ExportRuntimeState {
     var pendingPaths: List<String> = emptyList()
         private set
 
+    /** 付费用户跳过水印。 */
+    var skipWatermark: Boolean = false
+        private set
+
     /** 已完成进度（用于进度页 UI）。 */
     val progressDone = mutableStateOf(0)
     val progressTotal = mutableStateOf(0)
@@ -39,8 +43,9 @@ object ExportRuntimeState {
     var lastResult: ExportBatchResult? = null
         private set
 
-    fun enqueue(paths: List<String>) {
+    fun enqueue(paths: List<String>, skipWatermark: Boolean = false) {
         pendingPaths = paths.distinct()
+        this.skipWatermark = skipWatermark
         progressDone.value = 0
         progressTotal.value = pendingPaths.size
         progressCurrentName.value = null
@@ -106,7 +111,7 @@ object ExportRuntimeState {
                         // ③ 支持取消：协程被 cancel 时下一项不再开始。
                         ensureActive()
                         val outcome: MediaExporter.ExportOutcome = try {
-                            MediaExporter.exportFile(context, path)
+                            MediaExporter.exportFile(context, path, skipWatermark = skipWatermark)
                         } catch (ce: CancellationException) {
                             throw ce
                         } catch (t: Throwable) {

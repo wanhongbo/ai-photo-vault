@@ -582,7 +582,14 @@ private fun CreateAlbumCard(
         Text(
             text = stringResource(R.string.home_album_create_title),
             color = UiColors.Home.emptyTitle,
+            maxLines = 1,
             modifier = Modifier.padding(top = 6.dp),
+        )
+        // 占位副标题行，与 AlbumCard 高度对齐
+        Text(
+            text = " ",
+            color = UiColors.Home.emptyBody,
+            fontSize = UiTextSize.homeNavLabel,
         )
     }
 }

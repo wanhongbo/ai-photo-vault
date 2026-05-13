@@ -364,6 +364,9 @@ fun VideoPlayerScreen(
             } else {
                 val shareChooserTitle = stringResource(R.string.photo_viewer_share_chooser)
                 val shareFailedMsg = stringResource(R.string.photo_viewer_share_failed)
+                val isPremium = remember {
+                    com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium
+                }
                 VideoActionButton(
                     iconRes = R.drawable.ic_photo_share,
                     label = stringResource(R.string.photo_viewer_share),
@@ -386,7 +389,7 @@ fun VideoPlayerScreen(
                     label = stringResource(R.string.photo_viewer_save_to_gallery),
                     onClick = {
                         scope.launch {
-                            val outcome = MediaExporter.exportFile(context, path)
+                            val outcome = MediaExporter.exportFile(context, path, skipWatermark = isPremium?.value ?: false)
                             val msg = when (outcome) {
                                 is MediaExporter.ExportOutcome.Success ->
                                     context.getString(R.string.export_toast_single_success)

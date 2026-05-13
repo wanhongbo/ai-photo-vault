@@ -148,10 +148,11 @@ class PrivacyRedactViewModel @Inject constructor(
         }
         if (_state.value.exporting) return
         _state.value = _state.value.copy(exporting = true)
+        val skipWatermark = com.xpx.vault.billing.SubscriptionRepoProvider.get(appContext)?.isPremium?.value ?: false
         viewModelScope.launch {
             val baseName = "Redacted_" + File(path).nameWithoutExtension.takeLast(8) +
                 "_" + System.currentTimeMillis()
-            val outcome = MediaExporter.exportRedactedBitmap(appContext, preview, baseName)
+            val outcome = MediaExporter.exportRedactedBitmap(appContext, preview, baseName, skipWatermark = skipWatermark)
             _state.value = _state.value.copy(exporting = false, exported = outcome is MediaExporter.ExportOutcome.Success)
             when (outcome) {
                 is MediaExporter.ExportOutcome.Success -> onResult(true, outcome.displayName)

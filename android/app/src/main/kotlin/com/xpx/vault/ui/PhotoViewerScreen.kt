@@ -255,7 +255,7 @@ fun PhotoViewerScreen(
                     onClick = {
                         val pathSnapshot = currentPath
                         scope.launch {
-                            val outcome = MediaExporter.exportFile(context, pathSnapshot)
+                            val outcome = MediaExporter.exportFile(context, pathSnapshot, skipWatermark = isPremium?.value ?: false)
                             val msg = when (outcome) {
                                 is MediaExporter.ExportOutcome.Success ->
                                     context.getString(R.string.export_toast_single_success)

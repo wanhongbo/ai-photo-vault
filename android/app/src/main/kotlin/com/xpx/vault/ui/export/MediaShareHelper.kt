@@ -202,7 +202,7 @@ object MediaShareHelper {
         return if (name.startsWith("asset_") || name.startsWith("camera_") || name.startsWith("tmp_")) {
             val ext = file.extension.ifBlank { "bin" }
             val tail = file.nameWithoutExtension.takeLast(8).ifBlank { System.currentTimeMillis().toString() }
-            "AIPhotoVault_$tail.$ext"
+            "LumaVault_$tail.$ext"
         } else {
             name
         }
@@ -238,7 +238,7 @@ object MediaShareHelper {
         return BitmapFactory.decodeFile(file.absolutePath, opts)
     }
 
-    private fun drawShareWatermark(context: Context, bitmap: Bitmap) {
+    fun drawShareWatermark(context: Context, bitmap: Bitmap) {
         val w = bitmap.width.toFloat()
         val h = bitmap.height.toFloat()
         if (w < 4f || h < 4f) return
@@ -247,7 +247,7 @@ object MediaShareHelper {
         val density = context.resources.displayMetrics.density
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
             textAlign = Paint.Align.RIGHT
-            textSize = min(12.5f * density, max(9.5f * density, w * 0.0185f))
+            textSize = min(25f * density, max(19f * density, w * 0.037f))
             color = Color.argb(52, 225, 232, 245)
             typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             setShadowLayer(1.2f * density, 0f, 0.6f * density, Color.argb(32, 0, 0, 0))

@@ -168,7 +168,8 @@ fun BulkExportScreen(
             },
             onClick = {
                 if (selected.isNotEmpty()) {
-                    ExportRuntimeState.enqueue(selected.toList())
+                    val isPremium = com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
+                    ExportRuntimeState.enqueue(selected.toList(), skipWatermark = isPremium)
                     onOpenExportProgress()
                 }
             },
