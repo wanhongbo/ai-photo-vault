@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -32,6 +31,8 @@ import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
+import com.xpx.vault.ui.theme.UiRadius
+import com.xpx.vault.ui.theme.UiSize
 
 /**
  * AI Tab 顶部「建议卡片」主入口。根据 [uiState.suggestion] 分发到对应的子 composable。
@@ -71,21 +72,18 @@ fun AiSuggestCard(
 // 公共组件
 // ============================================================================
 
-/** 卡片外壳：圆角 + 垂直渐变背景 + 内边距。 */
+/** 卡片外壳：圆角 + sectionBg + border，与 App 其他卡片保持一致。 */
 @Composable
 private fun SuggestCardContainer(
-    gradientStart: Color,
-    gradientEnd: Color,
     content: @Composable () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(colors = listOf(gradientStart, gradientEnd)),
-            )
-            .padding(18.dp),
+            .clip(RoundedCornerShape(UiRadius.homeCard))
+            .background(UiColors.Home.sectionBg)
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
+            .padding(UiSize.homeCardPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) { content() }
 }
@@ -136,7 +134,7 @@ private fun SuggestHeader(
             }
             Text(
                 text = title,
-                color = UiColors.Ai.suggestTitle,
+                color = UiColors.Home.title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -227,7 +225,7 @@ private fun SecondaryActionButton(
 private fun SuggestDesc(text: String) {
     Text(
         text = text,
-        color = UiColors.Ai.suggestDesc,
+        color = UiColors.Home.emptyBody,
         fontSize = 14.sp,
         lineHeight = (14 * 1.55).sp,
     )
@@ -239,10 +237,7 @@ private fun SuggestDesc(text: String) {
 
 @Composable
 private fun ScanningSuggestCard(state: AiSuggestion.Scanning) {
-    SuggestCardContainer(
-        gradientStart = UiColors.Ai.suggestCardGradientStart,
-        gradientEnd = UiColors.Ai.suggestCardGradientEnd,
-    ) {
+    SuggestCardContainer {
         SuggestHeader(
             iconRes = R.drawable.ic_ai_brain,
             iconTint = Color.White,
@@ -292,10 +287,7 @@ private fun SensitiveSuggestCard(
     onViewCleanup: () -> Unit,
     onSnooze: () -> Unit,
 ) {
-    SuggestCardContainer(
-        gradientStart = UiColors.Ai.sensitiveGradStart,
-        gradientEnd = UiColors.Ai.sensitiveGradEnd,
-    ) {
+    SuggestCardContainer {
         SuggestHeader(
             iconRes = R.drawable.ic_ai_eye_off,
             iconTint = UiColors.Ai.sensitiveBadgeText,
@@ -351,10 +343,7 @@ private fun CleanupSuggestCard(
     onExec: () -> Unit,
     onSnooze: () -> Unit,
 ) {
-    SuggestCardContainer(
-        gradientStart = UiColors.Ai.cleanupGradStart,
-        gradientEnd = UiColors.Ai.cleanupGradEnd,
-    ) {
+    SuggestCardContainer {
         SuggestHeader(
             iconRes = R.drawable.ic_ai_copy,
             iconTint = UiColors.Ai.cleanupBadgeText,
@@ -388,10 +377,7 @@ private fun CleanupSuggestCard(
 
 @Composable
 private fun AllClearSuggestCard(onRescan: () -> Unit) {
-    SuggestCardContainer(
-        gradientStart = UiColors.Ai.allClearGradStart,
-        gradientEnd = UiColors.Ai.allClearGradEnd,
-    ) {
+    SuggestCardContainer {
         SuggestHeader(
             iconRes = R.drawable.ic_ai_shield,
             iconTint = UiColors.Ai.allClearBadgeText,
@@ -421,10 +407,7 @@ private fun AllClearSuggestCard(onRescan: () -> Unit) {
 
 @Composable
 private fun IdleSuggestCard(onStartScan: () -> Unit) {
-    SuggestCardContainer(
-        gradientStart = UiColors.Ai.suggestCardGradientStart,
-        gradientEnd = UiColors.Ai.suggestCardGradientEnd,
-    ) {
+    SuggestCardContainer {
         SuggestHeader(
             iconRes = R.drawable.ic_ai_brain,
             iconTint = Color.White,

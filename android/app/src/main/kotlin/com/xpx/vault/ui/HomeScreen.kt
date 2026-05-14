@@ -704,25 +704,27 @@ private fun HomeAlbumPermissionState(
             text = if (permanentlyDenied) stringResource(R.string.home_permission_denied_desc) else stringResource(R.string.home_permission_desc),
             color = UiColors.Home.emptyBody,
             fontSize = UiTextSize.permissionBody,
+            lineHeight = UiTextSize.permissionBodyLineHeight,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = UiSize.permissionBodyTopGap),
         )
-        AppButton(
+        VaultEmptyActionButton(
             text = if (permanentlyDenied) stringResource(R.string.home_permission_settings) else stringResource(R.string.home_permission_grant),
             onClick = if (permanentlyDenied) onOpenSettings else onGrant,
+            isPrimary = true,
+            showIcon = false,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(UiSize.permissionButtonHeight)
                 .padding(top = UiSize.permissionPrimaryTopGap),
         )
         if (permanentlyDenied) {
-            AppButton(
+            VaultEmptyActionButton(
                 text = stringResource(R.string.home_permission_later),
                 onClick = {},
-                variant = AppButtonVariant.SECONDARY,
+                isPrimary = false,
+                showIcon = false,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(UiSize.permissionButtonHeight)
                     .padding(top = UiSize.permissionSecondaryTopGap),
             )
         }
@@ -806,6 +808,7 @@ private fun VaultEmptyActionButton(
     isPrimary: Boolean,
     modifier: Modifier = Modifier,
     loading: Boolean = false,
+    showIcon: Boolean = true,
 ) {
     val interaction = rememberFeedbackInteractionSource()
     Row(
@@ -823,7 +826,7 @@ private fun VaultEmptyActionButton(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (isPrimary && !loading) {
+        if (isPrimary && !loading && showIcon) {
             Icon(
                 painter = painterResource(R.drawable.ic_home_nav_import),
                 contentDescription = null,

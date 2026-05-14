@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -29,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -40,6 +40,8 @@ import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
+import com.xpx.vault.ui.theme.UiSize
+import com.xpx.vault.ui.theme.UiTextSize
 
 /**
  * 与 AiFeature 卡片关联的逻辑标识，供跳转路由映射使用。
@@ -65,7 +67,7 @@ fun AiHomeScreen(
             .fillMaxSize()
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding()
-            .padding(20.dp),
+            .padding(UiSize.settingsScreenHorizontalPad),
     ) {
         AiHeader()
         Spacer(Modifier.height(16.dp))
@@ -101,8 +103,8 @@ private fun AiHeader() {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.ai_title),
-            color = Color(0xFFF0F4FF),
-            fontSize = 28.sp,
+            color = UiColors.Home.title,
+            fontSize = UiTextSize.homeTitle,
             fontWeight = FontWeight.Bold,
         )
     }
@@ -117,14 +119,14 @@ private fun AiFeaturesHeader(count: Int) {
     ) {
         Text(
             text = stringResource(R.string.ai_features_title),
-            color = Color(0xFFF0F4FF),
-            fontSize = 18.sp,
+            color = UiColors.Home.title,
+            fontSize = UiTextSize.homeSectionTitle,
             fontWeight = FontWeight.Bold,
         )
         // 「4 项功能」由运行时动态拼接（而非固定文案），跟随卡片数量变化。
         Text(
             text = stringResource(R.string.ai_features_count_fmt, count),
-            color = Color(0xFF6B6B70),
+            color = UiColors.Home.subtitle,
             fontSize = 13.sp,
         )
     }
@@ -185,94 +187,39 @@ private fun AiFeatureCard(
     wideTopLayout: Boolean = false,
 ) {
     val interaction = rememberFeedbackInteractionSource()
-    Row(
+    Column(
         modifier = modifier
             .clip(RoundedCornerShape(UiRadius.homeCard))
             .background(UiColors.Home.sectionBg)
             .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
             .pressFeedback(interaction)
-            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .padding(UiSize.homeCardPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(4.dp)
-                .fillMaxHeight()
-                .background(feature.barColor),
-        )
-        if (wideTopLayout) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(feature.iconBgColor),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(feature.iconRes),
-                        contentDescription = null,
-                        tint = feature.barColor,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = stringResource(feature.nameRes),
-                        color = UiColors.Home.title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = stringResource(feature.descRes),
-                        color = UiColors.Home.emptyBody,
-                        fontSize = 12.sp,
-                    )
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(feature.iconBgColor),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(feature.iconRes),
-                        contentDescription = null,
-                        tint = feature.barColor,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-                Text(
-                    text = stringResource(feature.nameRes),
-                    color = UiColors.Home.title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = stringResource(feature.descRes),
-                    color = UiColors.Home.emptyBody,
-                    fontSize = 12.sp,
-                )
-            }
+                .size(if (wideTopLayout) 56.dp else 52.dp)
+                .clip(RoundedCornerShape(UiRadius.homeAlbumCard))
+                .background(feature.iconBgColor),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(feature.iconRes),
+                contentDescription = null,
+                tint = feature.barColor,
+                modifier = Modifier.size(if (wideTopLayout) 28.dp else 26.dp),
+            )
         }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = stringResource(feature.nameRes),
+            color = UiColors.Home.emptyTitle,
+            fontSize = UiTextSize.homeEmptyTitle,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

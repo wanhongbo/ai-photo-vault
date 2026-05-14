@@ -112,12 +112,18 @@ class MainActivity : FragmentActivity() {
                     LaunchedEffect(requireUnlock) {
                         if (!requireUnlock) {
                             aiLocalScanUseCase.requestScan()
-                            // 首启软墙：解锁后尝试展示一次可跳过的 Paywall
+                            // 首启软墙：让用户先进入保险箱主页，延迟 5s 再弹出可跳过的 Paywall。
+                            // 注：delay 期间若 requireUnlock 重新变为 true（重新加锁），
+                            // LaunchedEffect 会取消当前协程，因此不会错误地在锁屏上弹出。
                             if (onboardingPaywallManager.shouldShow()) {
-                                onboardingPaywallManager.markSeen()
-                                navController.navigate(
-                                    "$ROUTE_PAYWALL?dismissable=true&source=onboarding",
-                                ) { launchSingleTop = true }
+                                kotlinx.coroutines.delay(5_000L)
+                                // 二次确认：协程恢复时仍未被加锁，且仍未展示过
+                                if (!requireUnlock && onboardingPaywallManager.shouldShow()) {
+                                    onboardingPaywallManager.markSeen()
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=true&source=onboarding",
+                                    ) { launchSingleTop = true }
+                                }
                             }
                         }
                     }
