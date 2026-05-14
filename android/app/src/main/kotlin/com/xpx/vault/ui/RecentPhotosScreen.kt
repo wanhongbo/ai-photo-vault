@@ -90,14 +90,23 @@ fun RecentPhotosScreen(
                 Text(text = stringResource(R.string.recent_list_empty), color = UiColors.Home.subtitle)
             }
         } else {
-            Box(
-                modifier = Modifier
+            // item 不足一行（< 3）时，大卡片背景会造成巨大空白，视觉不协调。
+            // 参考相册 grid 视觉：稀疏时直接裸 grid；满行后再套容器卡片。
+            val isSparse = photos.size < 3
+            val gridModifier = if (isSparse) {
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+            } else {
+                Modifier
+                    .fillMaxWidth()
                     .padding(top = 12.dp)
                     .clip(RoundedCornerShape(UiRadius.homeCard))
                     .background(UiColors.Home.sectionBg)
                     .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
-                    .padding(UiSize.homeCardPadding),
-            ) {
+                    .padding(UiSize.homeCardPadding)
+            }
+            Box(modifier = gridModifier) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
