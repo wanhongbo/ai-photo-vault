@@ -102,6 +102,24 @@ fun SettingsSubscriptionScreen(
                     color = UiColors.Home.subtitle,
                     fontSize = UiTextSize.settingsRowDesc,
                 )
+                Spacer(Modifier.height(20.dp))
+                // Premium 状态：完整权益清单（统一显示 "无限 / 已解锁"）
+                Text(
+                    text = stringResource(R.string.settings_subscription_perks_title_premium),
+                    color = UiColors.Home.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.height(12.dp))
+                val unlimited = stringResource(R.string.settings_subscription_perk_unlimited)
+                val unlocked = stringResource(R.string.settings_subscription_perk_unlocked)
+                PerkStatusRow(label = stringResource(R.string.paywall_compare_storage), value = unlimited, highlighted = true)
+                Spacer(Modifier.height(10.dp))
+                PerkStatusRow(label = stringResource(R.string.paywall_compare_ai), value = unlimited, highlighted = true)
+                Spacer(Modifier.height(10.dp))
+                PerkStatusRow(label = stringResource(R.string.paywall_compare_backup), value = unlimited, highlighted = true)
+                Spacer(Modifier.height(10.dp))
+                PerkStatusRow(label = stringResource(R.string.paywall_compare_watermark), value = unlocked, highlighted = true)
             } else {
                 Text(
                     text = stringResource(R.string.settings_subscription_free),
@@ -110,7 +128,7 @@ fun SettingsSubscriptionScreen(
                     fontWeight = FontWeight.Medium,
                 )
                 Spacer(Modifier.height(16.dp))
-                // 配额进度条
+                // 免费版：前两项配额用进度条展示实时用量；后两项组件级受限或受限以其它方式呈现。
                 QuotaProgressRow(
                     label = stringResource(R.string.paywall_compare_storage),
                     current = vaultUsage,
@@ -121,6 +139,18 @@ fun SettingsSubscriptionScreen(
                     label = stringResource(R.string.paywall_compare_ai),
                     current = aiUsage,
                     max = com.xpx.vault.domain.quota.FreeQuota.MAX_AI_MONTHLY,
+                )
+                Spacer(Modifier.height(12.dp))
+                PerkStatusRow(
+                    label = stringResource(R.string.paywall_compare_backup),
+                    value = stringResource(R.string.paywall_compare_backup_free),
+                    highlighted = false,
+                )
+                Spacer(Modifier.height(10.dp))
+                PerkStatusRow(
+                    label = stringResource(R.string.paywall_compare_watermark),
+                    value = stringResource(R.string.settings_subscription_perk_watermark_free),
+                    highlighted = false,
                 )
             }
             Spacer(Modifier.height(24.dp))
@@ -172,6 +202,30 @@ private fun QuotaProgressRow(label: String, current: Int, max: Int) {
                 .fillMaxWidth()
                 .height(6.dp)
                 .clip(RoundedCornerShape(3.dp)),
+        )
+    }
+}
+
+/**
+ * 非配额型权益行：展示固定状态值（如 "无限 / 已解锁 / 带水印 / 1 次"）。
+ * highlighted=true 表示 Premium 已解锁态（采用主色强调）；false 为免费版受限态（灰调）。
+ */
+@Composable
+private fun PerkStatusRow(label: String, value: String, highlighted: Boolean) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            color = UiColors.Home.subtitle,
+            fontSize = 14.sp,
+        )
+        Text(
+            text = value,
+            color = if (highlighted) UiColors.Home.navItemActive else UiColors.Home.subtitle,
+            fontSize = 14.sp,
+            fontWeight = if (highlighted) FontWeight.SemiBold else FontWeight.Normal,
         )
     }
 }

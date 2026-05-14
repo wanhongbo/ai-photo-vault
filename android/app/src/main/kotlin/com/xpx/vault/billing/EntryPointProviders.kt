@@ -2,6 +2,7 @@ package com.xpx.vault.billing
 
 import android.content.Context
 import com.xpx.vault.domain.quota.QuotaManager
+import com.xpx.vault.domain.repo.AiAnalysisRepository
 import com.xpx.vault.domain.repo.SubscriptionRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -68,5 +69,28 @@ object PaywallAnalyticsProvider {
                 AnalyticsEntryPoint::class.java,
             )
             ep.paywallAnalytics()
+        }.getOrNull()
+}
+
+/**
+ * 为非-ViewModel / object 层（如 VaultStore）提供 [AiAnalysisRepository] 访问。
+ * 主要用于在删除 vault 照片同时同步清理 AI 分析表（phash/quality/tag/sensitive），
+ * 避免 AI tab 卡片统计还挂着已删照片的孤儿记录。
+ */
+object AiAnalysisRepoProvider {
+
+    @EntryPoint
+    @InstallIn(SingletonComponent::class)
+    interface AiRepoEntryPoint {
+        fun aiAnalysisRepository(): AiAnalysisRepository
+    }
+
+    fun get(context: Context): AiAnalysisRepository? =
+        runCatching {
+            val ep = EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                AiRepoEntryPoint::class.java,
+            )
+            ep.aiAnalysisRepository()
         }.getOrNull()
 }

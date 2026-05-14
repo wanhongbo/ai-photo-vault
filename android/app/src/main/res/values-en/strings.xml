@@ -87,7 +87,7 @@
     <string name="home_search_hint">Search vault content</string>
     <string name="home_action_add">Import</string>
     <string name="home_action_search">Search</string>
-    <string name="home_vault_title">My Vault</string>
+    <string name="home_vault_title">Luma Vault</string>
     <string name="home_vault_security_info">%1$d photos · AES-256 local encryption</string>
     <string name="home_import_success_default_album">Imported to Default album</string>
     <string name="home_import_duplicate_default_album">Already exists, duplicate skipped</string>
@@ -338,6 +338,12 @@
     <string name="settings_subscription_all_unlocked">You have unlocked all premium features including unlimited storage, AI, and watermark-free export.</string>
     <string name="settings_subscription_free">Free Plan</string>
     <string name="settings_subscription_manage">Manage Subscription</string>
+    <!-- Shared perk row copy (complements paywall_compare_*) -->
+    <string name="settings_subscription_perks_title_free">Free Plan Perks</string>
+    <string name="settings_subscription_perks_title_premium">Premium Perks</string>
+    <string name="settings_subscription_perk_unlimited">Unlimited</string>
+    <string name="settings_subscription_perk_unlocked">Unlocked</string>
+    <string name="settings_subscription_perk_watermark_free">Watermarked</string>
     <string name="settings_about_privacy">Privacy Policy</string>
     <string name="settings_about_privacy_desc">How we handle your data</string>
     <string name="settings_about_terms">Terms of Service</string>

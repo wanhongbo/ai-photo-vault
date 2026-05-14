@@ -88,7 +88,7 @@
     <string name="home_search_hint">搜索保险箱内容</string>
     <string name="home_action_add">导入</string>
     <string name="home_action_search">搜索</string>
-    <string name="home_vault_title">我的保险箱</string>
+    <string name="home_vault_title">Luma 保险箱</string>
     <string name="home_vault_security_info">%1$d 张图片 · AES-256 本地加密</string>
     <string name="home_import_success_default_album">已成功导入到 Default 相册</string>
     <string name="home_import_duplicate_default_album">该内容已存在，已跳过重复导入</string>
@@ -339,6 +339,12 @@
     <string name="settings_subscription_all_unlocked">你已解锁全部高级功能，享受无限存储、无限 AI 与无水印导出。</string>
     <string name="settings_subscription_free">免费版</string>
     <string name="settings_subscription_manage">管理订阅</string>
+    <!-- 权益行共用文案（与 paywall_compare_* 互补） -->
+    <string name="settings_subscription_perks_title_free">免费版权益</string>
+    <string name="settings_subscription_perks_title_premium">Premium 权益</string>
+    <string name="settings_subscription_perk_unlimited">无限</string>
+    <string name="settings_subscription_perk_unlocked">已解锁</string>
+    <string name="settings_subscription_perk_watermark_free">带水印</string>
     <string name="settings_about_privacy">隐私政策</string>
     <string name="settings_about_privacy_desc">查看数据与隐私说明</string>
     <string name="settings_about_terms">服务条款</string>

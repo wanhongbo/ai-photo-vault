@@ -4,7 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.webkit.MimeTypeMap
+import com.xpx.vault.ai.util.PhotoIdentity
+import com.xpx.vault.billing.AiAnalysisRepoProvider
 import com.xpx.vault.data.crypto.VaultCipher
+import com.xpx.vault.AppLogger
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
@@ -313,7 +316,19 @@ object VaultStore {
         val dest = File(targetDir, file.name)
         if (dest.exists()) dest.delete()
         val ok = file.renameTo(dest)
-        if (ok) dest.setLastModified(System.currentTimeMillis())
+        if (ok) {
+            dest.setLastModified(System.currentTimeMillis())
+            // 同步清除该照片在 AI 分析表（phash/quality/tag/sensitive）中的所有记录，
+            // 避免 AI tab 的 observePendingSensitiveCount / observeBlurry / observeDuplicates
+            // 因孤儿记录仍按旧值展示（用户从打码/审查页删图后 AI tab 仍提示“还有待处理”的问题源头）。
+            runCatching {
+                val repo = AiAnalysisRepoProvider.get(context)
+                if (repo != null) {
+                    val photoId = PhotoIdentity.fromPath(path)
+                    repo.purgePhoto(photoId)
+                }
+            }.onFailure { AppLogger.w("VaultStore", "purgePhoto on delete failed: ${it.message}") }
+        }
         ok
     }
 

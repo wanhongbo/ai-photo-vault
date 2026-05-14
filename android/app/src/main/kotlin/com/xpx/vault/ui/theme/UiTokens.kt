@@ -95,14 +95,16 @@ object UiColors {
         val scanningProgressFill = Color(0xFF4A9EFF)
         val scanningProgressTrack = Color(0x334A9EFF)
 
-        // —— Sensitive 状态（红调）——
-        val sensitiveGradStart = Color(0xFF6E1A3A)
+        // —— Sensitive 状态（琥珀金警示）——
+        // 原为鲜红 #E85A4F，饱和度过高、与 app 冷蓝基调冲突；
+        // 统一为 Paywall crownRing 同源的琥珀金 #E8C547，保留警示感的同时维持品牌一致。
+        val sensitiveGradStart = Color(0xFF6E4A1A)
         val sensitiveGradEnd = Color(0xFF0D1B2E)
-        val sensitiveIconBg = Color(0x33E85A4F)
-        val sensitiveBadgeBg = Color(0x33E85A4F)
-        val sensitiveBadgeText = Color(0xFFFF7A6F)
-        val sensitiveExecBtnBg = Color(0xFFE85A4F)
-        val sensitiveExecBtnText = Color(0xFFFFFFFF)
+        val sensitiveIconBg = Color(0x33E8C547)
+        val sensitiveBadgeBg = Color(0x33E8C547)
+        val sensitiveBadgeText = Color(0xFFF5D87A)
+        val sensitiveExecBtnBg = Color(0xFFE8C547)
+        val sensitiveExecBtnText = Color(0xFF0D0D0D)
 
         // —— Cleanup 状态（橙调）——
         val cleanupGradStart = Color(0xFF6E4A1A)
@@ -113,26 +115,31 @@ object UiColors {
         val cleanupExecBtnBg = Color(0xFFFFB547)
         val cleanupExecBtnText = Color(0xFF0D0D0D)
 
-        // —— AllClear 状态（绿调）——
-        val allClearGradStart = Color(0xFF1A6E3A)
-        val allClearGradEnd = Color(0xFF0D2B1E)
-        val allClearIconBg = Color(0x3332D583)
-        val allClearBadgeBg = Color(0x3332D583)
-        val allClearBadgeText = Color(0xFF5BE59D)
-        val allClearExecBtnBg = Color(0x2232D583)
-        val allClearExecBtnText = Color(0xFF5BE59D)
-        val allClearExecBtnStroke = Color(0x5532D583)
+        // —— AllClear 状态（冷青 teal）——
+        // 原为鲜绿 #32D583，饱和度高、与深蓝冷调出戏；
+        // 改为 teal #5BC0D4，既传达"安全/清净"，又与 Scanning 蓝 (#4A9EFF) 形成区分。
+        val allClearGradStart = Color(0xFF1A5A6E)
+        val allClearGradEnd = Color(0xFF0D1B2E)
+        val allClearIconBg = Color(0x335BC0D4)
+        val allClearBadgeBg = Color(0x335BC0D4)
+        val allClearBadgeText = Color(0xFF8FE0EA)
+        val allClearExecBtnBg = Color(0x225BC0D4)
+        val allClearExecBtnText = Color(0xFF8FE0EA)
+        val allClearExecBtnStroke = Color(0x555BC0D4)
 
+        // —— 功能卡片图标条颜色 ——
+        // blurBar/blurIconBg 与 Sensitive 同宗：隐私打码本质是敏感内容防护，统一琥珀金警示。
+        // searchBar 改为淡蓝，avoid 跳绿。dedupBar 保留洋红（非红绿色，与 app 对比点缀 OK）。
         val classifyBar = Color(0xFF4A9EFF)
-        val searchBar = Color(0xFF32D583)
-        val blurBar = Color(0xFFE85A4F)
+        val searchBar = Color(0xFF7CB4FF)
+        val blurBar = Color(0xFFE8C547)
         val compressBar = Color(0xFFFFB547)
         val encryptBar = Color(0xFF6366F1)
         val dedupBar = Color(0xFFC850C0)
 
         val classifyIconBg = Color(0x204A9EFF)
-        val searchIconBg = Color(0x2032D583)
-        val blurIconBg = Color(0x20E85A4F)
+        val searchIconBg = Color(0x207CB4FF)
+        val blurIconBg = Color(0x20E8C547)
         val compressIconBg = Color(0x20FFB547)
         val encryptIconBg = Color(0x206366F1)
         val dedupIconBg = Color(0x20C850C0)
