@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Material Symbols Outlined — auto_awesome (FILL@0, wght@400, opsz@24)
+  https://fonts.google.com/icons?selected=Material+Symbols+Outlined:auto_awesome:FILL@0;wght@400;GRAD@0;opsz@24
+  Path from: https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/auto_awesome/default/24px.svg
+  (viewBox 0 -960 960 960 → 24dp via group scale + translateY)
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- Sparkles / auto-awesome style, single fill -->
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M19,9l1.25,-2.27L22.5,7l-2.25,-1.73L19,3l-1.25,2.27L15.5,7l2.25,1.73L19,9zM5,15.5L6.38,13.03L9,11L6.38,8.97L5,6.5L3.62,8.97L1,11l2.62,2.03L5,15.5zM19,18l1.25,-2.27L22.5,16l-2.25,-1.73L19,12l-1.25,2.27L15.5,16l2.25,1.73L19,18z" />
+    <group
+        android:pivotX="0"
+        android:pivotY="0"
+        android:scaleX="0.025"
+        android:scaleY="0.025"
+        android:translateY="24">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M260,-260l36,-78 78,-36 -78,-36 -36,-78 -36,78 -78,36 78,36 36,78ZM660,-380l43,-88 87,-44 -87,-44 -43,-88 -44,88 -88,44 88,44 44,88ZM260,-160l-69,-150L40,-379l151,-69 69,-151 70,151 150,69 -150,69 -70,150ZM660,-280l-87,-180L393,-547l180,-87 87,-181 87,181 180,87 -180,87 -87,180ZM319,-319ZM657,-457Z" />
+    </group>
 </vector>

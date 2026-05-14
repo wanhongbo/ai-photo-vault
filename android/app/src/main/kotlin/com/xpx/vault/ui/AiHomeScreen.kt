@@ -216,7 +216,8 @@ private fun AiFeatureCard(
         Text(
             text = stringResource(feature.nameRes),
             color = UiColors.Home.emptyTitle,
-            fontSize = UiTextSize.homeEmptyTitle,
+            // 字号在 homeEmptyTitle(20sp) 基础上缩小 20% → 16sp，仅作用于 AI 功能卡片。
+            fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
         )

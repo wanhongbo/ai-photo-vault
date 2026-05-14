@@ -51,7 +51,7 @@
     <string name="ai_action_start_scan">Start scan</string>
     <string name="ai_action_snooze">Snooze 7 days</string>
     <string name="ai_action_view_cleanup">View cleanups</string>
-    <string name="ai_features_title">Core AI Features</string>
+    <string name="ai_features_title">Features</string>
     <string name="ai_features_count">6 features</string>
     <string name="ai_features_count_fmt">%1$d features</string>
     <string name="ai_feat_classify">Smart Classify</string>
@@ -306,6 +306,8 @@
     <string name="settings_l1_subscription">My Subscription</string>
         <string name="settings_backup_banner">Album files cannot be recovered after deleting the app. Please back up your files in time.</string>
     <string name="settings_l1_subscription_sub">See your plan and renewal</string>
+    <string name="settings_l1_subscription_premium_title">Premium Activated</string>
+    <string name="settings_l1_subscription_premium_sub">View benefits and manage subscription</string>
     <string name="settings_l1_security">Security &amp; Privacy</string>
     <string name="settings_l1_security_sub">Unlock, PIN, and privacy options</string>
     <string name="settings_l1_backup">Backup &amp; Sync</string>
