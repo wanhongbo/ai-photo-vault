@@ -259,14 +259,8 @@ fun SettingsBackupSyncScreen(
     )
     val manualRows = listOf(
         SettingsRowModel(
-            title = stringResource(R.string.settings_item_backup_local_cloud),
-            desc = stringResource(R.string.settings_item_backup_local_cloud_desc),
-            trailing = SettingsTrailing.CHEVRON,
-            onClick = onOpenBackupRestore,
-        ),
-        SettingsRowModel(
-            title = stringResource(R.string.settings_item_restore_from_backup),
-            desc = stringResource(R.string.settings_item_restore_from_backup_desc),
+            title = stringResource(R.string.settings_item_backup_restore),
+            desc = stringResource(R.string.settings_item_backup_restore_desc),
             trailing = SettingsTrailing.CHEVRON,
             onClick = onOpenBackupRestore,
         ),

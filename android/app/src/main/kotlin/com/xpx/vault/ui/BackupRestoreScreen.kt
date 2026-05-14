@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -244,7 +245,7 @@ fun BackupRestoreScreen(
                         val name = "AIVault_Backup_${formatStamp(System.currentTimeMillis())}.aivb"
                         manualBackupLauncher.launch(name)
                     },
-                    badgeRes = R.drawable.ic_backup_upload,
+                    badgeRes = R.drawable.ic_backup_table,
                     loading = state.backingUp,
                 )
             }
@@ -257,7 +258,7 @@ fun BackupRestoreScreen(
                     onAction = {
                         manualRestoreLauncher.launch(arrayOf("application/octet-stream", "*/*"))
                     },
-                    badgeRes = R.drawable.ic_backup_restore,
+                    badgeRes = R.drawable.ic_restore_page,
                     secondary = true,
                     loading = state.restoring,
                 )
@@ -495,6 +496,7 @@ private fun BackupRestoreCard(
             .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
             .padding(UiSize.backupCardPadding),
         verticalArrangement = Arrangement.spacedBy(UiSize.backupCardInnerGap),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
@@ -510,17 +512,20 @@ private fun BackupRestoreCard(
             )
         }
         Text(text = title, color = UiColors.Home.title, fontWeight = FontWeight.SemiBold)
-        Text(text = desc, color = UiColors.Home.emptyBody, fontSize = UiTextSize.homeEmptyBody)
-        Row(modifier = Modifier.fillMaxWidth()) {
-            AppButton(
-                text = action,
-                onClick = onAction,
-                variant = if (secondary) AppButtonVariant.SECONDARY else AppButtonVariant.PRIMARY,
-                enabled = !loading,
-                loading = loading,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        Text(
+            text = desc,
+            color = UiColors.Home.emptyBody,
+            fontSize = UiTextSize.homeEmptyBody,
+            textAlign = TextAlign.Center,
+        )
+        AppButton(
+            text = action,
+            onClick = onAction,
+            variant = if (secondary) AppButtonVariant.SECONDARY else AppButtonVariant.PRIMARY,
+            enabled = !loading,
+            loading = loading,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
