@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Photo Vault</string>
+    <string name="app_name">Luma Vault</string>
     <string name="share_image_watermark" translatable="false">LumaVault</string>
     <string name="home_placeholder">W1 · Local vault (shell)</string>
-    <string name="splash_title">VaultSafe</string>
+    <string name="splash_title">Luma Vault</string>
     <string name="splash_tagline">Private · Encrypted · Yours</string>
     <string name="splash_footer">v%1$s  •  AES-256 Encrypted</string>
     <string name="home_title">My Vault</string>
@@ -188,7 +188,7 @@
     <string name="album_empty_desc">Imported photos from system gallery will appear here</string>
     <string name="settings_title">Settings</string>
     <string name="settings_subtitle">Privacy and Security</string>
-    <string name="settings_profile_name">VaultSafe User</string>
+    <string name="settings_profile_name">Luma User</string>
     <string name="settings_profile_desc">Local encryption protection is enabled</string>
     <string name="settings_group_security">Security</string>
     <string name="settings_group_backup_policy">Backup Policy</string>

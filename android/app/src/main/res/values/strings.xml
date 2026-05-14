@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Photo Vault</string>
+    <string name="app_name">Luma Vault</string>
     <!-- 分享图片右下角品牌水印（刻意低调；品牌拼写按产品要求） -->
     <string name="share_image_watermark" translatable="false">LumaVault</string>
     <string name="home_placeholder">W1 · Local vault (shell)</string>
-    <string name="splash_title">VaultSafe</string>
+    <string name="splash_title">Luma Vault</string>
     <string name="splash_tagline">Private · Encrypted · Yours</string>
     <string name="splash_footer">v%1$s  •  AES-256 Encrypted</string>
     <string name="home_title">我的保险库</string>
@@ -189,7 +189,7 @@
     <string name="album_empty_desc">从系统相册导入后会显示在这里</string>
     <string name="settings_title">设置</string>
     <string name="settings_subtitle">隐私与安全</string>
-    <string name="settings_profile_name">VaultSafe 用户</string>
+    <string name="settings_profile_name">Luma 用户</string>
     <string name="settings_profile_desc">本地加密保护已开启</string>
     <string name="settings_group_security">安全</string>
     <string name="settings_group_backup_policy">备份策略</string>
