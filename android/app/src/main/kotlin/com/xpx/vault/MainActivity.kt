@@ -525,6 +525,11 @@ class MainActivity : FragmentActivity() {
                                 onViewMedia = { path ->
                                     navController.navigate(viewerRouteForPath(path)) { launchSingleTop = true }
                                 },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_vault",
+                                    ) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_VAULT_SEARCH) {
@@ -565,6 +570,11 @@ class MainActivity : FragmentActivity() {
                                 onOpenExportProgress = {
                                     navController.navigate(ROUTE_EXPORT_PROGRESS) { launchSingleTop = true }
                                 },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_vault",
+                                    ) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_BULK_EXPORT) {
@@ -599,8 +609,16 @@ class MainActivity : FragmentActivity() {
                                 path = Uri.decode(entry.arguments?.getString("path") ?: ""),
                                 onBack = { navController.popBackStack() },
                                 onOpenRedact = { path ->
-                                    navController.navigate("$ROUTE_AI_PRIVACY_REDACT/${Uri.encode(path)}") {
-                                        launchSingleTop = true
+                                    // 进入隐私脱敏属 AI 功能，进入前检查月配额。
+                                    val gate = paywallGatekeeper.checkAccess(com.xpx.vault.domain.quota.ProFeature.AI_PRIVACY)
+                                    if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+                                        navController.navigate(
+                                            "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
+                                        ) { launchSingleTop = true }
+                                    } else {
+                                        navController.navigate("$ROUTE_AI_PRIVACY_REDACT/${Uri.encode(path)}") {
+                                            launchSingleTop = true
+                                        }
                                     }
                                 },
                             )
@@ -612,6 +630,11 @@ class MainActivity : FragmentActivity() {
                             PrivacyRedactScreen(
                                 path = Uri.decode(entry.arguments?.getString("path") ?: ""),
                                 onBack = { navController.popBackStack() },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_vault",
+                                    ) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(

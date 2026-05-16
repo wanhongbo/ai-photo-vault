@@ -73,6 +73,7 @@ import kotlin.math.min
 fun PrivacyRedactScreen(
     path: String,
     onBack: () -> Unit,
+    onPaywallRequired: () -> Unit = {},
     viewModel: PrivacyRedactViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -158,6 +159,13 @@ fun PrivacyRedactScreen(
             label = if (state.saving) stringResource(R.string.privacy_redact_saving) else stringResource(R.string.privacy_redact_save_to_album),
             enabled = state.ready && state.preview != null && !state.saving && !state.exporting && !state.sharing,
             onClick = {
+                // 入库前做配额硬墙检查，vault 已满时跳转支付墙。
+                val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+                val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
+                if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+                    onPaywallRequired()
+                    return@PrimaryActionButton
+                }
                 viewModel.saveToVault { success, msg ->
                     val text = if (success) context.getString(R.string.privacy_redact_saved) else context.getString(R.string.privacy_redact_save_failed, msg)
                     Toast.makeText(context, text, Toast.LENGTH_SHORT).show()

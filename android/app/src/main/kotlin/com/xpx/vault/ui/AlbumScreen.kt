@@ -75,6 +75,7 @@ fun AlbumScreen(
     onOpenPhoto: (String) -> Unit,
     onBack: () -> Unit,
     onOpenExportProgress: () -> Unit = {},
+    onPaywallRequired: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -135,6 +136,21 @@ fun AlbumScreen(
         }
     }
 
+    // 导入入口统一走配额硬墙检查；vault 已满时跳支付墙。
+    val triggerImport = {
+        val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+        val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
+        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+            onPaywallRequired()
+        } else {
+            pickerLauncher.launch(
+                PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                    .build(),
+            )
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -182,11 +198,7 @@ fun AlbumScreen(
                             shape = CircleShape,
                         )
                         .throttledClickable(interactionSource = emptyAddInteraction, indication = null) {
-                            pickerLauncher.launch(
-                                PickVisualMediaRequest.Builder()
-                                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                                    .build(),
-                            )
+                            triggerImport()
                         },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -237,11 +249,7 @@ fun AlbumScreen(
                                         shape = RoundedCornerShape(UiRadius.homeThumb),
                                     )
                                     .throttledClickable(interactionSource = addInteraction, indication = null) {
-                                        pickerLauncher.launch(
-                                            PickVisualMediaRequest.Builder()
-                                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                                                .build(),
-                                        )
+                                        triggerImport()
                                     },
                                 contentAlignment = Alignment.Center,
                             ) {

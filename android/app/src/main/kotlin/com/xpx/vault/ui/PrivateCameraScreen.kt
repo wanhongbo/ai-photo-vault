@@ -156,6 +156,7 @@ private data class CaptureShotResult(
 fun PrivateCameraScreen(
     onBack: () -> Unit,
     onViewMedia: (String) -> Unit = {},
+    onPaywallRequired: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -485,6 +486,16 @@ fun PrivateCameraScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     ShutterButton(enabled = hasCameraPermission && !capturing && if (captureMode == CameraCaptureMode.PHOTO) imageCapture != null else videoCapture != null, recording = isRecording, onClick = {
                         if (capturing) return@ShutterButton
+                        // 入库前做配额硬墙检查；正在录制时点击是「停止录制」，不受配额限制。
+                        val isStopRecording = captureMode == CameraCaptureMode.VIDEO && isRecording
+                        if (!isStopRecording) {
+                            val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+                            val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
+                            if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+                                onPaywallRequired()
+                                return@ShutterButton
+                            }
+                        }
                         if (captureMode == CameraCaptureMode.VIDEO) {
                             val video = videoCapture ?: return@ShutterButton
                             if (isRecording) {
