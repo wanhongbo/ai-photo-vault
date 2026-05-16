@@ -170,7 +170,6 @@ private fun SettingsSubscriptionEntryCard(onClick: () -> Unit) {
             premium = premium,
             goldFillStart = goldFillStart,
             goldFillEnd = goldFillEnd,
-            goldStroke = goldStroke,
         )
         Column(
             modifier = Modifier
@@ -208,7 +207,6 @@ private fun BoxWithSubscriptionIcon(
     premium: Boolean,
     goldFillStart: Color,
     goldFillEnd: Color,
-    goldStroke: Color,
 ) {
     val outer = UiSize.settingsAvatarSize * 2
     val glyph = 44.dp
@@ -232,31 +230,14 @@ private fun BoxWithSubscriptionIcon(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_settings_subscription),
+                painter = painterResource(
+                    if (premium) R.drawable.ic_premium_crown
+                    else R.drawable.ic_premium_crown_outline,
+                ),
                 contentDescription = stringResource(R.string.settings_l1_subscription),
                 tint = if (premium) Color.White else UiColors.Ai.execBtnText,
                 modifier = Modifier.size(glyph),
             )
-        }
-        // Premium 徐章：右上角皇冠小圆形
-        if (premium) {
-            Box(
-                modifier = Modifier
-                    .size(22.dp)
-                    .align(Alignment.TopEnd)
-                    .offset(x = 4.dp, y = (-4).dp)
-                    .clip(CircleShape)
-                    .background(goldStroke)
-                    .border(2.dp, Color.White, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_premium_crown),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(14.dp),
-                )
-            }
         }
     }
 }
