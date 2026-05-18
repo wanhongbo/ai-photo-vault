@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +39,7 @@ import com.xpx.vault.ui.theme.UiRadius
 private const val ProgressAnimMs = 1_200
 
 /**
- * 闪屏（对齐 Pixso node `4:2` 布局）。盾牌位图可替换为 `drawable-nodpi` 下导出的高清 PNG，并改 [R.drawable.ic_splash_shield] 引用。
+ * 闪屏（对齐 Pixso node `4:2` 布局）。中央品牌图标复用 App Launcher 图标资源。
  * 首启后的跳转由 [SplashViewModel] 与 [MainActivity] 的导航逻辑负责。
  */
 @Composable
@@ -85,21 +84,14 @@ fun SplashScreen() {
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(
+            Image(
+                painter = painterResource(R.mipmap.ic_launcher_v2),
+                contentDescription = null,
                 modifier = Modifier
                     .size(88.dp)
-                    .clip(RoundedCornerShape(UiRadius.splashIcon))
-                    .background(UiColors.Splash.iconSurface)
-                    .border(1.dp, UiColors.Splash.iconStroke, RoundedCornerShape(UiRadius.splashIcon)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.shield_check),
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    contentScale = ContentScale.Fit,
-                )
-            }
+                    .clip(RoundedCornerShape(UiRadius.splashIcon)),
+                contentScale = ContentScale.Fit,
+            )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = stringResource(R.string.splash_title),
