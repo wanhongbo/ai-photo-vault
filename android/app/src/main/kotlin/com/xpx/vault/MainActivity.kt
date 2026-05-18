@@ -451,7 +451,7 @@ class MainActivity : FragmentActivity() {
                                         Intent.ACTION_SENDTO,
                                         Uri.parse("mailto:service@xipengxin.com"),
                                     ).apply {
-                                        putExtra(Intent.EXTRA_SUBJECT, "LumaVault Support")
+                                        putExtra(Intent.EXTRA_SUBJECT, "LumaNox Support")
                                     }
                                     try {
                                         startActivity(intent)

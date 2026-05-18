@@ -1,4 +1,4 @@
-# LumaVault — U.S. pre-launch plan (Reddit, X, Product Hunt)
+# LumaNox — U.S. pre-launch plan (Reddit, X, Product Hunt)
 
 **Audience:** United States (first), then expand messaging as you add regions.
 **Platform rollout:** **Google Play (Android) first** → **Apple App Store (iOS) later** on the same product story. Say **“Android first”** publicly until you have a firm iOS ship date; avoid guessing dates.
@@ -16,7 +16,7 @@
 
 One sentence you can repeat:
 
-> **LumaVault** is an offline-first encrypted photo/video vault. We’re shipping **Google Play (U.S.) first**; **iOS on the App Store is planned next**—same privacy posture, platform-native implementation.
+> **LumaNox** is an offline-first encrypted photo/video vault. We’re shipping **Google Play (U.S.) first**; **iOS on the App Store is planned next**—same privacy posture, platform-native implementation.
 
 Do **not** imply feature parity or ship dates for iOS until engineering and App Review reality match what you write.
 
@@ -88,7 +88,7 @@ For people in the US who keep IDs, finance screenshots, medical photos, or anyth
 - A second gallery app?
 - Turning off backup entirely (and accepting the tradeoff)?
 
-I’m building **LumaVault**, an **offline-first** vault idea: encrypt on-device, biometric lock, and **no routine uploads of your media** as part of the core design. **Ship order:** **Google Play (Android) first**, then **iOS on the App Store** afterward (same product goals; dates TBD until announced). 
+I’m building **LumaNox**, an **offline-first** vault idea: encrypt on-device, biometric lock, and **no routine uploads of your media** as part of the core design. **Ship order:** **Google Play (Android) first**, then **iOS on the App Store** afterward (same product goals; dates TBD until announced). 
 
 What’s the **one** requirement you wouldn’t compromise on?
 
@@ -102,7 +102,7 @@ Do you trust “local-only” apps more than “privacy-focused” cloud apps?
 **Body:**
 Honest question for US Android users: when an app says “privacy,” do you default to assuming **some** data leaves the device unless proven otherwise?
 
-I’m working on **LumaVault** (encrypted local vault + on-device helpers like cleanup/redaction concepts). Still pre-launch on **Google Play**—**iOS App Store later**. Details: `[LANDING_URL]`
+I’m working on **LumaNox** (encrypted local vault + on-device helpers like cleanup/redaction concepts). Still pre-launch on **Google Play**—**iOS App Store later**. Details: `[LANDING_URL]`
 
 If you had to pick one statement you want to be true, which is closer to you?
 
@@ -126,7 +126,7 @@ Offline encrypted media vault on Android: what’s the biggest foot-gun?
 
 For devs who’ve shipped similar apps: **what mistake created the most support tickets or bad reviews?**
 
-Product: **LumaVault** (consumer-facing). **Android ships first; iOS next.** Context: `[LANDING_URL]`
+Product: **LumaNox** (consumer-facing). **Android ships first; iOS next.** Context: `[LANDING_URL]`
 
 ---
 
@@ -138,7 +138,7 @@ How do you handle duplicate / blurry / junk photos without sending your library 
 **Body:**
 My camera roll is half “maybe useful” and half “why did I take 12 burst shots of a receipt.”
 
-I want **LumaVault** to help with **on-device** cleanup/classification ideas (nothing that requires uploading your library for “smart” features). **v1 is targeting Google Play (U.S.) first**; iOS comes after. More: `[LANDING_URL]`
+I want **LumaNox** to help with **on-device** cleanup/classification ideas (nothing that requires uploading your library for “smart” features). **v1 is targeting Google Play (U.S.) first**; iOS comes after. More: `[LANDING_URL]`
 
 What’s your current workflow in the US—**manual**, **local tools**, or **you just gave up**?
 
@@ -156,7 +156,7 @@ Vault apps: do you want “maximum security UX” or “it should feel like a no
 - **A)** Extra friction everywhere (confirmations, strict modes)
 - **B)** Friction only on destructive actions, otherwise feels like Photos
 
-I’m building **LumaVault** and trying not to ship “security theater,” but also not ship “oops I exported the wrong thing.” **Android first, iOS later.** Context: `[LANDING_URL]`
+I’m building **LumaNox** and trying not to ship “security theater,” but also not ship “oops I exported the wrong thing.” **Android first, iOS later.** Context: `[LANDING_URL]`
 
 Reply with **A/B** and **one** feature you’d insist on for v1.
 
@@ -170,7 +170,7 @@ Encrypted backup of a phone vault: what’s the threat model you actually use?
 **Body:**
 When people say “backup,” it can mean anything from “copy to my laptop” to “sync folder that I forgot was syncing.”
 
-For **LumaVault**, I’m thinking: **encrypted backup packages** where recovery is intentional—not a silent cloud mirror of thumbnails. **Launching on Google Play (U.S.) first; iOS App Store afterward.** Details: `[LANDING_URL]`
+For **LumaNox**, I’m thinking: **encrypted backup packages** where recovery is intentional—not a silent cloud mirror of thumbnails. **Launching on Google Play (U.S.) first; iOS App Store afterward.** Details: `[LANDING_URL]`
 
 What do **you** want to be true?
 
@@ -185,7 +185,7 @@ What do **you** want to be true?
 Launching on Google Play (US) in ~1 week—what makes you hit “Install” vs “Not now” for a new indie app?
 
 **Body:**
-I’m shipping **LumaVault** soon on **Google Play (U.S.)** first: **offline encrypted vault** for photos/videos, biometric unlock, and features aimed at **local** cleanup/redaction workflows (see Play listing when live). **iOS / App Store is on the roadmap after Android.**
+I’m shipping **LumaNox** soon on **Google Play (U.S.)** first: **offline encrypted vault** for photos/videos, biometric unlock, and features aimed at **local** cleanup/redaction workflows (see Play listing when live). **iOS / App Store is on the roadmap after Android.**
 
 What proof do you look for on a cold install?
 
@@ -201,10 +201,10 @@ Site: `[LANDING_URL]` — Play: `[PLAY LINK]` (if already public)
 ## Week 8 — r/androidapps (post-Play launch)
 
 **Title:**
-LumaVault is live on Google Play (US) — offline encrypted vault for photos/videos (iOS next)
+LumaNox is live on Google Play (US) — offline encrypted vault for photos/videos (iOS next)
 
 **Body:**
-**LumaVault** is now on **Google Play (U.S.)**: `[PLAY LINK]`
+**LumaNox** is now on **Google Play (U.S.)**: `[PLAY LINK]`
 
 **Roadmap:** **iOS on the App Store is planned next**—`[IOS_PUBLIC_NOTE]` (keep this accurate; if you have no date, say “in development” only).
 
@@ -238,8 +238,8 @@ More context: `[LANDING_URL]`
 
 ## Week 1
 
-1. US Android folks: what’s the *one* photo category you’d never want caught in a generic cloud backup pipeline—IDs, finance, medical, “other”? I’m building **LumaVault**: offline-first, encrypted on-device. **Shipping Google Play (U.S.) first; iOS App Store next on the roadmap.** [LANDING_URL]
-2. “Privacy policy” isn’t the same as “your pixels never leave the phone.” I care about the second one for **LumaVault**. What do *you* verify before trusting a gallery/vault app? [LANDING_URL]
+1. US Android folks: what’s the *one* photo category you’d never want caught in a generic cloud backup pipeline—IDs, finance, medical, “other”? I’m building **LumaNox**: offline-first, encrypted on-device. **Shipping Google Play (U.S.) first; iOS App Store next on the roadmap.** [LANDING_URL]
+2. “Privacy policy” isn’t the same as “your pixels never leave the phone.” I care about the second one for **LumaNox**. What do *you* verify before trusting a gallery/vault app? [LANDING_URL]
 3. Building in public: week 1 is threat modeling for normal humans—“my backup settings did *what*?” **Android build lands first; iOS follows.** [LANDING_URL]
 4. Sensitive photos in the same camera roll as memes: workflow problem or tooling problem? I’m betting tooling—a dedicated encrypted vault. Play first, iOS after. [LANDING_URL]
 5. Poll: For a vault app, what matters more? (a) Maximum local control (b) Convenience (more trust assumptions)
@@ -248,27 +248,27 @@ More context: `[LANDING_URL]`
 
 ## Week 2
 
-1. “Local-only” should be verifiable: permissions, network calls, defaults. That’s the bar for **LumaVault**. **Play (U.S.) first, App Store later.** [LANDING_URL]
-2. If ML helps, it should be **on-device** and optional—not “upload your library for magic.” **LumaVault** [LANDING_URL]
+1. “Local-only” should be verifiable: permissions, network calls, defaults. That’s the bar for **LumaNox**. **Play (U.S.) first, App Store later.** [LANDING_URL]
+2. If ML helps, it should be **on-device** and optional—not “upload your library for magic.” **LumaNox** [LANDING_URL]
 3. Do you read **Data safety** (Android) / **App Privacy** (iOS) *before* install, or only after something feels sketchy? We’re Android-first, but I’m designing with both storefront disclosures in mind.
-4. First-run copy should explain **what never uploads** in plain English. Still iterating. **LumaVault** [LANDING_URL]
+4. First-run copy should explain **what never uploads** in plain English. Still iterating. **LumaNox** [LANDING_URL]
 5. Uninstalled a “privacy” app before—what was the moment?
 
 ---
 
 ## Week 3
 
-1. Android: Keystore + per-file encryption is table stakes. The hard part is **UX**—restore, exports, “what did I just delete?” **LumaVault** ships **Play** first. [LANDING_URL]
+1. Android: Keystore + per-file encryption is table stakes. The hard part is **UX**—restore, exports, “what did I just delete?” **LumaNox** ships **Play** first. [LANDING_URL]
 2. Sensitive workflows shouldn’t need 17 toggles.
 3. The scariest vault bugs are boring: thumbnails, providers, backup surprises. Building with that in mind—**iOS will get the same paranoia pass** when we port.
-4. The Play listing will answer **“What leaves my device?”** early. **LumaVault** [LANDING_URL]
+4. The Play listing will answer **“What leaves my device?”** early. **LumaNox** [LANDING_URL]
 5. Reply with your #1 vault app pet peeve → my “do not ship” list.
 
 ---
 
 ## Week 4
 
-1. Camera rolls fail because humans take 9 blurry photos and 1 good one. **On-device** cleanup ideas in **LumaVault**—**Google Play (U.S.) first**. [LANDING_URL]
+1. Camera rolls fail because humans take 9 blurry photos and 1 good one. **On-device** cleanup ideas in **LumaNox**—**Google Play (U.S.) first**. [LANDING_URL]
 2. “Smart cleanup” that requires uploading your whole library is a non-starter. Local-first or nothing.
 3. Receipt screenshots deserve their own encrypted universe.
 4. Junk photo strategy: manual / ignore / third-party?
@@ -280,7 +280,7 @@ More context: `[LANDING_URL]`
 
 1. Should a vault feel like a **bank app** or a **gallery** with strict export gates? Debating defaults—**Play v1 first**. [LANDING_URL]
 2. Poll: Export/share—(a) always multi-step confirm (b) fast but labeled “leaves the vault”?
-3. Screenshot test: “What’s confusing in 5 seconds?” **LumaVault**
+3. Screenshot test: “What’s confusing in 5 seconds?” **LumaNox**
 4. Pre-launch feedback = best prioritization. Reply or catch the Reddit thread. [LANDING_URL]
 5. Ship **only three** v1 vault features—what are they? (I’ll compare to the roadmap, **Android first**.)
 
@@ -288,8 +288,8 @@ More context: `[LANDING_URL]`
 
 ## Week 6
 
-1. Backup is a **threat model** debate. **LumaVault**: encrypted packages, not silent mirrors. [LANDING_URL]
-2. Google Photos can coexist. LumaVault is a **safe island**—first on **Android (U.S.)**, then **iOS**.
+1. Backup is a **threat model** debate. **LumaNox**: encrypted packages, not silent mirrors. [LANDING_URL]
+2. Google Photos can coexist. LumaNox is a **safe island**—first on **Android (U.S.)**, then **iOS**.
 3. Restore UX earns trust—or loses it.
 4. New phone: bigger fear—**losing data** or **leaking data**?
 5. North star: **default local, explicit outbound.** [LANDING_URL]
@@ -308,7 +308,7 @@ More context: `[LANDING_URL]`
 
 ## Week 8 (Play live + iOS roadmap)
 
-1. **LumaVault** is live on **Google Play (U.S.)**: [PLAY LINK] — Offline-first encrypted vault + local privacy workflows. **iOS / App Store:** [IOS_PUBLIC_NOTE] [LANDING_URL]
+1. **LumaNox** is live on **Google Play (U.S.)**: [PLAY LINK] — Offline-first encrypted vault + local privacy workflows. **iOS / App Store:** [IOS_PUBLIC_NOTE] [LANDING_URL]
 2. Shipped on Play ≠ done. Feedback firehose starts now. Thank you for blunt reviews.
 3. Check **Data safety** + permissions first. Lock/unlock—what felt wrong?
 4. Roadmap: friction-driven improvements on Android **while iOS is in progress** (no feature bingo).
@@ -327,7 +327,7 @@ Use this block when you are **~4–8 weeks from iOS submission** or when TestFli
 
 ## X — iOS proximity (examples, paste when true)
 
-1. **LumaVault** iOS update: TestFlight is open / closed / next wave: [link or “DM for invite policy”]. Android: [PLAY LINK]
+1. **LumaNox** iOS update: TestFlight is open / closed / next wave: [link or “DM for invite policy”]. Android: [PLAY LINK]
 2. Porting notes: iOS has different photo picker + backup defaults—**we’re designing for the same “no accidental cloud vault” rule.** [LANDING_URL]
 3. App Store review reality: ship dates move. **Android is live:** [PLAY_LINK] · **iOS:** [IOS_PUBLIC_NOTE]
 
@@ -337,7 +337,7 @@ Use this block when you are **~4–8 weeks from iOS submission** or when TestFli
 `[WIP] Encrypted offline photo vault coming to iOS after Android—what’s your #1 “vault app” dealbreaker?`
 
 **Body (template):**
-**LumaVault** is live on **Google Play (U.S.)** today: `[PLAY_LINK]`. I’m working toward **iOS on the App Store** next with the same offline-first / local encryption posture (implementation details differ by platform).
+**LumaNox** is live on **Google Play (U.S.)** today: `[PLAY_LINK]`. I’m working toward **iOS on the App Store** next with the same offline-first / local encryption posture (implementation details differ by platform).
 
 What would make you **not** trust an iOS vault on day one?
 
@@ -395,7 +395,7 @@ Use as a **tick list**; not all items apply if you skip Ship.
 
 ## Launch title
 
-`LumaVault`
+`LumaNox`
 
 ## Subtitle / short description
 
@@ -403,7 +403,7 @@ Use as a **tick list**; not all items apply if you skip Ship.
 
 ## First comment (maker comment)
 
-Hey Product Hunt — I’m the maker of **LumaVault**.
+Hey Product Hunt — I’m the maker of **LumaNox**.
 
 **What it is:** an **offline-first** vault that encrypts photos/videos **on your device**, with biometric lock and **local** workflows for cleanup + privacy tools (exact v1 scope is in the **Google Play** listing).
 
@@ -433,7 +433,7 @@ If you try the Android build: what confused you in the **first 2 minutes**?
 
 ## PH “Ship” page — short copy (optional)
 
-**Headline:** `LumaVault — encrypted vault (offline-first)`
+**Headline:** `LumaNox — encrypted vault (offline-first)`
 **Body:** `Photos/videos encrypted on-device. Biometric lock. Local cleanup & privacy tools. Google Play (U.S.) first; iOS App Store next. Notify me.`
 **Button:** `Notify me`
 

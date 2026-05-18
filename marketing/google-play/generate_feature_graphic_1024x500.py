@@ -84,7 +84,7 @@ def main() -> None:
     soft_glows(img)
     draw = ImageDraw.Draw(img)
 
-    draw.text((40, 88), "LumaVault", font=f_brand, fill=WHITE)
+    draw.text((40, 88), "LumaNox", font=f_brand, fill=WHITE)
     draw.text((40, 152), "Private Photo Vault", font=f_sub, fill=ACCENT_TEAL)
     draw.text((40, 210), "Keep the light  ·  ", font=f_tag, fill=MUTED)
     draw.text((40, 238), "Guard the private", font=f_tag, fill=ACCENT_GOLD)

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Luma Vault</string>
+    <string name="app_name">LumaNox</string>
     <!-- 分享图片右下角品牌水印（刻意低调；品牌拼写按产品要求） -->
-    <string name="share_image_watermark" translatable="false">LumaVault</string>
+    <string name="share_image_watermark" translatable="false">LumaNox</string>
     <string name="home_placeholder">W1 · Local vault (shell)</string>
-    <string name="splash_title">Luma Vault</string>
+    <string name="splash_title">LumaNox</string>
     <string name="splash_tagline">Private · Encrypted · Yours</string>
     <string name="splash_footer">v%1$s  •  AES-256 Encrypted</string>
     <string name="home_title">我的保险库</string>
@@ -88,7 +88,7 @@
     <string name="home_search_hint">搜索保险箱内容</string>
     <string name="home_action_add">导入</string>
     <string name="home_action_search">搜索</string>
-    <string name="home_vault_title">Luma 保险箱</string>
+    <string name="home_vault_title">LumaNox</string>
     <string name="home_vault_security_info">%1$d 张图片 · AES-256 本地加密</string>
     <string name="home_import_success_default_album">已成功导入到 Default 相册</string>
     <string name="home_import_duplicate_default_album">该内容已存在，已跳过重复导入</string>
@@ -189,7 +189,7 @@
     <string name="album_empty_desc">从系统相册导入后会显示在这里</string>
     <string name="settings_title">设置</string>
     <string name="settings_subtitle">隐私与安全</string>
-    <string name="settings_profile_name">Luma 用户</string>
+    <string name="settings_profile_name">LumaNox 用户</string>
     <string name="settings_profile_desc">本地加密保护已开启</string>
     <string name="settings_group_security">安全</string>
     <string name="settings_group_backup_policy">备份策略</string>
@@ -410,7 +410,7 @@
     <string name="paywall_feature_ads">无广告体验</string>
     <string name="paywall_action_upgrade">立即升级</string>
     <string name="paywall_close_cd">关闭</string>
-    <string name="paywall_hero_title">Luma Vault Pro</string>
+    <string name="paywall_hero_title">LumaNox Pro</string>
     <string name="paywall_hero_subtitle">解锁全部隐私保护能力</string>
     <string name="paywall_hero_subtitle_active">你已解锁全部高级能力</string>
     <string name="paywall_best_value">超值</string>

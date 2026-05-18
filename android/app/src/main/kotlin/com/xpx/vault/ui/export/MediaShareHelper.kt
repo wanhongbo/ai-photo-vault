@@ -202,7 +202,7 @@ object MediaShareHelper {
         return if (name.startsWith("asset_") || name.startsWith("camera_") || name.startsWith("tmp_")) {
             val ext = file.extension.ifBlank { "bin" }
             val tail = file.nameWithoutExtension.takeLast(8).ifBlank { System.currentTimeMillis().toString() }
-            "LumaVault_$tail.$ext"
+            "LumaNox_$tail.$ext"
         } else {
             name
         }

@@ -7,7 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * LumaVault 全局排版规范。
+ * LumaNox 全局排版规范。
  *
  * 字体：使用系统 sans-serif（中文设备自动映射到 Noto Sans CJK / 思源黑体）。
  * 若需精确控制，可将 .ttf 放入 res/font/ 后改用 Font(resId = R.font.xxx)。

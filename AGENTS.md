@@ -1,10 +1,10 @@
-# AGENTS.md — LumaVault (AI Photo Vault)
+# AGENTS.md — LumaNox (AI Photo Vault)
 
 > This file provides AI coding agents with the project context needed to work effectively on this codebase.
 
 ## Project Overview
 
-**LumaVault** (internal code name: `xpx.vault`) is a privacy-first, fully offline photo & video vault app for Android. All data is AES-256 encrypted on-device — zero cloud, zero data collection. The app features AI-powered privacy redaction, smart cleanup/classification, encrypted backup/restore, biometric unlock, and a Premium subscription via RevenueCat.
+**LumaNox** (internal code name: `xpx.vault`) is a privacy-first, fully offline photo & video vault app for Android. All data is AES-256 encrypted on-device — zero cloud, zero data collection. The app features AI-powered privacy redaction, smart cleanup/classification, encrypted backup/restore, biometric unlock, and a Premium subscription via RevenueCat.
 
 - **Package**: `com.xpx.vault`
 - **Min SDK**: 26 (Android 8.0) / **Target SDK**: 35 / **Compile SDK**: 35

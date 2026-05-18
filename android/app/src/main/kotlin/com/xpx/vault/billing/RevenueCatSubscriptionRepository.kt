@@ -181,7 +181,7 @@ class RevenueCatSubscriptionRepository @Inject constructor(
     }
 
     private fun applyCustomerInfo(info: CustomerInfo) {
-        val active = info.entitlements[LumaVaultBillingIds.ENTITLEMENT_PREMIUM]?.isActive == true
+        val active = info.entitlements[LumaNoxBillingIds.ENTITLEMENT_PREMIUM]?.isActive == true
         _isPremium.value = active
         val cur = _offeringsState.value
         if (cur is PaywallOfferingsState.Ready) {

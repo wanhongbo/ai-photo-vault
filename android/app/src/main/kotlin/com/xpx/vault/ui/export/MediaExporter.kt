@@ -25,13 +25,13 @@ import kotlinx.coroutines.withContext
  *
  * 策略：
  * - Android 10+: 使用 MediaStore + RELATIVE_PATH + IS_PENDING 事务写入。
- * - Android 9 及以下：直接写入 Environment.DIRECTORY_PICTURES/MOVIES 下的 LumaVaultAlbum 目录，
+ * - Android 9 及以下：直接写入 Environment.DIRECTORY_PICTURES/MOVIES 下的 LumaNoxAlbum 目录，
  *   然后通过 MediaScannerConnection 触发扫描（此路径仅在声明 WRITE_EXTERNAL_STORAGE 后生效）。
  */
 object MediaExporter {
 
-    private const val EXPORT_SUB_DIR = "LumaVaultAlbum"
-    private const val REDACTED_SUB_DIR = "LumaVaultAlbum/Redacted"
+    private const val EXPORT_SUB_DIR = "LumaNoxAlbum"
+    private const val REDACTED_SUB_DIR = "LumaNoxAlbum/Redacted"
 
     sealed class ExportOutcome {
         data class Success(val uri: Uri, val displayName: String) : ExportOutcome()
@@ -313,7 +313,7 @@ object MediaExporter {
         return if (name.startsWith("asset_") || name.startsWith("camera_") || name.startsWith("tmp_")) {
             val ext = file.extension.ifBlank { "bin" }
             val tail = file.nameWithoutExtension.takeLast(8).ifBlank { System.currentTimeMillis().toString() }
-            "LumaVault_$tail.$ext"
+            "LumaNox_$tail.$ext"
         } else {
             name
         }

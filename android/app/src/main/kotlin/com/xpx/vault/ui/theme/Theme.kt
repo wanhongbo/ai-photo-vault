@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 /**
- * LumaVault 全局 Shape scale。
+ * LumaNox 全局 Shape scale。
  * - extraSmall：Chip / 小徽章
  * - small：密集列表行（设置行）
  * - medium：TopBar / 输入域
@@ -25,7 +25,7 @@ val AppShapes: Shapes = Shapes(
 )
 
 /**
- * LumaVault 深色主色方案。将项目原有的 UiColors 品牌色映射到 Material3 [ColorScheme] 的
+ * LumaNox 深色主色方案。将项目原有的 UiColors 品牌色映射到 Material3 [ColorScheme] 的
  * 标准角色上，使 Material 标准组件（Snackbar / Chip / AlertDialog / Switch 等）获得一致
  * 的品牌感；自绘组件仍可继续读取 UiColors 专用令牌。
  *

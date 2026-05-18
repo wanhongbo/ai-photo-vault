@@ -1,33 +1,33 @@
-# Google Play Store Listing — LumaVault
+# Google Play Store Listing — LumaNox
 
 > **Document version**: 2026-05-12  
 > **Scope**: Google Play Console → Store listing (Main)  
 > **Package name**: `com.xpx.vault`  
 > **Current version**: 0.2.0 (versionCode 2)  
 > **Default language**: English (United States) · **Additional**: 简体中文  
-> **Owner**: LumaVault Team
+> **Owner**: LumaNox Team
 
 ---
 
 ## 0. 应用名优化建议 / App Name Optimization
 
-**Original (待替换)**：`LumaVault - Private photo Vault`  
+**Original (待替换)**：`LumaNox - Private photo Vault`  
 **问题**：`Vault` 重复、大小写不规范、破折号断行不专业。
 
 ### 推荐方案（按优先级） / Recommendations (by priority)
 
 | # | English (≤30 chars) | 简体中文 (≤30字符) | 亮点 |
 |---|---|---|---|
-| 🥇 **1** | **LumaVault: Private Photo Safe** (29) | **LumaVault：隐私相册保险箱** | 保留品牌 LumaVault，用 **Safe** 消除 Vault 重复，语义与品牌互补 |
-| 2 | `Luma — Private Photo Vault` (26) | `Luma：私密相册保险库` | 品牌简化为 Luma，Vault 作为描述词 |
-| 3 | `LumaVault: Encrypted Photos` (28) | `LumaVault：加密私密相册` | 突出「加密」功能，SEO 更友好 |
-| 4 | `LumaVault · Secret Gallery` (26) | `LumaVault · 私密相册` | Gallery 替代 Vault，更大众化 |
+| 🥇 **1** | **LumaNox: Private Photo Safe** (29) | **LumaNox：隐私相册保险箱** | 保留品牌 LumaNox，用 **Safe** 消除 Vault 重复，语义与品牌互补 |
+| 2 | `LumaNox — Private Photo Vault` (29) | `LumaNox：私密相册保险库` | 使用完整品牌，Vault 作为描述词 |
+| 3 | `LumaNox: Encrypted Photos` (28) | `LumaNox：加密私密相册` | 突出「加密」功能，SEO 更友好 |
+| 4 | `LumaNox · Secret Gallery` (26) | `LumaNox · 私密相册` | Gallery 替代 Vault，更大众化 |
 
 **最终选定（本文通篇以此为准）**：  
-- **英文**：`LumaVault: Private Photo Safe`  
-- **中文**：`LumaVault：隐私相册保险箱`
+- **英文**：`LumaNox: Private Photo Safe`  
+- **中文**：`LumaNox：隐私相册保险箱`
 
-> 理由：保留了工程代码、包名、RevenueCat Dashboard、营销素材中已固化的 **LumaVault** 品牌资产；`Safe` 与 `Vault` 同属「保险/保险箱」语义家族，读感一致但避免重复；首字母 L 与 S 形成韵律，商店搜索关键词 "photo safe / photo vault" 双覆盖。
+> 理由：保留了工程代码、包名、RevenueCat Dashboard、营销素材中已固化的 **LumaNox** 品牌资产；`Safe` 与 `Vault` 同属「保险/保险箱」语义家族，读感一致但避免重复；首字母 L 与 S 形成韵律，商店搜索关键词 "photo safe / photo vault" 双覆盖。
 
 ---
 
@@ -37,8 +37,8 @@
 
 | Locale | Value | Count |
 |---|---|---|
-| `en-US` | `LumaVault: Private Photo Safe` | 29 / 30 |
-| `zh-CN` | `LumaVault：隐私相册保险箱` | 14 / 30 |
+| `en-US` | `LumaNox: Private Photo Safe` | 29 / 30 |
+| `zh-CN` | `LumaNox：隐私相册保险箱` | 14 / 30 |
 
 ### 1.2 Short description / 简短说明（≤80 characters）
 
@@ -63,7 +63,7 @@ AES-256 本地加密私密相册，指纹解锁，全程离线，零云端上传
 #### 🇺🇸 English (`en-US`)
 
 ```
-LumaVault is a zero-cloud, fully offline photo safe. Every photo and video you add is sealed with AES-256 encryption, unlocked only by your fingerprint, face, or PIN — and never leaves your device.
+LumaNox is a zero-cloud, fully offline photo safe. Every photo and video you add is sealed with AES-256 encryption, unlocked only by your fingerprint, face, or PIN — and never leaves your device.
 
 Built for people who take privacy seriously: travelers on public Wi-Fi, professionals handling sensitive imagery, and anyone tired of their "private" folder syncing to a server they don't own.
 
@@ -85,7 +85,7 @@ Built for people who take privacy seriously: travelers on public Wi-Fi, professi
 ━━━━━━━━━━━━━━━━━━━━
 📸  PRIVATE CAMERA
 ━━━━━━━━━━━━━━━━━━━━
-Shoot directly into your vault. Photos captured through LumaVault never touch the system gallery, never appear in backups, and never sync to Google Photos. Straight from lens to encrypted storage.
+Shoot directly into your vault. Photos captured through LumaNox never touch the system gallery, never appear in backups, and never sync to Google Photos. Straight from lens to encrypted storage.
 
 ━━━━━━━━━━━━━━━━━━━━
 🖼️  SMART ALBUMS & TRASH
@@ -107,7 +107,7 @@ TensorFlow Lite runs entirely on your phone. No pixel ever leaves the device.
 ━━━━━━━━━━━━━━━━━━━━
 📤  SHARE WITHOUT LEAKING
 ━━━━━━━━━━━━━━━━━━━━
-Export to WhatsApp, Telegram, Signal, or any system share target. LumaVault decrypts to a temporary file, hands it to the share sheet, then wipes the temp file the moment you return. You stay in control.
+Export to WhatsApp, Telegram, Signal, or any system share target. LumaNox decrypts to a temporary file, hands it to the share sheet, then wipes the temp file the moment you return. You stay in control.
 
 ━━━━━━━━━━━━━━━━━━━━
 💾  ENCRYPTED BACKUP & RESTORE
@@ -141,10 +141,10 @@ Payments are processed by Google Play; subscription management happens through y
 • We request only the permissions the feature you tap actually needs
 • Uninstall = total wipe. Your vault stays on your device, always
 
-Your memories belong to you. LumaVault just helps you keep them that way.
+Your memories belong to you. LumaNox just helps you keep them that way.
 
-Full privacy policy: https://lumavault.app/privacy
-Support: support@lumavault.app
+Full privacy policy: https://lumanox.app/privacy
+Support: support@lumanox.app
 ```
 
 **Character count (EN)**: ~3,450 / 4,000 ✅
@@ -154,7 +154,7 @@ Support: support@lumavault.app
 #### 🇨🇳 简体中文 (`zh-CN`)
 
 ```
-LumaVault 是一款完全离线、零云端上传的隐私相册保险箱。你添加的每一张照片和视频，都会使用 AES-256 加密并锁进本地保险箱，仅凭指纹、面容或 PIN 可以解锁 —— 数据永远不离开这部手机。
+LumaNox 是一款完全离线、零云端上传的隐私相册保险箱。你添加的每一张照片和视频，都会使用 AES-256 加密并锁进本地保险箱，仅凭指纹、面容或 PIN 可以解锁 —— 数据永远不离开这部手机。
 
 我们为真正在意隐私的人而生：公共 Wi-Fi 下的旅行者、需要管理敏感影像的专业人士，以及所有不愿自己的"私密文件夹"被悄悄同步到陌生服务器的用户。
 
@@ -198,7 +198,7 @@ TensorFlow Lite 完全运行在你的手机上，像素永不外发。
 ━━━━━━━━━━━━━━━━━━━━
 📤  分享不泄漏
 ━━━━━━━━━━━━━━━━━━━━
-可分享到 WhatsApp、Telegram、Signal 等任意系统分享目标。LumaVault 会先解密到临时文件、交给系统分享面板，用户返回应用后立即擦除临时文件，全程可控。
+可分享到 WhatsApp、Telegram、Signal 等任意系统分享目标。LumaNox 会先解密到临时文件、交给系统分享面板，用户返回应用后立即擦除临时文件，全程可控。
 
 ━━━━━━━━━━━━━━━━━━━━
 💾  加密备份与恢复
@@ -232,10 +232,10 @@ TensorFlow Lite 完全运行在你的手机上，像素永不外发。
 • 只申请你点击的功能所真正需要的权限
 • 卸载即彻底清除，你的保险箱始终只在你的设备里
 
-记忆属于你。LumaVault 只是帮你守住它。
+记忆属于你。LumaNox 只是帮你守住它。
 
-完整隐私政策：https://lumavault.app/privacy
-联系支持：support@lumavault.app
+完整隐私政策：https://lumanox.app/privacy
+联系支持：support@lumanox.app
 ```
 
 **字符数（ZH）**: ~1,250 / 4,000 ✅
@@ -260,9 +260,9 @@ TensorFlow Lite 完全运行在你的手机上，像素永不外发。
 
 | Field | Value |
 |---|---|
-| **Email** | `support@lumavault.app` *(待配置真实邮箱)* |
-| **Website** | `https://lumavault.app` |
-| **Privacy policy URL** | `https://lumavault.app/privacy` *(必须 HTTPS 且与 Data Safety 一致)* |
+| **Email** | `support@lumanox.app` *(待配置真实邮箱)* |
+| **Website** | `https://lumanox.app` |
+| **Privacy policy URL** | `https://lumanox.app/privacy` *(必须 HTTPS 且与 Data Safety 一致)* |
 | **Phone** | *(可选，留空)* |
 
 ---
@@ -273,7 +273,7 @@ TensorFlow Lite 完全运行在你的手机上，像素永不外发。
 
 ### v0.2.0 — EN
 ```
-Welcome to LumaVault! 🔒
+Welcome to LumaNox! 🔒
 • AES-256 on-device encryption
 • Fingerprint & face unlock
 • Private camera — photos never touch the gallery
@@ -285,7 +285,7 @@ Welcome to LumaVault! 🔒
 
 ### v0.2.0 — ZH
 ```
-LumaVault 初版上线！🔒
+LumaNox 初版上线！🔒
 • AES-256 本地加密
 • 指纹 / 面容解锁
 • 私密相机 —— 拍摄内容不入系统相册
@@ -394,4 +394,4 @@ LumaVault 初版上线！🔒
 
 | Date | Version | Author | Change |
 |---|---|---|---|
-| 2026-05-12 | 1.0 | Marketing | 初版；确定英文 app name 为 "LumaVault: Private Photo Safe" |
+| 2026-05-12 | 1.0 | Marketing | 初版；确定英文 app name 为 "LumaNox: Private Photo Safe" |

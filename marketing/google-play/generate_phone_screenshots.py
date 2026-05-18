@@ -124,7 +124,7 @@ def main() -> None:
     def slide01(img: Image.Image, draw: ImageDraw.ImageDraw) -> None:
         glow_orbs(img, draw, 1)
         status_bar(draw, f_small)
-        draw.text((60, 200), "LumaVault", font=f_h1, fill=WHITE)
+        draw.text((60, 200), "LumaNox", font=f_h1, fill=WHITE)
         draw.text((60, 280), "Private Photo Vault", font=f_h2, fill=ACCENT_TEAL)
         draw.text((60, 400), "Keep the light,", font=f_body, fill=MUTED)
         draw.text((60, 450), "Guard the private", font=f_body, fill=ACCENT_GOLD)
@@ -167,7 +167,7 @@ def main() -> None:
         draw.text((60, 270), "Bring photos in — they land inside the vault.", font=f_body, fill=MUTED)
         card(draw, (60, 380, W - 60, 620), "From gallery", "Batch import · originals preserved", f_h2, f_body)
         card(draw, (60, 660, W - 60, 900), "Secure delete (optional)", "Remove copies from public gallery after import.", f_h2, f_body)
-        draw.text((60, 1720), "LumaVault — Private Photo Vault", font=f_tiny, fill=MUTED)
+        draw.text((60, 1720), "LumaNox — Private Photo Vault", font=f_tiny, fill=MUTED)
 
     def slide05(img: Image.Image, draw: ImageDraw.ImageDraw) -> None:
         glow_orbs(img, draw, 5)
@@ -205,7 +205,7 @@ def main() -> None:
         glow_orbs(img, draw, 8)
         status_bar(draw, f_small)
         draw.text((60, 200), "Designed to be trusted", font=f_h1, fill=WHITE)
-        draw.text((60, 290), "LumaVault keeps keys and thumbnails", font=f_body, fill=MUTED)
+        draw.text((60, 290), "LumaNox keeps keys and thumbnails", font=f_body, fill=MUTED)
         draw.text((60, 340), "under your control.", font=f_body, fill=MUTED)
         card(draw, (60, 460, W - 60, 720), "Encryption at rest", "Device keystore + file-level protection.", f_h2, f_body)
         card(draw, (60, 760, W - 60, 1020), "No ad profiling", "We do not sell your library to data brokers.", f_h2, f_body)

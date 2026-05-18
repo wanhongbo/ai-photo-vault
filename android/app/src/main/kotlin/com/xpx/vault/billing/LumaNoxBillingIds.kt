@@ -3,7 +3,7 @@ package com.xpx.vault.billing
 /**
  * 与 RevenueCat Dashboard、Play Console 商品 ID 对齐（见 `doc/android/支付功能-开发计划与配置清单.md` §3.0）。
  */
-object LumaVaultBillingIds {
+object LumaNoxBillingIds {
     const val ENTITLEMENT_PREMIUM = "premium"
     const val OFFERING_DEFAULT = "default"
     const val PACKAGE_MONTHLY = "\$rc_monthly"

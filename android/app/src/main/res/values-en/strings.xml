@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Luma Vault</string>
-    <string name="share_image_watermark" translatable="false">LumaVault</string>
+    <string name="app_name">LumaNox</string>
+    <string name="share_image_watermark" translatable="false">LumaNox</string>
     <string name="home_placeholder">W1 · Local vault (shell)</string>
-    <string name="splash_title">Luma Vault</string>
+    <string name="splash_title">LumaNox</string>
     <string name="splash_tagline">Private · Encrypted · Yours</string>
     <string name="splash_footer">v%1$s  •  AES-256 Encrypted</string>
     <string name="home_title">My Vault</string>
@@ -87,7 +87,7 @@
     <string name="home_search_hint">Search vault content</string>
     <string name="home_action_add">Import</string>
     <string name="home_action_search">Search</string>
-    <string name="home_vault_title">Luma Vault</string>
+    <string name="home_vault_title">LumaNox</string>
     <string name="home_vault_security_info">%1$d photos · AES-256 local encryption</string>
     <string name="home_import_success_default_album">Imported to Default album</string>
     <string name="home_import_duplicate_default_album">Already exists, duplicate skipped</string>
@@ -188,7 +188,7 @@
     <string name="album_empty_desc">Imported photos from system gallery will appear here</string>
     <string name="settings_title">Settings</string>
     <string name="settings_subtitle">Privacy and Security</string>
-    <string name="settings_profile_name">Luma User</string>
+    <string name="settings_profile_name">LumaNox User</string>
     <string name="settings_profile_desc">Local encryption protection is enabled</string>
     <string name="settings_group_security">Security</string>
     <string name="settings_group_backup_policy">Backup Policy</string>
@@ -409,7 +409,7 @@
     <string name="paywall_feature_ads">Ad-free experience</string>
     <string name="paywall_action_upgrade">Upgrade now</string>
     <string name="paywall_close_cd">Close</string>
-    <string name="paywall_hero_title">Luma Vault Pro</string>
+    <string name="paywall_hero_title">LumaNox Pro</string>
     <string name="paywall_hero_subtitle">Unlock all privacy features</string>
     <string name="paywall_hero_subtitle_active">You already have full premium access.</string>
     <string name="paywall_best_value">BEST VALUE</string>
