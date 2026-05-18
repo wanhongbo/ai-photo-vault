@@ -19,3 +19,24 @@
 | 10 | [10-内购付费.md](./10-内购付费.md) | RevenueCat（底层 Play Billing） |
 | — | [支付功能-开发计划与配置清单.md](./支付功能-开发计划与配置清单.md) | **LumaNox**：支付排期、Play / RevenueCat / 工程 / 隐私清单（与 10 配套落地） |
 | 11 | [11-Firebase监控.md](./11-Firebase监控.md) | **一期暂缓**；后续可选 Crashlytics 等 |
+
+## Release 构建（prod + signed AAB）
+
+仓库内已包含模板，**真实密钥勿提交**：
+
+| 文件 | 说明 |
+|------|------|
+| `android/local.properties.example` | 复制为 `local.properties`，配置 `sdk.dir` 与 `revenuecat.apiKey.prod` |
+| `android/keystore.properties.example` | 复制为 `keystore.properties`，配置上传密钥库路径与密码 |
+| `android/vault-upload.jks` | 本地上传密钥库（`.gitignore` 忽略，需自行生成或从安全备份恢复） |
+
+```bash
+cd android
+cp local.properties.example local.properties    # 编辑 sdk.dir 与 RC prod key
+cp keystore.properties.example keystore.properties  # 编辑密码；确保 vault-upload.jks 存在
+
+./gradlew :app:bundleProdRelease   # 上架 Play：app/build/outputs/bundle/prodRelease/*.aab
+./gradlew :app:assembleProdRelease # 可选：签名 APK
+```
+
+未配置 `keystore.properties` 时，`bundle*Release` 任务会失败（避免打出未签名 AAB 误传商店）。需 **JDK 21**。

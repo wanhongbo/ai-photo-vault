@@ -1,5 +1,9 @@
 # 复制为 android/local.properties（该文件已在 .gitignore 中，勿提交）。
 # sdk.dir=/path/to/Android/sdk
 
-# RevenueCat Android Public API Key（与 Dashboard 中 Google Play 应用对应）
+# RevenueCat Public API Key（与 Dashboard 中 Google Play 应用对应）
+# prodRelease 构建必须配置 prod；devDebug 可用 dev 或 android 兼容项。
+# revenuecat.apiKey.dev=goog_xxxxxxxx
+# revenuecat.apiKey.prod=goog_xxxxxxxx
+# 兼容旧键名（仅 dev flavor 回退）：
 # revenuecat.apiKey.android=goog_xxxxxxxx
