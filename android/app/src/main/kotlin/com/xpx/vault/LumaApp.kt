@@ -8,7 +8,7 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
-class PhotoVaultApp : Application() {
+class LumaApp : Application() {
     @Inject
     lateinit var appLockManager: AppLockManager
 

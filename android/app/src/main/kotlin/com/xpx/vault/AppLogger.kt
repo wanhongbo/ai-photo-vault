@@ -7,7 +7,7 @@ import android.util.Log
  * 一期不接入 Firebase；仅 Logcat / 后续 Play 控制台崩溃。
  */
 object AppLogger {
-    private const val GLOBAL_TAG = "PhotoVault"
+    private const val GLOBAL_TAG = "Luma"
 
     fun install() {
         // 预留：若后续需要集中开关、采样或本地计数，可在此扩展。

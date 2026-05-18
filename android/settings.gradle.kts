@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PhotoVault"
+rootProject.name = "Luma"
 include(":app")
 include(":core:domain")
 include(":core:data")
