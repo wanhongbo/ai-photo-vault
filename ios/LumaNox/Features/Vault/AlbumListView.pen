@@ -1,0 +1,559 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "frm_029",
+      "name": "AlbumListView - Android reference",
+      "layout": "none",
+      "fill": "#05080D",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "children": [
+        {
+          "type": "frame",
+          "id": "frm_009",
+          "name": "Android status bar",
+          "layout": "none",
+          "fill": "#0B0B0B",
+          "x": 0,
+          "y": 0,
+          "width": 393,
+          "height": 28,
+          "children": [
+            {
+              "type": "text",
+              "id": "txt_001",
+              "content": "12:05",
+              "fontFamily": "Inter",
+              "fill": "#FFFFFF",
+              "fontSize": 13,
+              "letterSpacing": 0,
+              "x": 18,
+              "y": 7,
+              "fontWeight": "650"
+            },
+            {
+              "type": "icon_font",
+              "id": "ico_002",
+              "iconFontFamily": "lucide",
+              "iconFontName": "refresh-cw",
+              "x": 66,
+              "y": 8,
+              "width": 13,
+              "height": 13,
+              "fill": "#FFFFFF"
+            },
+            {
+              "type": "icon_font",
+              "id": "ico_003",
+              "iconFontFamily": "lucide",
+              "iconFontName": "mail",
+              "x": 88,
+              "y": 8,
+              "width": 14,
+              "height": 14,
+              "fill": "#FFFFFF"
+            },
+            {
+              "type": "icon_font",
+              "id": "ico_004",
+              "iconFontFamily": "lucide",
+              "iconFontName": "mail",
+              "x": 111,
+              "y": 8,
+              "width": 14,
+              "height": 14,
+              "fill": "#FFFFFF"
+            },
+            {
+              "type": "icon_font",
+              "id": "ico_005",
+              "iconFontFamily": "lucide",
+              "iconFontName": "mail",
+              "x": 135,
+              "y": 8,
+              "width": 14,
+              "height": 14,
+              "fill": "#FFFFFF"
+            },
+            {
+              "type": "ellipse",
+              "id": "ell_006",
+              "fill": "#FFFFFF",
+              "x": 158,
+              "y": 13,
+              "width": 4.5,
+              "height": 4.5
+            },
+            {
+              "type": "icon_font",
+              "id": "ico_007",
+              "iconFontFamily": "lucide",
+              "iconFontName": "wifi",
+              "x": 336,
+              "y": 7,
+              "width": 17,
+              "height": 17,
+              "fill": "#FFFFFF"
+            },
+            {
+              "type": "icon_font",
+              "id": "ico_008",
+              "iconFontFamily": "lucide",
+              "iconFontName": "battery-charging",
+              "x": 359,
+              "y": 7,
+              "width": 16,
+              "height": 16,
+              "fill": "#FFFFFF"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "frm_011",
+          "name": "Back button",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 48,
+          "width": 44,
+          "height": 44,
+          "cornerRadius": 14,
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "ico_010",
+              "iconFontFamily": "lucide",
+              "iconFontName": "chevron-left",
+              "x": 11,
+              "y": 11,
+              "width": 22,
+              "height": 22,
+              "fill": "#EAF1FF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "txt_012",
+          "content": "All albums",
+          "fontFamily": "Inter",
+          "fill": "#EAF1FF",
+          "fontSize": 25,
+          "letterSpacing": 0,
+          "x": 139,
+          "y": 59,
+          "fontWeight": "750",
+          "name": "Title"
+        },
+        {
+          "type": "frame",
+          "id": "frm_014",
+          "name": "Sort chip - Recently created",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 107,
+          "width": 110,
+          "height": 38,
+          "cornerRadius": 9,
+          "stroke": {
+            "thickness": 1.4,
+            "fill": "#4A9EFF"
+          },
+          "children": [
+            {
+              "type": "text",
+              "id": "txt_013",
+              "content": "Recently created",
+              "fontFamily": "Inter",
+              "fill": "#B7D7FF",
+              "fontSize": 13,
+              "letterSpacing": 0,
+              "x": 10,
+              "y": 11,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "frm_018",
+          "name": "Album card - Default",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 160,
+          "width": 175,
+          "height": 226,
+          "cornerRadius": 18,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#243348"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "frm_015",
+              "name": "Default album cover",
+              "layout": "none",
+              "fill": "#C9CED0",
+              "x": 16,
+              "y": 17,
+              "width": 143,
+              "height": 130,
+              "cornerRadius": 10,
+              "clip": true,
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_001",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "rotation": 110,
+                    "colors": [
+                      {
+                        "color": "#C9CAC6",
+                        "position": 0
+                      },
+                      {
+                        "color": "#9FA5A8",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "x": 0,
+                  "y": 0,
+                  "width": 143,
+                  "height": 130,
+                  "cornerRadius": 10
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_002",
+                  "fill": "#BFC1BF",
+                  "x": 0,
+                  "y": 0,
+                  "width": 143,
+                  "height": 40
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_003",
+                  "fill": "#E7E8E7",
+                  "x": 86,
+                  "y": -10,
+                  "width": 15,
+                  "height": 150,
+                  "cornerRadius": 4,
+                  "rotation": -16
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_004",
+                  "fill": "#CDD2D3",
+                  "x": 116,
+                  "y": 0,
+                  "width": 8,
+                  "height": 128,
+                  "cornerRadius": 3,
+                  "rotation": 9
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_005",
+                  "fill": "#A7AFB2",
+                  "x": 0,
+                  "y": 86,
+                  "width": 143,
+                  "height": 44
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_006",
+                  "fill": "#FAFFFF",
+                  "x": 86,
+                  "y": 51,
+                  "width": 56,
+                  "height": 5,
+                  "cornerRadius": 3,
+                  "rotation": -4
+                },
+                {
+                  "type": "ellipse",
+                  "id": "ell_cover_007",
+                  "fill": "#D7A189",
+                  "x": 29,
+                  "y": 62,
+                  "width": 88,
+                  "height": 96
+                },
+                {
+                  "type": "ellipse",
+                  "id": "ell_cover_008",
+                  "fill": "#15191C",
+                  "x": 38,
+                  "y": 43,
+                  "width": 72,
+                  "height": 31
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_009",
+                  "fill": "#4B5660",
+                  "x": 38,
+                  "y": 81,
+                  "width": 59,
+                  "height": 5,
+                  "cornerRadius": 3
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_010",
+                  "fill": "#DBE3E8",
+                  "x": 42,
+                  "y": 76,
+                  "width": 22,
+                  "height": 10,
+                  "cornerRadius": 4,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#6C7784"
+                  }
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_011",
+                  "fill": "#DBE3E8",
+                  "x": 74,
+                  "y": 76,
+                  "width": 22,
+                  "height": 10,
+                  "cornerRadius": 4,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#6C7784"
+                  }
+                },
+                {
+                  "type": "ellipse",
+                  "id": "ell_cover_012",
+                  "fill": "#20242A",
+                  "x": 45,
+                  "y": 83,
+                  "width": 4,
+                  "height": 4
+                },
+                {
+                  "type": "ellipse",
+                  "id": "ell_cover_013",
+                  "fill": "#20242A",
+                  "x": 84,
+                  "y": 83,
+                  "width": 4,
+                  "height": 4
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_014",
+                  "fill": "#6B3432",
+                  "x": 54,
+                  "y": 101,
+                  "width": 34,
+                  "height": 4,
+                  "cornerRadius": 2
+                },
+                {
+                  "type": "ellipse",
+                  "id": "ell_cover_015",
+                  "fill": "#D5A08B",
+                  "x": -14,
+                  "y": 104,
+                  "width": 72,
+                  "height": 26,
+                  "rotation": -22
+                },
+                {
+                  "type": "rectangle",
+                  "id": "rect_cover_016",
+                  "fill": "#D5A08B",
+                  "x": 2,
+                  "y": 109,
+                  "width": 62,
+                  "height": 15,
+                  "cornerRadius": 9,
+                  "rotation": -15
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "txt_016",
+              "content": "Default",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 15,
+              "letterSpacing": 0,
+              "x": 16,
+              "y": 160,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "txt_017",
+              "content": "6 photos",
+              "fontFamily": "Inter",
+              "fill": "#9FB2D1",
+              "fontSize": 13,
+              "letterSpacing": 0,
+              "x": 16,
+              "y": 187,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "frm_022",
+          "name": "Album card - 准备是不是不",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 202,
+          "y": 160,
+          "width": 175,
+          "height": 226,
+          "cornerRadius": 18,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#243348"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "frm_019",
+              "name": "Empty album cover",
+              "layout": "none",
+              "fill": "#142741",
+              "x": 16,
+              "y": 17,
+              "width": 143,
+              "height": 130,
+              "cornerRadius": 10
+            },
+            {
+              "type": "text",
+              "id": "txt_020",
+              "content": "准备是不是不",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 15,
+              "letterSpacing": 0,
+              "x": 16,
+              "y": 160,
+              "fontWeight": "500",
+              "width": 143,
+              "textGrowth": "fixed-width"
+            },
+            {
+              "type": "text",
+              "id": "txt_021",
+              "content": "0 photos",
+              "fontFamily": "Inter",
+              "fill": "#9FB2D1",
+              "fontSize": 13,
+              "letterSpacing": 0,
+              "x": 16,
+              "y": 187,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "frm_026",
+          "name": "Album card - Create album",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 398,
+          "width": 175,
+          "height": 226,
+          "cornerRadius": 18,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#243348"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "frm_024",
+              "name": "Create album cover",
+              "layout": "none",
+              "fill": "#142741",
+              "x": 16,
+              "y": 17,
+              "width": 143,
+              "height": 130,
+              "cornerRadius": 10,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "ico_023",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "plus",
+                  "x": 59,
+                  "y": 53,
+                  "width": 25,
+                  "height": 25,
+                  "fill": "#9FB2D1"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "txt_025",
+              "content": "Create album",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 15,
+              "letterSpacing": 0,
+              "x": 16,
+              "y": 160,
+              "fontWeight": "500",
+              "width": 143,
+              "textGrowth": "fixed-width"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "frm_027",
+          "name": "Android navigation area",
+          "layout": "none",
+          "fill": "#0B0B0B",
+          "x": 0,
+          "y": 824,
+          "width": 393,
+          "height": 28
+        },
+        {
+          "type": "rectangle",
+          "id": "rect_028",
+          "fill": "#FFFFFF",
+          "x": 160,
+          "y": 838,
+          "width": 73,
+          "height": 3.5,
+          "cornerRadius": 2,
+          "name": "Gesture handle"
+        }
+      ],
+      "clip": true
+    }
+  ]
+}
