@@ -1,0 +1,58 @@
+name: LumaNox
+configFiles:
+  Debug: Config/Local.xcconfig
+  Release: Config/Local.xcconfig
+packages:
+  Argon2Swift:
+    url: https://github.com/tmthecoder/Argon2Swift.git
+    branch: main
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios.git
+    from: "5.14.0"
+options:
+  bundleIdPrefix: com.xpx
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+targets:
+  LumaNox:
+    type: application
+    platform: iOS
+    sources:
+      - path: LumaNox
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xpx.vault
+        INFOPLIST_KEY_CFBundleDisplayName: LumaNox
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_NSCameraUsageDescription: "LumaNox needs camera access for private capture."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "LumaNox needs microphone access to record private videos."
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "LumaNox needs photo library access to import media into your vault."
+        INFOPLIST_KEY_NSFaceIDUsageDescription: "LumaNox uses Face ID to unlock your vault."
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: LumaNox/Supporting/Info.plist
+        INFOPLIST_KEY_REVENUECAT_API_KEY: $(REVENUECAT_API_KEY)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 0.2.0
+        DEVELOPMENT_LANGUAGE: zh-Hans
+        SWIFT_EMIT_LOC_STRINGS: YES
+    dependencies:
+      - package: Argon2Swift
+      - package: RevenueCat
+        product: RevenueCat
+      - sdk: Photos.framework
+      - sdk: PhotosUI.framework
+      - sdk: LocalAuthentication.framework
+      - sdk: AVFoundation.framework
+      - sdk: CryptoKit.framework
