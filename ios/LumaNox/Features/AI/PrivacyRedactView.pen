@@ -325,7 +325,7 @@
                 {
                   "type": "text",
                   "id": "drag_hint_text",
-                  "content": "自动已用马赛克遮盖",
+                  "content": "正在识别敏感信息…",
                   "fontFamily": "Inter",
                   "fontSize": 11,
                   "letterSpacing": 0,
@@ -384,7 +384,7 @@
                 {
                   "type": "text",
                   "id": "detected_text",
-                  "content": "AI识别 3处 · 手动 0处",
+                  "content": "正在识别敏感信息…",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "letterSpacing": 0,

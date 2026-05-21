@@ -476,6 +476,7 @@ struct PrivacyRedactView: View {
     @State private var manualRegions: [PrivacyRedactionRegion] = []
     @State private var draftRegion: PrivacyRedactionRegion?
     @State private var selectedManualRegionID: UUID?
+    @State private var toastMessage: String?
     let path: String
 
     private var selectableRecords: [VaultMediaRecord] {
@@ -510,7 +511,10 @@ struct PrivacyRedactView: View {
     }
 
     private var statusText: String {
-        L10n.tr("privacy_redact_detection_status_fmt", autoRegions.count, manualRegions.count)
+        if redactionService.isDetecting {
+            return L10n.tr("privacy_redact_detecting")
+        }
+        return L10n.tr("privacy_redact_detection_status_fmt", autoRegions.count, manualRegions.count)
     }
 
     private var manualCountText: String {
@@ -531,6 +535,7 @@ struct PrivacyRedactView: View {
                 PrivacyRedactCanvas(
                     path: activePath,
                     isVideo: activeIsVideo,
+                    isDetecting: redactionService.isDetecting,
                     mode: redactMode,
                     regions: displayedRegions,
                     selectedManualRegionID: selectedManualRegionID,
@@ -561,6 +566,15 @@ struct PrivacyRedactView: View {
         }
         .lnScreenBackground()
         .ignoresSafeArea(.container, edges: .bottom)
+        .overlay(alignment: .top) {
+            if let toastMessage {
+                PrivacyRedactToast(message: toastMessage)
+                    .padding(.top, 82)
+                    .padding(.horizontal, 24)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: toastMessage)
         .task(id: activePath) {
             await aiService.refreshSummary()
             await reloadDetectedRegions(for: activePath)
@@ -621,7 +635,13 @@ struct PrivacyRedactView: View {
 
             Button {
                 draftRegion = nil
-                redactMode = redactMode == .manual ? .automatic : .manual
+                if redactMode == .manual {
+                    redactMode = .automatic
+                    selectedManualRegionID = nil
+                } else {
+                    redactMode = .manual
+                    selectedManualRegionID = nil
+                }
             } label: {
                 Text(modeButtonTitle)
                     .font(.system(size: 12, weight: .bold))
@@ -642,10 +662,10 @@ struct PrivacyRedactView: View {
                 .font(.system(size: 11, weight: .regular))
                 .foregroundStyle(LNColor.subtitle)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            PrivacyRedactSmallChip(title: L10n.tr("privacy_redact_undo"), identifier: "privacy_redact_undo") {
+            PrivacyRedactSmallChip(title: L10n.tr("privacy_redact_undo"), identifier: "privacy_redact_undo", isEnabled: !manualRegions.isEmpty) {
                 undoLastManualRegion()
             }
-            PrivacyRedactSmallChip(title: L10n.tr("privacy_redact_clear"), identifier: "privacy_redact_clear") {
+            PrivacyRedactSmallChip(title: L10n.tr("privacy_redact_clear"), identifier: "privacy_redact_clear", isEnabled: !manualRegions.isEmpty) {
                 manualRegions.removeAll()
                 selectedManualRegionID = nil
                 draftRegion = nil
@@ -673,11 +693,11 @@ struct PrivacyRedactView: View {
                 .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
-                .background(activeIsVideo ? LNColor.buttonDisabledBg : LNColor.brandBlue)
+                .background(activeIsVideo || saveRegions.isEmpty ? LNColor.buttonDisabledBg : LNColor.brandBlue)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
             .buttonStyle(.plain)
-            .disabled(redactionService.isSaving || activeIsVideo)
+            .disabled(redactionService.isSaving || activeIsVideo || saveRegions.isEmpty)
             .accessibilityIdentifier("privacy_redact_save_vault")
 
             HStack(spacing: 10) {
@@ -707,12 +727,24 @@ struct PrivacyRedactView: View {
         manualRegions.removeAll()
         draftRegion = nil
         selectedManualRegionID = nil
-        autoRegions = await redactionService.detectRegions(path: path)
+        toastMessage = nil
+        let detectedRegions = await redactionService.detectRegions(path: path)
+        autoRegions = detectedRegions
+        if !path.isEmpty, detectedRegions.isEmpty {
+            showToast(L10n.tr("privacy_redact_no_sensitive_toast"))
+        }
     }
 
     private func updateDraftRegion(_ normalizedRect: CGRect?) {
         guard redactMode == .manual, !activeIsVideo else { return }
         guard let normalizedRect else {
+            draftRegion = nil
+            return
+        }
+        if let selectedManualRegionID,
+           let index = manualRegions.firstIndex(where: { $0.id == selectedManualRegionID }) {
+            manualRegions[index].normalizedRect = normalizedRect
+            manualRegions[index].style = selectedStyle
             draftRegion = nil
             return
         }
@@ -737,8 +769,18 @@ struct PrivacyRedactView: View {
             style: selectedStyle,
             source: .manual
         )
-        manualRegions.append(region)
-        selectedManualRegionID = region.id
+        if let selectedManualRegionID,
+           let index = manualRegions.firstIndex(where: { $0.id == selectedManualRegionID }) {
+            manualRegions[index] = PrivacyRedactionRegion(
+                id: selectedManualRegionID,
+                normalizedRect: normalizedRect,
+                style: selectedStyle,
+                source: .manual
+            )
+        } else {
+            manualRegions.append(region)
+            selectedManualRegionID = region.id
+        }
         draftRegion = nil
     }
 
@@ -756,6 +798,16 @@ struct PrivacyRedactView: View {
             selectedManualRegionID = manualRegions.last?.id
         }
         draftRegion = nil
+    }
+
+    private func showToast(_ message: String) {
+        toastMessage = message
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_200_000_000)
+            if toastMessage == message {
+                toastMessage = nil
+            }
+        }
     }
 
     private var redactionPicker: some View {
@@ -901,6 +953,7 @@ struct PrivacyRedactView: View {
 private struct PrivacyRedactCanvas: View {
     let path: String
     let isVideo: Bool
+    let isDetecting: Bool
     let mode: PrivacyRedactView.RedactMode
     let regions: [PrivacyRedactionRegion]
     let selectedManualRegionID: UUID?
@@ -958,23 +1011,36 @@ private struct PrivacyRedactCanvas: View {
                     .padding(.leading, 72)
                     .padding(.top, 34)
 
-                if mode == .manual {
+                if isDetecting {
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color(hex: 0x818CF8), style: StrokeStyle(lineWidth: 1.5, dash: [7, 6]))
+                        .fill(Color(hex: 0x020409, alpha: 0.62))
                         .frame(width: imageRect.width, height: imageRect.height)
                         .position(x: imageRect.midX, y: imageRect.midY)
-                        .allowsHitTesting(false)
+
+                    HStack(spacing: 10) {
+                        ProgressView()
+                            .tint(.white)
+                        Text(L10n.tr("privacy_redact_detecting"))
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(LNColor.title)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Color(hex: 0x101722, alpha: 0.88))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: 0x2F4564), lineWidth: 1))
+                    .position(x: imageRect.midX, y: imageRect.midY)
                 }
             }
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 6)
                     .onChanged { value in
-                        guard mode == .manual, !isVideo else { return }
+                        guard mode == .manual, !isVideo, !isDetecting else { return }
                         onDraftChanged(normalizedRect(from: value.startLocation, to: value.location, in: imageRect))
                     }
                     .onEnded { value in
-                        guard mode == .manual, !isVideo else { return }
+                        guard mode == .manual, !isVideo, !isDetecting else { return }
                         onDraftCommitted(normalizedRect(from: value.startLocation, to: value.location, in: imageRect))
                     }
             )
@@ -1098,22 +1164,43 @@ private struct PrivacyRedactRegionView: View {
     }
 }
 
+private struct PrivacyRedactToast: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(LNColor.title)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color(hex: 0x101722, alpha: 0.94))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0x2F4564), lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.25), radius: 12, y: 8)
+            .accessibilityIdentifier("privacy_redact_toast")
+    }
+}
+
 private struct PrivacyRedactSmallChip: View {
     let title: String
     let identifier: String
+    var isEnabled = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color(hex: 0xB7C6DD))
+                .foregroundStyle(isEnabled ? Color(hex: 0xB7C6DD) : Color(hex: 0x66758A))
                 .frame(width: 72, height: 36)
-                .background(LNColor.sectionBg)
+                .background(isEnabled ? LNColor.sectionBg : Color(hex: 0x0B1420))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
         }
         .buttonStyle(.plain)
+        .disabled(!isEnabled)
         .accessibilityIdentifier(identifier)
     }
 }

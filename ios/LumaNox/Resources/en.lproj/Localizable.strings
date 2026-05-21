@@ -124,6 +124,8 @@
 "privacy_redact_drag_hint" = "Drag to select a sensitive area";
 "privacy_redact_detection_status" = "AI 3 regions · Manual 1 region";
 "privacy_redact_detection_status_fmt" = "AI %d regions · Manual %d regions";
+"privacy_redact_detecting" = "Detecting sensitive information…";
+"privacy_redact_no_sensitive_toast" = "No sensitive information detected";
 "privacy_redact_enter_manual" = "Draw";
 "privacy_redact_manual_hint" = "Drag on the image; the style applies to the active manual region";
 "privacy_redact_manual_done" = "Done";

@@ -90,6 +90,11 @@ final class PrivacyRedactionService: ObservableObject {
             lastIsError = true
             return PrivacyRedactionResult(imported: false, detectedRegionCount: 0)
         }
+        guard !regions.isEmpty else {
+            lastMessage = L10n.tr("privacy_redact_no_sensitive_toast")
+            lastIsError = false
+            return PrivacyRedactionResult(imported: false, detectedRegionCount: 0)
+        }
 
         isSaving = true
         defer { isSaving = false }

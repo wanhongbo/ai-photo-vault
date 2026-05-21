@@ -124,6 +124,8 @@
 "privacy_redact_drag_hint" = "拖动框选敏感区域";
 "privacy_redact_detection_status" = "AI识别 3处 · 手动 1处";
 "privacy_redact_detection_status_fmt" = "AI识别 %d处 · 手动 %d处";
+"privacy_redact_detecting" = "正在识别敏感信息…";
+"privacy_redact_no_sensitive_toast" = "未检测到敏感信息";
 "privacy_redact_enter_manual" = "手动框选";
 "privacy_redact_manual_hint" = "拖动框选区域，样式作用于当前手动区域";
 "privacy_redact_manual_done" = "完成";
