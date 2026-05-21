@@ -22,7 +22,6 @@ struct AIHomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     aiScanSummaryCard
-                    aiStatsRow
                     HStack {
                         Text(L10n.tr("ai_tools_title"))
                             .font(LNTypography.titleLarge())
@@ -106,14 +105,6 @@ struct AIHomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
         .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(Color(hex: 0x244869), lineWidth: 1))
         .accessibilityIdentifier("ai_scan_summary_card")
-    }
-
-    private var aiStatsRow: some View {
-        HStack(spacing: 10) {
-            AIStatPill(value: "\(aiService.summary.scannedCount)/\(aiService.summary.totalCount)", label: L10n.tr("ai_stat_scanned"), color: LNColor.brandBlue)
-            AIStatPill(value: "\(aiService.summary.sensitiveCount)", label: L10n.tr("ai_stat_sensitive"), color: LNColor.amberWarning)
-            AIStatPill(value: "\(aiService.summary.cleanupCount)", label: L10n.tr("ai_stat_cleanup"), color: LNColor.cleanupOrange)
-        }
     }
 
     private var aiToolList: some View {
@@ -1467,30 +1458,6 @@ private struct PrivacyRedactShareSheet: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
-private struct AIStatPill: View {
-    let value: String
-    let label: String
-    let color: Color
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(value)
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(color)
-            Text(label)
-                .font(LNTypography.labelMedium())
-                .foregroundStyle(LNColor.subtitle)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(LNColor.sectionBg)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
-    }
 }
 
 private struct AIActionHeaderCard: View {
