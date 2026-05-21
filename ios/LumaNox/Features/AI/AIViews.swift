@@ -503,11 +503,11 @@ struct PrivacyRedactView: View {
                     isVideo: activeIsVideo,
                     selectedStyle: selectedStyle
                 )
-                .frame(height: min(430, max(390, proxy.size.height * 0.49)))
+                .frame(height: min(400, max(360, proxy.size.height * 0.46)))
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
 
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     privacyRedactStatusLine
                     privacyRedactManualOps
                     PrivacyRedactStylePicker(selectedStyle: $selectedStyle)
@@ -576,19 +576,19 @@ struct PrivacyRedactView: View {
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 12)
-            .frame(height: 32)
+            .frame(height: 40)
             .background(LNColor.sectionBg)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
 
             Button {} label: {
                 Text(L10n.tr("privacy_redact_manual_done"))
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(Color.white)
-                    .frame(width: 78, height: 32)
+                    .frame(width: 88, height: 40)
                     .background(Color(hex: 0x1F4A9E))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.brandBlue, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.brandBlue, lineWidth: 1))
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("privacy_redact_manual_done")
@@ -604,7 +604,7 @@ struct PrivacyRedactView: View {
             PrivacyRedactSmallChip(title: L10n.tr("privacy_redact_undo"), identifier: "privacy_redact_undo")
             PrivacyRedactSmallChip(title: L10n.tr("privacy_redact_clear"), identifier: "privacy_redact_clear")
         }
-        .frame(height: 28)
+        .frame(height: 36)
     }
 
     private var privacyRedactBottomActions: some View {
@@ -952,10 +952,10 @@ private struct PrivacyRedactSmallChip: View {
             Text(title)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(hex: 0xB7C6DD))
-                .frame(width: 64, height: 28)
+                .frame(width: 72, height: 36)
                 .background(LNColor.sectionBg)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier(identifier)
@@ -981,16 +981,16 @@ private struct PrivacyRedactStylePicker: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 31)
+                        .frame(height: 38)
                         .background(selectedStyle == style ? LNColor.brandBlue : LNColor.sectionBg)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(selectedStyle == style ? LNColor.brandBlue : LNColor.stroke, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(selectedStyle == style ? LNColor.brandBlue : LNColor.stroke, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("privacy_redact_style_\(style.rawValue)")
             }
         }
-        .frame(height: 70)
+        .frame(height: 84)
     }
 }
 
