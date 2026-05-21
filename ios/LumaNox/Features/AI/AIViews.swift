@@ -438,6 +438,7 @@ struct AIClassifyView: View {
 }
 
 struct AIClassifyDetailView: View {
+    @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
     let category: String
@@ -447,19 +448,41 @@ struct AIClassifyDetailView: View {
     }
 
     var body: some View {
-        LNScreenScaffold(title: localizedCategory(category), onBack: { dismiss() }) {
+        VaultListScreenChrome(title: localizedCategory(category), onBack: { dismiss() }) { availableWidth in
+            let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
+
             if categoryRecords.isEmpty {
-                AIEmptyActionView(
-                    systemImage: "tray",
-                    title: L10n.tr("ai_classify_detail_empty"),
-                    message: L10n.tr("ai_classify_empty_desc")
-                )
+                VStack {
+                    AIEmptyActionView(
+                        systemImage: "tray",
+                        title: L10n.tr("ai_classify_detail_empty"),
+                        message: L10n.tr("ai_classify_empty_desc")
+                    )
+                }
+                .padding(.horizontal, LNSpacing.screenHorizontal)
+                .padding(.top, 22)
+                .padding(.bottom, 28)
             } else {
-                LNMediaGrid(items: categoryRecords.map(mediaItem)) { _ in }
+                VaultMediaGridCard(
+                    items: categoryRecords.map(mediaItem),
+                    width: cardWidth,
+                    onSelect: open
+                )
+                .padding(.horizontal, LNSpacing.screenHorizontal)
+                .padding(.top, 22)
+                .padding(.bottom, 28)
             }
         }
         .task { aiService.refreshSummary() }
         .accessibilityIdentifier("ai_classify_detail_view")
+    }
+
+    private func open(_ item: LNMediaItem) {
+        if item.isVideo {
+            router.pushAI(.videoPlayer(path: item.path, isTrash: false))
+        } else {
+            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .recent))
+        }
     }
 }
 

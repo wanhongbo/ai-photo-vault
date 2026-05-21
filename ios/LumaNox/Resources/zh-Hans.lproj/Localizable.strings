@@ -349,6 +349,10 @@
 "storage_usage_encrypted_size" = "密文占用";
 "storage_usage_metadata_updated" = "索引更新时间";
 "language_settings_title" = "语言";
+"language_follow_system" = "跟随系统";
+"language_simplified_chinese" = "简体中文";
+"language_english" = "English";
+"language_effective_label" = "当前生效语言：%@";
 "privacy_policy_title" = "隐私政策";
 "terms_title" = "服务条款";
 "legal_placeholder" = "法务页面占位，后续同步 Android raw HTML。";

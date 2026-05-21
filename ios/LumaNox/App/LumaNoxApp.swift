@@ -13,6 +13,7 @@ struct LumaNoxApp: App {
     @StateObject private var appLock = AppLockManager.shared
     @StateObject private var vaultStore = VaultStore.shared
     @StateObject private var subscription = SubscriptionService.shared
+    @StateObject private var languageManager = LanguageManager.shared
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -22,6 +23,8 @@ struct LumaNoxApp: App {
                 .environmentObject(appLock)
                 .environmentObject(vaultStore)
                 .environmentObject(subscription)
+                .environmentObject(languageManager)
+                .environment(\.locale, languageManager.effectiveLocale)
                 .preferredColorScheme(.dark)
                 .onChange(of: scenePhase) { phase in
                     appLock.handleScenePhase(phase)

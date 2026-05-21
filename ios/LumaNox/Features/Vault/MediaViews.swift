@@ -120,7 +120,7 @@ struct RecentPhotosView: View {
     }
 }
 
-private struct VaultListScreenChrome<Content: View>: View {
+struct VaultListScreenChrome<Content: View>: View {
     let title: String
     let onBack: () -> Void
     @ViewBuilder let content: (CGFloat) -> Content
@@ -276,7 +276,7 @@ private struct VaultCreateAlbumListCard: View {
     }
 }
 
-private struct VaultMediaGridCard: View {
+struct VaultMediaGridCard: View {
     let items: [LNMediaItem]
     let width: CGFloat
     let onSelect: (LNMediaItem) -> Void

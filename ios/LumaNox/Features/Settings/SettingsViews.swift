@@ -276,11 +276,17 @@ struct SettingsDataStorageView: View {
 
 struct SettingsGeneralView: View {
     @EnvironmentObject private var router: AppRouter
+    @EnvironmentObject private var languageManager: LanguageManager
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         LNScreenScaffold(title: L10n.settingsGeneral, onBack: { dismiss() }) {
-            LNSettingsRow(title: L10n.languageTitle) { router.pushSettings(.languageSettings) }
+            LNSettingsRow(
+                title: L10n.languageTitle,
+                subtitle: languageManager.effectiveLanguageLabel
+            ) {
+                router.pushSettings(.languageSettings)
+            }
         }
     }
 }
@@ -464,14 +470,22 @@ struct StorageUsageView: View {
 }
 
 struct LanguageSettingsView: View {
+    @EnvironmentObject private var languageManager: LanguageManager
     @Environment(\.dismiss) private var dismiss
-    @State private var selection = 0
-
     var body: some View {
         LNScreenScaffold(title: L10n.languageTitle, onBack: { dismiss() }) {
-            Picker(L10n.languageTitle, selection: $selection) {
-                Text("简体中文").tag(0)
-                Text("English").tag(1)
+            Text(L10n.languageCurrentLanguage(languageManager.effectiveLanguageLabel))
+                .font(LNTypography.bodyMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.bottom, 4)
+            Picker(L10n.languageTitle, selection: Binding(
+                get: { languageManager.selection },
+                set: { languageManager.setSelection($0) }
+            )) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(L10n.tr(language.labelKey)).tag(language)
+                }
             }
             .pickerStyle(.inline)
         }

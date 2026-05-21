@@ -1,0 +1,193 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_ai_classify_detail",
+      "name": "AIClassifyDetailView - Album grid reference",
+      "layout": "none",
+      "fill": "#05080D",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "children": [
+        {
+          "type": "frame",
+          "id": "status_ai_classify_detail",
+          "name": "iOS status bar",
+          "layout": "horizontal",
+          "fill": "transparent",
+          "x": 0,
+          "y": 0,
+          "width": 393,
+          "height": 46,
+          "padding": [14, 24, 0, 24],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "time_ai_classify_detail",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 13,
+              "letterSpacing": 0,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "sys_ai_classify_detail",
+              "content": "||",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 12,
+              "letterSpacing": 0,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "back_ai_classify_detail",
+          "name": "Back button",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 48,
+          "width": 44,
+          "height": 44,
+          "cornerRadius": 14,
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "back_icon_ai_classify_detail",
+              "iconFontFamily": "lucide",
+              "iconFontName": "chevron-left",
+              "x": 11,
+              "y": 11,
+              "width": 22,
+              "height": 22,
+              "fill": "#EAF1FF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "title_ai_classify_detail",
+          "name": "Category title",
+          "content": "People",
+          "fontFamily": "Inter",
+          "fill": "#EAF1FF",
+          "fontSize": 30,
+          "letterSpacing": 0,
+          "fontWeight": "700",
+          "textGrowth": "fixed-width",
+          "textAlign": "center",
+          "x": 70,
+          "y": 52,
+          "width": 253
+        },
+        {
+          "type": "frame",
+          "id": "grid_card_ai_classify_detail",
+          "name": "Category media grid card",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "stroke": { "fill": "#243348", "thickness": 1 },
+          "x": 16,
+          "y": 114,
+          "width": 361,
+          "height": "fit_content",
+          "padding": 16,
+          "gap": 8,
+          "cornerRadius": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "grid_row_ai_classify_detail_1",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 103,
+              "gap": 8,
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "thumb_ai_classify_detail_1",
+                  "name": "Real media thumbnail",
+                  "fill": "#142741",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                },
+                {
+                  "type": "rectangle",
+                  "id": "thumb_ai_classify_detail_2",
+                  "name": "Real media thumbnail",
+                  "fill": "#1B304D",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                },
+                {
+                  "type": "rectangle",
+                  "id": "thumb_ai_classify_detail_3",
+                  "name": "Real media thumbnail",
+                  "fill": "#28364E",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "grid_row_ai_classify_detail_2",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 103,
+              "gap": 8,
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "thumb_ai_classify_detail_4",
+                  "name": "Real media thumbnail",
+                  "fill": "#203047",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                },
+                {
+                  "type": "rectangle",
+                  "id": "thumb_ai_classify_detail_5",
+                  "name": "Real media thumbnail",
+                  "fill": "#17324F",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                },
+                {
+                  "type": "rectangle",
+                  "id": "thumb_ai_classify_detail_6",
+                  "name": "Real media thumbnail",
+                  "fill": "#233954",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
