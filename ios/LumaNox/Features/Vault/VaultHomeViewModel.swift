@@ -1,7 +1,9 @@
+import CoreTransferable
 import Foundation
 import Photos
 import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
 
 @MainActor
 final class VaultHomeViewModel: ObservableObject {
@@ -63,34 +65,12 @@ final class VaultHomeViewModel: ObservableObject {
         pickerItems = []
         Task {
             vaultStore.beginImportBatch()
-            var summary = VaultImportSummary()
-            for item in items {
-                let ext = extensionForPickerItem(item)
-                if let data = try? await item.loadTransferable(type: Data.self) {
-                    switch await vaultStore.importPlainData(data, fileExtension: ext) {
-                    case .added: summary.added += 1
-                    case .duplicate: summary.duplicate += 1
-                    case .failed: summary.failed += 1
-                    }
-                } else {
-                    summary.failed += 1
-                }
-            }
+            let summary = await PhotosPickerVaultImporter.importItems(items, into: vaultDefaultAlbumName, vaultStore: vaultStore)
             vaultStore.endImportBatch()
             await vaultStore.finalizeImportBatch(summary)
             snapshot = vaultStore.snapshot
         }
         return true
-    }
-
-    private func extensionForPickerItem(_ item: PhotosPickerItem) -> String {
-        if let type = item.supportedContentTypes.first {
-            if type.conforms(to: .movie) { return "mp4" }
-            if type.conforms(to: .png) { return "png" }
-            if type.conforms(to: .heic) { return "heic" }
-            return type.preferredFilenameExtension ?? "jpg"
-        }
-        return "jpg"
     }
 
     func createAlbum(router: AppRouter) {
@@ -114,4 +94,77 @@ private var debugSkipsPin: Bool {
     #else
     false
     #endif
+}
+
+private struct VaultPickedMediaFile: Transferable {
+    let url: URL
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(contentType: .item) { file in
+            SentTransferredFile(file.url)
+        } importing: { received in
+            let ext = received.file.pathExtension.isEmpty ? "bin" : received.file.pathExtension
+            let copy = FileManager.default.temporaryDirectory
+                .appendingPathComponent("lumanox_picker_\(UUID().uuidString).\(ext)")
+            if FileManager.default.fileExists(atPath: copy.path) {
+                try FileManager.default.removeItem(at: copy)
+            }
+            try FileManager.default.copyItem(at: received.file, to: copy)
+            return VaultPickedMediaFile(url: copy)
+        }
+    }
+}
+
+@MainActor
+enum PhotosPickerVaultImporter {
+    static func importItems(
+        _ items: [PhotosPickerItem],
+        into albumName: String,
+        vaultStore: VaultStore = .shared
+    ) async -> VaultImportSummary {
+        var summary = VaultImportSummary()
+        for item in items {
+            switch await importItem(item, into: albumName, vaultStore: vaultStore) {
+            case .added: summary.added += 1
+            case .duplicate: summary.duplicate += 1
+            case .failed: summary.failed += 1
+            }
+        }
+        return summary
+    }
+
+    private static func importItem(
+        _ item: PhotosPickerItem,
+        into albumName: String,
+        vaultStore: VaultStore
+    ) async -> VaultImportResult {
+        if let picked = try? await item.loadTransferable(type: VaultPickedMediaFile.self) {
+            defer { try? FileManager.default.removeItem(at: picked.url) }
+            return await vaultStore.importPlainFile(
+                at: picked.url,
+                fileExtension: extensionForPickerItem(item, fallback: picked.url.pathExtension),
+                albumName: albumName
+            )
+        }
+
+        if let data = try? await item.loadTransferable(type: Data.self) {
+            return await vaultStore.importPlainData(
+                data,
+                fileExtension: extensionForPickerItem(item),
+                albumName: albumName
+            )
+        }
+
+        return .failed
+    }
+
+    private static func extensionForPickerItem(_ item: PhotosPickerItem, fallback: String = "jpg") -> String {
+        if let type = item.supportedContentTypes.first {
+            if type.conforms(to: .movie) { return type.preferredFilenameExtension ?? "mp4" }
+            if type.conforms(to: .png) { return "png" }
+            if type.conforms(to: .heic) { return "heic" }
+            return type.preferredFilenameExtension ?? fallback
+        }
+        return fallback.isEmpty ? "jpg" : fallback
+    }
 }

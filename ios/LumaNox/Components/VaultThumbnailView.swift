@@ -115,7 +115,7 @@ struct VaultMediaThumbnailView: View {
 }
 
 private func makeImageThumbnail(encryptedURL: URL, targetPixelSize: CGFloat) -> UIImage? {
-    guard let data = try? VaultCipher.shared.decryptFile(at: encryptedURL) else { return nil }
+    guard let data = vaultReadableData(at: encryptedURL) else { return nil }
     let options: [CFString: Any] = [
         kCGImageSourceCreateThumbnailFromImageAlways: true,
         kCGImageSourceShouldCacheImmediately: false,
@@ -133,16 +133,27 @@ private func makeVideoThumbnail(encryptedURL: URL, targetPixelSize: CGFloat) -> 
     let cacheDir = FileManager.default.temporaryDirectory
         .appendingPathComponent("vault_thumb_video", isDirectory: true)
     let tempURL = cacheDir.appendingPathComponent("\(UUID().uuidString).\(encryptedURL.pathExtension.isEmpty ? "mov" : encryptedURL.pathExtension)")
+    var shouldRemoveTemp = false
     do {
         try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
-        _ = try VaultCipher.shared.decryptToTempFile(
+        let playbackURL: URL
+        if let decrypted = try? VaultCipher.shared.decryptToTempFile(
             sourceURL: encryptedURL,
             cacheDirectory: cacheDir,
             fileName: tempURL.lastPathComponent
-        )
-        defer { try? FileManager.default.removeItem(at: tempURL) }
+        ) {
+            playbackURL = decrypted
+            shouldRemoveTemp = true
+        } else {
+            playbackURL = encryptedURL
+        }
+        defer {
+            if shouldRemoveTemp {
+                try? FileManager.default.removeItem(at: tempURL)
+            }
+        }
 
-        let asset = AVURLAsset(url: tempURL)
+        let asset = AVURLAsset(url: playbackURL)
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
         generator.maximumSize = CGSize(width: targetPixelSize, height: targetPixelSize)
@@ -152,4 +163,16 @@ private func makeVideoThumbnail(encryptedURL: URL, targetPixelSize: CGFloat) -> 
         try? FileManager.default.removeItem(at: tempURL)
         return nil
     }
+}
+
+private func vaultReadableData(at url: URL) -> Data? {
+    if let decrypted = try? VaultCipher.shared.decryptFile(at: url) {
+        return decrypted
+    }
+
+    guard let raw = try? Data(contentsOf: url) else { return nil }
+    if CGImageSourceCreateWithData(raw as CFData, nil) != nil || UIImage(data: raw) != nil {
+        return raw
+    }
+    return nil
 }

@@ -178,46 +178,6 @@ fun AlbumScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = stringResource(R.string.common_loading), color = UiColors.Home.subtitle)
             }
-        } else if (photos.isEmpty()) {
-            val emptyAddInteraction = rememberFeedbackInteractionSource()
-            val emptyPressed = emptyAddInteraction.collectIsPressedAsState()
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(UiSize.homeEmptyIconWrap)
-                        .plusPressFeedback(emptyAddInteraction, CircleShape)
-                        .clip(CircleShape)
-                        .background(UiColors.Home.emptyIconBg)
-                        .border(
-                            width = if (emptyPressed.value) 1.8.dp else 1.2.dp,
-                            color = if (emptyPressed.value) UiColors.Home.navItemActive else UiColors.Home.navItemActiveStroke.copy(alpha = 0.55f),
-                            shape = CircleShape,
-                        )
-                        .throttledClickable(interactionSource = emptyAddInteraction, indication = null) {
-                            triggerImport()
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(painter = painterResource(R.drawable.ic_home_action_add), contentDescription = stringResource(R.string.album_action_add), tint = UiColors.Home.navItemActive)
-                }
-                Text(
-                    text = stringResource(R.string.album_empty_title),
-                    color = UiColors.Home.emptyTitle,
-                    fontSize = UiTextSize.homeEmptyTitle,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 12.dp),
-                )
-                Text(
-                    text = stringResource(R.string.album_empty_desc),
-                    color = UiColors.Home.emptyBody,
-                    fontSize = UiTextSize.homeEmptyBody,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-            }
         } else {
             Box(
                 modifier = Modifier
@@ -235,30 +195,7 @@ fun AlbumScreen(
                 ) {
                     if (!selectionMode) {
                         item {
-                            val addInteraction = rememberFeedbackInteractionSource()
-                            val addPressed = addInteraction.collectIsPressedAsState()
-                            Box(
-                                modifier = Modifier
-                                    .size(UiSize.homeThumbSize)
-                                    .plusPressFeedback(addInteraction, RoundedCornerShape(UiRadius.homeThumb))
-                                    .clip(RoundedCornerShape(UiRadius.homeThumb))
-                                    .background(UiColors.Home.emptyIconBg)
-                                    .border(
-                                        width = if (addPressed.value) 1.8.dp else 1.2.dp,
-                                        color = if (addPressed.value) UiColors.Home.navItemActive else UiColors.Home.navItemActiveStroke.copy(alpha = 0.45f),
-                                        shape = RoundedCornerShape(UiRadius.homeThumb),
-                                    )
-                                    .throttledClickable(interactionSource = addInteraction, indication = null) {
-                                        triggerImport()
-                                    },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_home_action_add),
-                                    contentDescription = stringResource(R.string.album_action_add),
-                                    tint = UiColors.Home.navItemActive,
-                                )
-                            }
+                            AlbumImportGridItem(onClick = triggerImport)
                         }
                     }
                     items(photos, key = { it.path }) { photo ->
@@ -303,6 +240,37 @@ fun AlbumScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun AlbumImportGridItem(
+    onClick: () -> Unit,
+) {
+    val addInteraction = rememberFeedbackInteractionSource()
+    val addPressed = addInteraction.collectIsPressedAsState()
+
+    Box(
+        modifier = Modifier
+            .size(UiSize.homeThumbSize)
+            .plusPressFeedback(addInteraction, RoundedCornerShape(UiRadius.homeThumb))
+            .clip(RoundedCornerShape(UiRadius.homeThumb))
+            .background(UiColors.Home.emptyIconBg)
+            .border(
+                width = if (addPressed.value) 1.8.dp else 1.2.dp,
+                color = if (addPressed.value) UiColors.Home.navItemActive else UiColors.Home.navItemActiveStroke.copy(alpha = 0.45f),
+                shape = RoundedCornerShape(UiRadius.homeThumb),
+            )
+            .throttledClickable(interactionSource = addInteraction, indication = null) {
+                onClick()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_home_action_add),
+            contentDescription = stringResource(R.string.album_action_add),
+            tint = UiColors.Home.navItemActive,
+        )
     }
 }
 

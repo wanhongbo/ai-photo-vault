@@ -25,6 +25,7 @@
 "home_album_create_title" = "New Album";
 "home_album_create_input_hint" = "Album name";
 "home_album_create_confirm" = "Create";
+"album_import_media_action" = "Import to this album";
 "home_camera_empty_action" = "Take private photo";
 
 "camera_home_title" = "Private Camera";

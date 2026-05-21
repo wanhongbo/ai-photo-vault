@@ -2,14 +2,34 @@
 
 > This file provides AI coding agents with the project context needed to work effectively on this codebase.
 
+## Mandatory Session Bootstrap
+
+Every new coding session must read this file first. For iOS work, also read these files before making design or code changes:
+
+- `docs/ios-session-handoff.md` — latest iOS implementation summary and handoff notes
+- `docs/ios-technical-plan.md` — iOS product-function analysis, architecture plan, milestones, and module implementation strategy
+- `docs/ios-ux-spec.md` — iOS product UX specification for information architecture, page states, interactions, content, privacy, and accessibility
+- `docs/ios-ux-guidelines.md` — iOS visual, interaction, accessibility, and validation rules
+- `docs/ios-pen-code-workflow.md` — one-page-one-Pen workflow and Pen-to-SwiftUI implementation rules
+- `docs/ios-parity-spec.md` — Android-to-iOS page, route, and component parity reference
+- `docs/ios-data-model-layer.md` — current iOS metadata/data-model design
+- `docs/ios-self-test.md` — manual iOS self-test checklist
+
+For any iOS code implementation, first align the intended behavior and module boundaries with `docs/ios-technical-plan.md`, then align the user-facing interaction, state handling, visual hierarchy, privacy copy, and accessibility behavior with `docs/ios-ux-spec.md`.
+
+When a user asks for iOS UI implementation, treat `.pen` files as the visual source of truth: update or create the corresponding Pen file first, then implement SwiftUI from it, then validate in the iOS simulator.
+
 ## Project Overview
 
-**LumaNox** (internal code name: `xpx.vault`) is a privacy-first, fully offline photo & video vault app for Android. All data is AES-256 encrypted on-device — zero cloud, zero data collection. The app features AI-powered privacy redaction, smart cleanup/classification, encrypted backup/restore, biometric unlock, and a Premium subscription via RevenueCat.
+**LumaNox** (internal code name: `xpx.vault`) is a privacy-first, fully offline photo & video vault app. Android is the mature reference implementation; iOS is being built to match Android's product behavior while using native SwiftUI and iOS platform conventions. All data is AES-256 encrypted on-device — zero cloud, zero data collection. The app features AI-powered privacy redaction, smart cleanup/classification, encrypted backup/restore, biometric unlock, and a Premium subscription via RevenueCat.
 
 - **Package**: `com.xpx.vault`
+- **iOS Bundle ID**: `com.xpx.vault`
 - **Min SDK**: 26 (Android 8.0) / **Target SDK**: 35 / **Compile SDK**: 35
+- **iOS Target**: iOS 16.0+
 - **JDK Toolchain**: 21 (required for compilation — JDK 17 will fail)
 - **Kotlin**: 2.0.21 / **Gradle**: 8.11.1 / **AGP**: 8.7.2
+- **iOS Stack**: SwiftUI / XcodeGen / CryptoKit / PhotosUI / AVFoundation / LocalAuthentication / RevenueCat
 
 ## Module Structure
 
@@ -23,6 +43,12 @@ android/
 │   └── ai-mlkit/               # ML Kit integration: face/text/barcode/image labeling analyzers
 └── feature/
     └── ai/                     # Feature-level AI placeholder (minimal)
+ios/
+├── LumaNox/App                 # SwiftUI app entry and root flow
+├── LumaNox/Core                # design system, navigation, crypto, vault, backup, metadata
+├── LumaNox/Components          # reusable SwiftUI components
+├── LumaNox/Features            # feature screens, each UI page should have a matching .pen
+└── LumaNox/Resources           # localization and assets
 ```
 
 ### Key Directories within `app/`
@@ -58,6 +84,8 @@ android/
 
 ## Build & Run
 
+### Android
+
 ```bash
 # Compile (dev flavor — always use dev+debug)
 ./gradlew :app:compileDevDebugKotlin
@@ -70,6 +98,16 @@ android/
 ```
 
 **Important**: The project requires **JDK 21**. Compilation will fail with "Cannot find a Java installation" if only JDK 17 or earlier is available.
+
+### iOS
+
+```bash
+cd ios
+xcodegen generate
+xcodebuild -scheme LumaNox -project LumaNox.xcodeproj -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' build
+```
+
+After every iOS code change, install and launch the app on an iOS simulator and capture a screenshot. A passing compile is not enough. Prefer `iPhone 16` unless the task requires another device class.
 
 ## Architecture Patterns
 
@@ -94,6 +132,20 @@ android/
 - Compose state hoisting pattern — UI state in ViewModels, collected via `collectAsStateWithLifecycle()`.
 - `BackupRuntimeState` / `AppLockManager` are singleton objects for app-wide state.
 
+### iOS Architecture
+- SwiftUI screens live under `ios/LumaNox/Features/**`.
+- Navigation route definitions live in `ios/LumaNox/Core/Navigation/AppRoute.swift`; route rendering lives in `RouteDestinationView.swift`.
+- Shared design tokens live in `ios/LumaNox/Core/DesignSystem`.
+- Vault data and metadata are local-only. Encrypted files under `Documents/vault_albums/` remain the source of truth; `vault_metadata_v1.json` is a rebuildable index.
+- Real media grids must use decrypted thumbnails through `VaultMediaThumbnailView` / `LNMediaGrid`, not decorative placeholders except for loading, empty, or failure states.
+- Any iOS code implementation must reference `docs/ios-technical-plan.md` for product/module strategy and `docs/ios-ux-spec.md` for UX behavior, page states, privacy wording, and accessibility requirements.
+
+### iOS Pen-to-Code Rule
+- Every routable iOS UI page must have a corresponding `.pen` file. Use the target index in `docs/ios-pen-code-workflow.md`.
+- For new or changed UI, update/create the Pen first, then generate or adapt SwiftUI from that Pen.
+- Android Compose screens are the behavior reference; iOS Pen files are the visual source of truth.
+- If simulator screenshots diverge from the Pen, reconcile both before marking the task complete.
+
 ## Coding Conventions
 
 ### String Resources (i18n)
@@ -108,6 +160,7 @@ android/
 - Chinese default: `res/values/strings.xml`
 - English translation: `res/values-en/strings.xml`
 - Comment convention: group by feature with `<!-- ========== 分类 ========== -->`
+- iOS user-visible strings must be in `ios/LumaNox/Resources/*.lproj/Localizable.strings` and accessed via `L10n`.
 
 ### Typography
 - Font: `AppFontFamily` (= `FontFamily.SansSerif`, maps to Noto Sans CJK/思源黑体 on Chinese devices).
@@ -213,3 +266,14 @@ enum class MyTab(@StringRes val labelRes: Int) {
 | Legal HTML pages | `app/src/main/res/raw/` (privacy_policy_*, terms_of_service_*) |
 | Proguard rules | `app/proguard-rules.pro` |
 | Version catalog | `gradle/libs.versions.toml` |
+| iOS parity / UX spec | `docs/ios-parity-spec.md` |
+| iOS latest handoff | `docs/ios-session-handoff.md` |
+| iOS technical plan | `docs/ios-technical-plan.md` |
+| iOS product UX spec | `docs/ios-ux-spec.md` |
+| iOS UX rules | `docs/ios-ux-guidelines.md` |
+| iOS Pen-to-code workflow | `docs/ios-pen-code-workflow.md` |
+| iOS data model layer | `docs/ios-data-model-layer.md` |
+| iOS manual self-test cases | `docs/ios-self-test.md` |
+| iOS SwiftUI app | `ios/LumaNox/` |
+| iOS design system | `ios/LumaNox/Core/DesignSystem/` |
+| iOS Pen files | `ios/LumaNox/**/*.pen` |

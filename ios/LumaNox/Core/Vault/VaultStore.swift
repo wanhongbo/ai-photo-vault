@@ -87,12 +87,39 @@ final class VaultStore: ObservableObject {
             let ext = fileExtension.lowercased()
             let hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
             let dest = albumDir.appendingPathComponent("asset_\(hash).\(ext)")
-            if fileManager.fileExists(atPath: dest.path) { return .duplicate }
+            if fileManager.fileExists(atPath: dest.path), canReadExistingVaultMedia(at: dest) {
+                return .duplicate
+            }
 
             let temp = albumDir.appendingPathComponent("tmp_\(UUID().uuidString).\(ext)")
             try data.write(to: temp, options: .atomic)
             defer { try? fileManager.removeItem(at: temp) }
             try cipher.encryptFile(at: temp, to: dest)
+            return .added
+        } catch {
+            return .failed
+        }
+    }
+
+    func importPlainFile(at sourceURL: URL, fileExtension: String, albumName: String = vaultDefaultAlbumName) async -> VaultImportResult {
+        do {
+            let safeAlbum = (try? createAlbum(named: albumName)) ?? vaultDefaultAlbumName
+            let albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
+            let ext = fileExtension.lowercased()
+            let hash = try sha256Hex(of: sourceURL)
+            let dest = albumDir.appendingPathComponent("asset_\(hash).\(ext)")
+            if fileManager.fileExists(atPath: dest.path), canReadExistingVaultMedia(at: dest) {
+                return .duplicate
+            }
+
+            try cipher.encryptFileFromChunks(to: dest) { sink in
+                let handle = try FileHandle(forReadingFrom: sourceURL)
+                defer { try? handle.close() }
+                while let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty {
+                    try sink(chunk)
+                }
+            }
+            invalidateCache()
             return .added
         } catch {
             return .failed
@@ -152,5 +179,47 @@ final class VaultStore: ObservableObject {
             return L10n.tr("home_import_failed")
         }
         return L10n.tr("home_import_none")
+    }
+
+    private func sha256Hex(of url: URL) throws -> String {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var digest = SHA256()
+        while let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty {
+            digest.update(data: chunk)
+        }
+        return digest.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func canReadExistingVaultMedia(at url: URL) -> Bool {
+        if let decrypted = try? cipher.decryptFile(at: url), looksLikeMediaData(decrypted) {
+            return true
+        }
+        if let raw = try? Data(contentsOf: url), looksLikeMediaData(raw) {
+            return true
+        }
+        return false
+    }
+
+    private func looksLikeMediaData(_ data: Data) -> Bool {
+        let bytes = Array(data.prefix(16))
+        guard bytes.count >= 4 else { return false }
+
+        if bytes.starts(with: [0xFF, 0xD8, 0xFF]) { return true }
+        if bytes.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return true }
+        if bytes.starts(with: [0x47, 0x49, 0x46, 0x38]) { return true }
+        if bytes.starts(with: [0x49, 0x49, 0x2A, 0x00]) || bytes.starts(with: [0x4D, 0x4D, 0x00, 0x2A]) {
+            return true
+        }
+        if bytes.count >= 12,
+           bytes[0...3].elementsEqual([0x52, 0x49, 0x46, 0x46]),
+           bytes[8...11].elementsEqual([0x57, 0x45, 0x42, 0x50]) {
+            return true
+        }
+        if bytes.count >= 12,
+           bytes[4...7].elementsEqual([0x66, 0x74, 0x79, 0x70]) {
+            return true
+        }
+        return false
     }
 }

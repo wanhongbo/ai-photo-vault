@@ -1,0 +1,37 @@
+---
+description: 打 Release AAB 前必须递增 versionCode/versionName，并走 prodRelease 构建流程
+alwaysApply: true
+---
+
+# Android Release AAB 发布约定
+
+当用户要求**编译 / 更新 / 上传 Release AAB**（含 `bundleProdRelease`、`打 aab`、`上架包` 等）时，**必须先改版本号再构建**，不得直接复用旧 versionCode。
+
+## 版本号（唯一来源）
+
+文件：`android/app/build.gradle.kts` → `defaultConfig`：
+
+- **`versionCode`**：每次上架 Play 必须 **+1**（整数，单调递增）。
+- **`versionName`**：同步更新用户可见版本（建议语义化，如 `0.2.2` → `0.2.3`；较大改动可用 `0.3.0`）。
+
+改完后在回复中明确写出**新旧版本**，便于用户对照 Play Console。
+
+## 构建命令
+
+```bash
+export JAVA_HOME=/Users/wanhongbo/workspace/jdk-21.0.11.jdk/Contents/Home
+cd android && ./gradlew :app:bundleProdRelease
+```
+
+- 使用 **`prodRelease`**（商店包），不要用 `devDebug`。
+- JDK 21 已在 `android/local.properties`（`org.gradle.java.home`）；若工具链报错，同时设置 `JAVA_HOME`。
+- Release 需存在 `android/keystore.properties`（已 gitignore）。
+
+## 产物路径
+
+`android/app/build/outputs/bundle/prodRelease/app-prod-release.aab`
+
+## 注意
+
+- `versionCode` 与 Google Play 已上传版本冲突会导致上传失败。
+- 仅改品牌文案、未发新包时，不必改版本号；**一旦要打新 AAB 就必须递增**。

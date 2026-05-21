@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -49,11 +50,7 @@ struct AlbumListView: View {
                     placeholder: L10n.homeAlbumCreateHint,
                     confirmTitle: L10n.homeAlbumCreateConfirm,
                     dismissTitle: L10n.commonCancel,
-                    onConfirm: {
-                        showCreate = false
-                        router.pushVault(.album(name: newName))
-                        newName = ""
-                    },
+                    onConfirm: createAlbumAndOpen,
                     onDismiss: { showCreate = false }
                 )
             }
@@ -69,6 +66,16 @@ struct AlbumListView: View {
 
     private func coverItem(for album: VaultAlbum) -> LNMediaItem? {
         vaultStore.photos(in: album.name).first?.toMediaItem()
+    }
+
+    private func createAlbumAndOpen() {
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let safeName = (try? vaultStore.createAlbum(named: trimmed)) ?? trimmed
+        showCreate = false
+        router.pushVault(.album(name: safeName))
+        newName = ""
+        Task { await vaultStore.loadSnapshot() }
     }
 }
 
@@ -273,21 +280,50 @@ private struct VaultMediaGridCard: View {
     let items: [LNMediaItem]
     let width: CGFloat
     let onSelect: (LNMediaItem) -> Void
+    var importSelection: Binding<[PhotosPickerItem]>? = nil
+    var isImporting = false
+
+    private var hasImportTile: Bool {
+        importSelection != nil
+    }
+
+    private var tileCount: Int {
+        items.count + (hasImportTile ? 1 : 0)
+    }
+
+    private var columnCount: Int {
+        hasImportTile ? min(3, max(1, tileCount)) : 3
+    }
 
     private var cellWidth: CGFloat {
         max(0, floor((width - 32 - LNSpacing.gridGap * 2) / 3))
     }
 
+    private var cardWidth: CGFloat {
+        guard hasImportTile else { return width }
+        return 32 + CGFloat(columnCount) * cellWidth + CGFloat(columnCount - 1) * LNSpacing.gridGap
+    }
+
     private var columns: [GridItem] {
-        [
-            GridItem(.fixed(cellWidth), spacing: LNSpacing.gridGap),
-            GridItem(.fixed(cellWidth), spacing: LNSpacing.gridGap),
-            GridItem(.fixed(cellWidth), spacing: LNSpacing.gridGap),
-        ]
+        Array(repeating: GridItem(.fixed(cellWidth), spacing: LNSpacing.gridGap), count: columnCount)
     }
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: LNSpacing.gridGap) {
+            if let importSelection {
+                PhotosPicker(
+                    selection: importSelection,
+                    maxSelectionCount: 32,
+                    matching: .any(of: [.images, .videos])
+                ) {
+                    VaultMediaImportGridTile(size: cellWidth, isImporting: isImporting)
+                }
+                .disabled(isImporting)
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.tr("album_import_media_action"))
+                .accessibilityIdentifier("album_import_media_tile")
+            }
+
             ForEach(items) { item in
                 Button {
                     onSelect(item)
@@ -309,13 +345,38 @@ private struct VaultMediaGridCard: View {
             }
         }
         .padding(LNSpacing.cardPadding)
-        .frame(width: width)
+        .frame(width: cardWidth)
         .background(LNColor.sectionBg)
         .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
         .overlay(
             RoundedRectangle(cornerRadius: LNRadius.homeCard)
                 .stroke(LNColor.strokeStrong, lineWidth: 1)
         )
+        .frame(width: width, alignment: .leading)
+    }
+}
+
+private struct VaultMediaImportGridTile: View {
+    let size: CGFloat
+    let isImporting: Bool
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(hex: 0x142741))
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(LNColor.stroke, lineWidth: 1)
+
+            if isImporting {
+                ProgressView()
+                    .tint(LNColor.brandBlue)
+            } else {
+                Image(systemName: "plus")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x9FB2D1))
+            }
+        }
+        .frame(width: size, height: size)
     }
 }
 
@@ -324,13 +385,18 @@ struct AlbumView: View {
     @EnvironmentObject private var vaultStore: VaultStore
     @Environment(\.dismiss) private var dismiss
     let albumName: String
+    @State private var pickerItems: [PhotosPickerItem] = []
+
+    private var safeAlbumName: String {
+        vaultStore.sanitizeAlbumName(albumName)
+    }
 
     private var albumItems: [LNMediaItem] {
-        vaultStore.photos(in: albumName).map { $0.toMediaItem() }
+        vaultStore.photos(in: safeAlbumName).map { $0.toMediaItem() }
     }
 
     var body: some View {
-        VaultListScreenChrome(title: albumName, onBack: { dismiss() }) { availableWidth in
+        VaultListScreenChrome(title: safeAlbumName, onBack: { dismiss() }) { availableWidth in
             let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
 
             VStack(spacing: 24) {
@@ -340,13 +406,22 @@ struct AlbumView: View {
                 }
                 .frame(width: cardWidth)
 
-                VaultMediaGridCard(items: albumItems, width: cardWidth, onSelect: open)
+                VaultMediaGridCard(
+                    items: albumItems,
+                    width: cardWidth,
+                    onSelect: open,
+                    importSelection: $pickerItems,
+                    isImporting: vaultStore.isImporting
+                )
             }
             .padding(.horizontal, LNSpacing.screenHorizontal)
             .padding(.top, 22)
             .padding(.bottom, 28)
         }
         .onAppear { Task { await vaultStore.loadSnapshot() } }
+        .onChange(of: pickerItems) { _ in
+            importSelectedItems()
+        }
     }
 
     private func open(_ item: LNMediaItem) {
@@ -354,6 +429,23 @@ struct AlbumView: View {
             router.pushVault(.videoPlayer(path: item.path))
         } else {
             router.pushVault(.photoViewer(path: item.path))
+        }
+    }
+
+    private func importSelectedItems() {
+        guard !pickerItems.isEmpty else { return }
+        guard router.guardProFeature(.vaultImport) else {
+            pickerItems = []
+            return
+        }
+
+        let items = pickerItems
+        pickerItems = []
+        Task {
+            vaultStore.beginImportBatch()
+            let summary = await PhotosPickerVaultImporter.importItems(items, into: safeAlbumName, vaultStore: vaultStore)
+            vaultStore.endImportBatch()
+            await vaultStore.finalizeImportBatch(summary)
         }
     }
 }
@@ -804,9 +896,9 @@ struct TrashBinView: View {
                     .foregroundStyle(LNColor.subtitle)
                 LNMediaGrid(items: trashItems) { item in
                     if item.isVideo {
-                        router.pushVault(.videoPlayer(path: item.path, isTrash: true))
+                        router.pushSettings(.videoPlayer(path: item.path, isTrash: true))
                     } else {
-                        router.pushVault(.photoViewer(path: item.path, isTrash: true))
+                        router.pushSettings(.photoViewer(path: item.path, isTrash: true))
                     }
                 }
             }

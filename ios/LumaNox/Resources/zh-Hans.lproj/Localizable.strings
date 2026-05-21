@@ -25,6 +25,7 @@
 "home_album_create_title" = "新建相册";
 "home_album_create_input_hint" = "输入相册名称";
 "home_album_create_confirm" = "创建";
+"album_import_media_action" = "向此相册导入";
 "home_camera_empty_action" = "拍摄私密照片";
 
 "camera_home_title" = "私密相机";

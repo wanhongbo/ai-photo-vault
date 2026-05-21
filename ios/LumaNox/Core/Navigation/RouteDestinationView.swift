@@ -16,6 +16,7 @@ struct RouteDestinationView: View {
                     path: path,
                     isTrash: isTrash,
                     onOpenAlbum: isTrash ? { album in
+                        router.selectedTab = .vault
                         router.pushVault(.album(name: album))
                     } : nil
                 )
@@ -24,6 +25,7 @@ struct RouteDestinationView: View {
                     path: path,
                     isTrash: isTrash,
                     onOpenAlbum: isTrash ? { album in
+                        router.selectedTab = .vault
                         router.pushVault(.album(name: album))
                     } : nil
                 )
