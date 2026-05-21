@@ -296,7 +296,7 @@
                   "width": 206,
                   "height": 26,
                   "cornerRadius": 6,
-                  "fill": "#05080D"
+                  "fill": "#1F4A9E"
                 },
                 {
                   "type": "rectangle",
@@ -306,18 +306,7 @@
                   "width": 160,
                   "height": 22,
                   "cornerRadius": 5,
-                  "fill": "#FFFFFF"
-                },
-                {
-                  "type": "rectangle",
-                  "id": "manual_region",
-                  "x": 32,
-                  "y": 40,
-                  "width": 84,
-                  "height": 58,
-                  "cornerRadius": 9,
-                  "fill": "#00000000",
-                  "stroke": { "thickness": 2, "fill": "#FF6B8F", "dashPattern": [8, 6] }
+                  "fill": "#2E78D5"
                 }
               ]
             },
@@ -336,7 +325,7 @@
                 {
                   "type": "text",
                   "id": "drag_hint_text",
-                  "content": "拖动框选敏感区域",
+                  "content": "自动已用马赛克遮盖",
                   "fontFamily": "Inter",
                   "fontSize": 11,
                   "letterSpacing": 0,
@@ -395,7 +384,7 @@
                 {
                   "type": "text",
                   "id": "detected_text",
-                  "content": "AI识别 3处 · 手动 1处",
+                  "content": "AI识别 3处 · 手动 0处",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "letterSpacing": 0,
@@ -411,20 +400,20 @@
               "width": 88,
               "height": 40,
               "cornerRadius": 12,
-              "fill": "#0F5135",
-              "stroke": { "thickness": 1, "fill": "#21C277" },
+              "fill": "#14233A",
+              "stroke": { "thickness": 1, "fill": "#4A9EFF" },
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
                 {
                   "type": "text",
                   "id": "manual_chip_text",
-                  "content": "完成",
+                  "content": "手动框选",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "letterSpacing": 0,
                   "fontWeight": "700",
-                  "fill": "#D9FFF0"
+                  "fill": "#DCEBFF"
                 }
               ]
             }
@@ -445,7 +434,7 @@
             {
               "type": "text",
               "id": "manual_count",
-              "content": "手动已加 1处",
+              "content": "手动已加 0处",
               "fontFamily": "Inter",
               "fontSize": 11,
               "letterSpacing": 0,

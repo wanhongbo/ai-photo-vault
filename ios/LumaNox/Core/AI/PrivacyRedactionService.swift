@@ -13,6 +13,30 @@ enum PrivacyRedactionStyle: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum PrivacyRedactionRegionSource: String {
+    case automatic
+    case manual
+}
+
+struct PrivacyRedactionRegion: Identifiable, Equatable {
+    let id: UUID
+    var normalizedRect: CGRect
+    var style: PrivacyRedactionStyle
+    var source: PrivacyRedactionRegionSource
+
+    init(
+        id: UUID = UUID(),
+        normalizedRect: CGRect,
+        style: PrivacyRedactionStyle = .mosaic,
+        source: PrivacyRedactionRegionSource
+    ) {
+        self.id = id
+        self.normalizedRect = normalizedRect
+        self.style = style
+        self.source = source
+    }
+}
+
 struct PrivacyRedactionResult {
     let imported: Bool
     let detectedRegionCount: Int
@@ -23,6 +47,7 @@ final class PrivacyRedactionService: ObservableObject {
     static let shared = PrivacyRedactionService()
 
     @Published private(set) var isSaving = false
+    @Published private(set) var isDetecting = false
     @Published private(set) var lastMessage: String?
     @Published private(set) var lastIsError = false
 
@@ -36,7 +61,30 @@ final class PrivacyRedactionService: ObservableObject {
         lastIsError = isError
     }
 
+    func detectRegions(path: String) async -> [PrivacyRedactionRegion] {
+        guard !path.isEmpty else { return PrivacyRedactor.demoRegions() }
+
+        isDetecting = true
+        defer { isDetecting = false }
+
+        do {
+            let regions = try await PrivacyRedactor.detectNormalizedRegions(path: path)
+            return regions
+        } catch {
+            lastMessage = error.localizedDescription
+            lastIsError = true
+            return []
+        }
+    }
+
     func redactAndImport(path: String, style: PrivacyRedactionStyle) async -> PrivacyRedactionResult {
+        let detected = await detectRegions(path: path).map {
+            PrivacyRedactionRegion(id: $0.id, normalizedRect: $0.normalizedRect, style: style, source: $0.source)
+        }
+        return await redactAndImport(path: path, regions: detected)
+    }
+
+    func redactAndImport(path: String, regions: [PrivacyRedactionRegion]) async -> PrivacyRedactionResult {
         guard !path.isEmpty else {
             lastMessage = L10n.tr("privacy_redact_select_first")
             lastIsError = true
@@ -48,7 +96,7 @@ final class PrivacyRedactionService: ObservableObject {
 
         let albumName = metadataStore.mediaRecord(forPath: path)?.albumName ?? vaultDefaultAlbumName
         do {
-            let output = try await PrivacyRedactor.renderRedactedJPEG(path: path, style: style)
+            let output = try await PrivacyRedactor.renderRedactedJPEG(path: path, regions: regions)
             let result = await vaultStore.importPlainData(
                 output.data,
                 fileExtension: "jpg",
@@ -87,6 +135,10 @@ private enum PrivacyRedactor {
     }
 
     static func renderRedactedJPEG(path: String, style: PrivacyRedactionStyle) async throws -> Output {
+        try await renderRedactedJPEG(path: path, regions: [])
+    }
+
+    static func renderRedactedJPEG(path: String, regions: [PrivacyRedactionRegion]) async throws -> Output {
         try await Task.detached(priority: .utility) {
             let encryptedURL = URL(fileURLWithPath: path)
             let data = try VaultCipher.shared.decryptFile(at: encryptedURL)
@@ -95,13 +147,33 @@ private enum PrivacyRedactor {
                 throw RedactionError.unsupportedMedia
             }
 
-            let regions = detectRegions(cgImage: cgImage, imageSize: image.size)
-            let effectiveRegions = regions.isEmpty ? [fallbackRegion(size: image.size)] : regions
+            let effectiveRegions: [PrivacyRedactionRegion]
+            if regions.isEmpty {
+                let detected = detectRegions(cgImage: cgImage, imageSize: image.size)
+                let rects = detected.isEmpty ? [fallbackRegion(size: image.size)] : detected
+                effectiveRegions = rects.map {
+                    PrivacyRedactionRegion(normalizedRect: normalize($0, imageSize: image.size), style: .mosaic, source: .automatic)
+                }
+            } else {
+                effectiveRegions = regions.map {
+                    PrivacyRedactionRegion(
+                        id: $0.id,
+                        normalizedRect: clampNormalized($0.normalizedRect),
+                        style: $0.style,
+                        source: $0.source
+                    )
+                }
+            }
+
             let renderer = UIGraphicsImageRenderer(size: image.size)
             let redacted = renderer.image { context in
                 image.draw(in: CGRect(origin: .zero, size: image.size))
                 for region in effectiveRegions {
-                    drawRedaction(in: context.cgContext, rect: region, style: style)
+                    drawRedaction(
+                        in: context.cgContext,
+                        rect: denormalize(region.normalizedRect, imageSize: image.size),
+                        style: region.style
+                    )
                 }
             }
 
@@ -115,6 +187,44 @@ private enum PrivacyRedactor {
                 regionCount: effectiveRegions.count
             )
         }.value
+    }
+
+    static func detectNormalizedRegions(path: String) async throws -> [PrivacyRedactionRegion] {
+        try await Task.detached(priority: .utility) {
+            let encryptedURL = URL(fileURLWithPath: path)
+            let data = try VaultCipher.shared.decryptFile(at: encryptedURL)
+            guard let image = UIImage(data: data),
+                  let cgImage = image.cgImage else {
+                throw RedactionError.unsupportedMedia
+            }
+            return detectRegions(cgImage: cgImage, imageSize: image.size).map {
+                PrivacyRedactionRegion(
+                    normalizedRect: normalize($0, imageSize: image.size),
+                    style: .mosaic,
+                    source: .automatic
+                )
+            }
+        }.value
+    }
+
+    static func demoRegions() -> [PrivacyRedactionRegion] {
+        [
+            PrivacyRedactionRegion(
+                normalizedRect: CGRect(x: 0.57, y: 0.13, width: 0.26, height: 0.17),
+                style: .mosaic,
+                source: .automatic
+            ),
+            PrivacyRedactionRegion(
+                normalizedRect: CGRect(x: 0.15, y: 0.77, width: 0.66, height: 0.08),
+                style: .mosaic,
+                source: .automatic
+            ),
+            PrivacyRedactionRegion(
+                normalizedRect: CGRect(x: 0.17, y: 0.86, width: 0.52, height: 0.07),
+                style: .mosaic,
+                source: .automatic
+            )
+        ]
     }
 
     private static func detectRegions(cgImage: CGImage, imageSize: CGSize) -> [CGRect] {
@@ -206,6 +316,31 @@ private enum PrivacyRedactor {
     private static func clamp(_ rect: CGRect, to size: CGSize) -> CGRect {
         let bounds = CGRect(origin: .zero, size: size)
         return rect.intersection(bounds)
+    }
+
+    private static func normalize(_ rect: CGRect, imageSize: CGSize) -> CGRect {
+        guard imageSize.width > 0, imageSize.height > 0 else { return .zero }
+        return clampNormalized(CGRect(
+            x: rect.minX / imageSize.width,
+            y: rect.minY / imageSize.height,
+            width: rect.width / imageSize.width,
+            height: rect.height / imageSize.height
+        ))
+    }
+
+    private static func denormalize(_ rect: CGRect, imageSize: CGSize) -> CGRect {
+        let normalized = clampNormalized(rect)
+        return CGRect(
+            x: normalized.minX * imageSize.width,
+            y: normalized.minY * imageSize.height,
+            width: normalized.width * imageSize.width,
+            height: normalized.height * imageSize.height
+        )
+    }
+
+    private static func clampNormalized(_ rect: CGRect) -> CGRect {
+        let bounds = CGRect(x: 0, y: 0, width: 1, height: 1)
+        return rect.standardized.intersection(bounds)
     }
 
     private static func mergeOverlapping(_ regions: [CGRect], imageSize: CGSize) -> [CGRect] {

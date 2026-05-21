@@ -123,8 +123,12 @@
 "privacy_redact_subtitle" = "自动识别敏感区域，也可手动框选";
 "privacy_redact_drag_hint" = "拖动框选敏感区域";
 "privacy_redact_detection_status" = "AI识别 3处 · 手动 1处";
+"privacy_redact_detection_status_fmt" = "AI识别 %d处 · 手动 %d处";
+"privacy_redact_enter_manual" = "手动框选";
+"privacy_redact_manual_hint" = "拖动框选区域，样式作用于当前手动区域";
 "privacy_redact_manual_done" = "完成";
 "privacy_redact_manual_count" = "手动已加 1处";
+"privacy_redact_manual_count_fmt" = "手动已加 %d处";
 "privacy_redact_undo" = "撤销";
 "privacy_redact_clear" = "清空";
 "privacy_redact_auto_hint" = "自动遮盖人脸、文字和码";
