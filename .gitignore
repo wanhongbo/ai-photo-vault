@@ -3,6 +3,7 @@
 
 # Local tooling venv (e.g. marketing asset scripts)
 .venv-screens/
+.tmp/
 
 # Android / Gradle
 **/.gradle/
