@@ -173,14 +173,16 @@ struct AIHomeView: View {
     }
 
     private func openAIFeature(_ route: AppRoute, proFeature: ProFeature, router: AppRouter) {
+        if route == .aiClassify {
+            router.pushAI(route)
+            return
+        }
         guard router.guardProFeature(proFeature) else { return }
         QuotaManager.shared.incrementAiUsage()
         router.pushAI(route)
     }
 
     private func startScan() {
-        guard router.guardProFeature(.aiClassify) else { return }
-        QuotaManager.shared.incrementAiUsage()
         Task { await aiService.scanVault() }
     }
 
