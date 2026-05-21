@@ -1,7 +1,8 @@
 import Foundation
 
 let vaultMetadataSchemaVersion = 1
-let vaultCipherVersionCBCv1 = 1
+let vaultCipherVersionCBCv1 = VaultFileCipherVersion.cbcV1
+let vaultCipherVersionAEADv2 = VaultFileCipherVersion.aeadV2
 
 enum VaultMediaKind: String, Codable, Hashable {
     case image

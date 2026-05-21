@@ -55,6 +55,7 @@ enum CryptoError: LocalizedError {
     case invalidKey
     case missingKey
     case invalidCipher
+    case unsupportedCipherVersion(Int)
     case randomFailed
     case cryptFailed(CCCryptorStatus)
 
@@ -63,6 +64,7 @@ enum CryptoError: LocalizedError {
         case .invalidKey: return "Invalid AES key"
         case .missingKey: return "Missing AES key"
         case .invalidCipher: return "Invalid ciphertext"
+        case .unsupportedCipherVersion(let version): return "Unsupported vault cipher version \(version)"
         case .randomFailed: return "Random IV failed"
         case .cryptFailed(let s): return "Crypt failed \(s)"
         }

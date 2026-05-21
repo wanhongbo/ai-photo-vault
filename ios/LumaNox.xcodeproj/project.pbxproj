@@ -63,6 +63,7 @@
 		782B97ECE55A70B2FA3E6608 /* AlbumListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */; };
 		7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */; };
 		811B27A1D4A459FCA8E7616D /* LNSharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B240AAE981FCB70074771 /* LNSharedViews.swift */; };
+		84441A178A24A141295D4C56 /* VaultCipherV2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA098E95640BF4765E38462 /* VaultCipherV2Tests.swift */; };
 		850CF95F443B9B31A9CEF679 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = E5FDDF8C579C61B9C8511E44 /* RevenueCat */; };
 		87BC961C807397BEE3450FC9 /* frm_3k.png in Resources */ = {isa = PBXBuildFile; fileRef = 6B9ED3B67D64C37F7D98B215 /* frm_3k.png */; };
 		8864791C62F7365323C11741 /* fKM7q.png in Resources */ = {isa = PBXBuildFile; fileRef = 35715BBBEB5046052E8116DF /* fKM7q.png */; };
@@ -80,6 +81,7 @@
 		9C65DB619883E5806D30DEF0 /* ExportProgressView.pen in Resources */ = {isa = PBXBuildFile; fileRef = A53B837DC76591BEE5DBBBFC /* ExportProgressView.pen */; };
 		A16D56AAE3CFADF2239DD3C4 /* PaywallGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF4D997C5999E2E9D99F158 /* PaywallGate.swift */; };
 		A2500ED248BBD2C23FA8B3D2 /* runtime_lock_or_main.png in Resources */ = {isa = PBXBuildFile; fileRef = EA54B97DE1D53DA59FA3FCD6 /* runtime_lock_or_main.png */; };
+		A261250DF2A1F8149EB5C344 /* VaultFileFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2693369AD7FA94F762FDDCE /* VaultFileFormat.swift */; };
 		A2F0A6BD255106E0287A405B /* ExportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9FE1E99F98223C123B73E0 /* ExportViews.swift */; };
 		A3C95D375296E51D3DD81D40 /* VaultCipher+Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BDA2787DB5B7CDB9CF79DEE /* VaultCipher+Stream.swift */; };
 		A41B47831E53371E5339BE04 /* BackupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4C456534536B3DE53A4E8BC /* BackupViews.swift */; };
@@ -123,6 +125,16 @@
 		F762EE90D58061C4E37FA9BE /* BackupKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02D8ED422B709C36CEF8A98C /* BackupKeyManager.swift */; };
 		FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657135709B6C821B72DC1DBD /* ThumbnailService.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7D62231A3FDC69499E5F0303 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 57F6AE44D61AE9E4BE6503E3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 306CABDC021080A08D193B0C;
+			remoteInfo = LumaNox;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		018D70E35D85115A60687CA8 /* runtime_lock_after_nav_pin_fix.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = runtime_lock_after_nav_pin_fix.png; sourceTree = "<group>"; };
@@ -205,6 +217,7 @@
 		A6D7C45A745A3B56970E7DB4 /* LNDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNDialog.swift; sourceTree = "<group>"; };
 		A6DF05A9EBD589A872E42357 /* LNNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNNavigationBar.swift; sourceTree = "<group>"; };
 		A8BBEE63722F0B9B727EF9FD /* AESCBC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESCBC.swift; sourceTree = "<group>"; };
+		ABA098E95640BF4765E38462 /* VaultCipherV2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultCipherV2Tests.swift; sourceTree = "<group>"; };
 		AED24C08D30394D9D28E1B1F /* VaultMaintenanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultMaintenanceService.swift; sourceTree = "<group>"; };
 		B302717FEC5F5B567844FEAF /* PhotosUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PhotosUI.framework; path = System/Library/Frameworks/PhotosUI.framework; sourceTree = SDKROOT; };
 		B401A4DA60A82577398F1C20 /* pencil_preview_contact_sheet.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = pencil_preview_contact_sheet.jpg; sourceTree = "<group>"; };
@@ -219,7 +232,9 @@
 		D14852B36C14B00552F54878 /* VaultHomeView.pen */ = {isa = PBXFileReference; path = VaultHomeView.pen; sourceTree = "<group>"; };
 		D194FC51681BABEC7A70791F /* MockModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockModels.swift; sourceTree = "<group>"; };
 		D1DBEE64A524C4C990F99981 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D241EC7295150AD02A89B255 /* LumaNoxTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LumaNoxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D24E567FFD4B2C084123FC7F /* LNTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNTokens.swift; sourceTree = "<group>"; };
+		D2693369AD7FA94F762FDDCE /* VaultFileFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultFileFormat.swift; sourceTree = "<group>"; };
 		D5C532FB51C0B341CAADA062 /* SettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViews.swift; sourceTree = "<group>"; };
 		D672F551AEBE8981A9F344D0 /* MediaExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaExportService.swift; sourceTree = "<group>"; };
 		D83880285DCAAD76A4957F4C /* ExportResultView.pen */ = {isa = PBXFileReference; path = ExportResultView.pen; sourceTree = "<group>"; };
@@ -433,6 +448,7 @@
 			children = (
 				27BEC7B01684FBA5A4CFA95C /* Config */,
 				A50C03C8DE15C0F57CF287AE /* LumaNox */,
+				851A724928927AF94F967BC3 /* LumaNoxTests */,
 				EB8127D49389B7AD10CA1217 /* Frameworks */,
 				861D24F6E48AFF84BB2226E9 /* Products */,
 			);
@@ -457,14 +473,24 @@
 				02D8ED422B709C36CEF8A98C /* BackupKeyManager.swift */,
 				87F131249226B498888052AA /* VaultCipher.swift */,
 				7BDA2787DB5B7CDB9CF79DEE /* VaultCipher+Stream.swift */,
+				D2693369AD7FA94F762FDDCE /* VaultFileFormat.swift */,
 			);
 			path = Crypto;
+			sourceTree = "<group>";
+		};
+		851A724928927AF94F967BC3 /* LumaNoxTests */ = {
+			isa = PBXGroup;
+			children = (
+				ABA098E95640BF4765E38462 /* VaultCipherV2Tests.swift */,
+			);
+			path = LumaNoxTests;
 			sourceTree = "<group>";
 		};
 		861D24F6E48AFF84BB2226E9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				7DBA6BD3F7D19B0BEE46B366 /* LumaNox.app */,
+				D241EC7295150AD02A89B255 /* LumaNoxTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -664,6 +690,24 @@
 			productReference = 7DBA6BD3F7D19B0BEE46B366 /* LumaNox.app */;
 			productType = "com.apple.product-type.application";
 		};
+		ACB2224DE461A1F952D0234C /* LumaNoxTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A5836B7355EC658353B23F8D /* Build configuration list for PBXNativeTarget "LumaNoxTests" */;
+			buildPhases = (
+				A0A5A4C45E677332FD667963 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D8A80BC678A7A5696CA65E91 /* PBXTargetDependency */,
+			);
+			name = LumaNoxTests;
+			packageProductDependencies = (
+			);
+			productName = LumaNoxTests;
+			productReference = D241EC7295150AD02A89B255 /* LumaNoxTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -674,6 +718,10 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					306CABDC021080A08D193B0C = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					ACB2224DE461A1F952D0234C = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
@@ -699,6 +747,7 @@
 			projectRoot = "";
 			targets = (
 				306CABDC021080A08D193B0C /* LumaNox */,
+				ACB2224DE461A1F952D0234C /* LumaNoxTests */,
 			);
 		};
 /* End PBXProject section */
@@ -748,6 +797,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A0A5A4C45E677332FD667963 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84441A178A24A141295D4C56 /* VaultCipherV2Tests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C716979EA1398DDA5E6D7564 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -815,6 +872,7 @@
 				FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */,
 				A3C95D375296E51D3DD81D40 /* VaultCipher+Stream.swift in Sources */,
 				D4231525816B3C57E3411970 /* VaultCipher.swift in Sources */,
+				A261250DF2A1F8149EB5C344 /* VaultFileFormat.swift in Sources */,
 				121063FB10E9EE11F641A065 /* VaultHomeView.swift in Sources */,
 				CD248D5986AE3AD9D2B31751 /* VaultHomeViewModel.swift in Sources */,
 				A9458970705182089F8C8DCC /* VaultMaintenanceService.swift in Sources */,
@@ -831,6 +889,14 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D8A80BC678A7A5696CA65E91 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 306CABDC021080A08D193B0C /* LumaNox */;
+			targetProxy = 7D62231A3FDC69499E5F0303 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXVariantGroup section */
 		DE2CDC6E6E63906CE9F9814D /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
@@ -844,6 +910,23 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		1A786051E9C44FB3AC1AF80C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.xpx.vault.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LumaNox.app/LumaNox";
+			};
+			name = Release;
+		};
 		61DD32F8175C1BA017DDC0EE /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2B8B3434CC31E4925CF539B2 /* Local.xcconfig */;
@@ -1029,6 +1112,23 @@
 			};
 			name = Debug;
 		};
+		DDEAA151ED87628DD9866FB8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.xpx.vault.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LumaNox.app/LumaNox";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1037,6 +1137,15 @@
 			buildConfigurations = (
 				B7CF9E1FDBC92102D9173AEF /* Debug */,
 				61DD32F8175C1BA017DDC0EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A5836B7355EC658353B23F8D /* Build configuration list for PBXNativeTarget "LumaNoxTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DDEAA151ED87628DD9866FB8 /* Debug */,
+				1A786051E9C44FB3AC1AF80C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

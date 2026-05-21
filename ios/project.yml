@@ -56,3 +56,15 @@ targets:
       - sdk: LocalAuthentication.framework
       - sdk: AVFoundation.framework
       - sdk: CryptoKit.framework
+  LumaNoxTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: LumaNoxTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xpx.vault.tests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: LumaNox
+    hostApplication: LumaNox
