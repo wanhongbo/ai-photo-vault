@@ -74,28 +74,23 @@ struct AIHomeView: View {
                     .foregroundStyle(LNColor.subtitle)
             } else {
                 HStack(spacing: 12) {
-                    Button { startScan() } label: {
-                        Text(primarySummaryAction)
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 40)
-                            .background(LNColor.brandBlue)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(aiService.summary.totalCount == 0)
+                    AISummaryActionButton(
+                        title: primarySummaryAction,
+                        foreground: .white,
+                        background: LNColor.brandBlue,
+                        fontWeight: .bold,
+                        enabled: aiService.summary.totalCount > 0,
+                        action: startScan
+                    )
 
-                    Button { router.pushAI(.aiSensitive) } label: {
-                        Text(L10n.tr("ai_summary_review_now"))
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Color(hex: 0xB7C6DD))
-                            .frame(width: 102, height: 40)
-                            .background(Color(hex: 0x122033))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
+                    AISummaryActionButton(
+                        title: L10n.tr("ai_summary_review_now"),
+                        foreground: Color(hex: 0xB7C6DD),
+                        background: Color(hex: 0x122033),
+                        stroke: LNColor.stroke,
+                        fontWeight: .semibold,
+                        action: { router.pushAI(.aiSensitive) }
+                    )
                 }
             }
         }
@@ -274,7 +269,40 @@ private struct AIToolRowModel: Identifiable {
     let accessibilityIdentifier: String
 }
 
+private struct AISummaryActionButton: View {
+    let title: String
+    let foreground: Color
+    let background: Color
+    var stroke: Color?
+    let fontWeight: Font.Weight
+    var enabled = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 13, weight: fontWeight))
+                .foregroundStyle(foreground)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+                .frame(maxWidth: .infinity)
+                .frame(height: 40)
+                .background(background)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay {
+                    if let stroke {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(stroke, lineWidth: 1)
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+    }
+}
+
 struct AICleanupView: View {
+    @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
     @State private var showConfirm = false
@@ -285,29 +313,42 @@ struct AICleanupView: View {
     }
 
     var body: some View {
-        LNScreenScaffold(title: L10n.aiCleanupTitle, onBack: { dismiss() }) {
-            AIActionHeaderCard(
-                icon: "rectangle.on.rectangle",
-                tint: LNColor.cleanupOrange,
-                title: L10n.tr("ai_cleanup_detected_count", cleanableRecords.count),
-                message: L10n.tr("ai_cleanup_live_desc"),
-                primaryTitle: aiService.progress.running ? L10n.commonLoading : L10n.tr("ai_cleanup_scan_now"),
-                primaryLoading: aiService.progress.running,
-                secondaryTitle: cleanableRecords.isEmpty ? nil : L10n.tr("ai_cleanup_confirm_clean"),
-                primaryAction: { Task { await aiService.scanVault() } },
-                secondaryAction: { showConfirm = true }
-            )
+        VaultListScreenChrome(title: L10n.aiCleanupTitle, onBack: { dismiss() }) { availableWidth in
+            let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
 
-            if cleanableRecords.isEmpty {
-                AIEmptyActionView(
-                    systemImage: "checkmark.shield",
-                    title: L10n.tr("ai_cleanup_empty"),
-                    message: L10n.tr("ai_cleanup_scan_hint")
+            VStack(spacing: 16) {
+                AIActionHeaderCard(
+                    icon: "rectangle.on.rectangle",
+                    tint: LNColor.cleanupOrange,
+                    title: L10n.tr("ai_cleanup_detected_count", cleanableRecords.count),
+                    message: L10n.tr("ai_cleanup_live_desc"),
+                    primaryTitle: aiService.progress.running ? L10n.commonLoading : L10n.tr("ai_cleanup_scan_now"),
+                    primaryLoading: aiService.progress.running,
+                    secondaryTitle: cleanableRecords.isEmpty ? nil : L10n.tr("ai_cleanup_confirm_clean"),
+                    primaryAction: { Task { await aiService.scanVault() } },
+                    secondaryAction: { showConfirm = true }
                 )
-            } else {
-                AISectionHeader(title: L10n.tr("ai_cleanup_candidates"), value: "\(cleanableRecords.count)")
-                LNMediaGrid(items: cleanableRecords.map(mediaItem)) { _ in }
+                .frame(width: cardWidth)
+
+                if cleanableRecords.isEmpty {
+                    AIEmptyActionView(
+                        systemImage: "checkmark.shield",
+                        title: L10n.tr("ai_cleanup_empty"),
+                        message: L10n.tr("ai_cleanup_scan_hint")
+                    )
+                    .frame(width: cardWidth)
+                } else {
+                    VaultMediaGridCard(
+                        items: cleanableRecords.map(mediaItem),
+                        width: cardWidth,
+                        onSelect: open
+                    )
+                    .accessibilityIdentifier("ai_cleanup_candidates_grid")
+                }
             }
+            .padding(.horizontal, LNSpacing.screenHorizontal)
+            .padding(.top, 22)
+            .padding(.bottom, 28)
         }
         .task { aiService.refreshSummary() }
         .overlay {
@@ -327,6 +368,14 @@ struct AICleanupView: View {
             }
         }
         .accessibilityIdentifier("ai_cleanup_view")
+    }
+
+    private func open(_ item: LNMediaItem) {
+        if item.isVideo {
+            router.pushAI(.videoPlayer(path: item.path, isTrash: false))
+        } else {
+            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .recent))
+        }
     }
 
     private func cleanupCandidates() async {
@@ -350,24 +399,38 @@ struct AISensitiveReviewView: View {
     }
 
     var body: some View {
-        LNScreenScaffold(title: L10n.tr("ai_sensitive_files_title"), onBack: { dismiss() }) {
-            AISensitiveReviewHeaderCard(
-                count: sensitiveRecords.count,
-                loading: aiService.progress.running,
-                onScan: { Task { await aiService.scanVault() } }
-            )
+        VaultListScreenChrome(title: L10n.tr("ai_sensitive_files_title"), onBack: { dismiss() }) { availableWidth in
+            let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
 
-            if sensitiveRecords.isEmpty {
-                AIEmptyActionView(
-                    systemImage: "checkmark.shield",
-                    title: L10n.tr("ai_sensitive_empty_title"),
-                    message: L10n.tr("ai_sensitive_empty_desc")
+            VStack(spacing: 16) {
+                AISensitiveReviewHeaderCard(
+                    count: sensitiveRecords.count,
+                    loading: aiService.progress.running,
+                    onScan: { Task { await aiService.scanVault() } }
                 )
-            } else {
-                AISensitiveGridCard(records: sensitiveRecords) { item in
-                    router.pushAI(.privacyRedact(path: item.path))
+                .frame(width: cardWidth)
+
+                if sensitiveRecords.isEmpty {
+                    AIEmptyActionView(
+                        systemImage: "checkmark.shield",
+                        title: L10n.tr("ai_sensitive_empty_title"),
+                        message: L10n.tr("ai_sensitive_empty_desc")
+                    )
+                    .frame(width: cardWidth)
+                } else {
+                    VaultMediaGridCard(
+                        items: sensitiveRecords.map(mediaItem),
+                        width: cardWidth,
+                        onSelect: { item in
+                            router.pushAI(.privacyRedact(path: item.path))
+                        }
+                    )
+                    .accessibilityIdentifier("ai_sensitive_candidates_grid")
                 }
             }
+            .padding(.horizontal, LNSpacing.screenHorizontal)
+            .padding(.top, 22)
+            .padding(.bottom, 28)
         }
         .task { aiService.refreshSummary() }
         .accessibilityIdentifier("ai_sensitive_review_view")
@@ -427,23 +490,6 @@ private struct AISensitiveReviewHeaderCard: View {
         .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
         .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(Color(hex: 0x244869), lineWidth: 1))
         .accessibilityIdentifier("ai_sensitive_header")
-    }
-}
-
-private struct AISensitiveGridCard: View {
-    let records: [VaultMediaRecord]
-    let onSelect: (LNMediaItem) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            AISectionHeader(title: L10n.tr("ai_sensitive_candidates"), value: "\(records.count)")
-            LNMediaGrid(items: records.map(mediaItem), onSelect: onSelect)
-        }
-        .padding(LNSpacing.cardPadding)
-        .background(LNColor.sectionBg)
-        .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
-        .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(LNColor.stroke, lineWidth: 1))
-        .accessibilityIdentifier("ai_sensitive_candidates_grid")
     }
 }
 
@@ -998,34 +1044,6 @@ struct PrivacyRedactView: View {
                 } else {
                     redactionService.updateMessage(L10n.tr("privacy_redact_share_failed"), isError: true)
                     showRedactionServiceMessage()
-                }
-            }
-        }
-    }
-
-    private var redactionPicker: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            AIActionHeaderCard(
-                icon: "shield.lefthalf.filled",
-                tint: LNColor.brandBlue,
-                title: L10n.tr("privacy_redact_picker_title"),
-                message: L10n.tr("privacy_redact_picker_desc"),
-                primaryTitle: aiService.progress.running ? L10n.commonLoading : L10n.tr("ai_cleanup_scan_now"),
-                primaryLoading: aiService.progress.running,
-                secondaryTitle: nil,
-                primaryAction: { Task { await aiService.scanVault() } },
-                secondaryAction: {}
-            )
-            if selectableRecords.isEmpty {
-                AIEmptyActionView(
-                    systemImage: "photo.on.rectangle",
-                    title: L10n.tr("privacy_redact_picker_empty_title"),
-                    message: L10n.tr("privacy_redact_picker_empty_desc")
-                )
-            } else {
-                AISectionHeader(title: L10n.tr("privacy_redact_picker_grid_title"), value: "\(selectableRecords.count)")
-                LNMediaGrid(items: selectableRecords.map(mediaItem)) { item in
-                    router.pushAI(.privacyRedact(path: item.path))
                 }
             }
         }

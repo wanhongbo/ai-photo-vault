@@ -118,11 +118,6 @@
 "ai_category_nature" = "Nature";
 "ai_category_videos" = "Videos";
 "ai_category_other" = "Other";
-"privacy_redact_picker_title" = "Choose media to redact";
-"privacy_redact_picker_desc" = "Pick a sensitive item or any vault image, then create a redacted encrypted copy.";
-"privacy_redact_picker_empty_title" = "No media available";
-"privacy_redact_picker_empty_desc" = "Import images or run a scan to surface sensitive items.";
-"privacy_redact_picker_grid_title" = "Vault media";
 "privacy_redact_subtitle" = "Auto-detect sensitive areas, or draw your own";
 "privacy_redact_drag_hint" = "Drag to select a sensitive area";
 "privacy_redact_detection_status" = "AI 3 regions · Manual 1 region";

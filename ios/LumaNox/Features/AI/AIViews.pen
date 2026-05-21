@@ -260,7 +260,7 @@
                       "id": "ai_later_button",
                       "layout": "horizontal",
                       "fill": "#122033",
-                      "width": 102,
+                      "width": "fill_container",
                       "height": 40,
                       "cornerRadius": 12,
                       "justifyContent": "center",

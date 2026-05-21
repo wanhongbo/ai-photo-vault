@@ -3,8 +3,8 @@
   "children": [
     {
       "type": "frame",
-      "id": "screen_ai_sensitive_review",
-      "name": "AISensitiveReviewView",
+      "id": "screen_ai_cleanup",
+      "name": "AICleanupView",
       "layout": "none",
       "fill": "#05080D",
       "x": 0,
@@ -15,7 +15,7 @@
       "children": [
         {
           "type": "frame",
-          "id": "status_ai_sensitive_review",
+          "id": "status_ai_cleanup",
           "layout": "horizontal",
           "fill": "transparent",
           "x": 0,
@@ -28,7 +28,7 @@
           "children": [
             {
               "type": "text",
-              "id": "time_ai_sensitive_review",
+              "id": "time_ai_cleanup",
               "content": "9:41",
               "fontFamily": "Inter",
               "fill": "#EAF1FF",
@@ -37,7 +37,7 @@
             },
             {
               "type": "text",
-              "id": "sys_ai_sensitive_review",
+              "id": "sys_ai_cleanup",
               "content": "||",
               "fontFamily": "Inter",
               "fill": "#EAF1FF",
@@ -48,7 +48,7 @@
         },
         {
           "type": "frame",
-          "id": "back_ai_sensitive_review",
+          "id": "back_ai_cleanup",
           "layout": "none",
           "fill": "#0C1523",
           "x": 16,
@@ -59,7 +59,7 @@
           "children": [
             {
               "type": "icon_font",
-              "id": "back_icon_ai_sensitive_review",
+              "id": "back_icon_ai_cleanup",
               "iconFontFamily": "lucide",
               "iconFontName": "chevron-left",
               "x": 11,
@@ -72,8 +72,8 @@
         },
         {
           "type": "text",
-          "id": "title_ai_sensitive_review",
-          "content": "Sensitive files",
+          "id": "title_ai_cleanup",
+          "content": "Smart Cleanup",
           "fontFamily": "Inter",
           "fill": "#EAF1FF",
           "fontSize": 24,
@@ -85,7 +85,7 @@
         },
         {
           "type": "frame",
-          "id": "header_ai_sensitive_review",
+          "id": "header_ai_cleanup",
           "layout": "vertical",
           "fill": "#0C1523",
           "x": 16,
@@ -98,7 +98,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "header_row_ai_sensitive_review",
+              "id": "header_row_ai_cleanup",
               "layout": "horizontal",
               "fill": "transparent",
               "width": "fill_container",
@@ -108,21 +108,21 @@
                 {
                   "type": "frame",
                   "layout": "none",
-                  "fill": "#1F4A9EFF",
+                  "fill": "#FFB0202E",
                   "width": 44,
                   "height": 44,
                   "cornerRadius": 13,
                   "children": [
                     {
                       "type": "icon_font",
-                      "id": "eye_slash_ai_sensitive_review",
+                      "id": "copy_ai_cleanup",
                       "iconFontFamily": "lucide",
-                      "iconFontName": "eye-off",
+                      "iconFontName": "copy",
                       "x": 11,
                       "y": 11,
                       "width": 22,
                       "height": 22,
-                      "fill": "#4A9EFF"
+                      "fill": "#FFB020"
                     }
                   ]
                 },
@@ -135,17 +135,17 @@
                   "children": [
                     {
                       "type": "text",
-                      "id": "badge_ai_sensitive_review",
-                      "content": "2 items may contain sensitive info",
+                      "id": "badge_ai_cleanup",
+                      "content": "7 cleanable items found",
                       "fontFamily": "Inter",
-                      "fill": "#B7D7FF",
+                      "fill": "#FFD89C",
                       "fontSize": 12,
                       "fontWeight": "600"
                     },
                     {
                       "type": "text",
-                      "id": "desc_ai_sensitive_review",
-                      "content": "Review sensitive media and open Privacy Blur for each one.",
+                      "id": "desc_ai_cleanup",
+                      "content": "Find duplicate, blurry, or oversized media before moving them to Trash.",
                       "fontFamily": "Inter",
                       "fill": "#8EA2C0",
                       "fontSize": 13,
@@ -158,11 +158,11 @@
             },
             {
               "type": "frame",
-              "id": "header_buttons_ai_sensitive_review",
+              "id": "header_buttons_ai_cleanup",
               "layout": "horizontal",
               "fill": "transparent",
               "width": "fill_container",
-              "gap": 12,
+              "gap": 10,
               "children": [
                 {
                   "type": "frame",
@@ -176,8 +176,29 @@
                   "children": [
                     {
                       "type": "text",
-                      "id": "scan_now_ai_sensitive_review",
+                      "id": "scan_now_ai_cleanup",
                       "content": "Scan now",
+                      "fontFamily": "Inter",
+                      "fill": "#FFFFFF",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "layout": "horizontal",
+                  "fill": "#EF4444",
+                  "width": "fill_container",
+                  "height": 40,
+                  "cornerRadius": 12,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "clean_now_ai_cleanup",
+                      "content": "Clean now",
                       "fontFamily": "Inter",
                       "fill": "#FFFFFF",
                       "fontSize": 13,
@@ -191,11 +212,11 @@
         },
         {
           "type": "frame",
-          "id": "media_grid_ai_sensitive_review",
+          "id": "media_grid_ai_cleanup",
           "layout": "vertical",
           "fill": "#0C1523",
           "x": 16,
-          "y": 288,
+          "y": 268,
           "width": 361,
           "height": "fit_content",
           "padding": 16,
@@ -205,7 +226,7 @@
           "children": [
             {
               "type": "frame",
-              "id": "grid_row_sensitive_1",
+              "id": "grid_row_cleanup_1",
               "layout": "horizontal",
               "width": "fill_container",
               "height": 103,
@@ -213,7 +234,16 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "id": "thumb_sensitive_1",
+                  "id": "thumb_cleanup_1",
+                  "fill": "#3C2A1D",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                },
+                {
+                  "type": "rectangle",
+                  "id": "thumb_cleanup_2",
                   "fill": "#1F3758",
                   "stroke": { "fill": "#223247", "thickness": 1 },
                   "width": 103,
@@ -222,8 +252,27 @@
                 },
                 {
                   "type": "rectangle",
-                  "id": "thumb_sensitive_2",
+                  "id": "thumb_cleanup_3",
                   "fill": "#304A67",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "grid_row_cleanup_2",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 103,
+              "gap": 8,
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "thumb_cleanup_4",
+                  "fill": "#203E64",
                   "stroke": { "fill": "#223247", "thickness": 1 },
                   "width": 103,
                   "height": 103,
@@ -231,8 +280,17 @@
                 },
                 {
                   "type": "rectangle",
-                  "id": "thumb_sensitive_3",
-                  "fill": "#203E64",
+                  "id": "thumb_cleanup_5",
+                  "fill": "#3E536B",
+                  "stroke": { "fill": "#223247", "thickness": 1 },
+                  "width": 103,
+                  "height": 103,
+                  "cornerRadius": 10
+                },
+                {
+                  "type": "rectangle",
+                  "id": "thumb_cleanup_6",
+                  "fill": "#1B2D46",
                   "stroke": { "fill": "#223247", "thickness": 1 },
                   "width": 103,
                   "height": 103,

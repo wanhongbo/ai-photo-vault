@@ -118,11 +118,6 @@
 "ai_category_nature" = "自然";
 "ai_category_videos" = "视频";
 "ai_category_other" = "其他";
-"privacy_redact_picker_title" = "选择要打码的媒体";
-"privacy_redact_picker_desc" = "可选择敏感项目或任意保险箱图片，并生成新的加密脱敏副本。";
-"privacy_redact_picker_empty_title" = "暂无可用媒体";
-"privacy_redact_picker_empty_desc" = "请先导入图片，或运行扫描找出敏感项目。";
-"privacy_redact_picker_grid_title" = "保险箱媒体";
 "privacy_redact_subtitle" = "自动识别敏感区域，也可手动框选";
 "privacy_redact_drag_hint" = "拖动框选敏感区域";
 "privacy_redact_detection_status" = "AI识别 3处 · 手动 1处";
