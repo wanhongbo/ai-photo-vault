@@ -56,6 +56,7 @@ private func vaultAINowMs() -> Int64 {
 @MainActor
 final class VaultAIAnalysisService: ObservableObject {
     static let shared = VaultAIAnalysisService()
+    nonisolated static let currentAnalyzerVersion = 3
 
     @Published private(set) var records: [VaultMediaRecord] = []
     @Published private(set) var summary = VaultAISummary()
@@ -97,14 +98,21 @@ final class VaultAIAnalysisService: ObservableObject {
 
         for record in targets {
             do {
-                let result = try await VaultAIAnalyzer.analyze(
-                    record: record,
-                    documentsDirectory: documents
-                )
+                let result: VaultAIAnalyzer.Result
+                if Self.canReuseAnalysis(for: record) {
+                    result = VaultAIAnalyzer.reuse(record: record)
+                } else {
+                    result = try await VaultAIAnalyzer.analyze(
+                        record: record,
+                        documentsDirectory: documents
+                    )
+                }
                 results.append(result)
             } catch {
                 var ai = record.ai
                 ai.scannedAtMs = Self.nowMs()
+                ai.analyzerVersion = Self.currentAnalyzerVersion
+                ai.sourceFingerprint = VaultAIAnalyzer.sourceFingerprint(for: record)
                 ai.category = record.mediaKind == .video ? VaultAICategory.videos : VaultAICategory.other
                 ai.tags = Array(Set(ai.tags + (record.mediaKind == .video ? [VaultAITag.video] : []))).sorted()
                 results.append(VaultAIAnalyzer.Result(recordID: record.id, ai: ai, dHash: nil, rgbFingerprint: nil))
@@ -143,6 +151,12 @@ final class VaultAIAnalysisService: ObservableObject {
         vaultAINowMs()
     }
 
+    nonisolated static func canReuseAnalysis(for record: VaultMediaRecord) -> Bool {
+        record.ai.scannedAtMs != nil
+            && record.ai.analyzerVersion == currentAnalyzerVersion
+            && record.ai.sourceFingerprint == VaultAIAnalyzer.sourceFingerprint(for: record)
+    }
+
     private static func makeSummary(from records: [VaultMediaRecord]) -> VaultAISummary {
         var categoryCounts: [String: Int] = [:]
         var scanned = 0
@@ -168,6 +182,17 @@ final class VaultAIAnalysisService: ObservableObject {
     }
 
     private func markDuplicates(in results: inout [VaultAIAnalyzer.Result]) {
+        for index in results.indices {
+            guard results[index].ai.tags.contains(VaultAITag.duplicate) else { continue }
+            var ai = results[index].ai
+            ai.tags.removeAll { $0 == VaultAITag.duplicate }
+            let tags = Set(ai.tags)
+            if !tags.contains(VaultAITag.blurry), !tags.contains(VaultAITag.overexposed), (ai.cleanupScore ?? 0) <= 0.82 {
+                ai.cleanupScore = 0
+            }
+            results[index].ai = ai
+        }
+
         let hashes = results.enumerated().compactMap { index, result -> (Int, UInt64, [UInt8])? in
             guard let hash = result.dHash,
                   let rgbFingerprint = result.rgbFingerprint else { return nil }
@@ -226,6 +251,15 @@ enum VaultAIAnalyzer {
         let rgbFingerprint: [UInt8]?
     }
 
+    static func reuse(record: VaultMediaRecord) -> Result {
+        Result(
+            recordID: record.id,
+            ai: record.ai,
+            dHash: uint64(fromHex: record.ai.perceptualHashHex),
+            rgbFingerprint: bytes(fromHex: record.ai.colorFingerprintHex)
+        )
+    }
+
     static func analyze(record: VaultMediaRecord, documentsDirectory: URL) async throws -> Result {
         try await Task.detached(priority: .utility) {
             if record.mediaKind == .video {
@@ -234,7 +268,9 @@ enum VaultAIAnalyzer {
                     sensitiveScore: 0,
                     cleanupScore: 0,
                     category: VaultAICategory.videos,
-                    tags: [VaultAITag.video]
+                    tags: [VaultAITag.video],
+                    analyzerVersion: VaultAIAnalysisService.currentAnalyzerVersion,
+                    sourceFingerprint: sourceFingerprint(for: record)
                 )
                 return Result(recordID: record.id, ai: ai, dHash: nil, rgbFingerprint: nil)
             }
@@ -248,7 +284,9 @@ enum VaultAIAnalyzer {
                     sensitiveScore: 0,
                     cleanupScore: 0,
                     category: VaultAICategory.other,
-                    tags: []
+                    tags: [],
+                    analyzerVersion: VaultAIAnalysisService.currentAnalyzerVersion,
+                    sourceFingerprint: sourceFingerprint(for: record)
                 )
                 return Result(recordID: record.id, ai: ai, dHash: nil, rgbFingerprint: nil)
             }
@@ -276,16 +314,70 @@ enum VaultAIAnalyzer {
                 tags.insert(VaultAITag.screenshot)
             }
 
-            let category = hints.category ?? pickCategory(record: record, labels: vision.labels, tags: tags, stats: visualStats)
+            let category = hints.category ?? pickCategory(
+                record: record,
+                labels: vision.labels,
+                tags: tags,
+                stats: visualStats,
+                hasProminentFace: vision.hasProminentFace,
+                hasProminentHuman: vision.hasProminentHuman
+            )
+            let dHash = quality.dHash
+            let colorFingerprint = rgbFingerprint(cgImage: cgImage)
             let ai = VaultAiMetadata(
                 scannedAtMs: vaultAINowMs(),
                 sensitiveScore: max(vision.sensitiveScore, hints.sensitiveScore),
                 cleanupScore: cleanupScore,
                 category: category,
-                tags: Array(tags).sorted()
+                tags: Array(tags).sorted(),
+                analyzerVersion: VaultAIAnalysisService.currentAnalyzerVersion,
+                sourceFingerprint: sourceFingerprint(for: record),
+                labels: vision.labels.map { VaultAiLabelObservation(identifier: $0.identifier, confidence: $0.confidence) },
+                perceptualHashHex: dHash.map(hexString),
+                colorFingerprintHex: hexString(colorFingerprint)
             )
-            return Result(recordID: record.id, ai: ai, dHash: quality.dHash, rgbFingerprint: rgbFingerprint(cgImage: cgImage))
+            return Result(recordID: record.id, ai: ai, dHash: dHash, rgbFingerprint: colorFingerprint)
         }.value
+    }
+
+    static func sourceFingerprint(for record: VaultMediaRecord) -> String {
+        [
+            record.storagePath,
+            String(record.modifiedAtMs),
+            String(record.encryptedSizeBytes),
+            record.encryptedSha256Hex ?? "",
+            record.originalSha256Hex ?? "",
+            String(record.width ?? 0),
+            String(record.height ?? 0),
+            String(record.durationMs ?? 0),
+        ].joined(separator: "|")
+    }
+
+    private static func hexString(_ value: UInt64) -> String {
+        String(format: "%016llx", value)
+    }
+
+    private static func uint64(fromHex value: String?) -> UInt64? {
+        guard let value, value.count <= 16 else { return nil }
+        return UInt64(value, radix: 16)
+    }
+
+    private static func hexString(_ bytes: [UInt8]) -> String {
+        bytes.map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func bytes(fromHex value: String?) -> [UInt8]? {
+        guard let value, value.count % 2 == 0 else { return nil }
+        var bytes: [UInt8] = []
+        bytes.reserveCapacity(value.count / 2)
+        var index = value.startIndex
+        while index < value.endIndex {
+            let next = value.index(index, offsetBy: 2)
+            guard let byte = UInt8(value[index..<next], radix: 16) else { return nil }
+            bytes.append(byte)
+            index = next
+        }
+        return bytes
     }
 
     private struct QualityResult {
@@ -308,6 +400,8 @@ enum VaultAIAnalyzer {
         let sensitiveScore: Double
         let labels: [VisionLabel]
         let tags: [String]
+        let hasProminentFace: Bool
+        let hasProminentHuman: Bool
     }
 
     private struct VisionLabel {
@@ -322,6 +416,7 @@ enum VaultAIAnalyzer {
     }
 
     private static func analyzeVision(cgImage: CGImage, record: VaultMediaRecord) -> VisionResult {
+        let humanRequest = VNDetectHumanRectanglesRequest()
         let faceRequest = VNDetectFaceRectanglesRequest()
         let barcodeRequest = VNDetectBarcodesRequest()
         let textRequest = VNRecognizeTextRequest()
@@ -333,16 +428,25 @@ enum VaultAIAnalyzer {
         let classifyRequest = VNClassifyImageRequest()
 
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        try? handler.perform([faceRequest, barcodeRequest, textRequest, classifyRequest])
+        try? handler.perform([humanRequest, faceRequest, barcodeRequest, textRequest, classifyRequest])
 
-        let faceCount = faceRequest.results?.count ?? 0
+        let faceObservations = faceRequest.results ?? []
+        let faceCount = faceObservations.count
         let barcodeCount = barcodeRequest.results?.count ?? 0
+        let hasProminentFace = faceObservations.contains { observation in
+            let box = observation.boundingBox
+            return box.width * box.height >= 0.012 && box.height >= 0.10
+        }
+        let hasProminentHuman = (humanRequest.results ?? []).contains { observation in
+            let box = observation.boundingBox
+            return box.width * box.height >= 0.035 && box.height >= 0.16
+        }
         let recognizedText = (textRequest.results ?? [])
             .compactMap { $0.topCandidates(1).first?.string }
             .joined(separator: " ")
         let labels = (classifyRequest.results ?? [])
             .prefix(8)
-            .filter { $0.confidence >= 0.12 }
+            .filter { $0.confidence >= 0.22 }
             .map { VisionLabel(identifier: $0.identifier.lowercased(), confidence: Double($0.confidence)) }
 
         var tags = Set<String>()
@@ -379,7 +483,13 @@ enum VaultAIAnalyzer {
             tags.insert(VaultAITag.screenshot)
         }
 
-        return VisionResult(sensitiveScore: score, labels: labels, tags: Array(tags))
+        return VisionResult(
+            sensitiveScore: score,
+            labels: labels,
+            tags: Array(tags),
+            hasProminentFace: hasProminentFace,
+            hasProminentHuman: hasProminentHuman
+        )
     }
 
     private static func analyzeQuality(cgImage: CGImage) -> QualityResult {
@@ -398,6 +508,7 @@ enum VaultAIAnalyzer {
 
     private static func metadataHints(for record: VaultMediaRecord) -> MetadataHints {
         let name = (record.originalFileName ?? record.fileName).lowercased()
+        let nameTokens = tokens(in: name)
         var tags = Set<String>()
         var sensitiveScore: Double = 0
         var category: String?
@@ -437,17 +548,11 @@ enum VaultAIAnalyzer {
             tags.insert(VaultAITag.screenshot)
             category = VaultAICategory.screenshots
         }
-        if name.contains("portrait")
-            || name.contains("selfie")
-            || name.contains("face")
-            || name.contains("people")
-            || name.contains("person")
-            || name.contains("avatar")
+        if containsAny(nameTokens, ["portrait", "selfie", "face", "avatar"])
             || name.contains("人物")
             || name.contains("人像") {
             tags.insert(VaultAITag.face)
             sensitiveScore = max(sensitiveScore, 0.66)
-            category = VaultAICategory.people
         }
         if name.contains("food")
             || name.contains("meal")
@@ -537,7 +642,14 @@ enum VaultAIAnalyzer {
         )
     }
 
-    private static func pickCategory(record: VaultMediaRecord, labels: [VisionLabel], tags: Set<String>, stats: VisualStats) -> String {
+    private static func pickCategory(
+        record: VaultMediaRecord,
+        labels: [VisionLabel],
+        tags: Set<String>,
+        stats: VisualStats,
+        hasProminentFace: Bool,
+        hasProminentHuman: Bool
+    ) -> String {
         if tags.contains(VaultAITag.idCard) || tags.contains(VaultAITag.bankCard) || tags.contains(VaultAITag.barcode) {
             return VaultAICategory.documents
         }
@@ -557,17 +669,30 @@ enum VaultAIAnalyzer {
             addLabelEvidence(label, to: &scores)
         }
 
-        if tags.contains(VaultAITag.face) {
-            scores[VaultAICategory.people, default: 0] += 1.15
+        let humanLabelScore = humanEvidenceScore(labels)
+        let nonHumanSubjectScore = nonHumanEvidenceScore(labels)
+        let hasFaceEvidence = tags.contains(VaultAITag.face)
+        let hasSkinToneHumanEvidence = stats.skinToneRatio > 0.045 && stats.darkRatio > 0.06 && stats.warmRatio < 0.50
+        let hasFaceBasedHumanEvidence = hasProminentFace
+            || (hasFaceEvidence && hasSkinToneHumanEvidence && nonHumanSubjectScore < 0.45)
+
+        if hasProminentHuman {
+            scores[VaultAICategory.people, default: 0] += 1.2
+        } else if hasFaceBasedHumanEvidence {
+            scores[VaultAICategory.people, default: 0] += 0.95
+        } else if hasFaceEvidence {
+            scores[VaultAICategory.people, default: 0] += 0.25
         }
         if tags.contains(VaultAITag.text) {
             scores[VaultAICategory.documents, default: 0] += 0.45
         }
 
-        if stats.skinToneRatio > 0.08 && stats.darkRatio > 0.14 && stats.warmRatio < 0.42 {
-            scores[VaultAICategory.people, default: 0] += 0.75
-        } else if stats.skinToneRatio > 0.05 && stats.darkRatio > 0.08 {
-            scores[VaultAICategory.people, default: 0] += 0.35
+        if hasProminentHuman || hasFaceBasedHumanEvidence || humanLabelScore >= 0.45 {
+            if stats.skinToneRatio > 0.08 && stats.darkRatio > 0.14 && stats.warmRatio < 0.42 {
+                scores[VaultAICategory.people, default: 0] += 0.55
+            } else if stats.skinToneRatio > 0.05 && stats.darkRatio > 0.08 {
+                scores[VaultAICategory.people, default: 0] += 0.25
+            }
         }
         if stats.greenRatio > 0.22 && stats.blueRatio > 0.12 {
             scores[VaultAICategory.nature, default: 0] += 0.8
@@ -590,6 +715,15 @@ enum VaultAIAnalyzer {
         let runnerUp = ranked.dropFirst().first?.value ?? 0
         if best.value < 0.65 { return VaultAICategory.other }
         if best.value < 1.4 && best.value - runnerUp < 0.20 { return VaultAICategory.other }
+        if best.key == VaultAICategory.people {
+            if nonHumanSubjectScore >= 0.45
+                && humanLabelScore < max(0.65, nonHumanSubjectScore + 0.20) {
+                return VaultAICategory.other
+            }
+            if !hasProminentHuman && !hasFaceBasedHumanEvidence && humanLabelScore < 0.45 {
+                return VaultAICategory.other
+            }
+        }
         return best.key
     }
 
@@ -624,10 +758,13 @@ enum VaultAIAnalyzer {
         let confidence = label.confidence
 
         if containsAny(tokens, [
-            "person", "people", "portrait", "selfie", "face", "smile", "skin",
-            "man", "woman", "boy", "girl", "child", "baby", "hair"
+            "person", "people", "portrait", "selfie", "face",
+            "man", "woman", "boy", "girl", "child", "baby", "human"
         ]) {
-            scores[VaultAICategory.people, default: 0] += confidence * 1.2
+            scores[VaultAICategory.people, default: 0] += confidence * 1.25
+        }
+        if containsAny(tokens, ["smile", "skin", "hair"]) {
+            scores[VaultAICategory.people, default: 0] += confidence * 0.35
         }
         if containsAny(tokens, [
             "food", "dish", "meal", "cuisine", "fruit", "dessert", "drink",
@@ -639,7 +776,8 @@ enum VaultAIAnalyzer {
         if containsAny(tokens, [
             "landscape", "sky", "cloud", "mountain", "tree", "beach", "sea",
             "ocean", "sunset", "sunrise", "plant", "flower", "forest", "river",
-            "lake", "snow", "water", "grass", "nature", "outdoor"
+            "lake", "snow", "water", "grass", "nature", "outdoor",
+            "animal", "mammal", "wildlife", "pet", "dog", "cat", "bird", "horse"
         ]) || phrase.contains(" natural landscape ") {
             scores[VaultAICategory.nature, default: 0] += confidence * 1.15
         }
@@ -651,6 +789,38 @@ enum VaultAIAnalyzer {
         }
         if containsAny(tokens, ["screenshot", "screen", "display", "website", "webpage"]) {
             scores[VaultAICategory.screenshots, default: 0] += confidence * 1.4
+        }
+    }
+
+    private static func humanEvidenceScore(_ labels: [VisionLabel]) -> Double {
+        labels.reduce(0) { total, label in
+            let tokens = tokens(in: label.identifier)
+            let weight: Double
+            if containsAny(tokens, [
+                "person", "people", "portrait", "selfie",
+                "man", "woman", "boy", "girl", "child", "baby", "human"
+            ]) {
+                weight = 1.0
+            } else if containsAny(tokens, ["smile", "skin", "hair"]) {
+                weight = 0.3
+            } else {
+                weight = 0
+            }
+            return total + label.confidence * weight
+        }
+    }
+
+    private static func nonHumanEvidenceScore(_ labels: [VisionLabel]) -> Double {
+        labels.reduce(0) { total, label in
+            let tokens = tokens(in: label.identifier)
+            guard containsAny(tokens, [
+                "animal", "mammal", "wildlife", "pet", "dog", "cat", "bird", "horse",
+                "vehicle", "car", "automobile", "truck", "bus", "train", "airplane",
+                "aircraft", "boat", "ship", "motorcycle", "bicycle", "wheel", "tire"
+            ]) else {
+                return total
+            }
+            return total + label.confidence
         }
     }
 
@@ -671,6 +841,91 @@ enum VaultAIAnalyzer {
 
     private static func tokens(in text: String) -> Set<String> {
         Set(text.lowercased().split { !$0.isLetter }.map(String.init).filter { !$0.isEmpty })
+    }
+
+    static func categoryForTesting(
+        labels: [(identifier: String, confidence: Double)],
+        tags: Set<String> = [],
+        hasProminentFace: Bool = false,
+        hasProminentHuman: Bool = false,
+        visualStats: (
+            blueRatio: Double,
+            greenRatio: Double,
+            warmRatio: Double,
+            skinToneRatio: Double,
+            darkRatio: Double,
+            whiteRatio: Double,
+            saturationAverage: Double
+        ) = (0, 0, 0, 0, 0, 0, 0)
+    ) -> String {
+        pickCategory(
+            record: VaultMediaRecord(
+                id: "test",
+                storagePath: "test.jpg",
+                albumName: "test",
+                fileName: "test.jpg",
+                mediaKind: .image,
+                state: .active,
+                encryptedSizeBytes: 0,
+                originalSha256Hex: nil,
+                encryptedSha256Hex: nil,
+                originalFileName: nil,
+                mimeType: nil,
+                uti: nil,
+                cipherVersion: nil,
+                createdAtMs: 0,
+                importedAtMs: 0,
+                modifiedAtMs: 0,
+                trashedAtMs: nil,
+                width: nil,
+                height: nil,
+                durationMs: nil,
+                source: .unknown,
+                ai: .empty
+            ),
+            labels: labels.map { VisionLabel(identifier: $0.identifier, confidence: $0.confidence) },
+            tags: tags,
+            stats: VisualStats(
+                blueRatio: visualStats.blueRatio,
+                greenRatio: visualStats.greenRatio,
+                warmRatio: visualStats.warmRatio,
+                skinToneRatio: visualStats.skinToneRatio,
+                darkRatio: visualStats.darkRatio,
+                whiteRatio: visualStats.whiteRatio,
+                saturationAverage: visualStats.saturationAverage
+            ),
+            hasProminentFace: hasProminentFace,
+            hasProminentHuman: hasProminentHuman
+        )
+    }
+
+    static func metadataHintCategoryForTesting(originalFileName: String) -> String? {
+        metadataHints(
+            for: VaultMediaRecord(
+                id: "test",
+                storagePath: "test.jpg",
+                albumName: "test",
+                fileName: "test.jpg",
+                mediaKind: .image,
+                state: .active,
+                encryptedSizeBytes: 0,
+                originalSha256Hex: nil,
+                encryptedSha256Hex: nil,
+                originalFileName: originalFileName,
+                mimeType: nil,
+                uti: nil,
+                cipherVersion: nil,
+                createdAtMs: 0,
+                importedAtMs: 0,
+                modifiedAtMs: 0,
+                trashedAtMs: nil,
+                width: nil,
+                height: nil,
+                durationMs: nil,
+                source: .unknown,
+                ai: .empty
+            )
+        ).category
     }
 
     private static func containsIDCardText(_ text: String) -> Bool {

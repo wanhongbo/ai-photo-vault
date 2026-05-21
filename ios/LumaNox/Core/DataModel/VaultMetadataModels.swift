@@ -33,20 +33,86 @@ enum VaultMediaSource: String, Codable, Hashable {
     case unknown
 }
 
+struct VaultAiLabelObservation: Codable, Hashable {
+    var identifier: String
+    var confidence: Double
+}
+
 struct VaultAiMetadata: Codable, Hashable {
     var scannedAtMs: Int64?
     var sensitiveScore: Double?
     var cleanupScore: Double?
     var category: String?
     var tags: [String]
+    var analyzerVersion: Int?
+    var sourceFingerprint: String?
+    var labels: [VaultAiLabelObservation]
+    var perceptualHashHex: String?
+    var colorFingerprintHex: String?
 
     static let empty = VaultAiMetadata(
         scannedAtMs: nil,
         sensitiveScore: nil,
         cleanupScore: nil,
         category: nil,
-        tags: []
+        tags: [],
+        analyzerVersion: nil,
+        sourceFingerprint: nil,
+        labels: [],
+        perceptualHashHex: nil,
+        colorFingerprintHex: nil
     )
+
+    init(
+        scannedAtMs: Int64?,
+        sensitiveScore: Double?,
+        cleanupScore: Double?,
+        category: String?,
+        tags: [String],
+        analyzerVersion: Int? = nil,
+        sourceFingerprint: String? = nil,
+        labels: [VaultAiLabelObservation] = [],
+        perceptualHashHex: String? = nil,
+        colorFingerprintHex: String? = nil
+    ) {
+        self.scannedAtMs = scannedAtMs
+        self.sensitiveScore = sensitiveScore
+        self.cleanupScore = cleanupScore
+        self.category = category
+        self.tags = tags
+        self.analyzerVersion = analyzerVersion
+        self.sourceFingerprint = sourceFingerprint
+        self.labels = labels
+        self.perceptualHashHex = perceptualHashHex
+        self.colorFingerprintHex = colorFingerprintHex
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case scannedAtMs
+        case sensitiveScore
+        case cleanupScore
+        case category
+        case tags
+        case analyzerVersion
+        case sourceFingerprint
+        case labels
+        case perceptualHashHex
+        case colorFingerprintHex
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        scannedAtMs = try container.decodeIfPresent(Int64.self, forKey: .scannedAtMs)
+        sensitiveScore = try container.decodeIfPresent(Double.self, forKey: .sensitiveScore)
+        cleanupScore = try container.decodeIfPresent(Double.self, forKey: .cleanupScore)
+        category = try container.decodeIfPresent(String.self, forKey: .category)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        analyzerVersion = try container.decodeIfPresent(Int.self, forKey: .analyzerVersion)
+        sourceFingerprint = try container.decodeIfPresent(String.self, forKey: .sourceFingerprint)
+        labels = try container.decodeIfPresent([VaultAiLabelObservation].self, forKey: .labels) ?? []
+        perceptualHashHex = try container.decodeIfPresent(String.self, forKey: .perceptualHashHex)
+        colorFingerprintHex = try container.decodeIfPresent(String.self, forKey: .colorFingerprintHex)
+    }
 }
 
 struct VaultMediaRecord: Identifiable, Codable, Hashable {

@@ -14,6 +14,7 @@
 		0E6DD6D651EC2D5C22CF6FA5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EE318A72F623E587F6C81DD /* AVFoundation.framework */; };
 		121063FB10E9EE11F641A065 /* VaultHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1766E374467294BEF5A81EE6 /* VaultHomeView.swift */; };
 		13CDC70C8B5B76180E1E7006 /* PasswordHasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E090E7F707328EB78816CB6F /* PasswordHasher.swift */; };
+		145BFCE7920D6960BA3AACF9 /* NetworkAIDatasetPhotoLibrarySeedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC0EF53851E2A97335530387 /* NetworkAIDatasetPhotoLibrarySeedTests.swift */; };
 		150C3FC679FEEC76B7245991 /* screen_2a.png in Resources */ = {isa = PBXBuildFile; fileRef = C3AC7B62556E04140F3A58B6 /* screen_2a.png */; };
 		174A73A8E20833EA2F97A686 /* LNDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D7C45A745A3B56970E7DB4 /* LNDialog.swift */; };
 		1E1237CDCBA68891BA084FB7 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 56815CA88C4EA9F91ABED32F /* Photos.framework */; };
@@ -64,6 +65,7 @@
 		6C707038AEC4E8D81DC5152C /* LNTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24E567FFD4B2C084123FC7F /* LNTokens.swift */; };
 		6E4CDE16543127CC885AB154 /* LocalBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6F3676571E36687F9C5E02C /* LocalBackupService.swift */; };
 		6E754462B3AC3EC44289DC14 /* VaultMetadataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4774BDE54BCD166B53833A58 /* VaultMetadataModels.swift */; };
+		6EC7870A56FEE386F2E854F9 /* AIClassificationRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F750D28346CAB57E2755170B /* AIClassificationRuleTests.swift */; };
 		72E1C705EF5A964F9E32C6AF /* VaultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC69DE179BB30C69A3742C /* VaultStore.swift */; };
 		782B97ECE55A70B2FA3E6608 /* AlbumListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */; };
 		7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */; };
@@ -267,6 +269,7 @@
 		DA23EEFE7CB8F5D3B0A673D7 /* FirstLaunchRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchRouter.swift; sourceTree = "<group>"; };
 		DA6D80E8EF90C3A5A0326DF4 /* VaultMetadataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultMetadataStore.swift; sourceTree = "<group>"; };
 		DA8EFDB435B5DE29A788A662 /* PaywallAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallAnalytics.swift; sourceTree = "<group>"; };
+		DC0EF53851E2A97335530387 /* NetworkAIDatasetPhotoLibrarySeedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkAIDatasetPhotoLibrarySeedTests.swift; sourceTree = "<group>"; };
 		DD9644AD884D86508FA10EC6 /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
 		DEDD1F18244EC60A00AF3AB8 /* LanguageSettingsView.pen */ = {isa = PBXFileReference; path = LanguageSettingsView.pen; sourceTree = "<group>"; };
 		DEE1A4782F64EDCC50A50E9B /* screen_1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_1x.png; sourceTree = "<group>"; };
@@ -283,6 +286,7 @@
 		F4C456534536B3DE53A4E8BC /* BackupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupViews.swift; sourceTree = "<group>"; };
 		F67E774C9F357BBF51F65143 /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = System/Library/Frameworks/CryptoKit.framework; sourceTree = SDKROOT; };
 		F6F3676571E36687F9C5E02C /* LocalBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBackupService.swift; sourceTree = "<group>"; };
+		F750D28346CAB57E2755170B /* AIClassificationRuleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIClassificationRuleTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -509,7 +513,9 @@
 		851A724928927AF94F967BC3 /* LumaNoxTests */ = {
 			isa = PBXGroup;
 			children = (
+				F750D28346CAB57E2755170B /* AIClassificationRuleTests.swift */,
 				0BF1855A4D106CFD1B09EDDE /* AIRecognitionFixtureImportTests.swift */,
+				DC0EF53851E2A97335530387 /* NetworkAIDatasetPhotoLibrarySeedTests.swift */,
 				266B639224CC819B5C54174E /* RealWorldAIRecognitionDatasetTests.swift */,
 				ABA098E95640BF4765E38462 /* VaultCipherV2Tests.swift */,
 			);
@@ -856,7 +862,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6EC7870A56FEE386F2E854F9 /* AIClassificationRuleTests.swift in Sources */,
 				A3762BBED3A87C11CCBFB2DA /* AIRecognitionFixtureImportTests.swift in Sources */,
+				145BFCE7920D6960BA3AACF9 /* NetworkAIDatasetPhotoLibrarySeedTests.swift in Sources */,
 				3C533D1937B2DC69F9BC5ABA /* RealWorldAIRecognitionDatasetTests.swift in Sources */,
 				84441A178A24A141295D4C56 /* VaultCipherV2Tests.swift in Sources */,
 			);
