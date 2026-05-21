@@ -97,11 +97,14 @@
 "ai_cleanup_empty" = "No cleanup candidates";
 "ai_cleanup_scan_hint" = "Run a scan after importing more photos to refresh suggestions.";
 "ai_cleanup_candidates" = "Candidates";
+"ai_sensitive_files_title" = "Sensitive files";
 "ai_sensitive_count_fmt" = "%d sensitive items";
+"ai_sensitive_count_may_contain_fmt" = "%d items may contain sensitive info";
 "ai_sensitive_live_desc" = "Faces, text, IDs, bank cards, and barcodes are reviewed locally on this device.";
+"ai_sensitive_review_blur_desc" = "Review sensitive media and open Privacy Blur for each one.";
 "ai_sensitive_empty_title" = "No sensitive items found";
 "ai_sensitive_empty_desc" = "Run a scan again after importing new media.";
-"ai_sensitive_candidates" = "Review before sharing";
+"ai_sensitive_candidates" = "Sensitive candidates";
 "ai_classify_summary_fmt" = "%d categories";
 "ai_classify_live_desc" = "Classification reads local Vision labels and metadata tags without uploading media.";
 "ai_classify_empty_title" = "No categories yet";

@@ -228,7 +228,7 @@ struct AIHomeView: View {
                 foreground: LNColor.brandBlue,
                 background: LNColor.brandBlue.opacity(0.20),
                 stroke: Color(hex: 0x244869),
-                route: .privacyRedact(path: ""),
+                route: .aiSensitive,
                 proFeature: .aiPrivacy,
                 accessibilityIdentifier: "ai_tool_privacy_blur"
             ),
@@ -350,17 +350,11 @@ struct AISensitiveReviewView: View {
     }
 
     var body: some View {
-        LNScreenScaffold(title: L10n.aiSensitiveTitle, onBack: { dismiss() }) {
-            AIActionHeaderCard(
-                icon: "eye.slash",
-                tint: LNColor.amberWarning,
-                title: L10n.tr("ai_sensitive_count_fmt", sensitiveRecords.count),
-                message: L10n.tr("ai_sensitive_live_desc"),
-                primaryTitle: aiService.progress.running ? L10n.commonLoading : L10n.tr("ai_cleanup_scan_now"),
-                primaryLoading: aiService.progress.running,
-                secondaryTitle: nil,
-                primaryAction: { Task { await aiService.scanVault() } },
-                secondaryAction: {}
+        LNScreenScaffold(title: L10n.tr("ai_sensitive_files_title"), onBack: { dismiss() }) {
+            AISensitiveReviewHeaderCard(
+                count: sensitiveRecords.count,
+                loading: aiService.progress.running,
+                onScan: { Task { await aiService.scanVault() } }
             )
 
             if sensitiveRecords.isEmpty {
@@ -370,14 +364,86 @@ struct AISensitiveReviewView: View {
                     message: L10n.tr("ai_sensitive_empty_desc")
                 )
             } else {
-                AISectionHeader(title: L10n.tr("ai_sensitive_candidates"), value: "\(sensitiveRecords.count)")
-                LNMediaGrid(items: sensitiveRecords.map(mediaItem)) { item in
+                AISensitiveGridCard(records: sensitiveRecords) { item in
                     router.pushAI(.privacyRedact(path: item.path))
                 }
             }
         }
         .task { aiService.refreshSummary() }
         .accessibilityIdentifier("ai_sensitive_review_view")
+    }
+}
+
+private struct AISensitiveReviewHeaderCard: View {
+    let count: Int
+    let loading: Bool
+    let onScan: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            HStack(spacing: 12) {
+                Image(systemName: "eye.slash")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(LNColor.brandBlue)
+                    .frame(width: 44, height: 44)
+                    .background(LNColor.brandBlue.opacity(0.18))
+                    .clipShape(RoundedRectangle(cornerRadius: 13))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.tr("ai_sensitive_count_may_contain_fmt", count))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0xB7D7FF))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                    Text(L10n.tr("ai_sensitive_review_blur_desc"))
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(LNColor.subtitle)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Button(action: onScan) {
+                ZStack {
+                    if loading {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text(L10n.tr("ai_cleanup_scan_now"))
+                            .font(.system(size: 13, weight: .bold))
+                    }
+                }
+                .foregroundStyle(Color.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 40)
+                .background(loading ? LNColor.buttonDisabledBg : LNColor.brandBlue)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+            .disabled(loading)
+            .accessibilityIdentifier("ai_sensitive_scan_now")
+        }
+        .padding(LNSpacing.cardPadding)
+        .background(LNColor.sectionBg)
+        .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
+        .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(Color(hex: 0x244869), lineWidth: 1))
+        .accessibilityIdentifier("ai_sensitive_header")
+    }
+}
+
+private struct AISensitiveGridCard: View {
+    let records: [VaultMediaRecord]
+    let onSelect: (LNMediaItem) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            AISectionHeader(title: L10n.tr("ai_sensitive_candidates"), value: "\(records.count)")
+            LNMediaGrid(items: records.map(mediaItem), onSelect: onSelect)
+        }
+        .padding(LNSpacing.cardPadding)
+        .background(LNColor.sectionBg)
+        .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
+        .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(LNColor.stroke, lineWidth: 1))
+        .accessibilityIdentifier("ai_sensitive_candidates_grid")
     }
 }
 

@@ -97,11 +97,14 @@
 "ai_cleanup_empty" = "暂无清理候选";
 "ai_cleanup_scan_hint" = "导入更多照片后可重新扫描刷新建议。";
 "ai_cleanup_candidates" = "候选项目";
+"ai_sensitive_files_title" = "敏感图片";
 "ai_sensitive_count_fmt" = "%d 项敏感内容";
+"ai_sensitive_count_may_contain_fmt" = "%d 项可能包含敏感信息";
 "ai_sensitive_live_desc" = "人脸、文字、证件、银行卡和二维码只在此设备本地检查。";
+"ai_sensitive_review_blur_desc" = "检查敏感媒体，并可逐项进入隐私打码。";
 "ai_sensitive_empty_title" = "未发现敏感内容";
 "ai_sensitive_empty_desc" = "导入新媒体后可重新扫描。";
-"ai_sensitive_candidates" = "分享前检查";
+"ai_sensitive_candidates" = "敏感候选";
 "ai_classify_summary_fmt" = "%d 个分类";
 "ai_classify_live_desc" = "分类使用本地 Vision 标签和 metadata，不上传媒体。";
 "ai_classify_empty_title" = "暂无分类";
