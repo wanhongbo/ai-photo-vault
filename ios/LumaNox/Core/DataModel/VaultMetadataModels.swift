@@ -38,6 +38,52 @@ struct VaultAiLabelObservation: Codable, Hashable {
     var confidence: Double
 }
 
+enum VaultAISubjectKind: String, Codable, Hashable {
+    case people
+    case pet
+}
+
+struct VaultAIIndexRecord: Codable, Hashable {
+    var recordID: String
+    var sourceFingerprint: String
+    var mediaKind: VaultMediaKind
+    var category: String?
+    var tags: [String]
+    var labels: [VaultAiLabelObservation]
+    var sensitiveScore: Double?
+    var cleanupScore: Double?
+    var duplicateGroupId: String?
+    var featurePrintBase64: String?
+    var subjectKind: VaultAISubjectKind?
+    var subjectClusterId: String?
+}
+
+struct VaultAISubjectCluster: Identifiable, Codable, Hashable {
+    var id: String
+    var kind: VaultAISubjectKind
+    var name: String?
+    var memberRecordIDs: [String]
+    var representativeRecordID: String?
+    var createdAtMs: Int64
+    var updatedAtMs: Int64
+}
+
+struct VaultAIIndexSnapshot: Codable, Hashable {
+    var schemaVersion: Int
+    var analyzerVersion: Int
+    var records: [VaultAIIndexRecord]
+    var subjectClusters: [VaultAISubjectCluster]
+    var updatedAtMs: Int64
+
+    static let empty = VaultAIIndexSnapshot(
+        schemaVersion: 1,
+        analyzerVersion: 0,
+        records: [],
+        subjectClusters: [],
+        updatedAtMs: 0
+    )
+}
+
 struct VaultAiMetadata: Codable, Hashable {
     var scannedAtMs: Int64?
     var sensitiveScore: Double?
@@ -49,6 +95,8 @@ struct VaultAiMetadata: Codable, Hashable {
     var labels: [VaultAiLabelObservation]
     var perceptualHashHex: String?
     var colorFingerprintHex: String?
+    var duplicateGroupId: String?
+    var sensitiveIgnoredAtMs: Int64?
 
     static let empty = VaultAiMetadata(
         scannedAtMs: nil,
@@ -60,7 +108,9 @@ struct VaultAiMetadata: Codable, Hashable {
         sourceFingerprint: nil,
         labels: [],
         perceptualHashHex: nil,
-        colorFingerprintHex: nil
+        colorFingerprintHex: nil,
+        duplicateGroupId: nil,
+        sensitiveIgnoredAtMs: nil
     )
 
     init(
@@ -73,7 +123,9 @@ struct VaultAiMetadata: Codable, Hashable {
         sourceFingerprint: String? = nil,
         labels: [VaultAiLabelObservation] = [],
         perceptualHashHex: String? = nil,
-        colorFingerprintHex: String? = nil
+        colorFingerprintHex: String? = nil,
+        duplicateGroupId: String? = nil,
+        sensitiveIgnoredAtMs: Int64? = nil
     ) {
         self.scannedAtMs = scannedAtMs
         self.sensitiveScore = sensitiveScore
@@ -85,6 +137,8 @@ struct VaultAiMetadata: Codable, Hashable {
         self.labels = labels
         self.perceptualHashHex = perceptualHashHex
         self.colorFingerprintHex = colorFingerprintHex
+        self.duplicateGroupId = duplicateGroupId
+        self.sensitiveIgnoredAtMs = sensitiveIgnoredAtMs
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -98,6 +152,8 @@ struct VaultAiMetadata: Codable, Hashable {
         case labels
         case perceptualHashHex
         case colorFingerprintHex
+        case duplicateGroupId
+        case sensitiveIgnoredAtMs
     }
 
     init(from decoder: Decoder) throws {
@@ -112,6 +168,8 @@ struct VaultAiMetadata: Codable, Hashable {
         labels = try container.decodeIfPresent([VaultAiLabelObservation].self, forKey: .labels) ?? []
         perceptualHashHex = try container.decodeIfPresent(String.self, forKey: .perceptualHashHex)
         colorFingerprintHex = try container.decodeIfPresent(String.self, forKey: .colorFingerprintHex)
+        duplicateGroupId = try container.decodeIfPresent(String.self, forKey: .duplicateGroupId)
+        sensitiveIgnoredAtMs = try container.decodeIfPresent(Int64.self, forKey: .sensitiveIgnoredAtMs)
     }
 }
 
@@ -197,11 +255,60 @@ struct VaultMetadataSnapshot: Codable, Hashable {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let source = activeMedia.sorted { $0.modifiedAtMs > $1.modifiedAtMs }
         guard !trimmed.isEmpty else { return Array(source.prefix(limit)) }
+        let queryTerms = vaultSearchExpandedTerms(for: trimmed)
         return Array(source.filter { record in
-            record.fileName.localizedCaseInsensitiveContains(trimmed)
-                || record.albumName.localizedCaseInsensitiveContains(trimmed)
-                || record.ai.tags.contains { $0.localizedCaseInsensitiveContains(trimmed) }
-                || (record.ai.category?.localizedCaseInsensitiveContains(trimmed) == true)
+            let haystack = vaultSearchHaystack(for: record)
+            return queryTerms.contains { query in
+                haystack.contains { value in
+                    value.localizedCaseInsensitiveContains(query)
+                }
+            }
         }.prefix(limit))
     }
+}
+
+private func vaultSearchHaystack(for record: VaultMediaRecord) -> [String] {
+    var values = [
+        record.fileName,
+        record.albumName,
+        record.originalFileName ?? "",
+        record.ai.category ?? "",
+    ]
+    values.append(contentsOf: record.ai.tags)
+    values.append(contentsOf: record.ai.labels.map(\.identifier))
+    values.append(contentsOf: vaultSearchExpandedTerms(for: record.ai.category ?? ""))
+    for tag in record.ai.tags {
+        values.append(contentsOf: vaultSearchExpandedTerms(for: tag))
+    }
+    for label in record.ai.labels {
+        values.append(contentsOf: vaultSearchExpandedTerms(for: label.identifier))
+    }
+    return values.filter { !$0.isEmpty }
+}
+
+private func vaultSearchExpandedTerms(for query: String) -> Set<String> {
+    let lowered = query.lowercased()
+    let tokens = Set(lowered.split { !$0.isLetter && !$0.isNumber && $0 != "_" }.map(String.init))
+    var terms = tokens
+    if !lowered.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        terms.insert(lowered)
+    }
+
+    let groups: [[String]] = [
+        ["狗", "犬", "宠物", "寵物", "dog", "pet", "animal", "mammal"],
+        ["猫", "貓", "宠物", "寵物", "cat", "pet", "animal", "mammal"],
+        ["证件", "證件", "身份证", "身份證", "护照", "護照", "passport", "id", "id_card", "document", "documents"],
+        ["银行卡", "銀行卡", "信用卡", "bank", "bank_card", "credit_card", "card"],
+        ["二维码", "二維碼", "条码", "條碼", "qr", "barcode", "code"],
+        ["截图", "截屏", "螢幕截圖", "screenshot", "screen", "screenshots"],
+        ["人脸", "人像", "自拍", "人物", "face", "selfie", "portrait", "people", "person"],
+        ["风景", "風景", "自然", "旅行", "地点", "地點", "nature", "landscape", "travel", "place", "outdoor"],
+        ["票据", "票據", "发票", "發票", "收据", "receipt", "invoice", "paper", "scan"],
+        ["模糊", "虚焦", "失焦", "blurry", "blur", "low_quality"],
+        ["重复", "重複", "相似", "duplicate", "similar", "dedup"],
+    ]
+    for group in groups where !terms.isDisjoint(with: group) {
+        terms.formUnion(group)
+    }
+    return terms
 }

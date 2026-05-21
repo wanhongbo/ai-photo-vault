@@ -10,6 +10,7 @@
 		07B79188BEB63573E604C247 /* MediaViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4EBFA92B5775EFFACB9756 /* MediaViews.swift */; };
 		0A06CA42F2A2CBAAFF5AF47C /* VaultThumbnailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E430DC90BBC4CC822BAC44EA /* VaultThumbnailView.swift */; };
 		0BCC71CECF76A8B21435B477 /* MediaMetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272AE82F2EC1285BFA48AF91 /* MediaMetadataExtractor.swift */; };
+		0C03878D97F142FB377DE203 /* VaultAICategoryMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D55F6C417C8C404BD8F5C0C3 /* VaultAICategoryMapper.swift */; };
 		0D19D7B834FCD4B56DB53277 /* CameraViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B36C7EB0368F50AB6AC2BFC /* CameraViews.swift */; };
 		0E6DD6D651EC2D5C22CF6FA5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EE318A72F623E587F6C81DD /* AVFoundation.framework */; };
 		121063FB10E9EE11F641A065 /* VaultHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1766E374467294BEF5A81EE6 /* VaultHomeView.swift */; };
@@ -86,6 +87,7 @@
 		98FFF0BE9492604AA3322BE3 /* ExternalBackupLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7C33D88658D984E52C5BBE /* ExternalBackupLocation.swift */; };
 		9A2B11F39F6ECED931C1A634 /* screen_1x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEE1A4782F64EDCC50A50E9B /* screen_1x.png */; };
 		9B911B240C73EE9A5C7BF80A /* LockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884A370DC3AD53F835557043 /* LockView.swift */; };
+		9BADA4477DF6AC11DCAAFF38 /* VaultAIIndexStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E362C2FCBED056B19BB57B24 /* VaultAIIndexStore.swift */; };
 		9C65DB619883E5806D30DEF0 /* ExportProgressView.pen in Resources */ = {isa = PBXBuildFile; fileRef = A53B837DC76591BEE5DBBBFC /* ExportProgressView.pen */; };
 		A16D56AAE3CFADF2239DD3C4 /* PaywallGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF4D997C5999E2E9D99F158 /* PaywallGate.swift */; };
 		A2500ED248BBD2C23FA8B3D2 /* runtime_lock_or_main.png in Resources */ = {isa = PBXBuildFile; fileRef = EA54B97DE1D53DA59FA3FCD6 /* runtime_lock_or_main.png */; };
@@ -262,6 +264,7 @@
 		D241EC7295150AD02A89B255 /* LumaNoxTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LumaNoxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D24E567FFD4B2C084123FC7F /* LNTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNTokens.swift; sourceTree = "<group>"; };
 		D2693369AD7FA94F762FDDCE /* VaultFileFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultFileFormat.swift; sourceTree = "<group>"; };
+		D55F6C417C8C404BD8F5C0C3 /* VaultAICategoryMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultAICategoryMapper.swift; sourceTree = "<group>"; };
 		D5C532FB51C0B341CAADA062 /* SettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViews.swift; sourceTree = "<group>"; };
 		D672F551AEBE8981A9F344D0 /* MediaExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaExportService.swift; sourceTree = "<group>"; };
 		D83880285DCAAD76A4957F4C /* ExportResultView.pen */ = {isa = PBXFileReference; path = ExportResultView.pen; sourceTree = "<group>"; };
@@ -275,6 +278,7 @@
 		DEE1A4782F64EDCC50A50E9B /* screen_1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_1x.png; sourceTree = "<group>"; };
 		E090E7F707328EB78816CB6F /* PasswordHasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordHasher.swift; sourceTree = "<group>"; };
 		E1EC20C0DDB6D96BED47D1FC /* screen_15.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_15.png; sourceTree = "<group>"; };
+		E362C2FCBED056B19BB57B24 /* VaultAIIndexStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultAIIndexStore.swift; sourceTree = "<group>"; };
 		E430DC90BBC4CC822BAC44EA /* VaultThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultThumbnailView.swift; sourceTree = "<group>"; };
 		E610D041074E032FA40C8808 /* BackupIntegrityVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupIntegrityVerifier.swift; sourceTree = "<group>"; };
 		E8BA57850FD7756DA83C995F /* PaywallModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallModels.swift; sourceTree = "<group>"; };
@@ -642,6 +646,8 @@
 			children = (
 				70B6D9D38622E858F4385298 /* PrivacyRedactionService.swift */,
 				7F34D29FA076FE9CC7A66378 /* VaultAIAnalysisService.swift */,
+				D55F6C417C8C404BD8F5C0C3 /* VaultAICategoryMapper.swift */,
+				E362C2FCBED056B19BB57B24 /* VaultAIIndexStore.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -938,6 +944,8 @@
 				DE5E1DD8859752E46109681D /* SubscriptionService.swift in Sources */,
 				FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */,
 				87F2096A12CE0926BAC5892C /* VaultAIAnalysisService.swift in Sources */,
+				0C03878D97F142FB377DE203 /* VaultAICategoryMapper.swift in Sources */,
+				9BADA4477DF6AC11DCAAFF38 /* VaultAIIndexStore.swift in Sources */,
 				A3C95D375296E51D3DD81D40 /* VaultCipher+Stream.swift in Sources */,
 				D4231525816B3C57E3411970 /* VaultCipher.swift in Sources */,
 				A261250DF2A1F8149EB5C344 /* VaultFileFormat.swift in Sources */,

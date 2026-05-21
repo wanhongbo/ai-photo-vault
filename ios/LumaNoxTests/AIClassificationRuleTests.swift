@@ -22,6 +22,8 @@ final class AIClassificationRuleTests: XCTestCase {
         XCTAssertTrue(metadata.labels.isEmpty)
         XCTAssertNil(metadata.perceptualHashHex)
         XCTAssertNil(metadata.colorFingerprintHex)
+        XCTAssertNil(metadata.duplicateGroupId)
+        XCTAssertNil(metadata.sensitiveIgnoredAtMs)
     }
 
     func testAnimalAndVehicleEvidenceDoNotBecomePeopleFromWeakAppearanceLabels() {
@@ -157,6 +159,22 @@ final class AIClassificationRuleTests: XCTestCase {
                 darkRatio: 0.15,
                 whiteRatio: 0.03,
                 saturationAverage: 0.31
+            )
+        )
+        XCTAssertEqual(category, VaultAICategory.people)
+    }
+
+    func testPortraitColorLayoutClassifiesAsPeopleWithoutVisionFaceLabel() {
+        let category = VaultAIAnalyzer.categoryForTesting(
+            labels: [],
+            visualStats: (
+                blueRatio: 0.04,
+                greenRatio: 0.06,
+                warmRatio: 0.24,
+                skinToneRatio: 0.18,
+                darkRatio: 0.16,
+                whiteRatio: 0.04,
+                saturationAverage: 0.34
             )
         )
         XCTAssertEqual(category, VaultAICategory.people)
