@@ -78,6 +78,54 @@ final class VaultMetadataStore {
         )
     }
 
+    func recordImportedMedia(
+        encryptedURL: URL,
+        albumName: String,
+        plainURL: URL,
+        plainSha256Hex: String,
+        source: VaultMediaSource,
+        originalFileName: String? = nil
+    ) throws {
+        let docs = documentsDirectory()
+        let storagePath = encryptedURL.relativePath(from: docs)
+        let values = try encryptedURL.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey, .fileSizeKey])
+        let now = Date().epochMs
+        let createdAtMs = (values.creationDate ?? Date()).epochMs
+        let modifiedAtMs = (values.contentModificationDate ?? Date()).epochMs
+        let details = MediaMetadataExtractor.extract(from: plainURL)
+        var snapshot = load()
+        snapshot.media.removeAll { $0.storagePath == storagePath }
+        snapshot.media.append(VaultMediaRecord(
+            id: storagePath,
+            storagePath: storagePath,
+            albumName: albumName,
+            fileName: encryptedURL.lastPathComponent,
+            mediaKind: VaultMediaKind.infer(from: encryptedURL.pathExtension),
+            state: .active,
+            encryptedSizeBytes: Int64(values.fileSize ?? 0),
+            originalSha256Hex: plainSha256Hex,
+            encryptedSha256Hex: encryptedSha256Hex(encryptedURL),
+            originalFileName: originalFileName,
+            mimeType: details.mimeType,
+            uti: details.uti,
+            cipherVersion: vaultCipherVersionCBCv1,
+            createdAtMs: createdAtMs,
+            importedAtMs: now,
+            modifiedAtMs: modifiedAtMs,
+            trashedAtMs: nil,
+            width: details.width,
+            height: details.height,
+            durationMs: details.durationMs,
+            source: source,
+            ai: .empty
+        ))
+        let vaultRoot = docs.appendingPathComponent("vault_albums", isDirectory: true)
+        snapshot.albums = buildAlbums(vaultRoot: vaultRoot, media: snapshot.media)
+        snapshot.media.sort { $0.modifiedAtMs > $1.modifiedAtMs }
+        snapshot.updatedAtMs = now
+        try save(snapshot)
+    }
+
     private func save(_ snapshot: VaultMetadataSnapshot) throws {
         let url = metadataURL()
         try fileManager.createDirectory(
@@ -191,6 +239,10 @@ final class VaultMetadataStore {
             encryptedSizeBytes: Int64(values.fileSize ?? 0),
             originalSha256Hex: previous?.originalSha256Hex,
             encryptedSha256Hex: previous?.encryptedSha256Hex ?? encryptedSha256Hex(file),
+            originalFileName: previous?.originalFileName,
+            mimeType: previous?.mimeType,
+            uti: previous?.uti,
+            cipherVersion: previous?.cipherVersion ?? vaultCipherVersionCBCv1,
             createdAtMs: previous?.createdAtMs ?? createdAtMs,
             importedAtMs: previous?.importedAtMs ?? createdAtMs,
             modifiedAtMs: modifiedAtMs,

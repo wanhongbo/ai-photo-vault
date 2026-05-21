@@ -98,19 +98,18 @@ private var debugSkipsPin: Bool {
 
 private struct VaultPickedMediaFile: Transferable {
     let url: URL
+    let originalFileName: String
 
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(contentType: .item) { file in
             SentTransferredFile(file.url)
         } importing: { received in
-            let ext = received.file.pathExtension.isEmpty ? "bin" : received.file.pathExtension
-            let copy = FileManager.default.temporaryDirectory
-                .appendingPathComponent("lumanox_picker_\(UUID().uuidString).\(ext)")
-            if FileManager.default.fileExists(atPath: copy.path) {
-                try FileManager.default.removeItem(at: copy)
-            }
-            try FileManager.default.copyItem(at: received.file, to: copy)
-            return VaultPickedMediaFile(url: copy)
+            let copy = try PlaintextTempFileManager.shared.copyFileToTemporary(
+                sourceURL: received.file,
+                scene: .importStaging,
+                preferredName: received.file.lastPathComponent
+            )
+            return VaultPickedMediaFile(url: copy, originalFileName: received.file.lastPathComponent)
         }
     }
 }
@@ -139,11 +138,12 @@ enum PhotosPickerVaultImporter {
         vaultStore: VaultStore
     ) async -> VaultImportResult {
         if let picked = try? await item.loadTransferable(type: VaultPickedMediaFile.self) {
-            defer { try? FileManager.default.removeItem(at: picked.url) }
+            defer { PlaintextTempFileManager.shared.removeItem(picked.url) }
             return await vaultStore.importPlainFile(
                 at: picked.url,
                 fileExtension: extensionForPickerItem(item, fallback: picked.url.pathExtension),
-                albumName: albumName
+                albumName: albumName,
+                originalFileName: picked.originalFileName
             )
         }
 
@@ -151,7 +151,8 @@ enum PhotosPickerVaultImporter {
             return await vaultStore.importPlainData(
                 data,
                 fileExtension: extensionForPickerItem(item),
-                albumName: albumName
+                albumName: albumName,
+                originalFileName: nil
             )
         }
 

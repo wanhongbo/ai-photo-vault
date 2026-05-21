@@ -32,6 +32,7 @@ extension VaultStore {
             let albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
             let ext = tempURL.pathExtension.isEmpty ? "bin" : tempURL.pathExtension
             let dest = albumDir.appendingPathComponent("camera_\(Int64(Date().timeIntervalSince1970 * 1000)).\(ext)")
+            let hash = try sha256Hex(of: tempURL)
             try cipher.encryptFileFromChunks(to: dest) { sink in
                 let handle = try FileHandle(forReadingFrom: tempURL)
                 defer { try? handle.close() }
@@ -39,6 +40,14 @@ extension VaultStore {
                     try sink(chunk)
                 }
             }
+            try metadataStore.recordImportedMedia(
+                encryptedURL: dest,
+                albumName: safeAlbum,
+                plainURL: tempURL,
+                plainSha256Hex: hash,
+                source: .camera,
+                originalFileName: tempURL.lastPathComponent
+            )
             PlaintextTempFileManager.shared.removeItem(tempURL)
             invalidateCache()
             await loadSnapshot()

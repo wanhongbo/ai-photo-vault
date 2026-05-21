@@ -6,12 +6,13 @@ enum PlaintextTempScene: String, CaseIterable {
     case videoThumbnail
     case share
     case export
+    case importStaging
     case backup
     case restore
 
     var ttl: TimeInterval {
         switch self {
-        case .camera, .videoPlayback, .videoThumbnail, .share:
+        case .camera, .videoPlayback, .videoThumbnail, .share, .importStaging:
             return 60 * 60
         case .export, .backup, .restore:
             return 24 * 60 * 60
@@ -24,7 +25,7 @@ enum PlaintextTempScene: String, CaseIterable {
         case .videoPlayback, .videoThumbnail:
             return fm.urls(for: .cachesDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("LumaNox/plaintext", isDirectory: true)
-        case .camera, .share, .export, .backup, .restore:
+        case .camera, .share, .export, .importStaging, .backup, .restore:
             return fm.temporaryDirectory
                 .appendingPathComponent("LumaNox/plaintext", isDirectory: true)
         }

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		07B79188BEB63573E604C247 /* MediaViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4EBFA92B5775EFFACB9756 /* MediaViews.swift */; };
 		0A06CA42F2A2CBAAFF5AF47C /* VaultThumbnailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E430DC90BBC4CC822BAC44EA /* VaultThumbnailView.swift */; };
+		0BCC71CECF76A8B21435B477 /* MediaMetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272AE82F2EC1285BFA48AF91 /* MediaMetadataExtractor.swift */; };
 		0D19D7B834FCD4B56DB53277 /* CameraViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B36C7EB0368F50AB6AC2BFC /* CameraViews.swift */; };
 		0E6DD6D651EC2D5C22CF6FA5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5EE318A72F623E587F6C81DD /* AVFoundation.framework */; };
 		121063FB10E9EE11F641A065 /* VaultHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1766E374467294BEF5A81EE6 /* VaultHomeView.swift */; };
@@ -133,6 +134,7 @@
 		21FD7DB812096513A52C8BC2 /* LockViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockViewModel.swift; sourceTree = "<group>"; };
 		24104AD6F80BE9FD9BAC378D /* SettingsViews.pen */ = {isa = PBXFileReference; path = SettingsViews.pen; sourceTree = "<group>"; };
 		24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */ = {isa = PBXFileReference; path = AlbumListView.pen; sourceTree = "<group>"; };
+		272AE82F2EC1285BFA48AF91 /* MediaMetadataExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaMetadataExtractor.swift; sourceTree = "<group>"; };
 		27665673957BB60EB122DCF2 /* CameraSessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSessionController.swift; sourceTree = "<group>"; };
 		28B89A5538F22060C70BEB0E /* BillingBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillingBootstrap.swift; sourceTree = "<group>"; };
 		2B8B3434CC31E4925CF539B2 /* Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.xcconfig; sourceTree = "<group>"; };
@@ -396,6 +398,7 @@
 		6377AC754C71BE1006C354DA /* DataModel */ = {
 			isa = PBXGroup;
 			children = (
+				272AE82F2EC1285BFA48AF91 /* MediaMetadataExtractor.swift */,
 				4774BDE54BCD166B53833A58 /* VaultMetadataModels.swift */,
 				DA6D80E8EF90C3A5A0326DF4 /* VaultMetadataStore.swift */,
 			);
@@ -753,6 +756,7 @@
 				43E5E062B31524F9DE0975FD /* LumaNoxApp.swift in Sources */,
 				CC82FF4B1BB35290DD6872BF /* LumaNoxBillingIds.swift in Sources */,
 				2359B8A2914F99510BCFCF1A /* MainTabView.swift in Sources */,
+				0BCC71CECF76A8B21435B477 /* MediaMetadataExtractor.swift in Sources */,
 				07B79188BEB63573E604C247 /* MediaViews.swift in Sources */,
 				B6AD5599CE78A695888F9EE7 /* MockModels.swift in Sources */,
 				B92EAB14DD3FA33A3CCDA45C /* OnboardingPaywallManager.swift in Sources */,

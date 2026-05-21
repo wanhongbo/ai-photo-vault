@@ -1,6 +1,8 @@
 import CryptoKit
 import Foundation
 
+private let importDataStreamThresholdBytes = 8 * 1024 * 1024
+
 @MainActor
 final class VaultStore: ObservableObject {
     static let shared = VaultStore()
@@ -80,7 +82,35 @@ final class VaultStore: ObservableObject {
         return safe
     }
 
-    func importPlainData(_ data: Data, fileExtension: String, albumName: String = vaultDefaultAlbumName) async -> VaultImportResult {
+    func importPlainData(
+        _ data: Data,
+        fileExtension: String,
+        albumName: String = vaultDefaultAlbumName,
+        originalFileName: String? = nil
+    ) async -> VaultImportResult {
+        if data.count >= importDataStreamThresholdBytes {
+            let ext = fileExtension.lowercased()
+            let tempURL: URL
+            do {
+                tempURL = try PlaintextTempFileManager.shared.makeFileURL(
+                    for: .importStaging,
+                    preferredBaseName: "import_\(UUID().uuidString)",
+                    fileExtension: ext
+                )
+                try data.write(to: tempURL, options: .atomic)
+            } catch {
+                return .failed
+            }
+            defer { PlaintextTempFileManager.shared.removeItem(tempURL) }
+            return await importPlainFile(
+                at: tempURL,
+                fileExtension: ext,
+                albumName: albumName,
+                originalFileName: originalFileName,
+                source: .picker
+            )
+        }
+
         do {
             let safeAlbum = (try? createAlbum(named: albumName)) ?? vaultDefaultAlbumName
             let albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
@@ -91,17 +121,35 @@ final class VaultStore: ObservableObject {
                 return .duplicate
             }
 
-            let temp = albumDir.appendingPathComponent("tmp_\(UUID().uuidString).\(ext)")
+            let temp = try PlaintextTempFileManager.shared.makeFileURL(
+                for: .importStaging,
+                preferredBaseName: "import_\(UUID().uuidString)",
+                fileExtension: ext
+            )
             try data.write(to: temp, options: .atomic)
-            defer { try? fileManager.removeItem(at: temp) }
+            defer { PlaintextTempFileManager.shared.removeItem(temp) }
             try cipher.encryptFile(at: temp, to: dest)
+            try metadataStore.recordImportedMedia(
+                encryptedURL: dest,
+                albumName: safeAlbum,
+                plainURL: temp,
+                plainSha256Hex: hash,
+                source: .picker,
+                originalFileName: originalFileName
+            )
             return .added
         } catch {
             return .failed
         }
     }
 
-    func importPlainFile(at sourceURL: URL, fileExtension: String, albumName: String = vaultDefaultAlbumName) async -> VaultImportResult {
+    func importPlainFile(
+        at sourceURL: URL,
+        fileExtension: String,
+        albumName: String = vaultDefaultAlbumName,
+        originalFileName: String? = nil,
+        source: VaultMediaSource = .picker
+    ) async -> VaultImportResult {
         do {
             let safeAlbum = (try? createAlbum(named: albumName)) ?? vaultDefaultAlbumName
             let albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
@@ -119,6 +167,14 @@ final class VaultStore: ObservableObject {
                     try sink(chunk)
                 }
             }
+            try metadataStore.recordImportedMedia(
+                encryptedURL: dest,
+                albumName: safeAlbum,
+                plainURL: sourceURL,
+                plainSha256Hex: hash,
+                source: source,
+                originalFileName: originalFileName ?? sourceURL.lastPathComponent
+            )
             invalidateCache()
             return .added
         } catch {
@@ -181,7 +237,7 @@ final class VaultStore: ObservableObject {
         return L10n.tr("home_import_none")
     }
 
-    private func sha256Hex(of url: URL) throws -> String {
+    func sha256Hex(of url: URL) throws -> String {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         var digest = SHA256()

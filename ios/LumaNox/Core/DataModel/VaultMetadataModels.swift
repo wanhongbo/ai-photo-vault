@@ -1,6 +1,7 @@
 import Foundation
 
 let vaultMetadataSchemaVersion = 1
+let vaultCipherVersionCBCv1 = 1
 
 enum VaultMediaKind: String, Codable, Hashable {
     case image
@@ -57,6 +58,10 @@ struct VaultMediaRecord: Identifiable, Codable, Hashable {
     var encryptedSizeBytes: Int64
     var originalSha256Hex: String?
     var encryptedSha256Hex: String?
+    var originalFileName: String?
+    var mimeType: String?
+    var uti: String?
+    var cipherVersion: Int?
     var createdAtMs: Int64
     var importedAtMs: Int64
     var modifiedAtMs: Int64
