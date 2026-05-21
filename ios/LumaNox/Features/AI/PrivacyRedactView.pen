@@ -395,7 +395,7 @@
                 {
                   "type": "text",
                   "id": "detected_text",
-                  "content": "自动 3 · 手动 1",
+                  "content": "AI识别 3处 · 手动 1处",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "letterSpacing": 0,
@@ -411,8 +411,8 @@
               "width": 88,
               "height": 40,
               "cornerRadius": 12,
-              "fill": "#1F4A9EFF",
-              "stroke": { "thickness": 1, "fill": "#4A9EFF" },
+              "fill": "#0F5135",
+              "stroke": { "thickness": 1, "fill": "#21C277" },
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -424,7 +424,7 @@
                   "fontSize": 12,
                   "letterSpacing": 0,
                   "fontWeight": "700",
-                  "fill": "#FFFFFF"
+                  "fill": "#D9FFF0"
                 }
               ]
             }
@@ -445,7 +445,7 @@
             {
               "type": "text",
               "id": "manual_count",
-              "content": "已添加 1",
+              "content": "手动已加 1处",
               "fontFamily": "Inter",
               "fontSize": 11,
               "letterSpacing": 0,
@@ -514,11 +514,12 @@
                   "width": "fill_container",
                   "height": 38,
                   "cornerRadius": 12,
-                  "fill": "#4A9EFF",
+                  "fill": "#312E81",
+                  "stroke": { "thickness": 1, "fill": "#818CF8" },
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    { "type": "text", "id": "style_mosaic_text", "content": "马赛克", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "700", "fill": "#FFFFFF" }
+                    { "type": "text", "id": "style_mosaic_text", "content": "马赛克", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "700", "fill": "#F3F4FF" }
                   ]
                 },
                 {

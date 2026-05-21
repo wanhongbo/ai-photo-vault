@@ -584,11 +584,11 @@ struct PrivacyRedactView: View {
             Button {} label: {
                 Text(L10n.tr("privacy_redact_manual_done"))
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color(hex: 0xD9FFF0))
                     .frame(width: 88, height: 40)
-                    .background(Color(hex: 0x1F4A9E))
+                    .background(Color(hex: 0x0F5135))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.brandBlue, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.success, lineWidth: 1))
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("privacy_redact_manual_done")
@@ -744,12 +744,12 @@ struct PrivacyRedactView: View {
                     Button { selectedStyle = style } label: {
                         Text(styleTitle(style))
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(selectedStyle == style ? Color.white : LNColor.navItemActive)
+                            .foregroundStyle(selectedStyle == style ? Color(hex: 0xF3F4FF) : LNColor.navItemActive)
                             .frame(maxWidth: .infinity)
                             .frame(height: 36)
-                            .background(selectedStyle == style ? LNColor.brandBlue : LNColor.sectionBg)
+                            .background(selectedStyle == style ? Color(hex: 0x312E81) : LNColor.sectionBg)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(selectedStyle == style ? LNColor.brandBlue : LNColor.stroke, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(selectedStyle == style ? Color(hex: 0x818CF8) : LNColor.stroke, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -977,14 +977,14 @@ private struct PrivacyRedactStylePicker: View {
                 Button { selectedStyle = style } label: {
                     Text(styleTitle(style))
                         .font(.system(size: 12, weight: selectedStyle == style ? .bold : .semibold))
-                        .foregroundStyle(selectedStyle == style ? Color.white : Color(hex: 0xB7C6DD))
+                        .foregroundStyle(selectedStyle == style ? Color(hex: 0xF3F4FF) : Color(hex: 0xB7C6DD))
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                         .frame(maxWidth: .infinity)
                         .frame(height: 38)
-                        .background(selectedStyle == style ? LNColor.brandBlue : LNColor.sectionBg)
+                        .background(selectedStyle == style ? Color(hex: 0x312E81) : LNColor.sectionBg)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(selectedStyle == style ? LNColor.brandBlue : LNColor.stroke, lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(selectedStyle == style ? Color(hex: 0x818CF8) : LNColor.stroke, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("privacy_redact_style_\(style.rawValue)")
