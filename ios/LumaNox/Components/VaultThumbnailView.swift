@@ -130,27 +130,21 @@ private func makeImageThumbnail(encryptedURL: URL, targetPixelSize: CGFloat) -> 
 }
 
 private func makeVideoThumbnail(encryptedURL: URL, targetPixelSize: CGFloat) -> UIImage? {
-    let cacheDir = FileManager.default.temporaryDirectory
-        .appendingPathComponent("vault_thumb_video", isDirectory: true)
-    let tempURL = cacheDir.appendingPathComponent("\(UUID().uuidString).\(encryptedURL.pathExtension.isEmpty ? "mov" : encryptedURL.pathExtension)")
-    var shouldRemoveTemp = false
+    var tempURL: URL?
     do {
-        try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
         let playbackURL: URL
-        if let decrypted = try? VaultCipher.shared.decryptToTempFile(
+        if let decrypted = try? PlaintextTempFileManager.shared.decryptVaultFileToTemporary(
             sourceURL: encryptedURL,
-            cacheDirectory: cacheDir,
-            fileName: tempURL.lastPathComponent
+            scene: .videoThumbnail,
+            preferredName: "\(UUID().uuidString).\(encryptedURL.pathExtension.isEmpty ? "mov" : encryptedURL.pathExtension)"
         ) {
             playbackURL = decrypted
-            shouldRemoveTemp = true
+            tempURL = decrypted
         } else {
             playbackURL = encryptedURL
         }
         defer {
-            if shouldRemoveTemp {
-                try? FileManager.default.removeItem(at: tempURL)
-            }
+            PlaintextTempFileManager.shared.removeItem(tempURL)
         }
 
         let asset = AVURLAsset(url: playbackURL)
@@ -160,7 +154,7 @@ private func makeVideoThumbnail(encryptedURL: URL, targetPixelSize: CGFloat) -> 
         let cgImage = try generator.copyCGImage(at: CMTime(seconds: 0.15, preferredTimescale: 600), actualTime: nil)
         return UIImage(cgImage: cgImage)
     } catch {
-        try? FileManager.default.removeItem(at: tempURL)
+        PlaintextTempFileManager.shared.removeItem(tempURL)
         return nil
     }
 }

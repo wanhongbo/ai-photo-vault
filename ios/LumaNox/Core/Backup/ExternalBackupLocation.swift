@@ -85,13 +85,11 @@ enum ExternalBackupLocation {
     static func copyAutoBackupToTemporary() throws -> URL {
         try withFolder { folder in
             let src = folder.appendingPathComponent(autoFileName)
-            let tmp = FileManager.default.temporaryDirectory
-                .appendingPathComponent("restore_auto_\(UUID().uuidString).dat")
-            if FileManager.default.fileExists(atPath: tmp.path) {
-                try FileManager.default.removeItem(at: tmp)
-            }
-            try FileManager.default.copyItem(at: src, to: tmp)
-            return tmp
+            return try PlaintextTempFileManager.shared.copyFileToTemporary(
+                sourceURL: src,
+                scene: .restore,
+                preferredName: "restore_auto_\(UUID().uuidString).dat"
+            )
         }
     }
 

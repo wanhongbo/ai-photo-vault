@@ -549,7 +549,10 @@ struct PhotoViewerView: View {
         .overlay { dialogOverlays }
         .sheet(isPresented: $showShareSheet) {
             if let shareURL {
-                PhotoShareSheet(url: shareURL)
+                PhotoShareSheet(url: shareURL) {
+                    PlaintextTempFileManager.shared.removeItem(shareURL)
+                    self.shareURL = nil
+                }
                     .ignoresSafeArea()
             }
         }
@@ -624,13 +627,11 @@ struct PhotoViewerView: View {
     private func makeShareURL(for path: String) async throws -> URL {
         try await Task.detached(priority: .userInitiated) {
             let sourceURL = URL(fileURLWithPath: path)
-            let cacheDir = FileManager.default.temporaryDirectory
-                .appendingPathComponent("lumanox_share", isDirectory: true)
             let name = sourceURL.lastPathComponent.isEmpty ? "LumaNox.jpg" : sourceURL.lastPathComponent
-            return try VaultCipher.shared.decryptToTempFile(
+            return try PlaintextTempFileManager.shared.decryptVaultFileToTemporary(
                 sourceURL: sourceURL,
-                cacheDirectory: cacheDir,
-                fileName: name
+                scene: .share,
+                preferredName: name
             )
         }.value
     }
@@ -870,9 +871,16 @@ private struct LNViewerDockButtonStyle: ButtonStyle {
 
 private struct PhotoShareSheet: UIViewControllerRepresentable {
     let url: URL
+    let onComplete: () -> Void
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        let controller = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, _, _, _ in
+            DispatchQueue.main.async {
+                onComplete()
+            }
+        }
+        return controller
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}

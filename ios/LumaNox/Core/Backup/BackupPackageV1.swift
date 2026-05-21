@@ -143,8 +143,11 @@ enum BackupPackageV1 {
         try writeAndDigest(int32ToBytes(headerBytes.count))
         try writeAndDigest(headerBytes)
 
-        let bodyData = try Data(contentsOf: bodyFile)
-        try writeAndDigest(bodyData)
+        let handle = try FileHandle(forReadingFrom: bodyFile)
+        defer { try? handle.close() }
+        while let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty {
+            try writeAndDigest(chunk)
+        }
 
         let trailer = Data(digest.finalize())
         try finalOutput.write(trailer)

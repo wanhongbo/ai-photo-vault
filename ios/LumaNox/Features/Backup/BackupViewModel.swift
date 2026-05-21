@@ -34,13 +34,11 @@ final class BackupRestoreViewModel: ObservableObject {
         }
         let localURL: URL
         do {
-            let tmp = FileManager.default.temporaryDirectory
-                .appendingPathComponent("restore_in_\(UUID().uuidString).aivb")
-            if FileManager.default.fileExists(atPath: tmp.path) {
-                try FileManager.default.removeItem(at: tmp)
-            }
-            try FileManager.default.copyItem(at: inputURL, to: tmp)
-            localURL = tmp
+            localURL = try PlaintextTempFileManager.shared.copyFileToTemporary(
+                sourceURL: inputURL,
+                scene: .restore,
+                preferredName: "restore_in_\(UUID().uuidString).aivb"
+            )
         } catch {
             pinError = L10n.tr("restore_error_cannot_read_file")
             return nil

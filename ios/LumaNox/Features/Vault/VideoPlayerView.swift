@@ -116,18 +116,14 @@ struct VideoPlayerView: View {
         isLoading = true
         loadError = nil
         let source = URL(fileURLWithPath: path)
-        let cacheRoot = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("video_cache", isDirectory: true)
-        pruneStaleVideoCache(at: cacheRoot)
-        let baseName = source.deletingPathExtension().lastPathComponent
         let ext = source.pathExtension.isEmpty ? "mp4" : source.pathExtension
-        let tempName = "play_\(baseName)_\(UUID().uuidString.prefix(8)).\(ext)"
+        let tempName = "play_\(UUID().uuidString).\(ext)"
         do {
             let tempURL = try await Task.detached(priority: .userInitiated) {
-                try VaultCipher.shared.decryptToTempFile(
+                try PlaintextTempFileManager.shared.decryptVaultFileToTemporary(
                     sourceURL: source,
-                    cacheDirectory: cacheRoot,
-                    fileName: tempName
+                    scene: .videoPlayback,
+                    preferredName: tempName
                 )
             }.value
             tempPlaybackURL = tempURL
@@ -145,22 +141,8 @@ struct VideoPlayerView: View {
         player?.pause()
         player = nil
         if let temp = tempPlaybackURL {
-            try? FileManager.default.removeItem(at: temp)
+            PlaintextTempFileManager.shared.removeItem(temp)
             tempPlaybackURL = nil
-        }
-    }
-
-    private func pruneStaleVideoCache(at cacheRoot: URL) {
-        let cutoff = Date().addingTimeInterval(-3600)
-        guard let files = try? FileManager.default.contentsOfDirectory(
-            at: cacheRoot,
-            includingPropertiesForKeys: [.contentModificationDateKey]
-        ) else { return }
-        for file in files {
-            guard let date = try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else { continue }
-            if date < cutoff {
-                try? FileManager.default.removeItem(at: file)
-            }
         }
     }
 

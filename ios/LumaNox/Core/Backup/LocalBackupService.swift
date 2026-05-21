@@ -236,7 +236,7 @@ final class LocalBackupService: @unchecked Sendable {
         } catch {
             return .failure(L10n.tr("restore_error_cannot_open_auto"))
         }
-        defer { try? FileManager.default.removeItem(at: tempURL) }
+        defer { PlaintextTempFileManager.shared.removeItem(tempURL) }
         return await restore(from: tempURL, pin: pin)
     }
 
@@ -269,6 +269,12 @@ final class LocalBackupService: @unchecked Sendable {
                     throw BackupError.wrongPin
                 }
 
+                let vaultRoot = try vaultRootURL()
+                let verifiedHeader = try BackupIntegrityVerifier.verifyPackage(
+                    at: inputURL,
+                    vaultRoot: vaultRoot
+                )
+
                 guard let bodyStream = InputStream(url: inputURL) else {
                     throw BackupError.io("cannot open backup")
                 }
@@ -280,16 +286,18 @@ final class LocalBackupService: @unchecked Sendable {
                 _ = try bodyStream.readFully(count: headerLen)
 
                 let reader = BackupPackageV1.newReader(input: bodyStream, backupKey: material.key)
-                reader.attachHeader(header)
+                reader.attachHeader(verifiedHeader)
 
-                let vaultRoot = try vaultRootURL()
                 var restored = 0
                 var skipped = 0
                 var failed = 0
 
-                for asset in header.assets {
+                for asset in verifiedHeader.assets {
                     do {
-                        let target = vaultRoot.appendingPathComponent(asset.relativePath)
+                        let target = try BackupIntegrityVerifier.resolvedAssetURL(
+                            relativePath: asset.relativePath,
+                            vaultRoot: vaultRoot
+                        )
                         if FileManager.default.fileExists(atPath: target.path),
                            cipher.decryptedSha256Hex(at: target) == asset.sha256Hex {
                             skipped += 1
@@ -330,7 +338,7 @@ final class LocalBackupService: @unchecked Sendable {
                     restored: restored,
                     skipped: skipped,
                     failed: failed,
-                    backupId: header.backupId
+                    backupId: verifiedHeader.backupId
                 )
             } catch BackupError.wrongPin {
                 return .failure(L10n.tr("restore_error_wrong_pin"))
@@ -358,9 +366,7 @@ final class LocalBackupService: @unchecked Sendable {
     }
 
     private func tmpDirectory() throws -> URL {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("backup_tmp", isDirectory: true)
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir
+        try PlaintextTempFileManager.shared.sessionDirectory(for: .backup)
     }
 
     private func newBackupId() -> String {
@@ -477,6 +483,9 @@ final class LocalBackupService: @unchecked Sendable {
         let ver = try stream.readInt32BE()
         guard ver == BackupPackageV1.version else { throw BackupError.unsupportedVersion(Int(ver)) }
         let headerLen = Int(try stream.readInt32BE())
+        guard headerLen > 0, headerLen <= 32 * 1024 * 1024 else {
+            throw BackupError.invalidHeaderLength(headerLen)
+        }
         let headerBytes = try stream.readFully(count: headerLen)
         return try BackupPackageV1.parseHeaderJson(String(decoding: headerBytes, as: UTF8.self))
     }

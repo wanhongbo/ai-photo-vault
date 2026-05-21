@@ -1,18 +1,16 @@
 import Foundation
 
 extension VaultStore {
-    private var cameraTmpDir: URL {
-        let docs = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        return docs.appendingPathComponent("camera_tmp", isDirectory: true)
-    }
-
     /// Plaintext temp path for AVFoundation capture (Android [reserveCameraTarget]).
     func reserveCameraTempFile(extension ext: String, albumName: String = vaultDefaultAlbumName) throws -> URL {
-        try fileManager.createDirectory(at: cameraTmpDir, withIntermediateDirectories: true)
         let safeExt = ext.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ".", with: "")
         let album = sanitizeAlbumName(albumName)
         let name = "cam_\(album)_\(Int64(Date().timeIntervalSince1970 * 1000)).\(safeExt.isEmpty ? "bin" : safeExt)"
-        return cameraTmpDir.appendingPathComponent(name)
+        return try PlaintextTempFileManager.shared.makeFileURL(
+            for: .camera,
+            preferredBaseName: URL(fileURLWithPath: name).deletingPathExtension().lastPathComponent,
+            fileExtension: safeExt
+        )
     }
 
     /// Encrypt camera temp file into vault (Android [finalizeCameraCapture]).
@@ -34,13 +32,19 @@ extension VaultStore {
             let albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
             let ext = tempURL.pathExtension.isEmpty ? "bin" : tempURL.pathExtension
             let dest = albumDir.appendingPathComponent("camera_\(Int64(Date().timeIntervalSince1970 * 1000)).\(ext)")
-            try cipher.encryptFile(at: tempURL, to: dest)
-            try? fileManager.removeItem(at: tempURL)
+            try cipher.encryptFileFromChunks(to: dest) { sink in
+                let handle = try FileHandle(forReadingFrom: tempURL)
+                defer { try? handle.close() }
+                while let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty {
+                    try sink(chunk)
+                }
+            }
+            PlaintextTempFileManager.shared.removeItem(tempURL)
             invalidateCache()
             await loadSnapshot()
             return dest.path
         } catch {
-            try? fileManager.removeItem(at: tempURL)
+            PlaintextTempFileManager.shared.removeItem(tempURL)
             return nil
         }
     }

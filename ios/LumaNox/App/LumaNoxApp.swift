@@ -6,6 +6,7 @@ struct LumaNoxApp: App {
         BillingBootstrap.configure()
         AutoBackupScheduler.registerBackgroundTasks()
         ExternalBackupLocation.sanitizeOnStartup()
+        VaultMaintenanceService.performStartupCleanup()
     }
 
     @StateObject private var router = AppRouter()
@@ -54,6 +55,7 @@ struct RootView: View {
         .onAppear {
             enforcePinGate()
             AutoBackupScheduler.scheduleColdStartIfDue()
+            Task { await VaultMaintenanceService.performUnlockedCleanup() }
         }
         .onChange(of: router.phase) { _ in enforcePinGate() }
     }
