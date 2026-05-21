@@ -18,7 +18,7 @@ struct LNNavigationBar: View {
             .accessibilityIdentifier("ln_nav_back")
 
             Text(title)
-                .font(LNTypography.displaySmall())
+                .font(LNTypography.titleMedium())
                 .foregroundStyle(LNColor.title)
                 .frame(maxWidth: .infinity)
                 .accessibilityAddTraits(.isHeader)
