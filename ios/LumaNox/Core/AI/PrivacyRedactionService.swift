@@ -1,4 +1,6 @@
 import Foundation
+import CoreImage
+import Photos
 import UIKit
 import Vision
 
@@ -53,6 +55,7 @@ final class PrivacyRedactionService: ObservableObject {
 
     private let metadataStore = VaultMetadataStore.shared
     private let vaultStore = VaultStore.shared
+    private let tempManager = PlaintextTempFileManager.shared
 
     private init() {}
 
@@ -130,11 +133,99 @@ final class PrivacyRedactionService: ObservableObject {
             return PrivacyRedactionResult(imported: false, detectedRegionCount: 0)
         }
     }
+
+    func exportToSystemPhotos(path: String, regions: [PrivacyRedactionRegion]) async -> Bool {
+        guard let tempURL = await makeRedactedTemporaryFile(path: path, regions: regions, scene: .export) else { return false }
+        defer { tempManager.removeItem(tempURL) }
+
+        let status = await requestPhotoAddAuthorization()
+        guard status == .authorized || status == .limited else {
+            lastMessage = L10n.tr("privacy_redact_export_denied")
+            lastIsError = true
+            return false
+        }
+
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                PHAssetCreationRequest.creationRequestForAssetFromImage(atFileURL: tempURL)
+            }
+            lastMessage = L10n.tr("privacy_redact_export_success")
+            lastIsError = false
+            return true
+        } catch {
+            lastMessage = L10n.tr("privacy_redact_export_failed")
+            lastIsError = true
+            return false
+        }
+    }
+
+    func makeRedactedShareURL(path: String, regions: [PrivacyRedactionRegion]) async -> URL? {
+        await makeRedactedTemporaryFile(path: path, regions: regions, scene: .share)
+    }
+
+    func renderPreviewImage(path: String, regions: [PrivacyRedactionRegion]) async -> UIImage? {
+        guard !path.isEmpty, !regions.isEmpty else { return nil }
+        do {
+            return try await PrivacyRedactor.renderRedactedPreviewImage(path: path, regions: regions)
+        } catch {
+            return nil
+        }
+    }
+
+    private func makeRedactedTemporaryFile(
+        path: String,
+        regions: [PrivacyRedactionRegion],
+        scene: PlaintextTempScene
+    ) async -> URL? {
+        guard !path.isEmpty else {
+            lastMessage = L10n.tr("privacy_redact_select_first")
+            lastIsError = true
+            return nil
+        }
+        guard !regions.isEmpty else {
+            lastMessage = L10n.tr("privacy_redact_no_sensitive_toast")
+            lastIsError = false
+            return nil
+        }
+
+        do {
+            let output = try await PrivacyRedactor.renderRedactedJPEG(path: path, regions: regions)
+            let url = try tempManager.makeFileURL(
+                for: scene,
+                preferredBaseName: URL(fileURLWithPath: output.fileName).deletingPathExtension().lastPathComponent,
+                fileExtension: "jpg"
+            )
+            try output.data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            lastMessage = error.localizedDescription
+            lastIsError = true
+            return nil
+        }
+    }
+
+    private func requestPhotoAddAuthorization() async -> PHAuthorizationStatus {
+        let current = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        guard current == .notDetermined else { return current }
+        return await withCheckedContinuation { continuation in
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+                continuation.resume(returning: status)
+            }
+        }
+    }
 }
 
 private enum PrivacyRedactor {
+    private static let ciContext = CIContext(options: [.cacheIntermediates: false])
+
     struct Output {
         let data: Data
+        let fileName: String
+        let regionCount: Int
+    }
+
+    private struct RenderedImage {
+        let image: UIImage
         let fileName: String
         let regionCount: Int
     }
@@ -144,20 +235,38 @@ private enum PrivacyRedactor {
     }
 
     static func renderRedactedJPEG(path: String, regions: [PrivacyRedactionRegion]) async throws -> Output {
+        let rendered = try await renderRedactedImage(path: path, regions: regions)
+        guard let jpeg = rendered.image.jpegData(compressionQuality: 0.92) else {
+            throw RedactionError.renderFailed
+        }
+        return Output(
+            data: jpeg,
+            fileName: rendered.fileName,
+            regionCount: rendered.regionCount
+        )
+    }
+
+    static func renderRedactedPreviewImage(path: String, regions: [PrivacyRedactionRegion]) async throws -> UIImage {
+        try await renderRedactedImage(path: path, regions: regions).image
+    }
+
+    private static func renderRedactedImage(path: String, regions: [PrivacyRedactionRegion]) async throws -> RenderedImage {
         try await Task.detached(priority: .utility) {
             let encryptedURL = URL(fileURLWithPath: path)
             let data = try VaultCipher.shared.decryptFile(at: encryptedURL)
             guard let image = UIImage(data: data),
-                  let cgImage = image.cgImage else {
+                  let sourceImage = normalizedImage(from: image),
+                  let cgImage = sourceImage.cgImage else {
                 throw RedactionError.unsupportedMedia
             }
+            let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
 
             let effectiveRegions: [PrivacyRedactionRegion]
             if regions.isEmpty {
-                let detected = detectRegions(cgImage: cgImage, imageSize: image.size)
-                let rects = detected.isEmpty ? [fallbackRegion(size: image.size)] : detected
+                let detected = detectRegions(cgImage: cgImage, imageSize: imageSize)
+                let rects = detected.isEmpty ? [fallbackRegion(size: imageSize)] : detected
                 effectiveRegions = rects.map {
-                    PrivacyRedactionRegion(normalizedRect: normalize($0, imageSize: image.size), style: .mosaic, source: .automatic)
+                    PrivacyRedactionRegion(normalizedRect: normalize($0, imageSize: imageSize), style: .mosaic, source: .automatic)
                 }
             } else {
                 effectiveRegions = regions.map {
@@ -170,24 +279,21 @@ private enum PrivacyRedactor {
                 }
             }
 
-            let renderer = UIGraphicsImageRenderer(size: image.size)
+            let renderer = UIGraphicsImageRenderer(size: imageSize, format: rendererFormat())
             let redacted = renderer.image { context in
-                image.draw(in: CGRect(origin: .zero, size: image.size))
+                sourceImage.draw(in: CGRect(origin: .zero, size: imageSize))
                 for region in effectiveRegions {
                     drawRedaction(
                         in: context.cgContext,
-                        rect: denormalize(region.normalizedRect, imageSize: image.size),
+                        sourceImage: cgImage,
+                        rect: denormalize(region.normalizedRect, imageSize: imageSize),
                         style: region.style
                     )
                 }
             }
-
-            guard let jpeg = redacted.jpegData(compressionQuality: 0.92) else {
-                throw RedactionError.renderFailed
-            }
             let base = encryptedURL.deletingPathExtension().lastPathComponent
-            return Output(
-                data: jpeg,
+            return RenderedImage(
+                image: redacted,
                 fileName: "\(base)_redacted.jpg",
                 regionCount: effectiveRegions.count
             )
@@ -199,12 +305,14 @@ private enum PrivacyRedactor {
             let encryptedURL = URL(fileURLWithPath: path)
             let data = try VaultCipher.shared.decryptFile(at: encryptedURL)
             guard let image = UIImage(data: data),
-                  let cgImage = image.cgImage else {
+                  let normalized = normalizedImage(from: image),
+                  let cgImage = normalized.cgImage else {
                 throw RedactionError.unsupportedMedia
             }
-            return detectRegions(cgImage: cgImage, imageSize: image.size).map {
+            let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+            return detectRegions(cgImage: cgImage, imageSize: imageSize).map {
                 PrivacyRedactionRegion(
-                    normalizedRect: normalize($0, imageSize: image.size),
+                    normalizedRect: normalize($0, imageSize: imageSize),
                     style: .mosaic,
                     source: .automatic
                 )
@@ -251,30 +359,19 @@ private enum PrivacyRedactor {
         return mergeOverlapping(regions.map { clamp($0, to: imageSize) }, imageSize: imageSize)
     }
 
-    private static func drawRedaction(in context: CGContext, rect: CGRect, style: PrivacyRedactionStyle) {
+    private static func drawRedaction(
+        in context: CGContext,
+        sourceImage: CGImage,
+        rect: CGRect,
+        style: PrivacyRedactionStyle
+    ) {
+        guard let rect = pixelAlignedRect(rect, imageSize: CGSize(width: sourceImage.width, height: sourceImage.height)) else { return }
         context.saveGState()
         switch style {
         case .mosaic:
-            context.setFillColor(UIColor.black.withAlphaComponent(0.86).cgColor)
-            context.fill(rect)
-            context.setFillColor(UIColor(red: 0.29, green: 0.62, blue: 1, alpha: 0.35).cgColor)
-            let block: CGFloat = max(10, min(rect.width, rect.height) / 4)
-            var y = rect.minY
-            var toggle = false
-            while y < rect.maxY {
-                var x = rect.minX
-                while x < rect.maxX {
-                    if toggle {
-                        context.fill(CGRect(x: x, y: y, width: min(block, rect.maxX - x), height: min(block, rect.maxY - y)))
-                    }
-                    toggle.toggle()
-                    x += block
-                }
-                y += block
-            }
+            drawMosaic(in: context, sourceImage: sourceImage, rect: rect)
         case .blur:
-            context.setFillColor(UIColor(red: 0.72, green: 0.84, blue: 1, alpha: 0.78).cgColor)
-            context.fill(rect)
+            drawBlur(in: context, sourceImage: sourceImage, rect: rect)
         case .blackBar:
             context.setFillColor(UIColor.black.cgColor)
             context.fill(rect)
@@ -282,22 +379,104 @@ private enum PrivacyRedactor {
             context.setFillColor(UIColor.white.cgColor)
             context.fill(rect)
         case .ovalBlur:
-            context.setFillColor(UIColor(red: 0.72, green: 0.84, blue: 1, alpha: 0.76).cgColor)
-            context.fillEllipse(in: rect)
+            context.addEllipse(in: rect)
+            context.clip()
+            drawBlur(in: context, sourceImage: sourceImage, rect: rect)
         case .emoji:
-            context.setFillColor(UIColor.black.withAlphaComponent(0.28).cgColor)
+            context.setFillColor(UIColor.white.cgColor)
             context.fill(rect)
-            let emoji = "🙂" as NSString
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: max(22, min(rect.width, rect.height) * 0.55))
-            ]
-            let size = emoji.size(withAttributes: attributes)
-            emoji.draw(
-                at: CGPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2),
-                withAttributes: attributes
-            )
+            drawEmoji(in: rect)
         }
         context.restoreGState()
+    }
+
+    private static func drawMosaic(in context: CGContext, sourceImage: CGImage, rect: CGRect) {
+        guard let crop = sourceImage.cropping(to: rect) else { return }
+        let shortSide = max(1, min(rect.width, rect.height))
+        let longSide = max(1, max(rect.width, rect.height))
+        let block = max(14, max(Int(shortSide * 0.10), Int(longSide * 0.04)))
+        let smallSize = CGSize(
+            width: max(1, Int(rect.width) / block),
+            height: max(1, Int(rect.height) / block)
+        )
+        let cropImage = UIImage(cgImage: crop)
+        let small = UIGraphicsImageRenderer(size: smallSize, format: rendererFormat()).image { rendererContext in
+            rendererContext.cgContext.interpolationQuality = .medium
+            cropImage.draw(in: CGRect(origin: .zero, size: smallSize))
+        }
+        context.interpolationQuality = .none
+        small.draw(in: rect)
+    }
+
+    private static func drawBlur(in context: CGContext, sourceImage: CGImage, rect: CGRect) {
+        guard let blurred = blurredCGImage(from: sourceImage, rect: rect) else { return }
+        UIImage(cgImage: blurred).draw(in: rect)
+    }
+
+    private static func drawEmoji(in rect: CGRect) {
+        let width = rect.width
+        let height = rect.height
+        let shortSide = max(1, min(width, height))
+        let longSide = max(1, max(width, height))
+        let emojiSize = max(14, shortSide * 0.92)
+        let emoji = "🙈" as NSString
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: emojiSize)
+        ]
+        let size = emoji.size(withAttributes: attributes)
+        let count = max(1, Int((longSide / shortSide).rounded()))
+        let step = longSide / CGFloat(count)
+        let isHorizontal = width >= height
+        for index in 0..<count {
+            let center = step * (CGFloat(index) + 0.5)
+            let point: CGPoint
+            if isHorizontal {
+                point = CGPoint(x: rect.minX + center - size.width / 2, y: rect.midY - size.height / 2)
+            } else {
+                point = CGPoint(x: rect.midX - size.width / 2, y: rect.minY + center - size.height / 2)
+            }
+            emoji.draw(at: point, withAttributes: attributes)
+        }
+    }
+
+    private static func blurredCGImage(from sourceImage: CGImage, rect: CGRect) -> CGImage? {
+        guard let crop = sourceImage.cropping(to: rect) else { return nil }
+        let input = CIImage(cgImage: crop)
+        let radius = blurRadius(for: rect)
+        let output = input
+            .clampedToExtent()
+            .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: radius])
+            .cropped(to: input.extent)
+        return ciContext.createCGImage(output, from: input.extent)
+    }
+
+    private static func blurRadius(for rect: CGRect) -> CGFloat {
+        let longestSide = max(rect.width, rect.height)
+        return min(80, max(20, longestSide * 0.08))
+    }
+
+    private static func pixelAlignedRect(_ rect: CGRect, imageSize: CGSize) -> CGRect? {
+        let bounds = CGRect(origin: .zero, size: imageSize)
+        let clipped = rect.standardized.intersection(bounds)
+        guard !clipped.isNull, clipped.width >= 1, clipped.height >= 1 else { return nil }
+        let integral = clipped.integral.intersection(bounds)
+        guard !integral.isNull, integral.width >= 1, integral.height >= 1 else { return nil }
+        return integral
+    }
+
+    private static func normalizedImage(from image: UIImage) -> UIImage? {
+        guard image.size.width > 0, image.size.height > 0 else { return nil }
+        let renderer = UIGraphicsImageRenderer(size: image.size, format: rendererFormat())
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: image.size))
+        }
+    }
+
+    private static func rendererFormat() -> UIGraphicsImageRendererFormat {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = false
+        return format
     }
 
     private static func convert(_ normalized: CGRect, imageSize: CGSize) -> CGRect {

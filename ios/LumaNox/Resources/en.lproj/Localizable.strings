@@ -146,6 +146,10 @@
 "privacy_redact_share_redacted" = "Share redacted";
 "privacy_redact_export_pending" = "Export will be available after saving a redacted copy.";
 "privacy_redact_share_pending" = "Sharing will be available after saving a redacted copy.";
+"privacy_redact_export_success" = "Exported to Photos.";
+"privacy_redact_export_failed" = "Could not export to Photos.";
+"privacy_redact_export_denied" = "Allow Photos write access before exporting.";
+"privacy_redact_share_failed" = "Could not share the redacted image.";
 "privacy_redact_save_success" = "Saved a redacted copy with %d masked regions.";
 "privacy_redact_save_duplicate" = "A matching redacted copy already exists.";
 "privacy_redact_save_failed" = "Could not save the redacted copy.";

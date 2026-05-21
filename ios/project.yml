@@ -38,6 +38,7 @@ targets:
         INFOPLIST_KEY_NSCameraUsageDescription: "LumaNox needs camera access for private capture."
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "LumaNox needs microphone access to record private videos."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "LumaNox needs photo library access to import media into your vault."
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "LumaNox needs permission to export redacted images to Photos."
         INFOPLIST_KEY_NSFaceIDUsageDescription: "LumaNox uses Face ID to unlock your vault."
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_FILE: LumaNox/Supporting/Info.plist

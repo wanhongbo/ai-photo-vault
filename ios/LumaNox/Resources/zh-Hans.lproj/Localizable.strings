@@ -146,6 +146,10 @@
 "privacy_redact_share_redacted" = "分享脱敏图片";
 "privacy_redact_export_pending" = "保存脱敏副本后即可导出到系统相册。";
 "privacy_redact_share_pending" = "保存脱敏副本后即可分享图片。";
+"privacy_redact_export_success" = "已导出到系统相册。";
+"privacy_redact_export_failed" = "导出系统相册失败。";
+"privacy_redact_export_denied" = "请允许写入系统相册后再导出。";
+"privacy_redact_share_failed" = "分享脱敏图片失败。";
 "privacy_redact_save_success" = "已保存脱敏副本，遮盖 %d 个区域。";
 "privacy_redact_save_duplicate" = "相同的脱敏副本已存在。";
 "privacy_redact_save_failed" = "无法保存脱敏副本。";

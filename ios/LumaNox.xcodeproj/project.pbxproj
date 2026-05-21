@@ -1028,6 +1028,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "LumaNox needs camera access for private capture.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "LumaNox uses Face ID to unlock your vault.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LumaNox needs microphone access to record private videos.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LumaNox needs permission to export redacted images to Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "LumaNox needs photo library access to import media into your vault.";
 				INFOPLIST_KEY_REVENUECAT_API_KEY = "$(REVENUECAT_API_KEY)";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1057,6 +1058,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "LumaNox needs camera access for private capture.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "LumaNox uses Face ID to unlock your vault.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LumaNox needs microphone access to record private videos.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LumaNox needs permission to export redacted images to Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "LumaNox needs photo library access to import media into your vault.";
 				INFOPLIST_KEY_REVENUECAT_API_KEY = "$(REVENUECAT_API_KEY)";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

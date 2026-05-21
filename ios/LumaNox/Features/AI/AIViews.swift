@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct AIHomeView: View {
     @EnvironmentObject private var router: AppRouter
@@ -477,6 +478,13 @@ struct PrivacyRedactView: View {
     @State private var draftRegion: PrivacyRedactionRegion?
     @State private var selectedManualRegionID: UUID?
     @State private var toastMessage: String?
+    @State private var isExportingSystem = false
+    @State private var isPreparingShare = false
+    @State private var shareURL: URL?
+    @State private var showShareSheet = false
+    @State private var redactedPreviewImage: UIImage?
+    @State private var previewTask: Task<Void, Never>?
+    @State private var previewRequestID = UUID()
     let path: String
 
     private var selectableRecords: [VaultMediaRecord] {
@@ -543,6 +551,7 @@ struct PrivacyRedactView: View {
                 PrivacyRedactCanvas(
                     path: activePath,
                     isVideo: activeIsVideo,
+                    previewImage: redactedPreviewImage,
                     isDetecting: redactionService.isDetecting,
                     mode: redactMode,
                     regions: displayedRegions,
@@ -590,6 +599,28 @@ struct PrivacyRedactView: View {
             await reloadDetectedRegions(for: activePath)
         }
         .onChange(of: selectedStyle) { applySelectedStyleToRegions($0) }
+        .onChange(of: activePath) { _ in scheduleRedactionPreview() }
+        .onChange(of: activeIsVideo) { _ in scheduleRedactionPreview() }
+        .onChange(of: displayedRegions) { _ in scheduleRedactionPreview() }
+        .onChange(of: redactionService.isDetecting) { _ in scheduleRedactionPreview() }
+        .onDisappear {
+            previewTask?.cancel()
+        }
+        .sheet(isPresented: $showShareSheet) {
+            if let shareURL {
+                PrivacyRedactShareSheet(url: shareURL) {
+                    PlaintextTempFileManager.shared.removeItem(shareURL)
+                    self.shareURL = nil
+                }
+                .ignoresSafeArea()
+            }
+        }
+        .onChange(of: showShareSheet) { isPresented in
+            if !isPresented, let shareURL {
+                PlaintextTempFileManager.shared.removeItem(shareURL)
+                self.shareURL = nil
+            }
+        }
         .accessibilityIdentifier("privacy_redact_view")
     }
 
@@ -716,16 +747,20 @@ struct PrivacyRedactView: View {
                 PrivacyRedactSecondaryAction(
                     title: L10n.tr("privacy_redact_export_system"),
                     systemImage: "square.and.arrow.down",
-                    identifier: "privacy_redact_export_system"
+                    identifier: "privacy_redact_export_system",
+                    isBusy: isExportingSystem,
+                    isEnabled: !saveRegions.isEmpty && !activeIsVideo && !isExportingSystem
                 ) {
-                    redactionService.updateMessage(L10n.tr("privacy_redact_export_pending"), isError: false)
+                    exportRedactedToSystemPhotos()
                 }
                 PrivacyRedactSecondaryAction(
                     title: L10n.tr("privacy_redact_share_redacted"),
                     systemImage: "square.and.arrow.up",
-                    identifier: "privacy_redact_share_redacted"
+                    identifier: "privacy_redact_share_redacted",
+                    isBusy: isPreparingShare,
+                    isEnabled: !saveRegions.isEmpty && !activeIsVideo && !isPreparingShare
                 ) {
-                    redactionService.updateMessage(L10n.tr("privacy_redact_share_pending"), isError: false)
+                    prepareRedactedShare()
                 }
             }
             .frame(height: 48)
@@ -742,6 +777,7 @@ struct PrivacyRedactView: View {
         toastMessage = nil
         let detectedRegions = await redactionService.detectRegions(path: path)
         autoRegions = detectedRegions
+        scheduleRedactionPreview()
         if !path.isEmpty, detectedRegions.isEmpty {
             showToast(L10n.tr("privacy_redact_no_sensitive_toast"))
         }
@@ -796,6 +832,28 @@ struct PrivacyRedactView: View {
         }
     }
 
+    private func scheduleRedactionPreview() {
+        let requestID = UUID()
+        let path = activePath
+        let regions = displayedRegions
+        previewRequestID = requestID
+        previewTask?.cancel()
+
+        guard !path.isEmpty, !activeIsVideo, !regions.isEmpty, !redactionService.isDetecting else {
+            redactedPreviewImage = nil
+            return
+        }
+
+        previewTask = Task {
+            let image = await redactionService.renderPreviewImage(path: path, regions: regions)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard previewRequestID == requestID else { return }
+                redactedPreviewImage = image
+            }
+        }
+    }
+
     private func undoLastManualRegion() {
         guard !manualRegions.isEmpty else { return }
         let removed = manualRegions.removeLast()
@@ -811,6 +869,32 @@ struct PrivacyRedactView: View {
             try? await Task.sleep(nanoseconds: 2_200_000_000)
             if toastMessage == message {
                 toastMessage = nil
+            }
+        }
+    }
+
+    private func exportRedactedToSystemPhotos() {
+        guard !isExportingSystem else { return }
+        isExportingSystem = true
+        Task {
+            _ = await redactionService.exportToSystemPhotos(path: activePath, regions: saveRegions)
+            await MainActor.run { isExportingSystem = false }
+        }
+    }
+
+    private func prepareRedactedShare() {
+        guard !isPreparingShare else { return }
+        isPreparingShare = true
+        Task {
+            let url = await redactionService.makeRedactedShareURL(path: activePath, regions: saveRegions)
+            await MainActor.run {
+                isPreparingShare = false
+                if let url {
+                    shareURL = url
+                    showShareSheet = true
+                } else {
+                    redactionService.updateMessage(L10n.tr("privacy_redact_share_failed"), isError: true)
+                }
             }
         }
     }
@@ -958,6 +1042,7 @@ struct PrivacyRedactView: View {
 private struct PrivacyRedactCanvas: View {
     let path: String
     let isVideo: Bool
+    let previewImage: UIImage?
     let isDetecting: Bool
     let mode: PrivacyRedactView.RedactMode
     let regions: [PrivacyRedactionRegion]
@@ -968,6 +1053,7 @@ private struct PrivacyRedactCanvas: View {
     var body: some View {
         GeometryReader { proxy in
             let imageRect = CGRect(x: 21, y: 18, width: max(1, proxy.size.width - 42), height: max(1, proxy.size.height - 36))
+            let contentRect = fittedImageRect(in: imageRect, imageSize: previewImage?.size)
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: 18)
                     .fill(Color(hex: 0x020409))
@@ -992,7 +1078,12 @@ private struct PrivacyRedactCanvas: View {
                     .position(x: imageRect.midX, y: imageRect.midY)
                 } else {
                     Group {
-                        if path.isEmpty {
+                        if let previewImage {
+                            Image(uiImage: previewImage)
+                                .resizable()
+                                .scaledToFit()
+                                .background(Color(hex: 0x07101C))
+                        } else if path.isEmpty {
                             PrivacyRedactMockPhoto()
                         } else {
                             VaultMediaThumbnailView(
@@ -1012,15 +1103,16 @@ private struct PrivacyRedactCanvas: View {
                     ForEach(regions) { region in
                         PrivacyRedactRegionView(
                             region: region,
-                            isSelectedManual: region.id == selectedManualRegionID
+                            isSelectedManual: region.id == selectedManualRegionID,
+                            drawsEffect: previewImage == nil
                         )
                         .frame(
-                            width: max(1, region.normalizedRect.width * imageRect.width),
-                            height: max(1, region.normalizedRect.height * imageRect.height)
+                            width: max(1, region.normalizedRect.width * contentRect.width),
+                            height: max(1, region.normalizedRect.height * contentRect.height)
                         )
                         .position(
-                            x: imageRect.minX + region.normalizedRect.midX * imageRect.width,
-                            y: imageRect.minY + region.normalizedRect.midY * imageRect.height
+                            x: contentRect.minX + region.normalizedRect.midX * contentRect.width,
+                            y: contentRect.minY + region.normalizedRect.midY * contentRect.height
                         )
                     }
 
@@ -1040,11 +1132,11 @@ private struct PrivacyRedactCanvas: View {
                 DragGesture(minimumDistance: 6)
                     .onChanged { value in
                         guard mode == .manual, !isVideo, !isDetecting else { return }
-                        onDraftChanged(normalizedRect(from: value.startLocation, to: value.location, in: imageRect))
+                        onDraftChanged(normalizedRect(from: value.startLocation, to: value.location, in: contentRect))
                     }
                     .onEnded { value in
                         guard mode == .manual, !isVideo, !isDetecting else { return }
-                        onDraftCommitted(normalizedRect(from: value.startLocation, to: value.location, in: imageRect))
+                        onDraftCommitted(normalizedRect(from: value.startLocation, to: value.location, in: contentRect))
                     }
             )
         }
@@ -1075,6 +1167,23 @@ private struct PrivacyRedactCanvas: View {
             x: min(max(point.x, rect.minX), rect.maxX),
             y: min(max(point.y, rect.minY), rect.maxY)
         )
+    }
+
+    private func fittedImageRect(in container: CGRect, imageSize: CGSize?) -> CGRect {
+        guard let imageSize, imageSize.width > 0, imageSize.height > 0 else {
+            return container
+        }
+        let imageRatio = imageSize.width / imageSize.height
+        let containerRatio = container.width / container.height
+        if containerRatio > imageRatio {
+            let height = container.height
+            let width = height * imageRatio
+            return CGRect(x: container.midX - width / 2, y: container.minY, width: width, height: height)
+        } else {
+            let width = container.width
+            let height = width / imageRatio
+            return CGRect(x: container.minX, y: container.midY - height / 2, width: width, height: height)
+        }
     }
 }
 
@@ -1122,10 +1231,13 @@ private struct PrivacyRedactMockPhoto: View {
 private struct PrivacyRedactRegionView: View {
     let region: PrivacyRedactionRegion
     let isSelectedManual: Bool
+    let drawsEffect: Bool
 
     var body: some View {
         ZStack {
-            redactionShape
+            if drawsEffect {
+                redactionShape
+            }
             if region.source == .manual {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(
@@ -1261,28 +1373,53 @@ private struct PrivacyRedactSecondaryAction: View {
     let title: String
     let systemImage: String
     let identifier: String
+    var isBusy = false
+    var isEnabled = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 15, weight: .semibold))
+                if isBusy {
+                    ProgressView()
+                        .tint(Color(hex: 0xD8DAE0))
+                } else {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 15, weight: .semibold))
+                }
                 Text(title)
                     .font(.system(size: 13, weight: .semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
             }
-            .foregroundStyle(Color(hex: 0xD8DAE0))
+            .foregroundStyle(isEnabled ? Color(hex: 0xD8DAE0) : Color(hex: 0x66758A))
             .frame(maxWidth: .infinity)
             .frame(height: 48)
-            .background(LNColor.sectionBg)
+            .background(isEnabled ? LNColor.sectionBg : Color(hex: 0x0B1420))
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
         }
         .buttonStyle(.plain)
+        .disabled(!isEnabled)
         .accessibilityIdentifier(identifier)
     }
+}
+
+private struct PrivacyRedactShareSheet: UIViewControllerRepresentable {
+    let url: URL
+    let onComplete: () -> Void
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, _, _, _ in
+            DispatchQueue.main.async {
+                onComplete()
+            }
+        }
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 private struct AIStatPill: View {

@@ -237,7 +237,7 @@
                   "width": 82,
                   "height": 66,
                   "cornerRadius": 12,
-                  "fill": "#4A9EFF"
+                  "fill": "#5D7186"
                 },
                 {
                   "type": "frame",
@@ -257,9 +257,9 @@
                       "fill": "transparent",
                       "gap": 4,
                       "children": [
-                        { "type": "rectangle", "id": "mosaic_1", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#7DBBFF" },
-                        { "type": "rectangle", "id": "mosaic_2", "width": 21, "height": 14, "cornerRadius": 4, "fill": "#2E78D5" },
-                        { "type": "rectangle", "id": "mosaic_3", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#B7D7FF" }
+                        { "type": "rectangle", "id": "mosaic_1", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#6C8297" },
+                        { "type": "rectangle", "id": "mosaic_2", "width": 21, "height": 14, "cornerRadius": 4, "fill": "#415369" },
+                        { "type": "rectangle", "id": "mosaic_3", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#8799A8" }
                       ]
                     },
                     {
@@ -269,9 +269,9 @@
                       "fill": "transparent",
                       "gap": 4,
                       "children": [
-                        { "type": "rectangle", "id": "mosaic_4", "width": 21, "height": 14, "cornerRadius": 4, "fill": "#1F4A9E" },
-                        { "type": "rectangle", "id": "mosaic_5", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#A7CFFF" },
-                        { "type": "rectangle", "id": "mosaic_6", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#4A9EFF" }
+                        { "type": "rectangle", "id": "mosaic_4", "width": 21, "height": 14, "cornerRadius": 4, "fill": "#304255" },
+                        { "type": "rectangle", "id": "mosaic_5", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#7C91A5" },
+                        { "type": "rectangle", "id": "mosaic_6", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#536A80" }
                       ]
                     },
                     {
@@ -281,9 +281,9 @@
                       "fill": "transparent",
                       "gap": 4,
                       "children": [
-                        { "type": "rectangle", "id": "mosaic_7", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#B7D7FF" },
-                        { "type": "rectangle", "id": "mosaic_8", "width": 21, "height": 14, "cornerRadius": 4, "fill": "#4A9EFF" },
-                        { "type": "rectangle", "id": "mosaic_9", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#2E78D5" }
+                        { "type": "rectangle", "id": "mosaic_7", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#91A0AC" },
+                        { "type": "rectangle", "id": "mosaic_8", "width": 21, "height": 14, "cornerRadius": 4, "fill": "#566D82" },
+                        { "type": "rectangle", "id": "mosaic_9", "width": 19, "height": 14, "cornerRadius": 4, "fill": "#35485D" }
                       ]
                     }
                   ]
@@ -296,7 +296,7 @@
                   "width": 206,
                   "height": 26,
                   "cornerRadius": 6,
-                  "fill": "#1F4A9E"
+                  "fill": "#05070B"
                 },
                 {
                   "type": "rectangle",
@@ -306,7 +306,7 @@
                   "width": 160,
                   "height": 22,
                   "cornerRadius": 5,
-                  "fill": "#2E78D5"
+                  "fill": "#F7F9FC"
                 }
               ]
             },
