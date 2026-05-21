@@ -31,8 +31,8 @@
               "id": "bulk_export_back",
               "content": "‹",
               "fontFamily": "Inter",
-              "fontSize": 30,
-              "fontWeight": "500",
+              "fontSize": 17,
+              "fontWeight": "600",
               "fill": "#EAF1FF",
               "width": 32
             },
@@ -41,8 +41,8 @@
               "id": "bulk_export_title",
               "content": "Bulk Export",
               "fontFamily": "Inter",
-              "fontSize": 22,
-              "fontWeight": "700",
+              "fontSize": 16,
+              "fontWeight": "600",
               "fill": "#EAF1FF",
               "width": 300
             }

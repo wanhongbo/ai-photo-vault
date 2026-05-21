@@ -142,10 +142,10 @@ struct VaultListScreenChrome<Content: View>: View {
         HStack(spacing: 0) {
             Button(action: onBack) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(LNColor.title)
                     .frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
-                    .background(LNColor.sectionBg)
+                    .background(LNColor.navBarBg.opacity(0.8))
                     .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
             }
             .accessibilityLabel(L10n.commonBack)
@@ -755,15 +755,11 @@ private struct PhotoViewerTopChrome: View {
                 HStack {
                     Button(action: onBack) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(LNColor.title)
-                            .frame(width: 48, height: 48)
-                            .background(LNColor.navBarBg.opacity(0.82))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(LNColor.stroke, lineWidth: 1)
-                            )
+                            .frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
+                            .background(LNColor.navBarBg.opacity(0.8))
+                            .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
                     }
                     .accessibilityLabel(L10n.commonBack)
 
@@ -775,7 +771,7 @@ private struct PhotoViewerTopChrome: View {
 
                     Spacer()
 
-                    Color.clear.frame(width: 48, height: 48)
+                    Color.clear.frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
                 }
                 .padding(.top, topInset + 8)
                 .padding(.horizontal, LNSpacing.screenHorizontal)

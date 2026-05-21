@@ -47,46 +47,20 @@ struct BulkExportView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        GeometryReader { proxy in
-            let contentWidth = max(0, proxy.size.width - LNSpacing.screenHorizontal * 2)
-            let cellSize = max(0, floor((contentWidth - LNSpacing.gridGap * 2) / 3))
+        LNScreenScaffold(title: L10n.tr("bulk_export_title"), onBack: { dismiss() }) {
+            GeometryReader { proxy in
+                let contentWidth = max(0, proxy.size.width - LNSpacing.screenHorizontal * 2)
+                let cellSize = max(0, floor((contentWidth - LNSpacing.gridGap * 2) / 3))
 
-            ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
-                    penNavigation
                     summaryCard
                     stateContent(contentWidth: contentWidth, cellSize: cellSize)
                 }
-                .padding(.horizontal, LNSpacing.screenHorizontal)
                 .padding(.bottom, 24)
                 .frame(width: proxy.size.width, alignment: .topLeading)
             }
-            .background(LNColor.bgBottom.ignoresSafeArea())
         }
         .task { await loadRecords() }
-    }
-
-    private var penNavigation: some View {
-        HStack(spacing: 0) {
-            Button(action: { dismiss() }) {
-                Text("‹")
-                    .font(.system(size: 30, weight: .medium))
-                    .foregroundStyle(LNColor.title)
-                    .frame(width: LNSpacing.minTouchTarget, height: 52, alignment: .leading)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(L10n.commonBack)
-            .accessibilityIdentifier("bulk_export_back")
-
-            Text(L10n.tr("bulk_export_title"))
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(LNColor.title)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityAddTraits(.isHeader)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 52)
     }
 
     private var summaryCard: some View {

@@ -570,7 +570,6 @@ struct PrivacyRedactView: View {
         GeometryReader { proxy in
             VStack(spacing: 0) {
                 privacyRedactTopBar
-                    .padding(.horizontal, 16)
                     .padding(.top, 8)
 
                 PrivacyRedactCanvas(
@@ -650,34 +649,40 @@ struct PrivacyRedactView: View {
     }
 
     private var privacyRedactTopBar: some View {
-        HStack(spacing: 12) {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(LNColor.title)
-                    .frame(width: 44, height: 44)
-                    .background(LNColor.navBarBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(L10n.commonBack)
-            .accessibilityIdentifier("privacy_redact_back")
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 0) {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(LNColor.title)
+                        .frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
+                        .background(LNColor.navBarBg.opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.commonBack)
+                .accessibilityIdentifier("privacy_redact_back")
 
-            VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.privacyRedactTitle)
-                    .font(.system(size: 22, weight: .bold))
+                    .font(LNTypography.titleMedium())
                     .foregroundStyle(LNColor.title)
-                    .accessibilityAddTraits(.isHeader)
-                Text(L10n.tr("privacy_redact_subtitle"))
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(LNColor.subtitle)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
+                    .accessibilityAddTraits(.isHeader)
+
+                Color.clear
+                    .frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
             }
-            Spacer(minLength: 0)
+            .padding(.horizontal, LNSpacing.screenHorizontal)
+
+            Text(L10n.tr("privacy_redact_subtitle"))
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+                .padding(.horizontal, LNSpacing.screenHorizontal)
         }
-        .frame(height: 52)
     }
 
     private var privacyRedactStatusLine: some View {

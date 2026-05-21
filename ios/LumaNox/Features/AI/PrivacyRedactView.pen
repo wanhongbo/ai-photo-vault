@@ -122,9 +122,9 @@
                   "id": "page_title",
                   "content": "隐私脱敏",
                   "fontFamily": "Inter",
-                  "fontSize": 22,
+                  "fontSize": 16,
                   "letterSpacing": 0,
-                  "fontWeight": "700",
+                  "fontWeight": "600",
                   "fill": "#EAF1FF"
                 },
                 {

@@ -143,11 +143,11 @@
           "content": "All albums",
           "fontFamily": "Inter",
           "fill": "#EAF1FF",
-          "fontSize": 25,
+          "fontSize": 16,
           "letterSpacing": 0,
           "x": 139,
           "y": 59,
-          "fontWeight": "750",
+          "fontWeight": "600",
           "name": "Title"
         },
         {

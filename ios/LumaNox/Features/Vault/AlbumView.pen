@@ -86,11 +86,11 @@
           "content": "Default",
           "fontFamily": "Inter",
           "fill": "#EAF1FF",
-          "fontSize": 30,
+          "fontSize": 16,
           "letterSpacing": 0,
           "x": 136,
           "y": 53,
-          "fontWeight": "700"
+          "fontWeight": "600"
         },
         {
           "type": "frame",
@@ -386,11 +386,11 @@
           "content": "New Album",
           "fontFamily": "Inter",
           "fill": "#EAF1FF",
-          "fontSize": 30,
+          "fontSize": 16,
           "letterSpacing": 0,
           "x": 106,
           "y": 53,
-          "fontWeight": "700"
+          "fontWeight": "600"
         },
         {
           "type": "frame",
