@@ -512,12 +512,16 @@ struct PrivacyRedactView: View {
                     privacyRedactManualOps
                     PrivacyRedactStylePicker(selectedStyle: $selectedStyle)
                 }
+                .padding(12)
+                .background(Color(hex: 0x0A1320))
+                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(LNColor.stroke, lineWidth: 1))
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
 
                 privacyRedactBottomActions
                     .padding(.horizontal, 20)
-                    .padding(.top, 18)
+                    .padding(.top, 12)
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
         }
@@ -567,10 +571,12 @@ struct PrivacyRedactView: View {
                 Text(L10n.tr("privacy_redact_detection_status"))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Color(hex: 0xB7C6DD))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 12)
-            .frame(height: 34)
+            .frame(height: 32)
             .background(LNColor.sectionBg)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
@@ -579,7 +585,7 @@ struct PrivacyRedactView: View {
                 Text(L10n.tr("privacy_redact_manual_done"))
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(Color.white)
-                    .frame(width: 86, height: 34)
+                    .frame(width: 78, height: 32)
                     .background(Color(hex: 0x1F4A9E))
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.brandBlue, lineWidth: 1))
@@ -598,11 +604,11 @@ struct PrivacyRedactView: View {
             PrivacyRedactSmallChip(title: L10n.tr("privacy_redact_undo"), identifier: "privacy_redact_undo")
             PrivacyRedactSmallChip(title: L10n.tr("privacy_redact_clear"), identifier: "privacy_redact_clear")
         }
-        .frame(height: 30)
+        .frame(height: 28)
     }
 
     private var privacyRedactBottomActions: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             Button {
                 Task { _ = await redactionService.redactAndImport(path: activePath, style: selectedStyle) }
             } label: {
@@ -619,7 +625,7 @@ struct PrivacyRedactView: View {
                 }
                 .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 54)
+                .frame(height: 52)
                 .background(activeIsVideo ? LNColor.buttonDisabledBg : LNColor.brandBlue)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
@@ -643,7 +649,7 @@ struct PrivacyRedactView: View {
                     redactionService.updateMessage(L10n.tr("privacy_redact_share_pending"), isError: false)
                 }
             }
-            .frame(height: 42)
+            .frame(height: 40)
         }
     }
 
@@ -946,7 +952,7 @@ private struct PrivacyRedactSmallChip: View {
             Text(title)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(hex: 0xB7C6DD))
-                .frame(width: 62, height: 30)
+                .frame(width: 64, height: 28)
                 .background(LNColor.sectionBg)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
@@ -975,7 +981,7 @@ private struct PrivacyRedactStylePicker: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 34)
+                        .frame(height: 31)
                         .background(selectedStyle == style ? LNColor.brandBlue : LNColor.sectionBg)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(selectedStyle == style ? LNColor.brandBlue : LNColor.stroke, lineWidth: 1))
@@ -984,7 +990,7 @@ private struct PrivacyRedactStylePicker: View {
                 .accessibilityIdentifier("privacy_redact_style_\(style.rawValue)")
             }
         }
-        .frame(height: 76)
+        .frame(height: 70)
     }
 }
 
@@ -1006,7 +1012,7 @@ private struct PrivacyRedactSecondaryAction: View {
             }
             .foregroundStyle(Color(hex: 0xD8DAE0))
             .frame(maxWidth: .infinity)
-            .frame(height: 42)
+            .frame(height: 40)
             .background(LNColor.sectionBg)
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
