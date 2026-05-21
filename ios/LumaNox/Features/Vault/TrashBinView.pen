@@ -1,0 +1,98 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_trash_bin",
+      "name": "TrashBinView",
+      "layout": "none",
+      "fill": "#05080D",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "children": [
+        {
+          "type": "frame",
+          "id": "back_trash_bin",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 48,
+          "width": 44,
+          "height": 44,
+          "cornerRadius": 14,
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "back_icon_trash_bin",
+              "iconFontFamily": "lucide",
+              "iconFontName": "chevron-left",
+              "x": 11,
+              "y": 11,
+              "width": 22,
+              "height": 22,
+              "fill": "#EAF1FF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "title_trash_bin",
+          "content": "Trash",
+          "fontFamily": "Inter",
+          "fill": "#EAF1FF",
+          "fontSize": 24,
+          "fontWeight": "750",
+          "x": 84,
+          "y": 52,
+          "width": 225,
+          "textAlign": "center"
+        },
+        {
+          "type": "text",
+          "id": "retain_hint_trash_bin",
+          "content": "Items in Trash are retained temporarily before permanent deletion.",
+          "fontFamily": "Inter",
+          "fill": "#8EA2C0",
+          "fontSize": 13,
+          "fontWeight": "500",
+          "x": 16,
+          "y": 116,
+          "width": 361,
+          "textGrowth": "fixed-width"
+        },
+        {
+          "type": "frame",
+          "id": "media_grid_trash_bin",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 150,
+          "width": 361,
+          "height": "fit_content",
+          "padding": 16,
+          "gap": 0,
+          "cornerRadius": 20,
+          "stroke": { "fill": "#314765", "thickness": 1 },
+          "children": [
+            {
+              "type": "frame",
+              "id": "grid_row_trash_bin_1",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 103,
+              "gap": 8,
+              "children": [
+                { "type": "rectangle", "id": "thumb_trash_1", "fill": "#3C2A1D", "stroke": { "fill": "#223247", "thickness": 1 }, "width": 103, "height": 103, "cornerRadius": 10 },
+                { "type": "rectangle", "id": "thumb_trash_2", "fill": "#1F3758", "stroke": { "fill": "#223247", "thickness": 1 }, "width": 103, "height": 103, "cornerRadius": 10 },
+                { "type": "rectangle", "id": "thumb_trash_3", "fill": "#304A67", "stroke": { "fill": "#223247", "thickness": 1 }, "width": 103, "height": 103, "cornerRadius": 10 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

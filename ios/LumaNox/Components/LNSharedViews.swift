@@ -1,38 +1,5 @@
 import SwiftUI
 
-struct LNMediaGrid: View {
-    let items: [LNMediaItem]
-    let onSelect: (LNMediaItem) -> Void
-
-    private let columns = [
-        GridItem(.flexible(), spacing: LNSpacing.gridGap),
-        GridItem(.flexible(), spacing: LNSpacing.gridGap),
-        GridItem(.flexible(), spacing: LNSpacing.gridGap),
-    ]
-
-    var body: some View {
-        LazyVGrid(columns: columns, spacing: LNSpacing.gridGap) {
-            ForEach(items) { item in
-                Button { onSelect(item) } label: {
-                    VaultMediaThumbnailView(
-                        encryptedPath: item.path,
-                        isVideo: item.isVideo,
-                        contentMode: .fill,
-                        targetPixelSize: 360
-                    )
-                    .aspectRatio(1, contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeThumb))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: LNRadius.homeThumb)
-                            .stroke(LNColor.stroke, lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-}
-
 struct LNEmptyStateCard: View {
     let title: String
     let message: String

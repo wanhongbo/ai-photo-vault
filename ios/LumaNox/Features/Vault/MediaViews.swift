@@ -473,19 +473,32 @@ struct VaultSearchView: View {
     }
 
     var body: some View {
-        LNScreenScaffold(title: L10n.vaultSearchTitle, onBack: { dismiss() }) {
-            TextField(L10n.vaultSearchTitle, text: $query)
-                .padding(12)
-                .background(LNColor.sectionBg)
-                .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeThumb))
-                .foregroundStyle(LNColor.title)
-            LNMediaGrid(items: results) { item in
-                if item.isVideo {
-                    router.pushVault(.videoPlayer(path: item.path))
-                } else {
-                    router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .search(query: query)))
+        VaultListScreenChrome(title: L10n.vaultSearchTitle, onBack: { dismiss() }) { availableWidth in
+            let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
+
+            VStack(spacing: 16) {
+                TextField(L10n.vaultSearchTitle, text: $query)
+                    .padding(12)
+                    .frame(width: cardWidth)
+                    .background(LNColor.sectionBg)
+                    .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeThumb))
+                    .overlay(RoundedRectangle(cornerRadius: LNRadius.homeThumb).stroke(LNColor.stroke, lineWidth: 1))
+                    .foregroundStyle(LNColor.title)
+
+                if !results.isEmpty {
+                    VaultMediaGridCard(items: results, width: cardWidth) { item in
+                        if item.isVideo {
+                            router.pushVault(.videoPlayer(path: item.path))
+                        } else {
+                            router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .search(query: query)))
+                        }
+                    }
+                    .accessibilityIdentifier("vault_search_results_grid")
                 }
             }
+            .padding(.horizontal, LNSpacing.screenHorizontal)
+            .padding(.top, 22)
+            .padding(.bottom, 28)
         }
         .onAppear { Task { await vaultStore.loadSnapshot() } }
     }
@@ -928,23 +941,34 @@ struct TrashBinView: View {
     @State private var trashItems: [LNMediaItem] = []
 
     var body: some View {
-        LNScreenScaffold(title: L10n.trashTitle, onBack: { dismiss() }) {
-            if trashItems.isEmpty {
-                Text(L10n.tr("trash_empty"))
-                    .font(LNTypography.bodyMedium())
-                    .foregroundStyle(LNColor.subtitle)
-            } else {
-                Text(L10n.tr("trash_retain_hint"))
-                    .font(LNTypography.labelMedium())
-                    .foregroundStyle(LNColor.subtitle)
-                LNMediaGrid(items: trashItems) { item in
-                    if item.isVideo {
-                        router.pushSettings(.videoPlayer(path: item.path, isTrash: true))
-                    } else {
-                        router.pushSettings(.photoViewer(path: item.path, isTrash: true, source: .trash))
+        VaultListScreenChrome(title: L10n.trashTitle, onBack: { dismiss() }) { availableWidth in
+            let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
+
+            VStack(alignment: .leading, spacing: 16) {
+                if trashItems.isEmpty {
+                    Text(L10n.tr("trash_empty"))
+                        .font(LNTypography.bodyMedium())
+                        .foregroundStyle(LNColor.subtitle)
+                        .frame(width: cardWidth, alignment: .leading)
+                } else {
+                    Text(L10n.tr("trash_retain_hint"))
+                        .font(LNTypography.labelMedium())
+                        .foregroundStyle(LNColor.subtitle)
+                        .frame(width: cardWidth, alignment: .leading)
+
+                    VaultMediaGridCard(items: trashItems, width: cardWidth) { item in
+                        if item.isVideo {
+                            router.pushSettings(.videoPlayer(path: item.path, isTrash: true))
+                        } else {
+                            router.pushSettings(.photoViewer(path: item.path, isTrash: true, source: .trash))
+                        }
                     }
+                    .accessibilityIdentifier("trash_media_grid")
                 }
             }
+            .padding(.horizontal, LNSpacing.screenHorizontal)
+            .padding(.top, 22)
+            .padding(.bottom, 28)
         }
         .task { await reloadTrash() }
     }

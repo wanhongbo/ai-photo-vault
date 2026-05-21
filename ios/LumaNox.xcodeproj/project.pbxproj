@@ -44,6 +44,7 @@
 		45CFD584AD99A36121C859D9 /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD2828BB1A11E50AB9D5DCD1 /* LocalAuthentication.framework */; };
 		486B75BFD5833E43971EAA68 /* PrivacyRedactView.pen in Resources */ = {isa = PBXBuildFile; fileRef = B54F71A283BE867B7C0AC126 /* PrivacyRedactView.pen */; };
 		49891495A9906516FA27049C /* Argon2idKdf.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8C14963566802D704E3C1C /* Argon2idKdf.swift */; };
+		4BC9E3A6722DE909D27985FF /* VaultSearchView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 10735D531A260565D68C8DE8 /* VaultSearchView.pen */; };
 		4D53235C038A42DA3DCF7570 /* PaywallViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E9255003D4588EA511C8F6 /* PaywallViewModel.swift */; };
 		4DC9510F80581CE56E40FDF9 /* MediaInfoItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55EDC7C4C9D33D6C3DC074E9 /* MediaInfoItems.swift */; };
 		51BB7EB4601FC3984CF5B6CC /* AESCBC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BBEE63722F0B9B727EF9FD /* AESCBC.swift */; };
@@ -133,6 +134,7 @@
 		F08C2E275153E01C1EE8777C /* RecentPhotosListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */; };
 		F392FCEE3EB37C002F0AB1F8 /* LNBottomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5324047407C827B2FCD59CC9 /* LNBottomTabBar.swift */; };
 		F531804D21BDA4B00CFEC9F0 /* PaywallNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201DCA4E25932076994F40AC /* PaywallNavigation.swift */; };
+		F67B4AEF6A0FBAA2E269CA44 /* TrashBinView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 62320789F14A1082ED747B00 /* TrashBinView.pen */; };
 		F762EE90D58061C4E37FA9BE /* BackupKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02D8ED422B709C36CEF8A98C /* BackupKeyManager.swift */; };
 		FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657135709B6C821B72DC1DBD /* ThumbnailService.swift */; };
 /* End PBXBuildFile section */
@@ -160,6 +162,7 @@
 		09816F34E8E45378A70CB76F /* LumaNoxStyleGuide.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LumaNoxStyleGuide.md; sourceTree = "<group>"; };
 		0BF1855A4D106CFD1B09EDDE /* AIRecognitionFixtureImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIRecognitionFixtureImportTests.swift; sourceTree = "<group>"; };
 		0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */ = {isa = PBXFileReference; path = RecentPhotosListView.pen; sourceTree = "<group>"; };
+		10735D531A260565D68C8DE8 /* VaultSearchView.pen */ = {isa = PBXFileReference; path = VaultSearchView.pen; sourceTree = "<group>"; };
 		12026A53779F2E96027AADE0 /* runtime_lock_keypad_moved_up.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = runtime_lock_keypad_moved_up.png; sourceTree = "<group>"; };
 		153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */ = {isa = PBXFileReference; path = RestoreProgressView.pen; sourceTree = "<group>"; };
 		1766E374467294BEF5A81EE6 /* VaultHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHomeView.swift; sourceTree = "<group>"; };
@@ -196,6 +199,7 @@
 		5BE981D8224A4925C036A472 /* LNSettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNSettingsComponents.swift; sourceTree = "<group>"; };
 		5EE318A72F623E587F6C81DD /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		60F6316B9511EE7354BC905E /* runtime_lock_after_nav_pin_fix_2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = runtime_lock_after_nav_pin_fix_2.png; sourceTree = "<group>"; };
+		62320789F14A1082ED747B00 /* TrashBinView.pen */ = {isa = PBXFileReference; path = TrashBinView.pen; sourceTree = "<group>"; };
 		63EDEEE53B1D9BE4F3642CCA /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		6497A795A1127220137BD699 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
 		657135709B6C821B72DC1DBD /* ThumbnailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailService.swift; sourceTree = "<group>"; };
@@ -674,9 +678,11 @@
 				8C4EBFA92B5775EFFACB9756 /* MediaViews.swift */,
 				9F170F7D5870A110226CEC61 /* PhotoViewerView.pen */,
 				0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */,
+				62320789F14A1082ED747B00 /* TrashBinView.pen */,
 				D14852B36C14B00552F54878 /* VaultHomeView.pen */,
 				1766E374467294BEF5A81EE6 /* VaultHomeView.swift */,
 				85EAB2D89D8473CB2D20EBDE /* VaultHomeViewModel.swift */,
+				10735D531A260565D68C8DE8 /* VaultSearchView.pen */,
 				46CFF782A0797B87261A0450 /* VideoPlayerView.swift */,
 			);
 			path = Vault;
@@ -821,7 +827,9 @@
 				F08C2E275153E01C1EE8777C /* RecentPhotosListView.pen in Resources */,
 				7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */,
 				2070853F7557A89E25EC1510 /* SettingsViews.pen in Resources */,
+				F67B4AEF6A0FBAA2E269CA44 /* TrashBinView.pen in Resources */,
 				ADC67DC6E153B321BD0B3137 /* VaultHomeView.pen in Resources */,
+				4BC9E3A6722DE909D27985FF /* VaultSearchView.pen in Resources */,
 				8864791C62F7365323C11741 /* fKM7q.png in Resources */,
 				87BC961C807397BEE3450FC9 /* frm_3k.png in Resources */,
 				60AE2DB6FF59E1024DF04184 /* pencil_preview_contact_sheet.jpg in Resources */,
