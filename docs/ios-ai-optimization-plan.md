@@ -79,15 +79,14 @@
 
 ## 4. 本轮落地范围
 
-本轮先完成 P0 的基础数据和扫描优化：
+本轮完成 P3 的高级能力基础闭环：
 
-- 新增 AI analyzer 版本号。
-- 新增输入 fingerprint，支持跳过未变化媒体。
-- 新增 Vision label 摘要保存。
-- 新增重复检测指纹保存。
-- 调整扫描结果聚合，让跳过项仍参与重复候选重算。
+- 视频扫描会临时解密到 cache、抽取关键帧，并复用图片 Vision 分类、OCR、二维码、人脸和 feature print 链路；首期只产出分类与敏感候选，不做视频打码。
+- 图片和视频关键帧都会生成本地 Vision feature print，用于人物/宠物 subject 聚类；聚类结果保存在独立 AI index 中，并预留命名、合并、拆分接口。
+- 新增独立加密 AI index：`Application Support/LumaNox/ai_results_v1.dat`。它保存 labels、feature print、duplicate group、subject cluster 等可重建明细；`VaultAiMetadata` 仍只保存 UI 所需摘要。
+- AI index 加载失败或损坏时回退为空索引，下一轮扫描可从加密媒体重新生成，不阻塞 metadata 摘要加载。
 
-暂不做 UI/Pen 变更，因此无需更新 AI 页面 Pen；后续涉及分类展示、筛选或清理分组时必须先更新对应 `.pen`。
+本轮不新增 UI 页面，也不改变 AI 页面视觉结构，因此无需更新 AI 页面 Pen；后续如果要展示人物/宠物聚类管理、命名、合并或拆分 UI，必须先更新对应 `.pen`。
 
 ## 5. 后续验证建议
 
