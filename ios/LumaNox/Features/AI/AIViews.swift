@@ -722,7 +722,7 @@ struct PrivacyRedactView: View {
     private var privacyRedactBottomActions: some View {
         VStack(spacing: 8) {
             Button {
-                Task { _ = await redactionService.redactAndImport(path: activePath, regions: saveRegions) }
+                saveRedactedToVault()
             } label: {
                 HStack(spacing: 8) {
                     if redactionService.isSaving {
@@ -875,12 +875,28 @@ struct PrivacyRedactView: View {
         }
     }
 
+    private func showRedactionServiceMessage() {
+        guard let message = redactionService.lastMessage else { return }
+        showToast(message)
+    }
+
+    private func saveRedactedToVault() {
+        guard !redactionService.isSaving else { return }
+        Task {
+            _ = await redactionService.redactAndImport(path: activePath, regions: saveRegions)
+            await MainActor.run { showRedactionServiceMessage() }
+        }
+    }
+
     private func exportRedactedToSystemPhotos() {
         guard !isExportingSystem else { return }
         isExportingSystem = true
         Task {
             _ = await redactionService.exportToSystemPhotos(path: activePath, regions: saveRegions)
-            await MainActor.run { isExportingSystem = false }
+            await MainActor.run {
+                isExportingSystem = false
+                showRedactionServiceMessage()
+            }
         }
     }
 
@@ -896,6 +912,7 @@ struct PrivacyRedactView: View {
                     showShareSheet = true
                 } else {
                     redactionService.updateMessage(L10n.tr("privacy_redact_share_failed"), isError: true)
+                    showRedactionServiceMessage()
                 }
             }
         }
