@@ -55,6 +55,7 @@ targets:
       - sdk: PhotosUI.framework
       - sdk: LocalAuthentication.framework
       - sdk: AVFoundation.framework
+      - sdk: Vision.framework
       - sdk: CryptoKit.framework
   LumaNoxTests:
     type: bundle.unit-test

@@ -53,6 +53,9 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: router.phase)
         .onAppear {
+            #if DEBUG
+            applyDebugLaunchRouteIfNeeded()
+            #endif
             enforcePinGate()
             AutoBackupScheduler.scheduleColdStartIfDue()
             Task { await VaultMaintenanceService.performUnlockedCleanup() }
@@ -68,4 +71,14 @@ struct RootView: View {
             router.phase = .lock
         }
     }
+
+    #if DEBUG
+    private func applyDebugLaunchRouteIfNeeded() {
+        guard ProcessInfo.processInfo.arguments.contains("-uiTestPrivacyRedact"),
+              router.aiPath.isEmpty else { return }
+        router.phase = .main
+        router.selectedTab = .ai
+        router.pushAI(.privacyRedact(path: ""))
+    }
+    #endif
 }

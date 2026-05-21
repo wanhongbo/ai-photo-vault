@@ -67,6 +67,25 @@ final class VaultMetadataStore {
         load().searchActive(query: query, limit: limit)
     }
 
+    func activeMediaRecords() -> [VaultMediaRecord] {
+        load().activeMedia.sorted { $0.modifiedAtMs > $1.modifiedAtMs }
+    }
+
+    func updateAiMetadata(_ updates: [String: VaultAiMetadata]) throws {
+        guard !updates.isEmpty else { return }
+        var snapshot = load()
+        var didChange = false
+        for index in snapshot.media.indices {
+            let record = snapshot.media[index]
+            guard let ai = updates[record.id] ?? updates[record.storagePath] else { continue }
+            snapshot.media[index].ai = ai
+            didChange = true
+        }
+        guard didChange else { return }
+        snapshot.updatedAtMs = Date().epochMs
+        try save(snapshot)
+    }
+
     func storageSummary() -> VaultStorageSummary {
         let snapshot = load()
         return VaultStorageSummary(
