@@ -36,7 +36,10 @@
 "private_camera_placeholder" = "Camera preview";
 
 "ai_title" = "AI Assistant";
+"ai_home_subtitle" = "Private scans stay on this device";
 "ai_features_title" = "Features";
+"ai_tools_title" = "Tools";
+"ai_tools_count_fmt" = "%d available";
 "ai_cleanup_title" = "Smart Cleanup";
 "ai_sensitive_review_title" = "Sensitive Review";
 "ai_classify_title" = "Smart Classify";
@@ -53,6 +56,17 @@
 "ai_suggest_sensitive_desc" = "AI detected photos that may contain IDs, faces, or private info. Tap to review before sharing.";
 "ai_suggest_redact_now" = "Redact now";
 "ai_suggest_snooze" = "Snooze";
+"ai_summary_label" = "Local AI scan";
+"ai_summary_title" = "1 item may need review";
+"ai_summary_desc" = "Check possible faces, IDs, and private details before sharing from the vault.";
+"ai_summary_review_now" = "Review now";
+"ai_summary_later" = "Later";
+"ai_tool_blur_desc" = "Mask faces, IDs, and screenshots";
+"ai_tool_classify_desc" = "Group vault media by local labels";
+"ai_tool_dedup_title" = "Deduplicate";
+"ai_tool_dedup_desc" = "Find similar photos and cleanup sets";
+"ai_tool_status_open" = "Open";
+"ai_tool_status_ready" = "Ready";
 "ai_cleanup_confirm_message" = "Clean up %d blurry/duplicate photos?";
 "ai_cleanup_confirm_clean" = "Clean Up";
 

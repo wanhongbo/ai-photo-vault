@@ -36,7 +36,10 @@
 "private_camera_placeholder" = "相机预览";
 
 "ai_title" = "AI 助手";
+"ai_home_subtitle" = "本地扫描只在此设备完成";
 "ai_features_title" = "功能";
+"ai_tools_title" = "工具";
+"ai_tools_count_fmt" = "%d 项可用";
 "ai_cleanup_title" = "智能清理";
 "ai_sensitive_review_title" = "敏感内容审查";
 "ai_classify_title" = "智能分类";
@@ -53,6 +56,17 @@
 "ai_suggest_sensitive_desc" = "AI 检测到可能包含证件、人脸或隐私信息的照片，分享前可先检查处理。";
 "ai_suggest_redact_now" = "立即打码";
 "ai_suggest_snooze" = "稍后提醒";
+"ai_summary_label" = "本地 AI 扫描";
+"ai_summary_title" = "1 项可能需要检查";
+"ai_summary_desc" = "分享保险箱内容前，先检查可能包含人脸、证件和隐私细节的项目。";
+"ai_summary_review_now" = "立即检查";
+"ai_summary_later" = "稍后";
+"ai_tool_blur_desc" = "遮盖人脸、证件和截图";
+"ai_tool_classify_desc" = "按本地标签整理保险箱媒体";
+"ai_tool_dedup_title" = "智能去重";
+"ai_tool_dedup_desc" = "发现相似照片并整理清理集合";
+"ai_tool_status_open" = "打开";
+"ai_tool_status_ready" = "就绪";
 "ai_cleanup_confirm_message" = "将清理 %d 张模糊/重复照片";
 "ai_cleanup_confirm_clean" = "确认清理";
 

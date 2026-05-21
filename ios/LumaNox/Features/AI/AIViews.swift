@@ -2,7 +2,6 @@ import SwiftUI
 
 struct AIHomeView: View {
     @EnvironmentObject private var router: AppRouter
-    @State private var suggestState: AISuggestState = .sensitive
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -12,167 +11,199 @@ struct AIHomeView: View {
                 .padding(.horizontal, LNSpacing.screenHorizontal)
                 .padding(.top, 8)
 
+            Text(L10n.tr("ai_home_subtitle"))
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(LNColor.subtitle)
+                .padding(.horizontal, LNSpacing.screenHorizontal)
+                .padding(.top, 2)
+
             VStack(alignment: .leading, spacing: 16) {
-                aiSuggestCard
+                aiScanSummaryCard
                 HStack {
-                    Text(L10n.aiFeaturesTitle)
+                    Text(L10n.tr("ai_tools_title"))
                         .font(LNTypography.titleLarge())
                         .foregroundStyle(LNColor.title)
                     Spacer()
-                    Text(L10n.tr("ai_features_count_fmt", aiFeatureCards.count))
+                    Text(L10n.tr("ai_tools_count_fmt", aiToolRows.count))
                         .font(LNTypography.labelMedium())
                         .foregroundStyle(LNColor.subtitle)
                 }
-                aiFeatureGrid
+                aiToolList
             }
             .padding(LNSpacing.screenHorizontal)
-            .padding(.top, 16)
+            .padding(.top, 14)
             .padding(.bottom, LNSpacing.homeNavBarHeight + 16)
         }
         .accessibilityIdentifier("ai_home_view")
     }
 
-    private var aiSuggestCard: some View {
-        HStack(alignment: .top, spacing: 12) {
-            iconWell(systemName: "eye.slash", foreground: LNColor.amberWarning, background: LNColor.aiBlurIconBg, size: 44)
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    Text(L10n.tr("ai_suggest_badge_sensitive"))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(LNColor.amberWarning)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(LNColor.amberWarning.opacity(0.18))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    Text(L10n.tr("ai_suggest_sensitive_title"))
-                        .font(LNTypography.titleMedium())
+    private var aiScanSummaryCard: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            HStack(spacing: 12) {
+                iconWell(systemName: "sparkles", foreground: LNColor.brandBlue, background: LNColor.brandBlue.opacity(0.20), size: 44)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.tr("ai_summary_label"))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(LNColor.navItemActive)
+                    Text(L10n.tr("ai_summary_title"))
+                        .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(LNColor.title)
                         .lineLimit(1)
                 }
-                Text(L10n.tr("ai_suggest_sensitive_desc"))
-                    .font(LNTypography.labelMedium())
-                    .foregroundStyle(LNColor.title.opacity(0.78))
-                    .lineLimit(3)
-                HStack(spacing: 10) {
-                    Button { openAIFeature(.privacyRedact(path: ""), router: router) } label: {
-                        Text(L10n.tr("ai_suggest_redact_now"))
-                            .font(LNTypography.labelMedium().weight(.bold))
-                            .foregroundStyle(Color.black)
-                            .frame(width: 116, height: 38)
-                            .background(LNColor.amberWarning)
-                            .clipShape(RoundedRectangle(cornerRadius: 11))
-                    }
-                    .buttonStyle(.plain)
-                    Button { suggestState = .idle } label: {
-                        Text(L10n.tr("ai_suggest_snooze"))
-                            .font(LNTypography.labelMedium())
-                            .foregroundStyle(LNColor.title.opacity(0.68))
-                            .frame(width: 96, height: 38)
-                            .background(Color.white.opacity(0.06))
-                            .clipShape(RoundedRectangle(cornerRadius: 11))
-                            .overlay(RoundedRectangle(cornerRadius: 11).stroke(Color.white.opacity(0.18), lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
+            }
+            Text(L10n.tr("ai_summary_desc"))
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(LNColor.subtitle)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 12) {
+                Button { openAIFeature(.aiSensitive, proFeature: .aiSensitive, router: router) } label: {
+                    Text(L10n.tr("ai_summary_review_now"))
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(Color.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 40)
+                        .background(LNColor.brandBlue)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                .buttonStyle(.plain)
+                Button {} label: {
+                    Text(L10n.tr("ai_summary_later"))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0xB7C6DD))
+                        .frame(width: 102, height: 40)
+                        .background(Color(hex: 0x122033))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(LNSpacing.cardPadding)
+        .frame(height: 166)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(colors: [LNColor.aiSensitiveStart, LNColor.aiGradEnd], startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
+        .background(LNColor.sectionBg)
         .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
-        .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(LNColor.stroke, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(Color(hex: 0x244869), lineWidth: 1))
+        .accessibilityIdentifier("ai_scan_summary_card")
     }
 
-    private var aiFeatureGrid: some View {
-        VStack(spacing: 12) {
-            featureCard(aiFeatureCards[0], wide: true)
-                .frame(maxWidth: .infinity)
-                .frame(height: 154)
-            HStack(spacing: 12) {
-                featureCard(aiFeatureCards[1])
-                featureCard(aiFeatureCards[2])
+    private var aiToolList: some View {
+        VStack(spacing: 10) {
+            ForEach(aiToolRows) { tool in
+                aiToolRow(tool)
             }
-            .frame(height: 142)
         }
     }
 
-    private func featureCard(_ feature: AIFeatureCardModel, wide: Bool = false) -> some View {
-        Button { openAIFeature(feature.route, router: router) } label: {
-            VStack(spacing: 10) {
+    private func aiToolRow(_ tool: AIToolRowModel) -> some View {
+        Button { openAIFeature(tool.route, proFeature: tool.proFeature, router: router) } label: {
+            HStack(spacing: 12) {
                 iconWell(
-                    systemName: feature.systemImage,
-                    foreground: feature.foreground,
-                    background: feature.background,
-                    size: wide ? 56 : 52
+                    systemName: tool.systemImage,
+                    foreground: tool.foreground,
+                    background: tool.background,
+                    size: 44
                 )
-                Text(feature.title)
-                    .font(LNTypography.titleMedium())
-                    .foregroundStyle(LNColor.title)
-                    .multilineTextAlignment(.center)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(tool.title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(LNColor.title)
+                        .lineLimit(1)
+                    Text(tool.subtitle)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(LNColor.subtitle)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                Text(tool.status)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0xB7C6DD))
+                    .frame(width: 58, height: 30)
+                    .background(Color(hex: 0x122033))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
             }
+            .padding(14)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .lnOutlinedCard(fill: LNColor.sectionBg)
+            .frame(height: 86)
+            .background(LNColor.sectionBg)
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(tool.stroke, lineWidth: 1))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(tool.accessibilityIdentifier)
     }
 
     private func iconWell(systemName: String, foreground: Color, background: Color, size: CGFloat) -> some View {
         Image(systemName: systemName)
-            .font(.system(size: size * 0.46, weight: .semibold))
+            .font(.system(size: size * 0.5, weight: .semibold))
             .foregroundStyle(foreground)
             .frame(width: size, height: size)
             .background(background)
-            .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeAlbumCard))
+            .clipShape(RoundedRectangle(cornerRadius: 13))
     }
 
-    private func openAIFeature(_ route: AppRoute, router: AppRouter) {
-        let feature: ProFeature = switch route {
-        case .aiCleanup: .aiCleanup
-        case .aiSensitive, .recentList: .aiSensitive
-        case .aiClassify, .aiClassifyDetail: .aiClassify
-        case .privacyRedact: .aiPrivacy
-        default: .aiClassify
-        }
-        guard router.guardProFeature(feature) else { return }
+    private func openAIFeature(_ route: AppRoute, proFeature: ProFeature, router: AppRouter) {
+        guard router.guardProFeature(proFeature) else { return }
         QuotaManager.shared.incrementAiUsage()
         router.pushAI(route)
     }
 
-    private var aiFeatureCards: [AIFeatureCardModel] {
+    private var aiToolRows: [AIToolRowModel] {
         [
-            AIFeatureCardModel(
+            AIToolRowModel(
                 title: L10n.tr("ai_feat_blur"),
+                subtitle: L10n.tr("ai_tool_blur_desc"),
+                status: L10n.tr("ai_tool_status_open"),
                 systemImage: "eye.slash",
-                foreground: LNColor.amberWarning,
-                background: LNColor.aiBlurIconBg,
-                route: .privacyRedact(path: "")
-            ),
-            AIFeatureCardModel(
-                title: L10n.tr("ai_feat_classify"),
-                systemImage: "square.stack.3d.up",
                 foreground: LNColor.brandBlue,
-                background: LNColor.aiClassifyIconBg,
-                route: .aiClassify
+                background: LNColor.brandBlue.opacity(0.20),
+                stroke: Color(hex: 0x244869),
+                route: .privacyRedact(path: ""),
+                proFeature: .aiPrivacy,
+                accessibilityIdentifier: "ai_tool_privacy_blur"
             ),
-            AIFeatureCardModel(
-                title: L10n.tr("ai_feat_dedup"),
+            AIToolRowModel(
+                title: L10n.tr("ai_feat_classify"),
+                subtitle: L10n.tr("ai_tool_classify_desc"),
+                status: L10n.tr("ai_tool_status_ready"),
+                systemImage: "square.stack.3d.up",
+                foreground: Color(hex: 0x7DBBFF),
+                background: Color(hex: 0x18283D),
+                stroke: LNColor.stroke,
+                route: .aiClassify,
+                proFeature: .aiClassify,
+                accessibilityIdentifier: "ai_tool_classify"
+            ),
+            AIToolRowModel(
+                title: L10n.tr("ai_tool_dedup_title"),
+                subtitle: L10n.tr("ai_tool_dedup_desc"),
+                status: L10n.tr("ai_tool_status_ready"),
                 systemImage: "rectangle.on.rectangle",
-                foreground: LNColor.aiDedup,
-                background: LNColor.aiDedupIconBg,
-                route: .aiCleanup
+                foreground: LNColor.success,
+                background: LNColor.success.opacity(0.20),
+                stroke: Color(hex: 0x214536),
+                route: .aiCleanup,
+                proFeature: .aiCleanup,
+                accessibilityIdentifier: "ai_tool_deduplicate"
             ),
         ]
     }
 }
 
-private struct AIFeatureCardModel {
+private struct AIToolRowModel: Identifiable {
+    var id: String { accessibilityIdentifier }
     let title: String
+    let subtitle: String
+    let status: String
     let systemImage: String
     let foreground: Color
     let background: Color
+    let stroke: Color
     let route: AppRoute
+    let proFeature: ProFeature
+    let accessibilityIdentifier: String
 }
 
 struct AICleanupView: View {
