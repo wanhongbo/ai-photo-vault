@@ -46,9 +46,10 @@ final class AIRecognitionFixtureImportTests: XCTestCase {
         let categoryCounts = Dictionary(grouping: records, by: { $0.ai.category ?? "nil" })
             .mapValues(\.count)
             .sorted { $0.key < $1.key }
-        let tagCounts = records
+        let rawTagCounts = records
             .flatMap(\.ai.tags)
             .reduce(into: [String: Int]()) { $0[$1, default: 0] += 1 }
+        let tagCounts = rawTagCounts
             .sorted { $0.key < $1.key }
 
         let categoryText = categoryCounts.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
@@ -63,6 +64,16 @@ final class AIRecognitionFixtureImportTests: XCTestCase {
         }
 
         XCTAssertEqual(scanned, 100)
+        XCTAssertGreaterThanOrEqual(totalSensitive, 40)
+        XCTAssertLessThanOrEqual(rawTagCounts[VaultAITag.duplicate, default: 0], 20)
+        XCTAssertEqual(buckets["screenshot"]?.categories[VaultAICategory.screenshots], 10)
+        XCTAssertEqual(buckets["food"]?.categories[VaultAICategory.food], 12)
+        XCTAssertEqual(buckets["nature"]?.categories[VaultAICategory.nature], 12)
+        XCTAssertEqual(buckets["people"]?.categories[VaultAICategory.people], 10)
+        XCTAssertEqual(buckets["id_document"]?.sensitive, 12)
+        XCTAssertEqual(buckets["bank_card"]?.sensitive, 10)
+        XCTAssertEqual(buckets["qr_barcode"]?.sensitive, 10)
+        XCTAssertGreaterThanOrEqual(buckets["duplicate"]?.tags[VaultAITag.duplicate] ?? 0, 10)
     }
 }
 

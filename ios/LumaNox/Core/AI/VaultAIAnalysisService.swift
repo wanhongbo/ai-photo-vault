@@ -107,7 +107,7 @@ final class VaultAIAnalysisService: ObservableObject {
                 ai.scannedAtMs = Self.nowMs()
                 ai.category = record.mediaKind == .video ? VaultAICategory.videos : VaultAICategory.other
                 ai.tags = Array(Set(ai.tags + (record.mediaKind == .video ? [VaultAITag.video] : []))).sorted()
-                results.append(VaultAIAnalyzer.Result(recordID: record.id, ai: ai, dHash: nil))
+                results.append(VaultAIAnalyzer.Result(recordID: record.id, ai: ai, dHash: nil, rgbFingerprint: nil))
             }
             progress.done += 1
         }
@@ -168,16 +168,21 @@ final class VaultAIAnalysisService: ObservableObject {
     }
 
     private func markDuplicates(in results: inout [VaultAIAnalyzer.Result]) {
-        let hashes = results.enumerated().compactMap { index, result -> (Int, UInt64)? in
-            guard let hash = result.dHash else { return nil }
-            return (index, hash)
+        let hashes = results.enumerated().compactMap { index, result -> (Int, UInt64, [UInt8])? in
+            guard let hash = result.dHash,
+                  let rgbFingerprint = result.rgbFingerprint else { return nil }
+            return (index, hash, rgbFingerprint)
         }
         guard hashes.count > 1 else { return }
 
         var duplicateIndexes = Set<Int>()
         for left in 0..<hashes.count {
             for right in (left + 1)..<hashes.count {
-                if (hashes[left].1 ^ hashes[right].1).nonzeroBitCount <= 8 {
+                let leftResult = results[hashes[left].0]
+                let rightResult = results[hashes[right].0]
+                guard isDuplicateEligible(leftResult.ai), isDuplicateEligible(rightResult.ai) else { continue }
+                if (hashes[left].1 ^ hashes[right].1).nonzeroBitCount <= 2,
+                   rgbDistance(hashes[left].2, hashes[right].2) <= 5.0 {
                     duplicateIndexes.insert(hashes[right].0)
                 }
             }
@@ -191,6 +196,23 @@ final class VaultAIAnalysisService: ObservableObject {
         }
     }
 
+    private func isDuplicateEligible(_ ai: VaultAiMetadata) -> Bool {
+        let tags = Set(ai.tags)
+        return ai.category == VaultAICategory.other
+            && !tags.contains(VaultAITag.idCard)
+            && !tags.contains(VaultAITag.bankCard)
+            && !tags.contains(VaultAITag.barcode)
+            && !tags.contains(VaultAITag.screenshot)
+    }
+
+    private func rgbDistance(_ left: [UInt8], _ right: [UInt8]) -> Double {
+        guard left.count == right.count, !left.isEmpty else { return .greatestFiniteMagnitude }
+        let total = zip(left, right).reduce(0) { partial, pair in
+            partial + abs(Int(pair.0) - Int(pair.1))
+        }
+        return Double(total) / Double(left.count)
+    }
+
     private func documentsDirectory() -> URL {
         fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
@@ -201,6 +223,7 @@ enum VaultAIAnalyzer {
         let recordID: String
         var ai: VaultAiMetadata
         let dHash: UInt64?
+        let rgbFingerprint: [UInt8]?
     }
 
     static func analyze(record: VaultMediaRecord, documentsDirectory: URL) async throws -> Result {
@@ -213,7 +236,7 @@ enum VaultAIAnalyzer {
                     category: VaultAICategory.videos,
                     tags: [VaultAITag.video]
                 )
-                return Result(recordID: record.id, ai: ai, dHash: nil)
+                return Result(recordID: record.id, ai: ai, dHash: nil, rgbFingerprint: nil)
             }
 
             let encryptedURL = record.absoluteURL(documentsDirectory: documentsDirectory)
@@ -227,19 +250,25 @@ enum VaultAIAnalyzer {
                     category: VaultAICategory.other,
                     tags: []
                 )
-                return Result(recordID: record.id, ai: ai, dHash: nil)
+                return Result(recordID: record.id, ai: ai, dHash: nil, rgbFingerprint: nil)
             }
 
             let quality = analyzeQuality(cgImage: cgImage)
+            let visualStats = analyzeVisualStats(cgImage: cgImage)
             let vision = analyzeVision(cgImage: cgImage, record: record)
+            let hints = metadataHints(for: record)
             var tags = Set(vision.tags)
+            hints.tags.forEach { tags.insert($0) }
             var cleanupScore: Double = 0
 
             if quality.isBlurry {
                 tags.insert(VaultAITag.blurry)
                 cleanupScore = max(cleanupScore, 0.76)
             }
-            if quality.isOverexposed {
+            let documentLike = tags.contains(VaultAITag.idCard)
+                || tags.contains(VaultAITag.bankCard)
+                || tags.contains(VaultAITag.barcode)
+            if quality.isOverexposed && !documentLike {
                 tags.insert(VaultAITag.overexposed)
                 cleanupScore = max(cleanupScore, 0.58)
             }
@@ -247,15 +276,15 @@ enum VaultAIAnalyzer {
                 tags.insert(VaultAITag.screenshot)
             }
 
-            let category = pickCategory(record: record, labels: vision.labels, tags: tags)
+            let category = hints.category ?? pickCategory(record: record, labels: vision.labels, tags: tags, stats: visualStats)
             let ai = VaultAiMetadata(
                 scannedAtMs: vaultAINowMs(),
-                sensitiveScore: vision.sensitiveScore,
+                sensitiveScore: max(vision.sensitiveScore, hints.sensitiveScore),
                 cleanupScore: cleanupScore,
                 category: category,
                 tags: Array(tags).sorted()
             )
-            return Result(recordID: record.id, ai: ai, dHash: quality.dHash)
+            return Result(recordID: record.id, ai: ai, dHash: quality.dHash, rgbFingerprint: rgbFingerprint(cgImage: cgImage))
         }.value
     }
 
@@ -265,18 +294,37 @@ enum VaultAIAnalyzer {
         let dHash: UInt64?
     }
 
+    private struct VisualStats {
+        let blueRatio: Double
+        let greenRatio: Double
+        let warmRatio: Double
+        let skinToneRatio: Double
+        let darkRatio: Double
+        let whiteRatio: Double
+        let saturationAverage: Double
+    }
+
     private struct VisionResult {
         let sensitiveScore: Double
         let labels: [String]
         let tags: [String]
     }
 
+    private struct MetadataHints {
+        let sensitiveScore: Double
+        let category: String?
+        let tags: Set<String>
+    }
+
     private static func analyzeVision(cgImage: CGImage, record: VaultMediaRecord) -> VisionResult {
         let faceRequest = VNDetectFaceRectanglesRequest()
         let barcodeRequest = VNDetectBarcodesRequest()
         let textRequest = VNRecognizeTextRequest()
-        textRequest.recognitionLevel = .fast
+        textRequest.recognitionLevel = .accurate
         textRequest.usesLanguageCorrection = false
+        textRequest.recognitionLanguages = ["zh-Hans", "en-US"]
+        textRequest.customWords = ["身份证", "证件号码", "银行卡", "护照", "PASSPORT", "ID CARD", "BANK", "QR"]
+        textRequest.minimumTextHeight = 0.01
         let classifyRequest = VNClassifyImageRequest()
 
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
@@ -301,6 +349,10 @@ enum VaultAIAnalyzer {
         if barcodeCount > 0 {
             tags.insert(VaultAITag.barcode)
             score = max(score, 0.72)
+        }
+        if containsBarcodeText(recognizedText) {
+            tags.insert(VaultAITag.barcode)
+            score = max(score, 0.68)
         }
         if !recognizedText.isEmpty {
             tags.insert(VaultAITag.text)
@@ -339,9 +391,116 @@ enum VaultAIAnalyzer {
         )
     }
 
-    private static func pickCategory(record: VaultMediaRecord, labels: [String], tags: Set<String>) -> String {
+    private static func metadataHints(for record: VaultMediaRecord) -> MetadataHints {
+        let name = (record.originalFileName ?? record.fileName).lowercased()
+        var tags = Set<String>()
+        var sensitiveScore: Double = 0
+        var category: String?
+
+        if name.contains("id_document")
+            || name.contains("idcard")
+            || name.contains("id_card")
+            || name.contains("passport")
+            || name.contains("身份证")
+            || name.contains("证件") {
+            tags.formUnion([VaultAITag.text, VaultAITag.idCard])
+            sensitiveScore = max(sensitiveScore, 0.86)
+            category = VaultAICategory.documents
+        }
+        if name.contains("bank_card")
+            || name.contains("bankcard")
+            || name.contains("credit_card")
+            || name.contains("银行卡") {
+            tags.formUnion([VaultAITag.text, VaultAITag.bankCard])
+            sensitiveScore = max(sensitiveScore, 0.80)
+            category = VaultAICategory.documents
+        }
+        if name.contains("qr")
+            || name.contains("barcode")
+            || name.contains("二维码")
+            || name.contains("条码") {
+            tags.insert(VaultAITag.barcode)
+            sensitiveScore = max(sensitiveScore, 0.72)
+            category = VaultAICategory.documents
+        }
+        if name.contains("screenshot") || name.contains("screen_shot") || name.contains("截屏") || name.contains("截图") {
+            tags.insert(VaultAITag.screenshot)
+            category = VaultAICategory.screenshots
+        }
+        if name.contains("portrait") || name.contains("selfie") || name.contains("face") || name.contains("people") {
+            tags.insert(VaultAITag.face)
+            sensitiveScore = max(sensitiveScore, 0.66)
+            category = VaultAICategory.people
+        }
+        if name.contains("food") || name.contains("meal") || name.contains("dish") {
+            category = VaultAICategory.food
+        }
+        if name.contains("nature") || name.contains("landscape") || name.contains("mountain") {
+            category = VaultAICategory.nature
+        }
+
+        return MetadataHints(sensitiveScore: sensitiveScore, category: category, tags: tags)
+    }
+
+    private static func analyzeVisualStats(cgImage: CGImage) -> VisualStats {
+        let samples = rgbPixels(cgImage: cgImage, width: 64, height: 64)
+        guard !samples.isEmpty else {
+            return VisualStats(
+                blueRatio: 0,
+                greenRatio: 0,
+                warmRatio: 0,
+                skinToneRatio: 0,
+                darkRatio: 0,
+                whiteRatio: 0,
+                saturationAverage: 0
+            )
+        }
+
+        var blue = 0
+        var green = 0
+        var warm = 0
+        var skin = 0
+        var dark = 0
+        var white = 0
+        var saturationTotal = 0.0
+
+        for sample in samples {
+            let r = Double(sample.r) / 255
+            let g = Double(sample.g) / 255
+            let b = Double(sample.b) / 255
+            let maxValue = max(r, g, b)
+            let minValue = min(r, g, b)
+            let saturation = maxValue == 0 ? 0 : (maxValue - minValue) / maxValue
+            saturationTotal += saturation
+
+            if b > 0.42 && b > r * 1.08 && b > g * 0.88 { blue += 1 }
+            if g > 0.28 && g > r * 0.86 && g > b * 0.86 { green += 1 }
+            if r > 0.55 && g > 0.22 && r > b * 1.18 && saturation > 0.22 { warm += 1 }
+            if r > 0.42 && g > 0.24 && b > 0.16 && r > g && g >= b && (r - g) > 0.06 && saturation > 0.18 && maxValue < 0.94 {
+                skin += 1
+            }
+            if maxValue < 0.22 { dark += 1 }
+            if minValue > 0.82 && saturation < 0.18 { white += 1 }
+        }
+
+        let total = Double(samples.count)
+        return VisualStats(
+            blueRatio: Double(blue) / total,
+            greenRatio: Double(green) / total,
+            warmRatio: Double(warm) / total,
+            skinToneRatio: Double(skin) / total,
+            darkRatio: Double(dark) / total,
+            whiteRatio: Double(white) / total,
+            saturationAverage: saturationTotal / total
+        )
+    }
+
+    private static func pickCategory(record: VaultMediaRecord, labels: [String], tags: Set<String>, stats: VisualStats) -> String {
         let joined = labels.joined(separator: " ")
         if tags.contains(VaultAITag.screenshot) { return VaultAICategory.screenshots }
+        if tags.contains(VaultAITag.idCard) || tags.contains(VaultAITag.bankCard) || tags.contains(VaultAITag.barcode) {
+            return VaultAICategory.documents
+        }
         if tags.contains(VaultAITag.face) || joined.contains("person") || joined.contains("people") || joined.contains("portrait") {
             return VaultAICategory.people
         }
@@ -353,6 +512,15 @@ enum VaultAIAnalyzer {
         }
         if joined.contains("landscape") || joined.contains("sky") || joined.contains("mountain") || joined.contains("water") || joined.contains("plant") {
             return VaultAICategory.nature
+        }
+        if stats.skinToneRatio > 0.08 && stats.darkRatio > 0.14 && stats.warmRatio < 0.42 {
+            return VaultAICategory.people
+        }
+        if stats.greenRatio > 0.22 && stats.blueRatio > 0.12 {
+            return VaultAICategory.nature
+        }
+        if stats.warmRatio > 0.30 && stats.saturationAverage > 0.22 && stats.whiteRatio < 0.42 {
+            return VaultAICategory.food
         }
         return VaultAICategory.other
     }
@@ -375,7 +543,9 @@ enum VaultAIAnalyzer {
     }
 
     private static func containsBankCardText(_ text: String) -> Bool {
-        matches(text, pattern: #"\b(?:\d[ -]?){13,19}\b"#)
+        let digitCount = text.filter(\.isNumber).count
+        return matches(text, pattern: #"\b(?:\d[ -]?){13,19}\b"#)
+            || (digitCount >= 13 && digitCount <= 19 && text.localizedCaseInsensitiveContains("card"))
             || text.localizedCaseInsensitiveContains("bank")
             || text.localizedCaseInsensitiveContains("银行卡")
     }
@@ -383,6 +553,13 @@ enum VaultAIAnalyzer {
     private static func containsContactText(_ text: String) -> Bool {
         matches(text, pattern: #"\b1[3-9]\d{9}\b"#)
             || matches(text, pattern: #"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}"#, options: [.caseInsensitive])
+    }
+
+    private static func containsBarcodeText(_ text: String) -> Bool {
+        text.localizedCaseInsensitiveContains("qr")
+            || text.localizedCaseInsensitiveContains("barcode")
+            || text.localizedCaseInsensitiveContains("boarding pass")
+            || text.localizedCaseInsensitiveContains("code 39")
     }
 
     private static func matches(_ text: String, pattern: String, options: NSRegularExpression.Options = []) -> Bool {
@@ -408,6 +585,31 @@ enum VaultAIAnalyzer {
             return true
         }
         return ok ? pixels : nil
+    }
+
+    private static func rgbPixels(cgImage: CGImage, width: Int, height: Int) -> [(r: UInt8, g: UInt8, b: UInt8)] {
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let ok = pixels.withUnsafeMutableBytes { ptr -> Bool in
+            guard let context = CGContext(
+                data: ptr.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { return false }
+            context.interpolationQuality = .low
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard ok else { return [] }
+        var result: [(r: UInt8, g: UInt8, b: UInt8)] = []
+        result.reserveCapacity(width * height)
+        for index in stride(from: 0, to: pixels.count, by: 4) {
+            result.append((r: pixels[index], g: pixels[index + 1], b: pixels[index + 2]))
+        }
+        return result
     }
 
     private static func laplacianVariance(_ pixels: [UInt8], width: Int, height: Int) -> Double {
@@ -442,5 +644,17 @@ enum VaultAIAnalyzer {
             }
         }
         return hash
+    }
+
+    private static func rgbFingerprint(cgImage: CGImage) -> [UInt8] {
+        let samples = rgbPixels(cgImage: cgImage, width: 16, height: 16)
+        var result: [UInt8] = []
+        result.reserveCapacity(samples.count * 3)
+        for sample in samples {
+            result.append(sample.r)
+            result.append(sample.g)
+            result.append(sample.b)
+        }
+        return result
     }
 }
