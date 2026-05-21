@@ -152,7 +152,7 @@ struct VaultListScreenChrome<Content: View>: View {
             .accessibilityIdentifier("vault_list_back")
 
             Text(title)
-                .font(.system(size: 30, weight: .bold))
+                .font(LNTypography.titleMedium())
                 .foregroundStyle(LNColor.title)
                 .frame(maxWidth: .infinity)
                 .lineLimit(1)

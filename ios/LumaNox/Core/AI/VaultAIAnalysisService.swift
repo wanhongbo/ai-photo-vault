@@ -306,8 +306,13 @@ enum VaultAIAnalyzer {
 
     private struct VisionResult {
         let sensitiveScore: Double
-        let labels: [String]
+        let labels: [VisionLabel]
         let tags: [String]
+    }
+
+    private struct VisionLabel {
+        let identifier: String
+        let confidence: Double
     }
 
     private struct MetadataHints {
@@ -336,9 +341,9 @@ enum VaultAIAnalyzer {
             .compactMap { $0.topCandidates(1).first?.string }
             .joined(separator: " ")
         let labels = (classifyRequest.results ?? [])
-            .prefix(5)
-            .filter { $0.confidence >= 0.18 }
-            .map { $0.identifier.lowercased() }
+            .prefix(8)
+            .filter { $0.confidence >= 0.12 }
+            .map { VisionLabel(identifier: $0.identifier.lowercased(), confidence: Double($0.confidence)) }
 
         var tags = Set<String>()
         var score: Double = 0
@@ -423,20 +428,57 @@ enum VaultAIAnalyzer {
             sensitiveScore = max(sensitiveScore, 0.72)
             category = VaultAICategory.documents
         }
-        if name.contains("screenshot") || name.contains("screen_shot") || name.contains("截屏") || name.contains("截图") {
+        if name.contains("screenshot")
+            || name.contains("screen_shot")
+            || name.contains("screen shot")
+            || name.contains("截屏")
+            || name.contains("截图")
+            || name.contains("截圖") {
             tags.insert(VaultAITag.screenshot)
             category = VaultAICategory.screenshots
         }
-        if name.contains("portrait") || name.contains("selfie") || name.contains("face") || name.contains("people") {
+        if name.contains("portrait")
+            || name.contains("selfie")
+            || name.contains("face")
+            || name.contains("people")
+            || name.contains("person")
+            || name.contains("avatar")
+            || name.contains("人物")
+            || name.contains("人像") {
             tags.insert(VaultAITag.face)
             sensitiveScore = max(sensitiveScore, 0.66)
             category = VaultAICategory.people
         }
-        if name.contains("food") || name.contains("meal") || name.contains("dish") {
+        if name.contains("food")
+            || name.contains("meal")
+            || name.contains("dish")
+            || name.contains("drink")
+            || name.contains("restaurant")
+            || name.contains("美食")
+            || name.contains("餐") {
             category = VaultAICategory.food
         }
-        if name.contains("nature") || name.contains("landscape") || name.contains("mountain") {
+        if name.contains("nature")
+            || name.contains("landscape")
+            || name.contains("mountain")
+            || name.contains("forest")
+            || name.contains("beach")
+            || name.contains("sea")
+            || name.contains("自然")
+            || name.contains("风景")
+            || name.contains("風景") {
             category = VaultAICategory.nature
+        }
+        if name.contains("receipt")
+            || name.contains("invoice")
+            || name.contains("document")
+            || name.contains("paper")
+            || name.contains("scan")
+            || name.contains("合同")
+            || name.contains("票据")
+            || name.contains("发票") {
+            tags.insert(VaultAITag.text)
+            category = VaultAICategory.documents
         }
 
         return MetadataHints(sensitiveScore: sensitiveScore, category: category, tags: tags)
@@ -495,45 +537,140 @@ enum VaultAIAnalyzer {
         )
     }
 
-    private static func pickCategory(record: VaultMediaRecord, labels: [String], tags: Set<String>, stats: VisualStats) -> String {
-        let joined = labels.joined(separator: " ")
-        if tags.contains(VaultAITag.screenshot) { return VaultAICategory.screenshots }
+    private static func pickCategory(record: VaultMediaRecord, labels: [VisionLabel], tags: Set<String>, stats: VisualStats) -> String {
         if tags.contains(VaultAITag.idCard) || tags.contains(VaultAITag.bankCard) || tags.contains(VaultAITag.barcode) {
             return VaultAICategory.documents
         }
-        if tags.contains(VaultAITag.face) || joined.contains("person") || joined.contains("people") || joined.contains("portrait") {
-            return VaultAICategory.people
+        if tags.contains(VaultAITag.screenshot) {
+            return VaultAICategory.screenshots
         }
-        if tags.contains(VaultAITag.text) || joined.contains("document") || joined.contains("paper") || joined.contains("receipt") {
-            return VaultAICategory.documents
+
+        var scores = [
+            VaultAICategory.people: 0.0,
+            VaultAICategory.documents: 0.0,
+            VaultAICategory.food: 0.0,
+            VaultAICategory.nature: 0.0,
+            VaultAICategory.screenshots: 0.0,
+        ]
+
+        for label in labels {
+            addLabelEvidence(label, to: &scores)
         }
-        if joined.contains("food") || joined.contains("dish") || joined.contains("meal") || joined.contains("drink") {
-            return VaultAICategory.food
+
+        if tags.contains(VaultAITag.face) {
+            scores[VaultAICategory.people, default: 0] += 1.15
         }
-        if joined.contains("landscape") || joined.contains("sky") || joined.contains("mountain") || joined.contains("water") || joined.contains("plant") {
-            return VaultAICategory.nature
+        if tags.contains(VaultAITag.text) {
+            scores[VaultAICategory.documents, default: 0] += 0.45
         }
+
         if stats.skinToneRatio > 0.08 && stats.darkRatio > 0.14 && stats.warmRatio < 0.42 {
-            return VaultAICategory.people
+            scores[VaultAICategory.people, default: 0] += 0.75
+        } else if stats.skinToneRatio > 0.05 && stats.darkRatio > 0.08 {
+            scores[VaultAICategory.people, default: 0] += 0.35
         }
         if stats.greenRatio > 0.22 && stats.blueRatio > 0.12 {
-            return VaultAICategory.nature
+            scores[VaultAICategory.nature, default: 0] += 0.8
+        } else if stats.greenRatio > 0.28 || stats.blueRatio > 0.26 {
+            scores[VaultAICategory.nature, default: 0] += 0.45
         }
         if stats.warmRatio > 0.30 && stats.saturationAverage > 0.22 && stats.whiteRatio < 0.42 {
-            return VaultAICategory.food
+            scores[VaultAICategory.food, default: 0] += 0.8
+        } else if stats.warmRatio > 0.24 && stats.saturationAverage > 0.30 {
+            scores[VaultAICategory.food, default: 0] += 0.45
         }
-        return VaultAICategory.other
+
+        let ranked = scores
+            .filter { $0.value > 0 }
+            .sorted { left, right in
+                if left.value == right.value { return categoryPriority(left.key) < categoryPriority(right.key) }
+                return left.value > right.value
+            }
+        guard let best = ranked.first else { return VaultAICategory.other }
+        let runnerUp = ranked.dropFirst().first?.value ?? 0
+        if best.value < 0.65 { return VaultAICategory.other }
+        if best.value < 1.4 && best.value - runnerUp < 0.20 { return VaultAICategory.other }
+        return best.key
     }
 
     private static func isLikelyScreenshot(record: VaultMediaRecord, image: UIImage, visionTags: Set<String>) -> Bool {
         if isLikelyScreenshotName(record) { return true }
-        let scale = max(image.size.width, image.size.height) / max(1, min(image.size.width, image.size.height))
-        return visionTags.contains(VaultAITag.text) && scale > 1.7
+        return visionTags.contains(VaultAITag.text) && isScreenLikeAspect(record: record, image: image)
     }
 
     private static func isLikelyScreenshotName(_ record: VaultMediaRecord) -> Bool {
         let name = (record.originalFileName ?? record.fileName).lowercased()
-        return name.contains("screenshot") || name.contains("screen_shot") || name.contains("截屏") || name.contains("截图")
+        return name.contains("screenshot")
+            || name.contains("screen_shot")
+            || name.contains("screen shot")
+            || name.contains("截屏")
+            || name.contains("截图")
+            || name.contains("截圖")
+    }
+
+    private static func isScreenLikeAspect(record: VaultMediaRecord, image: UIImage) -> Bool {
+        let pixelWidth = Double(record.width ?? Int(image.size.width * image.scale))
+        let pixelHeight = Double(record.height ?? Int(image.size.height * image.scale))
+        let longEdge = max(pixelWidth, pixelHeight)
+        let shortEdge = max(1, min(pixelWidth, pixelHeight))
+        let ratio = longEdge / shortEdge
+        guard longEdge >= 1100, shortEdge >= 640 else { return false }
+        return (1.72...2.35).contains(ratio)
+    }
+
+    private static func addLabelEvidence(_ label: VisionLabel, to scores: inout [String: Double]) {
+        let tokens = tokens(in: label.identifier)
+        let phrase = " \(label.identifier.replacingOccurrences(of: "_", with: " ")) "
+        let confidence = label.confidence
+
+        if containsAny(tokens, [
+            "person", "people", "portrait", "selfie", "face", "smile", "skin",
+            "man", "woman", "boy", "girl", "child", "baby", "hair"
+        ]) {
+            scores[VaultAICategory.people, default: 0] += confidence * 1.2
+        }
+        if containsAny(tokens, [
+            "food", "dish", "meal", "cuisine", "fruit", "dessert", "drink",
+            "beverage", "cake", "bread", "meat", "vegetable", "coffee", "tea",
+            "restaurant", "pizza", "noodle", "sushi", "salad"
+        ]) {
+            scores[VaultAICategory.food, default: 0] += confidence * 1.25
+        }
+        if containsAny(tokens, [
+            "landscape", "sky", "cloud", "mountain", "tree", "beach", "sea",
+            "ocean", "sunset", "sunrise", "plant", "flower", "forest", "river",
+            "lake", "snow", "water", "grass", "nature", "outdoor"
+        ]) || phrase.contains(" natural landscape ") {
+            scores[VaultAICategory.nature, default: 0] += confidence * 1.15
+        }
+        if containsAny(tokens, [
+            "document", "paper", "text", "receipt", "book", "newspaper", "menu",
+            "letter", "invoice", "form", "card", "handwriting", "note", "whiteboard"
+        ]) || phrase.contains(" business card ") {
+            scores[VaultAICategory.documents, default: 0] += confidence * 1.1
+        }
+        if containsAny(tokens, ["screenshot", "screen", "display", "website", "webpage"]) {
+            scores[VaultAICategory.screenshots, default: 0] += confidence * 1.4
+        }
+    }
+
+    private static func categoryPriority(_ category: String) -> Int {
+        switch category {
+        case VaultAICategory.documents: return 0
+        case VaultAICategory.screenshots: return 1
+        case VaultAICategory.people: return 2
+        case VaultAICategory.food: return 3
+        case VaultAICategory.nature: return 4
+        default: return 5
+        }
+    }
+
+    private static func containsAny(_ tokens: Set<String>, _ candidates: Set<String>) -> Bool {
+        !tokens.isDisjoint(with: candidates)
+    }
+
+    private static func tokens(in text: String) -> Set<String> {
+        Set(text.lowercased().split { !$0.isLetter }.map(String.init).filter { !$0.isEmpty })
     }
 
     private static func containsIDCardText(_ text: String) -> Bool {

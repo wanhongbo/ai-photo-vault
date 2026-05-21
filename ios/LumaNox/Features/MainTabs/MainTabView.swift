@@ -61,6 +61,9 @@ struct MainTabView: View {
 
     /// 首启软墙：进入主页 5s 后展示可关闭 Paywall（对齐 Android MainActivity）。
     private func scheduleOnboardingPaywallIfNeeded() {
+        #if DEBUG
+        return
+        #endif
         guard BillingBootstrap.isConfigured else { return }
         guard OnboardingPaywallManager.shouldShow else { return }
         Task {
