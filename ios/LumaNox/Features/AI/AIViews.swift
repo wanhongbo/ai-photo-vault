@@ -307,9 +307,39 @@ struct AICleanupView: View {
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
     @State private var showConfirm = false
     @State private var isCleaning = false
+    @State private var keepRecordIDs: [String: String] = [:]
 
-    private var cleanableRecords: [VaultMediaRecord] {
-        aiService.records.filter { VaultAIAnalysisService.isCleanable($0) }
+    private var duplicateGroups: [AIDuplicateGroup] {
+        Dictionary(grouping: aiService.records.filter { $0.ai.duplicateGroupId != nil }) { $0.ai.duplicateGroupId ?? "" }
+            .compactMap { groupID, records in
+                let sorted = records.sorted { lhs, rhs in
+                    if lhs.modifiedAtMs == rhs.modifiedAtMs { return lhs.id < rhs.id }
+                    return lhs.modifiedAtMs > rhs.modifiedAtMs
+                }
+                guard sorted.count > 1 else { return nil }
+                return AIDuplicateGroup(id: groupID, records: sorted)
+            }
+            .sorted { $0.records.count > $1.records.count }
+    }
+
+    private var qualityRecords: [VaultMediaRecord] {
+        aiService.records.filter { record in
+            guard record.ai.duplicateGroupId == nil else { return false }
+            return VaultAIAnalysisService.isCleanable(record)
+        }
+    }
+
+    private var cleanupTargets: [VaultMediaRecord] {
+        var targets = qualityRecords
+        for group in duplicateGroups {
+            let keepID = keepRecordIDs[group.id] ?? group.defaultKeepRecordID
+            targets.append(contentsOf: group.records.filter { $0.id != keepID })
+        }
+        return targets
+    }
+
+    private var hasCleanupCandidates: Bool {
+        !duplicateGroups.isEmpty || !qualityRecords.isEmpty
     }
 
     var body: some View {
@@ -320,17 +350,17 @@ struct AICleanupView: View {
                 AIActionHeaderCard(
                     icon: "rectangle.on.rectangle",
                     tint: LNColor.cleanupOrange,
-                    title: L10n.tr("ai_cleanup_detected_count", cleanableRecords.count),
+                    title: L10n.tr("ai_cleanup_detected_count", cleanupTargets.count),
                     message: L10n.tr("ai_cleanup_live_desc"),
                     primaryTitle: aiService.progress.running ? L10n.commonLoading : L10n.tr("ai_cleanup_scan_now"),
                     primaryLoading: aiService.progress.running,
-                    secondaryTitle: cleanableRecords.isEmpty ? nil : L10n.tr("ai_cleanup_confirm_clean"),
+                    secondaryTitle: cleanupTargets.isEmpty ? nil : L10n.tr("ai_cleanup_confirm_clean"),
                     primaryAction: { Task { await aiService.scanVault() } },
                     secondaryAction: { showConfirm = true }
                 )
                 .frame(width: cardWidth)
 
-                if cleanableRecords.isEmpty {
+                if !hasCleanupCandidates {
                     AIEmptyActionView(
                         systemImage: "checkmark.shield",
                         title: L10n.tr("ai_cleanup_empty"),
@@ -338,12 +368,30 @@ struct AICleanupView: View {
                     )
                     .frame(width: cardWidth)
                 } else {
-                    VaultMediaGridCard(
-                        items: cleanableRecords.map(mediaItem),
-                        width: cardWidth,
-                        onSelect: open
-                    )
-                    .accessibilityIdentifier("ai_cleanup_candidates_grid")
+                    ForEach(duplicateGroups) { group in
+                        AIDuplicateGroupCard(
+                            group: group,
+                            keepRecordID: keepRecordIDs[group.id] ?? group.defaultKeepRecordID,
+                            width: cardWidth,
+                            onKeepChanged: { keepRecordIDs[group.id] = $0 },
+                            onOpen: open
+                        )
+                    }
+
+                    if !qualityRecords.isEmpty {
+                        AISectionHeader(
+                            title: L10n.tr("ai_cleanup_quality_section"),
+                            value: L10n.tr("ai_classify_items_fmt", qualityRecords.count)
+                        )
+                        .frame(width: cardWidth)
+
+                        VaultMediaGridCard(
+                            items: qualityRecords.map(mediaItem),
+                            width: cardWidth,
+                            onSelect: open
+                        )
+                        .accessibilityIdentifier("ai_cleanup_candidates_grid")
+                    }
                 }
             }
             .padding(.horizontal, LNSpacing.screenHorizontal)
@@ -355,7 +403,7 @@ struct AICleanupView: View {
             if showConfirm {
                 LNDialog(
                     title: L10n.aiCleanupTitle,
-                    message: L10n.tr("ai_cleanup_confirm_message", cleanableRecords.count),
+                    message: L10n.tr("ai_cleanup_confirm_message", cleanupTargets.count),
                     confirmTitle: L10n.tr("ai_cleanup_confirm_clean"),
                     dismissTitle: L10n.commonCancel,
                     confirmVariant: .danger,
@@ -381,7 +429,7 @@ struct AICleanupView: View {
     private func cleanupCandidates() async {
         guard !isCleaning else { return }
         isCleaning = true
-        for item in cleanableRecords.map(mediaItem) {
+        for item in cleanupTargets.map(mediaItem) {
             _ = await VaultStore.shared.moveToTrash(path: item.path)
         }
         aiService.refreshSummary()
@@ -418,14 +466,21 @@ struct AISensitiveReviewView: View {
                     )
                     .frame(width: cardWidth)
                 } else {
-                    VaultMediaGridCard(
-                        items: sensitiveRecords.map(mediaItem),
-                        width: cardWidth,
-                        onSelect: { item in
-                            router.pushAI(.privacyRedact(path: item.path))
+                    VStack(spacing: 10) {
+                        ForEach(sensitiveRecords) { record in
+                            AISensitiveCandidateCard(
+                                record: record,
+                                width: cardWidth,
+                                onRedact: {
+                                    router.pushAI(.privacyRedact(path: mediaItem(record).path))
+                                },
+                                onIgnore: {
+                                    aiService.ignoreSensitiveCandidate(recordID: record.id)
+                                }
+                            )
                         }
-                    )
-                    .accessibilityIdentifier("ai_sensitive_candidates_grid")
+                    }
+                    .accessibilityIdentifier("ai_sensitive_candidates_list")
                 }
             }
             .padding(.horizontal, LNSpacing.screenHorizontal)
@@ -544,10 +599,21 @@ struct AIClassifyDetailView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
+    @State private var selectedTag = AIClassifyTagFilter.all
     let category: String
 
     private var categoryRecords: [VaultMediaRecord] {
         aiService.records.filter { $0.ai.category == category }
+    }
+
+    private var availableTags: [String] {
+        let tags = Set(categoryRecords.flatMap(\.ai.tags))
+        return [AIClassifyTagFilter.all] + tags.sorted { localizedAITag($0) < localizedAITag($1) }
+    }
+
+    private var filteredRecords: [VaultMediaRecord] {
+        guard selectedTag != AIClassifyTagFilter.all else { return categoryRecords }
+        return categoryRecords.filter { $0.ai.tags.contains(selectedTag) }
     }
 
     var body: some View {
@@ -566,11 +632,30 @@ struct AIClassifyDetailView: View {
                 .padding(.top, 22)
                 .padding(.bottom, 28)
             } else {
-                VaultMediaGridCard(
-                    items: categoryRecords.map(mediaItem),
-                    width: cardWidth,
-                    onSelect: open
-                )
+                VStack(alignment: .leading, spacing: 14) {
+                    AIClassifyTagFilterBar(
+                        tags: availableTags,
+                        selectedTag: selectedTag,
+                        records: categoryRecords,
+                        onSelect: { selectedTag = $0 }
+                    )
+                    .frame(width: cardWidth)
+
+                    if filteredRecords.isEmpty {
+                        AIEmptyActionView(
+                            systemImage: "tag",
+                            title: L10n.tr("ai_classify_detail_filter_empty"),
+                            message: L10n.tr("ai_classify_detail_filter_empty_desc")
+                        )
+                        .frame(width: cardWidth)
+                    } else {
+                        VaultMediaGridCard(
+                            items: filteredRecords.map(mediaItem),
+                            width: cardWidth,
+                            onSelect: open
+                        )
+                    }
+                }
                 .padding(.horizontal, LNSpacing.screenHorizontal)
                 .padding(.top, 22)
                 .padding(.bottom, 28)
@@ -722,7 +807,7 @@ struct PrivacyRedactView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: toastMessage)
         .task(id: activePath) {
-            await aiService.refreshSummary()
+            aiService.refreshSummary()
             await reloadDetectedRegions(for: activePath)
         }
         .onChange(of: selectedStyle) { applySelectedStyleToRegions($0) }
@@ -1614,6 +1699,224 @@ private struct AIEmptyActionView: View {
     }
 }
 
+private struct AIDuplicateGroup: Identifiable {
+    let id: String
+    let records: [VaultMediaRecord]
+
+    var defaultKeepRecordID: String {
+        records.first?.id ?? ""
+    }
+}
+
+private struct AIDuplicateGroupCard: View {
+    let group: AIDuplicateGroup
+    let keepRecordID: String
+    let width: CGFloat
+    let onKeepChanged: (String) -> Void
+    let onOpen: (LNMediaItem) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.tr("ai_cleanup_duplicate_group_title"))
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(LNColor.title)
+                    Text(L10n.tr("ai_cleanup_duplicate_group_subtitle", group.records.count))
+                        .font(LNTypography.labelMedium())
+                        .foregroundStyle(LNColor.subtitle)
+                }
+                Spacer()
+                Text(L10n.tr("ai_cleanup_keep_selected"))
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(LNColor.success)
+                    .padding(.horizontal, 9)
+                    .frame(height: 28)
+                    .background(LNColor.success.opacity(0.14))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(group.records) { record in
+                        AIDuplicateThumbnail(
+                            record: record,
+                            isKept: record.id == keepRecordID,
+                            onKeep: { onKeepChanged(record.id) },
+                            onOpen: { onOpen(mediaItem(record)) }
+                        )
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .frame(width: width, alignment: .leading)
+        .background(LNColor.sectionBg)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(hex: 0x314765), lineWidth: 1))
+        .accessibilityIdentifier("ai_cleanup_duplicate_group")
+    }
+}
+
+private struct AIDuplicateThumbnail: View {
+    let record: VaultMediaRecord
+    let isKept: Bool
+    let onKeep: () -> Void
+    let onOpen: () -> Void
+
+    var body: some View {
+        VStack(spacing: 7) {
+            Button(action: onOpen) {
+                VaultMediaThumbnailView(
+                    encryptedPath: mediaItem(record).path,
+                    isVideo: record.isVideo,
+                    contentMode: .fill,
+                    targetPixelSize: 220
+                )
+                .frame(width: 78, height: 78)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(isKept ? LNColor.success : LNColor.stroke, lineWidth: isKept ? 2 : 1))
+                .overlay(alignment: .topTrailing) {
+                    if isKept {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color(hex: 0x03140C))
+                            .frame(width: 22, height: 22)
+                            .background(LNColor.success)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .padding(6)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+
+            Button(action: onKeep) {
+                Text(isKept ? L10n.tr("ai_cleanup_keep_selected_short") : L10n.tr("ai_cleanup_keep_action"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(isKept ? LNColor.success : Color(hex: 0xB7C6DD))
+                    .frame(width: 78, height: 28)
+                    .background(isKept ? LNColor.success.opacity(0.14) : Color(hex: 0x122033))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(isKept ? LNColor.success : LNColor.stroke, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+private struct AISensitiveCandidateCard: View {
+    let record: VaultMediaRecord
+    let width: CGFloat
+    let onRedact: () -> Void
+    let onIgnore: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: onRedact) {
+                VaultMediaThumbnailView(
+                    encryptedPath: mediaItem(record).path,
+                    isVideo: record.isVideo,
+                    contentMode: .fill,
+                    targetPixelSize: 240
+                )
+                .frame(width: 74, height: 74)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(spacing: 8) {
+                    Text(sensitiveRiskLabel(record))
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(sensitiveRiskColor(record))
+                    Text(sensitiveHitSummary(record))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0xB7C6DD))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                }
+
+                Text(mediaItem(record).fileName)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(LNColor.title)
+                    .lineLimit(1)
+
+                HStack(spacing: 8) {
+                    Button(action: onRedact) {
+                        Text(L10n.tr("ai_sensitive_redact_action"))
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(height: 32)
+                            .padding(.horizontal, 12)
+                            .background(LNColor.brandBlue)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: onIgnore) {
+                        Text(L10n.tr("ai_sensitive_ignore_action"))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color(hex: 0xB7C6DD))
+                            .frame(height: 32)
+                            .padding(.horizontal, 12)
+                            .background(Color(hex: 0x122033))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(width: width, alignment: .leading)
+        .background(LNColor.sectionBg)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(hex: 0x314765), lineWidth: 1))
+    }
+}
+
+private enum AIClassifyTagFilter {
+    static let all = "__all__"
+}
+
+private struct AIClassifyTagFilterBar: View {
+    let tags: [String]
+    let selectedTag: String
+    let records: [VaultMediaRecord]
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(tags, id: \.self) { tag in
+                    Button { onSelect(tag) } label: {
+                        Text(label(for: tag))
+                            .font(.system(size: 12, weight: selectedTag == tag ? .bold : .semibold))
+                            .foregroundStyle(selectedTag == tag ? Color.white : Color(hex: 0xB7C6DD))
+                            .padding(.horizontal, 13)
+                            .frame(height: 36)
+                            .background(selectedTag == tag ? LNColor.brandBlue : Color(hex: 0x122033))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(selectedTag == tag ? LNColor.brandBlue : LNColor.stroke, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .accessibilityIdentifier("ai_classify_tag_filter")
+    }
+
+    private func label(for tag: String) -> String {
+        if tag == AIClassifyTagFilter.all {
+            return L10n.tr("ai_classify_filter_all", records.count)
+        }
+        let count = records.filter { $0.ai.tags.contains(tag) }.count
+        return L10n.tr("ai_classify_filter_tag_fmt", localizedAITag(tag), count)
+    }
+}
+
 private struct AISectionHeader: View {
     let title: String
     let value: String
@@ -1666,6 +1969,46 @@ private func mediaItem(_ record: VaultMediaRecord) -> LNMediaItem {
 private func localizedCategory(_ category: String) -> String {
     let localized = L10n.tr(VaultAIAnalysisService.categoryLabelKey(category))
     return localized == VaultAIAnalysisService.categoryLabelKey(category) ? L10n.tr("ai_category_other") : localized
+}
+
+private func localizedAITag(_ tag: String) -> String {
+    let key = "ai_tag_\(tag)"
+    let localized = L10n.tr(key)
+    return localized == key ? tag.replacingOccurrences(of: "_", with: " ") : localized
+}
+
+private func sensitiveHitSummary(_ record: VaultMediaRecord) -> String {
+    let tags = sensitiveHitTags(record)
+    guard !tags.isEmpty else { return L10n.tr("ai_sensitive_hit_unknown") }
+    return tags.map(localizedAITag).joined(separator: " · ")
+}
+
+private func sensitiveHitTags(_ record: VaultMediaRecord) -> [String] {
+    let priority = [
+        VaultAITag.idCard,
+        VaultAITag.bankCard,
+        VaultAITag.barcode,
+        VaultAITag.face,
+        VaultAITag.contact,
+        VaultAITag.text,
+        VaultAITag.screenshot,
+    ]
+    let tags = Set(record.ai.tags)
+    return priority.filter { tags.contains($0) }
+}
+
+private func sensitiveRiskLabel(_ record: VaultMediaRecord) -> String {
+    let score = record.ai.sensitiveScore ?? 0
+    if score >= 0.78 { return L10n.tr("ai_sensitive_risk_high") }
+    if score >= 0.58 { return L10n.tr("ai_sensitive_risk_medium") }
+    return L10n.tr("ai_sensitive_risk_low")
+}
+
+private func sensitiveRiskColor(_ record: VaultMediaRecord) -> Color {
+    let score = record.ai.sensitiveScore ?? 0
+    if score >= 0.78 { return LNColor.error }
+    if score >= 0.58 { return LNColor.amberWarning }
+    return LNColor.brandBlue
 }
 
 private func styleTitle(_ style: PrivacyRedactionStyle) -> String {
