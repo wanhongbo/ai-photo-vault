@@ -27,7 +27,7 @@ LumaNox 是一个隐私优先、完全离线的照片与视频保险箱。核心
 
 - SwiftUI 工程，入口：`ios/LumaNox/App/LumaNoxApp.swift`。
 - 路由定义：`ios/LumaNox/Core/Navigation/AppRoute.swift`，路由渲染：`RouteDestinationView.swift`。
-- 设计系统：`LNColor`、`LNTokens`、`LNButton`、`LNNavigationBar`、`LNDialog`、`LNMediaGrid`。
+- 设计系统：`LNColor`、`LNTokens`、`LNButton`、`LNNavigationBar`、`LNDialog`、`VaultMediaGridCard`。
 - 本地化：`ios/LumaNox/Resources/*.lproj/Localizable.strings` + `L10n`。
 - Vault 真实数据层：`VaultStore` + `VaultMetadataStore`，索引位于 `Application Support/LumaNox/vault_metadata_v1.json`。
 - 真实媒体缩略图：`VaultMediaThumbnailView` 会解密图片/视频并生成缩略图。
@@ -122,7 +122,7 @@ flowchart TD
 
 技术方案：
 
-- 列表统一使用 `LNMediaGrid`，输入类型为 `LNMediaItem`。
+- 列表统一使用标准媒体 Grid：`VaultMediaGridCard` + `VaultMediaThumbnailView`，输入类型为 `LNMediaItem`。
 - 查看器打开时按当前列表顺序建立 path 列表，支持删除后自动跳到下一项。
 - 图片查看直接解密为 `UIImage`；视频先解密到 cache，再交给 `AVPlayer`。
 - 删除进入回收站应保留 albumName、trashedAtMs；恢复应回到原相册。

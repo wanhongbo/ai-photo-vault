@@ -42,7 +42,7 @@
    - 将 Pen 的分组映射为 SwiftUI 子 View。
    - 将 Pen 的 token 映射到 `LNColor`、`LNSpacing`、`LNRadius`、`LNTypography`。
    - 所有文本进入 `Localizable.strings`。
-   - 媒体网格使用 `LNMediaGrid` / `VaultMediaThumbnailView`，不要回退到装饰缩略图。
+   - 媒体网格使用标准 `VaultMediaGridCard` / `VaultMediaThumbnailView`，不要回退到装饰缩略图。
 
 4. 验证
    - 运行 `xcodegen generate`。
