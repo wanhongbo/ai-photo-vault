@@ -231,7 +231,15 @@ struct ExportProgressView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
 
-    @State private var progress = MediaExportProgress(completed: 0, total: 1, currentFileName: nil)
+    @State private var progress = LongRunningTaskProgress(
+        phase: .exporting,
+        current: 0,
+        total: 1,
+        currentFileName: nil,
+        bytesWritten: 0,
+        totalBytes: 0,
+        cancellable: true
+    )
     @State private var showCancel = false
     @State private var exportTask: Task<Void, Never>?
     @State private var didCancel = false
@@ -240,6 +248,12 @@ struct ExportProgressView: View {
         LNScreenScaffold(title: L10n.tr("export_progress_title"), onBack: { showCancel = true }) {
             VStack(spacing: 16) {
                 LNProgressCard(title: progressTitle, progress: progress.fraction)
+
+                Text(L10n.tr(progress.phase.localizationKey))
+                    .font(LNTypography.bodyMedium())
+                    .foregroundStyle(LNColor.subtitle)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lnCard()
 
                 if let currentFileName = progress.currentFileName {
                     Text(L10n.tr("export_progress_current", currentFileName))
@@ -276,13 +290,21 @@ struct ExportProgressView: View {
     }
 
     private var progressTitle: String {
-        L10n.tr("export_progress_count", progress.completed, progress.total)
+        L10n.tr("export_progress_count", progress.current, progress.total)
     }
 
     private func startExport() {
         guard exportTask == nil else { return }
         let records = ExportRuntimeState.pendingRecords
-        progress = MediaExportProgress(completed: 0, total: max(records.count, 1), currentFileName: nil)
+        progress = LongRunningTaskProgress(
+            phase: .exporting,
+            current: 0,
+            total: max(records.count, 1),
+            currentFileName: nil,
+            bytesWritten: 0,
+            totalBytes: records.reduce(Int64(0)) { $0 + max(0, $1.encryptedSizeBytes) },
+            cancellable: true
+        )
         exportTask = Task {
             let result = await MediaExportService.shared.export(records: records) { next in
                 progress = next

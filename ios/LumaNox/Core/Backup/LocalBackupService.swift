@@ -92,7 +92,7 @@ final class LocalBackupService: @unchecked Sendable {
             lock.unlock()
         }
 
-        let work = Task.detached(priority: .utility) { [self] in
+        let work: Task<BackupExecutionResult, Never> = Task.detached(priority: .utility) { [self] in
             do {
                 publishProgress(.initial(phase: .preparing), to: progress)
                 try Task.checkCancellation()
@@ -222,7 +222,7 @@ final class LocalBackupService: @unchecked Sendable {
             lock.unlock()
         }
 
-        let work = Task.detached(priority: .userInitiated) { [self] in
+        let work: Task<BackupExecutionResult, Never> = Task.detached(priority: .userInitiated) { [self] in
             do {
                 publishProgress(.initial(phase: .preparing), to: progress)
                 try Task.checkCancellation()
@@ -351,7 +351,7 @@ final class LocalBackupService: @unchecked Sendable {
             lock.unlock()
         }
 
-        let work = Task.detached(priority: .userInitiated) { [self] in
+        let work: Task<RestoreExecutionResult, Never> = Task.detached(priority: .userInitiated) { [self] in
             do {
                 publishProgress(.initial(phase: .verifying), to: progress)
                 try Task.checkCancellation()
@@ -565,8 +565,13 @@ final class LocalBackupService: @unchecked Sendable {
             if name == ".vault_encrypted_v1" || name.contains(".enc_tmp_") { continue }
             let values = try file.resourceValues(forKeys: [.isRegularFileKey])
             guard values.isRegularFile == true else { continue }
-            if let asset = try? buildAsset(vaultRoot: vaultRoot, file: file) {
+            do {
+                let asset = try buildAsset(vaultRoot: vaultRoot, file: file)
                 assets.append(asset)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                continue
             }
         }
         return assets

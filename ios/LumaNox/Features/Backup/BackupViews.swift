@@ -142,6 +142,7 @@ struct BackupProgressView: View {
     @Environment(\.dismiss) private var dismiss
     let outputUri: String
     @StateObject private var viewModel: BackupProgressViewModel
+    @State private var showCancel = false
 
     init(outputUri: String) {
         self.outputUri = outputUri
@@ -150,23 +151,46 @@ struct BackupProgressView: View {
     }
 
     var body: some View {
-        LNScreenScaffold(title: L10n.tr("backup_progress_title"), onBack: { dismiss() }) {
-            LNProgressCard(title: outputUri, progress: viewModel.progress)
-            Text(viewModel.statusText)
-                .font(LNTypography.bodyMedium())
-                .foregroundStyle(LNColor.subtitle)
+        LNScreenScaffold(title: L10n.tr("backup_progress_title"), onBack: backOrConfirmCancel) {
+            LongTaskProgressContent(progress: viewModel.progress)
+            LNButton(
+                title: L10n.commonCancel,
+                variant: .secondary,
+                enabled: viewModel.progress.cancellable && !viewModel.finished && !viewModel.failed
+            ) {
+                showCancel = true
+            }
         }
-        .task {
+        .onAppear {
             guard router.guardProFeature(.backupCreate) else {
                 dismiss()
                 return
             }
-            await viewModel.start()
-            if viewModel.finished {
+            viewModel.start {
                 router.pushSettings(.backupResult)
             }
         }
+        .onDisappear {
+            if !viewModel.finished && !viewModel.failed {
+                viewModel.cancel()
+            }
+        }
         .overlay {
+            if showCancel {
+                LNDialog(
+                    title: L10n.tr("backup_cancel_title"),
+                    message: L10n.tr("backup_cancel_message"),
+                    confirmTitle: L10n.tr("backup_cancel_confirm"),
+                    dismissTitle: L10n.tr("backup_cancel_continue"),
+                    confirmVariant: .danger,
+                    onConfirm: {
+                        showCancel = false
+                        viewModel.cancel()
+                        dismiss()
+                    },
+                    onDismiss: { showCancel = false }
+                )
+            }
             if viewModel.failed, let msg = viewModel.errorMessage {
                 LNDialog(
                     title: L10n.tr("settings_pin_error_title"),
@@ -175,6 +199,14 @@ struct BackupProgressView: View {
                     onConfirm: { dismiss() }
                 )
             }
+        }
+    }
+
+    private func backOrConfirmCancel() {
+        if viewModel.progress.cancellable && !viewModel.finished && !viewModel.failed {
+            showCancel = true
+        } else {
+            dismiss()
         }
     }
 }
@@ -203,6 +235,7 @@ struct RestoreProgressView: View {
     let inputUri: String
     let pin: String
     @StateObject private var viewModel: RestoreProgressViewModel
+    @State private var showCancel = false
 
     init(inputUri: String, pin: String = "") {
         self.inputUri = inputUri
@@ -214,16 +247,42 @@ struct RestoreProgressView: View {
     }
 
     var body: some View {
-        LNScreenScaffold(title: L10n.tr("restore_progress_title"), onBack: { dismiss() }) {
-            LNProgressCard(title: inputUri, progress: viewModel.progress)
+        LNScreenScaffold(title: L10n.tr("restore_progress_title"), onBack: backOrConfirmCancel) {
+            LongTaskProgressContent(progress: viewModel.progress)
+            LNButton(
+                title: L10n.commonCancel,
+                variant: .secondary,
+                enabled: viewModel.progress.cancellable && !viewModel.finished && !viewModel.failed
+            ) {
+                showCancel = true
+            }
         }
-        .task {
-            await viewModel.start()
-            if viewModel.finished {
+        .onAppear {
+            viewModel.start {
                 router.pushSettings(.restoreResult)
             }
         }
+        .onDisappear {
+            if !viewModel.finished && !viewModel.failed {
+                viewModel.cancel()
+            }
+        }
         .overlay {
+            if showCancel {
+                LNDialog(
+                    title: L10n.tr("restore_cancel_title"),
+                    message: L10n.tr("restore_cancel_message"),
+                    confirmTitle: L10n.tr("restore_cancel_confirm"),
+                    dismissTitle: L10n.tr("restore_cancel_continue"),
+                    confirmVariant: .danger,
+                    onConfirm: {
+                        showCancel = false
+                        viewModel.cancel()
+                        dismiss()
+                    },
+                    onDismiss: { showCancel = false }
+                )
+            }
             if viewModel.failed, let msg = viewModel.errorMessage {
                 LNDialog(
                     title: L10n.tr("settings_pin_error_title"),
@@ -232,6 +291,14 @@ struct RestoreProgressView: View {
                     onConfirm: { dismiss() }
                 )
             }
+        }
+    }
+
+    private func backOrConfirmCancel() {
+        if viewModel.progress.cancellable && !viewModel.finished && !viewModel.failed {
+            showCancel = true
+        } else {
+            dismiss()
         }
     }
 }
@@ -250,6 +317,44 @@ struct RestoreResultView: View {
                 actionTitle: L10n.commonOk,
                 action: { dismiss() }
             )
+        }
+    }
+}
+
+private struct LongTaskProgressContent: View {
+    let progress: LongRunningTaskProgress
+
+    var body: some View {
+        VStack(spacing: 14) {
+            LNProgressCard(
+                title: L10n.tr(progress.phase.localizationKey),
+                progress: progress.fraction
+            )
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L10n.tr("long_task_items_fmt", progress.current, progress.total))
+                    .font(LNTypography.bodyMedium())
+                    .foregroundStyle(LNColor.subtitle)
+
+                if progress.totalBytes > 0 {
+                    Text(L10n.tr(
+                        "long_task_bytes_fmt",
+                        ByteCountFormatter.string(fromByteCount: progress.bytesWritten, countStyle: .file),
+                        ByteCountFormatter.string(fromByteCount: progress.totalBytes, countStyle: .file)
+                    ))
+                    .font(LNTypography.bodyMedium())
+                    .foregroundStyle(LNColor.subtitle)
+                }
+
+                if let fileName = progress.currentFileName {
+                    Text(L10n.tr("long_task_current_file_fmt", fileName))
+                        .font(LNTypography.labelMedium())
+                        .foregroundStyle(LNColor.subtitle.opacity(0.9))
+                        .lineLimit(2)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .lnCard()
         }
     }
 }
