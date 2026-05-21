@@ -30,10 +30,13 @@ extension VaultStore {
             try fileManager.createDirectory(at: targetDir, withIntermediateDirectories: true)
             let dest = targetDir.appendingPathComponent(source.lastPathComponent)
             if fileManager.fileExists(atPath: dest.path) {
+                ThumbnailService.shared.invalidate(encryptedPath: dest.path)
                 try fileManager.removeItem(at: dest)
             }
+            ThumbnailService.shared.invalidate(encryptedPath: source.path)
             try fileManager.moveItem(at: source, to: dest)
             try fileManager.setAttributes([.modificationDate: Date()], ofItemAtPath: dest.path)
+            ThumbnailService.shared.invalidate(encryptedPath: dest.path)
             invalidateCache()
             await loadSnapshot()
             return true
@@ -107,8 +110,10 @@ extension VaultStore {
                 let suffix = ext.isEmpty ? "" : ".\(ext)"
                 dest = albumDir.appendingPathComponent("\(base)_restored_\(Int(Date().timeIntervalSince1970))\(suffix)")
             }
+            ThumbnailService.shared.invalidate(encryptedPath: file.path)
             try fileManager.moveItem(at: file, to: dest)
             try fileManager.setAttributes([.modificationDate: Date()], ofItemAtPath: dest.path)
+            ThumbnailService.shared.invalidate(encryptedPath: dest.path)
             if parent.path != trashRoot.path {
                 let remaining = try? fileManager.contentsOfDirectory(atPath: parent.path)
                 if remaining?.isEmpty == true {
@@ -133,6 +138,7 @@ extension VaultStore {
         do {
             let parent = file.deletingLastPathComponent()
             let trashRoot = try trashDirectory()
+            ThumbnailService.shared.invalidate(encryptedPath: file.path)
             try fileManager.removeItem(at: file)
             if parent.path != trashRoot.path {
                 let remaining = try? fileManager.contentsOfDirectory(atPath: parent.path)
@@ -155,6 +161,7 @@ extension VaultStore {
         let values = try file.resourceValues(forKeys: [.contentModificationDateKey])
         let modified = values.contentModificationDate ?? Date()
         if now.timeIntervalSince(modified) > trashRetainMs {
+            ThumbnailService.shared.invalidate(encryptedPath: file.path)
             try? fileManager.removeItem(at: file)
         }
     }

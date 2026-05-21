@@ -117,6 +117,7 @@
 		F392FCEE3EB37C002F0AB1F8 /* LNBottomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5324047407C827B2FCD59CC9 /* LNBottomTabBar.swift */; };
 		F531804D21BDA4B00CFEC9F0 /* PaywallNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201DCA4E25932076994F40AC /* PaywallNavigation.swift */; };
 		F762EE90D58061C4E37FA9BE /* BackupKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02D8ED422B709C36CEF8A98C /* BackupKeyManager.swift */; };
+		FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657135709B6C821B72DC1DBD /* ThumbnailService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -163,6 +164,7 @@
 		5EE318A72F623E587F6C81DD /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		60F6316B9511EE7354BC905E /* runtime_lock_after_nav_pin_fix_2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = runtime_lock_after_nav_pin_fix_2.png; sourceTree = "<group>"; };
 		63EDEEE53B1D9BE4F3642CCA /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		657135709B6C821B72DC1DBD /* ThumbnailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailService.swift; sourceTree = "<group>"; };
 		659E2F4A518B734BBFFE4354 /* BiometricAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthService.swift; sourceTree = "<group>"; };
 		6A9FE1E99F98223C123B73E0 /* ExportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportViews.swift; sourceTree = "<group>"; };
 		6B9ED3B67D64C37F7D98B215 /* frm_3k.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = frm_3k.png; sourceTree = "<group>"; };
@@ -344,6 +346,7 @@
 			children = (
 				D672F551AEBE8981A9F344D0 /* MediaExportService.swift */,
 				7B224DC7450B7689747A1F9E /* PlaintextTempFileManager.swift */,
+				657135709B6C821B72DC1DBD /* ThumbnailService.swift */,
 				AED24C08D30394D9D28E1B1F /* VaultMaintenanceService.swift */,
 				ECA0AF35AC07F37BA5F1622F /* VaultModels.swift */,
 				1FBC69DE179BB30C69A3742C /* VaultStore.swift */,
@@ -793,6 +796,7 @@
 				CE8D914F5B2A3B015F982488 /* SettingsViews.swift in Sources */,
 				C99A12AC265413E4875E4C0D /* SplashView.swift in Sources */,
 				DE5E1DD8859752E46109681D /* SubscriptionService.swift in Sources */,
+				FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */,
 				A3C95D375296E51D3DD81D40 /* VaultCipher+Stream.swift in Sources */,
 				D4231525816B3C57E3411970 /* VaultCipher.swift in Sources */,
 				121063FB10E9EE11F641A065 /* VaultHomeView.swift in Sources */,
