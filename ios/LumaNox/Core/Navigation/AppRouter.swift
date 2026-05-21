@@ -64,4 +64,15 @@ final class AppRouter: ObservableObject {
             pushSettings(route)
         }
     }
+
+    func popCurrentTab(count: Int = 1) {
+        switch selectedTab {
+        case .vault, .camera:
+            vaultPath.removeLast(min(count, vaultPath.count))
+        case .ai:
+            aiPath.removeLast(min(count, aiPath.count))
+        case .settings:
+            settingsPath.removeLast(min(count, settingsPath.count))
+        }
+    }
 }

@@ -266,7 +266,7 @@ struct SettingsDataStorageView: View {
         LNScreenScaffold(title: L10n.settingsData, onBack: { dismiss() }) {
             LNSettingsRow(title: L10n.storageUsageTitle) { router.pushSettings(.storageUsage) }
             LNSettingsRow(title: L10n.tr("bulk_export_title")) {
-                guard router.guardProFeature(.exportNoWatermark) else { return }
+                ExportRuntimeState.prepareSource(albumName: nil)
                 router.pushSettings(.bulkExport)
             }
             LNSettingsRow(title: L10n.trashTitle) { router.pushSettings(.trashBin) }

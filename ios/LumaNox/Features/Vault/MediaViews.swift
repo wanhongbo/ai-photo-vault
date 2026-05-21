@@ -401,7 +401,7 @@ struct AlbumView: View {
 
             VStack(spacing: 24) {
                 LNButton(title: L10n.tr("bulk_export_title"), variant: .secondary) {
-                    guard router.guardProFeature(.exportNoWatermark) else { return }
+                    ExportRuntimeState.prepareSource(albumName: safeAlbumName)
                     router.pushInCurrentTab(.bulkExport)
                 }
                 .frame(width: cardWidth)

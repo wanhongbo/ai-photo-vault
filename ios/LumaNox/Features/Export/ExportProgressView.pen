@@ -1,0 +1,134 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_export_progress",
+      "name": "ExportProgressView",
+      "layout": "vertical",
+      "fill": "#05080D",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "padding": 16,
+      "gap": 18,
+      "children": [
+        {
+          "type": "frame",
+          "id": "export_progress_nav",
+          "layout": "horizontal",
+          "fill": "transparent",
+          "width": 361,
+          "height": 52,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "export_progress_back",
+              "content": "‹",
+              "fontFamily": "Inter",
+              "fontSize": 30,
+              "fontWeight": "500",
+              "fill": "#EAF1FF",
+              "width": 32
+            },
+            {
+              "type": "text",
+              "id": "export_progress_title",
+              "content": "Exporting",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700",
+              "fill": "#EAF1FF",
+              "width": 300
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "export_progress_card",
+          "name": "Progress card",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "width": 361,
+          "padding": 18,
+          "gap": 14,
+          "cornerRadius": 18,
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            {
+              "type": "text",
+              "id": "export_progress_count",
+              "content": "Exporting 4 of 8",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700",
+              "fill": "#EAF1FF",
+              "width": 325
+            },
+            {
+              "type": "frame",
+              "id": "export_progress_track",
+              "width": 325,
+              "height": 8,
+              "cornerRadius": 4,
+              "fill": "#223247"
+            },
+            {
+              "type": "frame",
+              "id": "export_progress_fill",
+              "width": 188,
+              "height": 8,
+              "cornerRadius": 4,
+              "fill": "#4A9EFF"
+            },
+            {
+              "type": "text",
+              "id": "export_progress_percent",
+              "content": "50%",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "fill": "#8EA2C0",
+              "width": 325
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "export_progress_current_card",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "width": 361,
+          "padding": 16,
+          "cornerRadius": 16,
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            {
+              "type": "text",
+              "id": "export_progress_current",
+              "content": "Processing IMG_2048.JPG",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal",
+              "fill": "#8EA2C0",
+              "width": 329
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "export_progress_cancel",
+          "name": "Cancel button",
+          "width": 361,
+          "height": 48,
+          "cornerRadius": 14,
+          "fill": "#142036",
+          "stroke": { "fill": "#223247", "thickness": 1 }
+        }
+      ]
+    }
+  ]
+}

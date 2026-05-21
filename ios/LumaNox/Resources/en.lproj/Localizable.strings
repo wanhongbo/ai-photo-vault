@@ -141,6 +141,19 @@
 "export_cancel_confirm" = "Cancel Export";
 "export_cancel_continue" = "Keep Exporting";
 "bulk_export_title" = "Bulk Export";
+"bulk_export_select_title" = "Select media to export";
+"bulk_export_selected_count" = "%d selected";
+"bulk_export_start" = "Export selected";
+"bulk_export_empty_title" = "No media to export";
+"bulk_export_empty_message" = "Import photos or videos into your vault first.";
+"bulk_export_error_title" = "Export list unavailable";
+"bulk_export_retry" = "Retry";
+"export_progress_count" = "Exporting %d of %d";
+"export_progress_current" = "Processing %@";
+"export_result_success_count" = "%d files ready";
+"export_result_failed_count" = "%d failed";
+"export_result_share" = "Share files";
+"export_result_done" = "Done";
 
 "paywall_title" = "Premium";
 "paywall_subtitle" = "Unlock all privacy and AI features";

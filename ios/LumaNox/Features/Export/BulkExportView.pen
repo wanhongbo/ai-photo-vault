@@ -1,0 +1,135 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_bulk_export",
+      "name": "BulkExportView",
+      "layout": "vertical",
+      "fill": "#05080D",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "padding": 16,
+      "gap": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "bulk_export_nav",
+          "name": "Navigation",
+          "layout": "horizontal",
+          "fill": "transparent",
+          "width": 361,
+          "height": 52,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "bulk_export_back",
+              "content": "‹",
+              "fontFamily": "Inter",
+              "fontSize": 30,
+              "fontWeight": "500",
+              "fill": "#EAF1FF",
+              "width": 32
+            },
+            {
+              "type": "text",
+              "id": "bulk_export_title",
+              "content": "Bulk Export",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700",
+              "fill": "#EAF1FF",
+              "width": 300
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bulk_export_summary",
+          "name": "Selection summary",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "width": 361,
+          "padding": 16,
+          "gap": 6,
+          "cornerRadius": 16,
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            {
+              "type": "text",
+              "id": "bulk_export_summary_title",
+              "content": "Select media to export",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "650",
+              "fill": "#EAF1FF",
+              "width": 329
+            },
+            {
+              "type": "text",
+              "id": "bulk_export_summary_count",
+              "content": "3 selected",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "500",
+              "fill": "#8EA2C0",
+              "width": 329
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bulk_export_grid",
+          "name": "Stable 3-column media grid",
+          "layout": "vertical",
+          "fill": "transparent",
+          "width": 361,
+          "gap": 8,
+          "children": [
+            {
+              "type": "frame",
+              "id": "bulk_export_row_1",
+              "layout": "horizontal",
+              "fill": "transparent",
+              "width": 361,
+              "height": 115,
+              "gap": 8,
+              "children": [
+                { "type": "frame", "id": "bulk_export_cell_1", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#142741", "stroke": { "fill": "#4A9EFF", "thickness": 2 } },
+                { "type": "frame", "id": "bulk_export_cell_2", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#20324A", "stroke": { "fill": "#223247", "thickness": 1 } },
+                { "type": "frame", "id": "bulk_export_cell_3", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#183C31", "stroke": { "fill": "#4A9EFF", "thickness": 2 } }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bulk_export_row_2",
+              "layout": "horizontal",
+              "fill": "transparent",
+              "width": 361,
+              "height": 115,
+              "gap": 8,
+              "children": [
+                { "type": "frame", "id": "bulk_export_cell_4", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#2B2748", "stroke": { "fill": "#223247", "thickness": 1 } },
+                { "type": "frame", "id": "bulk_export_cell_5", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#142741", "stroke": { "fill": "#4A9EFF", "thickness": 2 } },
+                { "type": "frame", "id": "bulk_export_cell_6", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#20324A", "stroke": { "fill": "#223247", "thickness": 1 } }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bulk_export_cta",
+          "name": "Export selected button",
+          "width": 361,
+          "height": 54,
+          "cornerRadius": 16,
+          "fill": "#4A9EFF"
+        }
+      ]
+    }
+  ]
+}
