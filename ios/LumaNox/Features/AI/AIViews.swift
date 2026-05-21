@@ -503,7 +503,7 @@ struct PrivacyRedactView: View {
                     isVideo: activeIsVideo,
                     selectedStyle: selectedStyle
                 )
-                .frame(height: min(350, max(330, proxy.size.height * 0.41)))
+                .frame(height: min(430, max(390, proxy.size.height * 0.49)))
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
 
@@ -515,11 +515,9 @@ struct PrivacyRedactView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
 
-                Spacer(minLength: 12)
-
                 privacyRedactBottomActions
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 10)
+                    .padding(.top, 18)
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
         }
