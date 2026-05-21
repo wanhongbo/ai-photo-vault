@@ -16,7 +16,7 @@ LumaNox 是一个隐私优先、完全离线的照片与视频保险箱。核心
 | 回收站 | 30 天保留、恢复、永久删除 | `TrashBinScreen` | 已有移动、列表、恢复、清除 | 增加过期自动清理策略与批量操作 |
 | 私密相机 | 拍照、录像、前后摄、闪光灯、直接入库不进系统相册 | `PrivateCameraScreen` | 已有 AVFoundation 拍照与长按录像入库 | 真机验证权限、闪光灯、录像稳定性 |
 | 备份恢复 | 手动 `.aivb`、自动 `backup.dat`、Argon2id、跨端包格式 | `LocalBackupMvpService` / `BackupPackageV1` | 已有手动/自动备份、恢复、Android 兼容包格式 | 交叉恢复测试、进度状态、失败可恢复路径 |
-| AI 助手 | 清理、敏感审查、分类、隐私打码 | `AiLocalScanUseCase` / `PrivacyRenderer` | UI 入口已有，多数仍是 mock/占位 | 使用 Vision/CoreImage/CoreML 建立本地真实分析链路 |
+| AI 助手 | 清理、敏感审查、分类、隐私打码 | `AiLocalScanUseCase` / `PrivacyRenderer` | 已有 Vision/图像质量/dHash 本地分析骨架和 metadata 写入；Pen、增量扫描、手动 ROI、导出分享仍需补齐 | 按 `docs/ai-assistant-technical-plan.md` 稳定跨端 AI 助手闭环 |
 | 导出 | 批量导出、导出进度、结果、无水印会员门控 | `BulkExportScreen` / `ExportProgressScreen` | 当前偏 mock | 接入 metadata 与真实解密导出 |
 | 订阅与配额 | RevenueCat、Paywall、Vault/AI/Backup quota | `PaywallGatekeeper` / `QuotaManager` | 已有 RevenueCat 骨架、门控模型、Paywall UI | 完成产品 ID、错误态、恢复购买与埋点闭环 |
 | 设置与法务 | 安全、备份、数据、语言、关于、隐私政策、服务条款 | `SettingsDetailScreens` / `LegalWebViewScreen` | 设置页大多可导航，部分占位 | 拆分一页一 Pen，接入真实设置和本地 HTML |
@@ -37,7 +37,7 @@ LumaNox 是一个隐私优先、完全离线的照片与视频保险箱。核心
 
 | 优先级 | 缺口 | 影响 |
 |---|---|---|
-| P0 | AI 页面仍多为 mock，不会写入 `VaultAiMetadata` | AI 核心卖点尚未真实可用 |
+| P0 | AI 扫描链路已接入 metadata，但 iOS 仍缺少单飞/增量跳过、固定样本回归和完整 Privacy Redact 导出分享闭环 | AI 核心卖点尚未达到发布级稳定 |
 | P0 | 批量导出未接入真实 media selection/decrypt/share | 数据出入口不完整 |
 | P1 | 设置、AI、Backup、Export 多数页面仍是分组 Pen | 后续 UI 对齐成本高 |
 | P1 | 法务 WebView 仍需本地 HTML 与语言选择策略 | 合规页面不足 |
@@ -162,6 +162,8 @@ flowchart TD
 - 自动备份的 BGTask 不承诺精确时间，冷启时用 catch-up 补跑。
 
 ### 4.6 AI 本地分析
+
+跨端整体方案、数据契约、交互规则与里程碑见 `docs/ai-assistant-technical-plan.md`。本节保留 iOS 侧实现要点。
 
 Android 能力基准：
 
@@ -333,7 +335,7 @@ xcrun simctl io booted screenshot /tmp/lumanox-sim/latest.png
 ## 9. 近期推荐任务清单
 
 1. 跑一次 iOS P0 自测，更新 `docs/ios-session-handoff.md` 的真实状态。
-2. 拆分 `AIViews.pen`，并把 AI 页面从 mock 改为读取 `VaultMetadataStore`。
+2. 拆分 `AIViews.pen`，并按 `docs/ai-assistant-technical-plan.md` 补齐 AI 扫描稳定化与 Privacy Redact 闭环。
 3. 实现批量导出真实链路，优先覆盖最近/相册选择导出。
 4. 增加 Android ↔ iOS `.aivb` 固定样本回归。
 5. 补齐法务本地 HTML 与 `LegalWebView`。
