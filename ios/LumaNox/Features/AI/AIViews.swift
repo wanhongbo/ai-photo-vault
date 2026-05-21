@@ -625,7 +625,7 @@ struct PrivacyRedactView: View {
                 }
                 .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 52)
+                .frame(height: 48)
                 .background(activeIsVideo ? LNColor.buttonDisabledBg : LNColor.brandBlue)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
@@ -649,7 +649,7 @@ struct PrivacyRedactView: View {
                     redactionService.updateMessage(L10n.tr("privacy_redact_share_pending"), isError: false)
                 }
             }
-            .frame(height: 40)
+            .frame(height: 48)
         }
     }
 
@@ -1012,7 +1012,7 @@ private struct PrivacyRedactSecondaryAction: View {
             }
             .foregroundStyle(Color(hex: 0xD8DAE0))
             .frame(maxWidth: .infinity)
-            .frame(height: 40)
+            .frame(height: 48)
             .background(LNColor.sectionBg)
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
