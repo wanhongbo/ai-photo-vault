@@ -333,6 +333,41 @@
                   "fill": "#EAF1FF"
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "detecting_overlay",
+              "layout": "vertical",
+              "x": 21,
+              "y": 18,
+              "width": 311,
+              "height": 424,
+              "cornerRadius": 16,
+              "fill": "#000000",
+              "stroke": { "thickness": 1, "fill": "#344761" },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "detecting_spinner",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "transparent",
+                  "stroke": { "thickness": 4, "fill": "#4A9EFF" }
+                },
+                {
+                  "type": "text",
+                  "id": "detecting_text",
+                  "content": "正在识别敏感信息…",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "letterSpacing": 0,
+                  "fontWeight": "500",
+                  "fill": "#B7C6DD"
+                }
+              ]
             }
           ]
         },
@@ -344,7 +379,7 @@
           "x": 20,
           "y": 512,
           "width": 353,
-          "height": 200,
+          "height": 156,
           "cornerRadius": 18,
           "fill": "#0A1320",
           "stroke": { "thickness": 1, "fill": "#2B3A52" }
@@ -421,67 +456,11 @@
         },
         {
           "type": "frame",
-          "id": "manual_ops",
-          "layout": "horizontal",
-          "x": 32,
-          "y": 572,
-          "width": 329,
-          "height": 36,
-          "gap": 8,
-          "fill": "transparent",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "manual_count",
-              "content": "手动已加 0处",
-              "fontFamily": "Inter",
-              "fontSize": 11,
-              "letterSpacing": 0,
-              "fontWeight": "normal",
-              "fill": "#8EA2C0",
-              "width": "fill_container",
-              "textGrowth": "fixed-width"
-            },
-            {
-              "type": "frame",
-              "id": "undo_chip",
-              "layout": "horizontal",
-              "width": 72,
-              "height": 36,
-              "cornerRadius": 12,
-              "fill": "#0C1523",
-              "stroke": { "thickness": 1, "fill": "#223247" },
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                { "type": "text", "id": "undo_text", "content": "撤销", "fontFamily": "Inter", "fontSize": 11, "letterSpacing": 0, "fontWeight": "600", "fill": "#B7C6DD" }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "clear_chip",
-              "layout": "horizontal",
-              "width": 72,
-              "height": 36,
-              "cornerRadius": 12,
-              "fill": "#0C1523",
-              "stroke": { "thickness": 1, "fill": "#223247" },
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                { "type": "text", "id": "clear_text", "content": "清空", "fontFamily": "Inter", "fontSize": 11, "letterSpacing": 0, "fontWeight": "600", "fill": "#B7C6DD" }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
           "id": "style_picker",
           "name": "Redaction style picker",
           "layout": "vertical",
           "x": 32,
-          "y": 616,
+          "y": 572,
           "width": 329,
           "height": 84,
           "gap": 8,
@@ -503,12 +482,12 @@
                   "width": "fill_container",
                   "height": 38,
                   "cornerRadius": 12,
-                  "fill": "#312E81",
-                  "stroke": { "thickness": 1, "fill": "#818CF8" },
+                  "fill": "#0B1420",
+                  "stroke": { "thickness": 1, "fill": "#1A2638" },
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    { "type": "text", "id": "style_mosaic_text", "content": "马赛克", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "700", "fill": "#F3F4FF" }
+                    { "type": "text", "id": "style_mosaic_text", "content": "马赛克", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "700", "fill": "#66758A" }
                   ]
                 },
                 {
@@ -518,12 +497,12 @@
                   "width": "fill_container",
                   "height": 38,
                   "cornerRadius": 12,
-                  "fill": "#0C1523",
-                  "stroke": { "thickness": 1, "fill": "#223247" },
+                  "fill": "#0B1420",
+                  "stroke": { "thickness": 1, "fill": "#1A2638" },
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    { "type": "text", "id": "style_blur_text", "content": "高斯模糊", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#B7C6DD" }
+                    { "type": "text", "id": "style_blur_text", "content": "高斯模糊", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#66758A" }
                   ]
                 },
                 {
@@ -533,12 +512,12 @@
                   "width": "fill_container",
                   "height": 38,
                   "cornerRadius": 12,
-                  "fill": "#0C1523",
-                  "stroke": { "thickness": 1, "fill": "#223247" },
+                  "fill": "#0B1420",
+                  "stroke": { "thickness": 1, "fill": "#1A2638" },
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    { "type": "text", "id": "style_bar_text", "content": "黑条", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#B7C6DD" }
+                    { "type": "text", "id": "style_bar_text", "content": "黑条", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#66758A" }
                   ]
                 }
               ]
@@ -559,12 +538,12 @@
                   "width": "fill_container",
                   "height": 38,
                   "cornerRadius": 12,
-                  "fill": "#0C1523",
-                  "stroke": { "thickness": 1, "fill": "#223247" },
+                  "fill": "#0B1420",
+                  "stroke": { "thickness": 1, "fill": "#1A2638" },
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    { "type": "text", "id": "style_white_text", "content": "白条", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#B7C6DD" }
+                    { "type": "text", "id": "style_white_text", "content": "白条", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#66758A" }
                   ]
                 },
                 {
@@ -574,12 +553,12 @@
                   "width": "fill_container",
                   "height": 38,
                   "cornerRadius": 12,
-                  "fill": "#0C1523",
-                  "stroke": { "thickness": 1, "fill": "#223247" },
+                  "fill": "#0B1420",
+                  "stroke": { "thickness": 1, "fill": "#1A2638" },
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    { "type": "text", "id": "style_oval_text", "content": "椭圆模糊", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#B7C6DD" }
+                    { "type": "text", "id": "style_oval_text", "content": "椭圆模糊", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#66758A" }
                   ]
                 },
                 {
@@ -589,12 +568,12 @@
                   "width": "fill_container",
                   "height": 38,
                   "cornerRadius": 12,
-                  "fill": "#0C1523",
-                  "stroke": { "thickness": 1, "fill": "#223247" },
+                  "fill": "#0B1420",
+                  "stroke": { "thickness": 1, "fill": "#1A2638" },
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
-                    { "type": "text", "id": "style_emoji_text", "content": "Emoji", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#B7C6DD" }
+                    { "type": "text", "id": "style_emoji_text", "content": "Emoji", "fontFamily": "Inter", "fontSize": 12, "letterSpacing": 0, "fontWeight": "600", "fill": "#66758A" }
                   ]
                 }
               ]
@@ -606,11 +585,11 @@
           "id": "primary_button",
           "layout": "horizontal",
           "x": 20,
-          "y": 724,
+          "y": 680,
           "width": 353,
           "height": 48,
           "cornerRadius": 14,
-          "fill": "#4A9EFF",
+          "fill": "#1A2330",
           "gap": 8,
           "justifyContent": "center",
           "alignItems": "center",
@@ -622,7 +601,7 @@
               "iconFontName": "shield-check",
               "width": 18,
               "height": 18,
-              "fill": "#FFFFFF"
+              "fill": "#66758A"
             },
             {
               "type": "text",
@@ -632,7 +611,7 @@
               "fontSize": 15,
               "letterSpacing": 0,
               "fontWeight": "700",
-              "fill": "#FFFFFF"
+              "fill": "#66758A"
             }
           ]
         },
@@ -641,7 +620,7 @@
           "id": "secondary_actions",
           "layout": "horizontal",
           "x": 20,
-          "y": 780,
+          "y": 736,
           "width": 353,
           "height": 48,
           "gap": 10,

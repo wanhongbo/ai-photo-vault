@@ -525,6 +525,14 @@ struct PrivacyRedactView: View {
         redactMode == .manual ? L10n.tr("privacy_redact_manual_done") : L10n.tr("privacy_redact_enter_manual")
     }
 
+    private var canEditRedaction: Bool {
+        !redactionService.isDetecting && !activeIsVideo
+    }
+
+    private var canSelectStyle: Bool {
+        canEditRedaction && !saveRegions.isEmpty
+    }
+
     var body: some View {
         GeometryReader { proxy in
             VStack(spacing: 0) {
@@ -548,8 +556,10 @@ struct PrivacyRedactView: View {
 
                 VStack(spacing: 8) {
                     privacyRedactStatusLine
-                    privacyRedactManualOps
-                    PrivacyRedactStylePicker(selectedStyle: $selectedStyle)
+                    if !manualRegions.isEmpty {
+                        privacyRedactManualOps
+                    }
+                    PrivacyRedactStylePicker(selectedStyle: $selectedStyle, isEnabled: canSelectStyle)
                 }
                 .padding(12)
                 .background(Color(hex: 0x0A1320))
@@ -579,7 +589,7 @@ struct PrivacyRedactView: View {
             await aiService.refreshSummary()
             await reloadDetectedRegions(for: activePath)
         }
-        .onChange(of: selectedStyle) { applySelectedStyleToActiveManualRegion($0) }
+        .onChange(of: selectedStyle) { applySelectedStyleToRegions($0) }
         .accessibilityIdentifier("privacy_redact_view")
     }
 
@@ -652,6 +662,8 @@ struct PrivacyRedactView: View {
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(redactMode == .manual ? LNColor.success : LNColor.brandBlue, lineWidth: 1))
             }
             .buttonStyle(.plain)
+            .disabled(!canEditRedaction)
+            .opacity(canEditRedaction ? 1 : 0.55)
             .accessibilityIdentifier("privacy_redact_manual_done")
         }
     }
@@ -741,13 +753,6 @@ struct PrivacyRedactView: View {
             draftRegion = nil
             return
         }
-        if let selectedManualRegionID,
-           let index = manualRegions.firstIndex(where: { $0.id == selectedManualRegionID }) {
-            manualRegions[index].normalizedRect = normalizedRect
-            manualRegions[index].style = selectedStyle
-            draftRegion = nil
-            return
-        }
         draftRegion = PrivacyRedactionRegion(
             normalizedRect: normalizedRect,
             style: selectedStyle,
@@ -769,26 +774,26 @@ struct PrivacyRedactView: View {
             style: selectedStyle,
             source: .manual
         )
-        if let selectedManualRegionID,
-           let index = manualRegions.firstIndex(where: { $0.id == selectedManualRegionID }) {
-            manualRegions[index] = PrivacyRedactionRegion(
-                id: selectedManualRegionID,
-                normalizedRect: normalizedRect,
-                style: selectedStyle,
-                source: .manual
-            )
-        } else {
-            manualRegions.append(region)
-            selectedManualRegionID = region.id
-        }
+        manualRegions.append(region)
+        selectedManualRegionID = region.id
         draftRegion = nil
     }
 
-    private func applySelectedStyleToActiveManualRegion(_ style: PrivacyRedactionStyle) {
-        guard redactMode == .manual,
-              let selectedManualRegionID,
-              let index = manualRegions.firstIndex(where: { $0.id == selectedManualRegionID }) else { return }
-        manualRegions[index].style = style
+    private func applySelectedStyleToRegions(_ style: PrivacyRedactionStyle) {
+        autoRegions = autoRegions.map {
+            PrivacyRedactionRegion(id: $0.id, normalizedRect: $0.normalizedRect, style: style, source: $0.source)
+        }
+        manualRegions = manualRegions.map {
+            PrivacyRedactionRegion(id: $0.id, normalizedRect: $0.normalizedRect, style: style, source: $0.source)
+        }
+        if let draftRegion {
+            self.draftRegion = PrivacyRedactionRegion(
+                id: draftRegion.id,
+                normalizedRect: draftRegion.normalizedRect,
+                style: style,
+                source: draftRegion.source
+            )
+        }
     }
 
     private func undoLastManualRegion() {
@@ -968,68 +973,66 @@ private struct PrivacyRedactCanvas: View {
                     .fill(Color(hex: 0x020409))
                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(LNColor.stroke, lineWidth: 1))
 
-                Group {
-                    if path.isEmpty {
-                        PrivacyRedactMockPhoto()
-                    } else {
-                        VaultMediaThumbnailView(
-                            encryptedPath: path,
-                            isVideo: isVideo,
-                            contentMode: .fit,
-                            targetPixelSize: 1200
-                        )
-                        .background(Color(hex: 0x07101C))
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0x344761), lineWidth: 1))
-                .frame(width: imageRect.width, height: imageRect.height)
-                .position(x: imageRect.midX, y: imageRect.midY)
-
-                ForEach(regions) { region in
-                    PrivacyRedactRegionView(
-                        region: region,
-                        isSelectedManual: region.id == selectedManualRegionID
-                    )
-                    .frame(
-                        width: max(1, region.normalizedRect.width * imageRect.width),
-                        height: max(1, region.normalizedRect.height * imageRect.height)
-                    )
-                    .position(
-                        x: imageRect.minX + region.normalizedRect.midX * imageRect.width,
-                        y: imageRect.minY + region.normalizedRect.midY * imageRect.height
-                    )
-                }
-
-                Text(mode == .manual ? L10n.tr("privacy_redact_manual_hint") : L10n.tr("privacy_redact_auto_hint"))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(LNColor.title)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color(hex: 0x101722, alpha: 0.80))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(.leading, 72)
-                    .padding(.top, 34)
-
                 if isDetecting {
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(hex: 0x020409, alpha: 0.62))
+                        .fill(Color.black)
+                        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0x344761), lineWidth: 1))
                         .frame(width: imageRect.width, height: imageRect.height)
                         .position(x: imageRect.midX, y: imageRect.midY)
 
-                    HStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         ProgressView()
-                            .tint(.white)
+                            .tint(LNColor.brandBlue)
                         Text(L10n.tr("privacy_redact_detecting"))
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(LNColor.title)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Color(hex: 0xB7C6DD))
+                            .multilineTextAlignment(.center)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(Color(hex: 0x101722, alpha: 0.88))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: 0x2F4564), lineWidth: 1))
+                    .padding(.horizontal, 20)
                     .position(x: imageRect.midX, y: imageRect.midY)
+                } else {
+                    Group {
+                        if path.isEmpty {
+                            PrivacyRedactMockPhoto()
+                        } else {
+                            VaultMediaThumbnailView(
+                                encryptedPath: path,
+                                isVideo: isVideo,
+                                contentMode: .fit,
+                                targetPixelSize: 1200
+                            )
+                            .background(Color(hex: 0x07101C))
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0x344761), lineWidth: 1))
+                    .frame(width: imageRect.width, height: imageRect.height)
+                    .position(x: imageRect.midX, y: imageRect.midY)
+
+                    ForEach(regions) { region in
+                        PrivacyRedactRegionView(
+                            region: region,
+                            isSelectedManual: region.id == selectedManualRegionID
+                        )
+                        .frame(
+                            width: max(1, region.normalizedRect.width * imageRect.width),
+                            height: max(1, region.normalizedRect.height * imageRect.height)
+                        )
+                        .position(
+                            x: imageRect.minX + region.normalizedRect.midX * imageRect.width,
+                            y: imageRect.minY + region.normalizedRect.midY * imageRect.height
+                        )
+                    }
+
+                    Text(mode == .manual ? L10n.tr("privacy_redact_manual_hint") : L10n.tr("privacy_redact_auto_hint"))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(LNColor.title)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color(hex: 0x101722, alpha: 0.80))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .padding(.leading, 72)
+                        .padding(.top, 34)
                 }
             }
             .contentShape(Rectangle())
@@ -1207,6 +1210,7 @@ private struct PrivacyRedactSmallChip: View {
 
 private struct PrivacyRedactStylePicker: View {
     @Binding var selectedStyle: PrivacyRedactionStyle
+    let isEnabled: Bool
 
     private let columns = [
         GridItem(.flexible(), spacing: 7),
@@ -1220,20 +1224,36 @@ private struct PrivacyRedactStylePicker: View {
                 Button { selectedStyle = style } label: {
                     Text(styleTitle(style))
                         .font(.system(size: 12, weight: selectedStyle == style ? .bold : .semibold))
-                        .foregroundStyle(selectedStyle == style ? Color(hex: 0xF3F4FF) : Color(hex: 0xB7C6DD))
+                        .foregroundStyle(styleTextColor(style))
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                         .frame(maxWidth: .infinity)
                         .frame(height: 38)
-                        .background(selectedStyle == style ? Color(hex: 0x312E81) : LNColor.sectionBg)
+                        .background(styleBackground(style))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(selectedStyle == style ? Color(hex: 0x818CF8) : LNColor.stroke, lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(styleStroke(style), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .disabled(!isEnabled)
                 .accessibilityIdentifier("privacy_redact_style_\(style.rawValue)")
             }
         }
         .frame(height: 84)
+    }
+
+    private func styleTextColor(_ style: PrivacyRedactionStyle) -> Color {
+        guard isEnabled else { return Color(hex: 0x66758A) }
+        return selectedStyle == style ? Color(hex: 0xF3F4FF) : Color(hex: 0xB7C6DD)
+    }
+
+    private func styleBackground(_ style: PrivacyRedactionStyle) -> Color {
+        guard isEnabled else { return Color(hex: 0x0B1420) }
+        return selectedStyle == style ? Color(hex: 0x312E81) : LNColor.sectionBg
+    }
+
+    private func styleStroke(_ style: PrivacyRedactionStyle) -> Color {
+        guard isEnabled else { return Color(hex: 0x1A2638) }
+        return selectedStyle == style ? Color(hex: 0x818CF8) : LNColor.stroke
     }
 }
 
