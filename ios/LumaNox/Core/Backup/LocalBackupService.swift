@@ -32,13 +32,18 @@ struct BackupExecutionResult {
     let assetCount: Int
     let outputSizeBytes: Int64
     let message: String
+    let cancelled: Bool
 
     static func success(backupId: String, assetCount: Int, bytes: Int64) -> BackupExecutionResult {
-        BackupExecutionResult(success: true, backupId: backupId, assetCount: assetCount, outputSizeBytes: bytes, message: "")
+        BackupExecutionResult(success: true, backupId: backupId, assetCount: assetCount, outputSizeBytes: bytes, message: "", cancelled: false)
     }
 
     static func failure(_ message: String) -> BackupExecutionResult {
-        BackupExecutionResult(success: false, backupId: nil, assetCount: 0, outputSizeBytes: 0, message: message)
+        BackupExecutionResult(success: false, backupId: nil, assetCount: 0, outputSizeBytes: 0, message: message, cancelled: false)
+    }
+
+    static func cancelled() -> BackupExecutionResult {
+        BackupExecutionResult(success: false, backupId: nil, assetCount: 0, outputSizeBytes: 0, message: L10n.tr("long_task_cancelled"), cancelled: true)
     }
 }
 
@@ -49,13 +54,18 @@ struct RestoreExecutionResult {
     let failed: Int
     let backupId: String?
     let message: String
+    let cancelled: Bool
 
     static func success(restored: Int, skipped: Int, failed: Int, backupId: String) -> RestoreExecutionResult {
-        RestoreExecutionResult(success: true, restored: restored, skipped: skipped, failed: failed, backupId: backupId, message: "")
+        RestoreExecutionResult(success: true, restored: restored, skipped: skipped, failed: failed, backupId: backupId, message: "", cancelled: false)
     }
 
     static func failure(_ message: String) -> RestoreExecutionResult {
-        RestoreExecutionResult(success: false, restored: 0, skipped: 0, failed: 0, backupId: nil, message: message)
+        RestoreExecutionResult(success: false, restored: 0, skipped: 0, failed: 0, backupId: nil, message: message, cancelled: false)
+    }
+
+    static func cancelled() -> RestoreExecutionResult {
+        RestoreExecutionResult(success: false, restored: 0, skipped: 0, failed: 0, backupId: nil, message: L10n.tr("long_task_cancelled"), cancelled: true)
     }
 }
 
@@ -68,7 +78,7 @@ final class LocalBackupService: @unchecked Sendable {
     private let lock = NSLock()
     private var isRunning = false
 
-    func createAutoBackup() async -> BackupExecutionResult {
+    func createAutoBackup(progress: LongRunningTaskProgressHandler? = nil) async -> BackupExecutionResult {
         lock.lock()
         guard !isRunning else {
             lock.unlock()
@@ -82,8 +92,10 @@ final class LocalBackupService: @unchecked Sendable {
             lock.unlock()
         }
 
-        return await Task.detached(priority: .utility) { [self] in
+        let work = Task.detached(priority: .utility) { [self] in
             do {
+                publishProgress(.initial(phase: .preparing), to: progress)
+                try Task.checkCancellation()
                 guard ExternalBackupLocation.isWritable() else {
                     throw BackupError.io(L10n.tr("backup_error_no_saf_dir"))
                 }
@@ -93,6 +105,7 @@ final class LocalBackupService: @unchecked Sendable {
                 let params = keyManager.getOrCreateKdfParams()
                 let fingerprint = keyManager.fingerprint(key: backupKey)
                 let vaultRoot = try vaultRootURL()
+                publishProgress(.initial(phase: .scanning), to: progress)
                 let assets = try scanVaultAssets(vaultRoot: vaultRoot)
                 guard !assets.isEmpty else { throw BackupError.vaultEmpty }
 
@@ -106,29 +119,46 @@ final class LocalBackupService: @unchecked Sendable {
                 let tmpDir = try tmpDirectory()
                 let bodyFile = tmpDir.appendingPathComponent("auto_body_\(backupId).bin")
                 let writingFile = tmpDir.appendingPathComponent("auto_\(backupId).writing")
+                let bytes: Int64
+                do {
+                    bytes = try writeBodyAndAssemble(
+                        vaultRoot: vaultRoot,
+                        bodyFile: bodyFile,
+                        writingFile: writingFile,
+                        backupKey: backupKey,
+                        headerBase: BackupPackageV1.HeaderBase(
+                            backupId: backupId,
+                            createdAtMs: now,
+                            kind: .AUTO,
+                            kdfAlgorithm: params.algorithm,
+                            kdfSaltHex: params.saltHex,
+                            kdfIterations: params.iterations,
+                            kdfMemoryKb: params.memoryKb,
+                            kdfParallelism: params.parallelism,
+                            keyFingerprintHex: fingerprint
+                        ),
+                        assets: assets,
+                        progress: progress
+                    )
 
-                let bytes = try writeBodyAndAssemble(
-                    vaultRoot: vaultRoot,
-                    bodyFile: bodyFile,
-                    writingFile: writingFile,
-                    backupKey: backupKey,
-                    headerBase: BackupPackageV1.HeaderBase(
-                        backupId: backupId,
-                        createdAtMs: now,
-                        kind: .AUTO,
-                        kdfAlgorithm: params.algorithm,
-                        kdfSaltHex: params.saltHex,
-                        kdfIterations: params.iterations,
-                        kdfMemoryKb: params.memoryKb,
-                        kdfParallelism: params.parallelism,
-                        keyFingerprintHex: fingerprint
-                    ),
-                    assets: assets
-                )
-
-                try ExternalBackupLocation.atomicReplaceAuto(tmpLocal: writingFile)
-                try? FileManager.default.removeItem(at: bodyFile)
-                try? FileManager.default.removeItem(at: writingFile)
+                    publishProgress(LongRunningTaskProgress(
+                        phase: .assembling,
+                        current: assets.count,
+                        total: assets.count,
+                        currentFileName: ExternalBackupLocation.autoFileName,
+                        bytesWritten: estimated,
+                        totalBytes: estimated,
+                        cancellable: true
+                    ), to: progress)
+                    try Task.checkCancellation()
+                    try ExternalBackupLocation.atomicReplaceAuto(tmpLocal: writingFile)
+                    try? FileManager.default.removeItem(at: bodyFile)
+                    try? FileManager.default.removeItem(at: writingFile)
+                } catch {
+                    try? FileManager.default.removeItem(at: bodyFile)
+                    try? FileManager.default.removeItem(at: writingFile)
+                    throw error
+                }
 
                 let externalPath = try ExternalBackupLocation.autoBackupFileURL()?.path
                 BackupMeta.updateAuto(
@@ -149,16 +179,36 @@ final class LocalBackupService: @unchecked Sendable {
                 )
 
                 await MainActor.run { QuotaManager.shared.recordSuccessfulBackup() }
+                publishProgress(LongRunningTaskProgress(
+                    phase: .completed,
+                    current: assets.count,
+                    total: assets.count,
+                    currentFileName: ExternalBackupLocation.autoFileName,
+                    bytesWritten: estimated,
+                    totalBytes: estimated,
+                    cancellable: false
+                ), to: progress)
                 return .success(backupId: backupId, assetCount: assets.count, bytes: bytes)
+            } catch is CancellationError {
+                publishProgress(.initial(phase: .cancelled, cancellable: false), to: progress)
+                return .cancelled()
             } catch let e as BackupError {
                 return .failure(e.localizedDescription ?? L10n.tr("backup_error_failed_fmt", ""))
             } catch {
                 return .failure(L10n.tr("backup_error_failed_fmt", error.localizedDescription))
             }
-        }.value
+        }
+        return await withTaskCancellationHandler {
+            await work.value
+        } onCancel: {
+            work.cancel()
+        }
     }
 
-    func createManualBackup(to outputURL: URL) async -> BackupExecutionResult {
+    func createManualBackup(
+        to outputURL: URL,
+        progress: LongRunningTaskProgressHandler? = nil
+    ) async -> BackupExecutionResult {
         lock.lock()
         guard !isRunning else {
             lock.unlock()
@@ -172,61 +222,104 @@ final class LocalBackupService: @unchecked Sendable {
             lock.unlock()
         }
 
-        return await Task.detached(priority: .userInitiated) { [self] in
+        let work = Task.detached(priority: .userInitiated) { [self] in
             do {
+                publishProgress(.initial(phase: .preparing), to: progress)
+                try Task.checkCancellation()
                 guard let backupKey = BackupSecretsStore.loadCached() else { throw BackupError.noBackupKey }
                 let params = keyManager.getOrCreateKdfParams()
                 let fingerprint = keyManager.fingerprint(key: backupKey)
 
                 let vaultRoot = try vaultRootURL()
+                publishProgress(.initial(phase: .scanning), to: progress)
                 let assets = try scanVaultAssets(vaultRoot: vaultRoot)
                 guard !assets.isEmpty else { throw BackupError.vaultEmpty }
+                let totalBytes = assets.reduce(Int64(0)) { $0 + $1.sizeBytes }
 
                 let backupId = newBackupId()
                 let now = Int64(Date().timeIntervalSince1970 * 1000)
                 let tmpDir = try tmpDirectory()
                 let bodyFile = tmpDir.appendingPathComponent("manual_body_\(backupId).bin")
                 let writingFile = tmpDir.appendingPathComponent("manual_\(backupId).writing")
+                let bytes: Int64
+                do {
+                    bytes = try writeBodyAndAssemble(
+                        vaultRoot: vaultRoot,
+                        bodyFile: bodyFile,
+                        writingFile: writingFile,
+                        backupKey: backupKey,
+                        headerBase: BackupPackageV1.HeaderBase(
+                            backupId: backupId,
+                            createdAtMs: now,
+                            kind: .MANUAL,
+                            kdfAlgorithm: params.algorithm,
+                            kdfSaltHex: params.saltHex,
+                            kdfIterations: params.iterations,
+                            kdfMemoryKb: params.memoryKb,
+                            kdfParallelism: params.parallelism,
+                            keyFingerprintHex: fingerprint
+                        ),
+                        assets: assets,
+                        progress: progress
+                    )
 
-                let bytes = try writeBodyAndAssemble(
-                    vaultRoot: vaultRoot,
-                    bodyFile: bodyFile,
-                    writingFile: writingFile,
-                    backupKey: backupKey,
-                    headerBase: BackupPackageV1.HeaderBase(
-                        backupId: backupId,
-                        createdAtMs: now,
-                        kind: .MANUAL,
-                        kdfAlgorithm: params.algorithm,
-                        kdfSaltHex: params.saltHex,
-                        kdfIterations: params.iterations,
-                        kdfMemoryKb: params.memoryKb,
-                        kdfParallelism: params.parallelism,
-                        keyFingerprintHex: fingerprint
-                    ),
-                    assets: assets
-                )
+                    publishProgress(LongRunningTaskProgress(
+                        phase: .assembling,
+                        current: assets.count,
+                        total: assets.count,
+                        currentFileName: outputURL.lastPathComponent,
+                        bytesWritten: totalBytes,
+                        totalBytes: totalBytes,
+                        cancellable: true
+                    ), to: progress)
+                    try Task.checkCancellation()
+                    if FileManager.default.fileExists(atPath: outputURL.path) {
+                        try FileManager.default.removeItem(at: outputURL)
+                    }
+                    try FileManager.default.copyItem(at: writingFile, to: outputURL)
 
-                if FileManager.default.fileExists(atPath: outputURL.path) {
-                    try FileManager.default.removeItem(at: outputURL)
+                    try? FileManager.default.removeItem(at: bodyFile)
+                    try? FileManager.default.removeItem(at: writingFile)
+                } catch {
+                    try? FileManager.default.removeItem(at: bodyFile)
+                    try? FileManager.default.removeItem(at: writingFile)
+                    try? FileManager.default.removeItem(at: outputURL)
+                    throw error
                 }
-                try FileManager.default.copyItem(at: writingFile, to: outputURL)
-
-                try? FileManager.default.removeItem(at: bodyFile)
-                try? FileManager.default.removeItem(at: writingFile)
 
                 await MainActor.run { QuotaManager.shared.recordSuccessfulBackup() }
+                publishProgress(LongRunningTaskProgress(
+                    phase: .completed,
+                    current: assets.count,
+                    total: assets.count,
+                    currentFileName: outputURL.lastPathComponent,
+                    bytesWritten: totalBytes,
+                    totalBytes: totalBytes,
+                    cancellable: false
+                ), to: progress)
                 return .success(backupId: backupId, assetCount: assets.count, bytes: bytes)
+            } catch is CancellationError {
+                publishProgress(.initial(phase: .cancelled, cancellable: false), to: progress)
+                try? FileManager.default.removeItem(at: outputURL)
+                return .cancelled()
             } catch let e as BackupError {
                 return .failure(e.localizedDescription ?? L10n.tr("backup_error_failed_fmt", ""))
             } catch {
                 return .failure(L10n.tr("backup_error_failed_fmt", error.localizedDescription))
             }
-        }.value
+        }
+        return await withTaskCancellationHandler {
+            await work.value
+        } onCancel: {
+            work.cancel()
+        }
     }
 
     /// 从已授权目录的 `backup.dat` 恢复（首启 RestoreLogin）。
-    func restoreFromAutoPackage(pin: String) async -> RestoreExecutionResult {
+    func restoreFromAutoPackage(
+        pin: String,
+        progress: LongRunningTaskProgressHandler? = nil
+    ) async -> RestoreExecutionResult {
         guard ExternalBackupLocation.findAutoBackup() else {
             return .failure(L10n.tr("restore_error_no_auto_backup"))
         }
@@ -237,10 +330,14 @@ final class LocalBackupService: @unchecked Sendable {
             return .failure(L10n.tr("restore_error_cannot_open_auto"))
         }
         defer { PlaintextTempFileManager.shared.removeItem(tempURL) }
-        return await restore(from: tempURL, pin: pin)
+        return await restore(from: tempURL, pin: pin, progress: progress)
     }
 
-    func restore(from inputURL: URL, pin: String) async -> RestoreExecutionResult {
+    func restore(
+        from inputURL: URL,
+        pin: String,
+        progress: LongRunningTaskProgressHandler? = nil
+    ) async -> RestoreExecutionResult {
         lock.lock()
         guard !isRunning else {
             lock.unlock()
@@ -254,8 +351,10 @@ final class LocalBackupService: @unchecked Sendable {
             lock.unlock()
         }
 
-        return await Task.detached(priority: .userInitiated) { [self] in
+        let work = Task.detached(priority: .userInitiated) { [self] in
             do {
+                publishProgress(.initial(phase: .verifying), to: progress)
+                try Task.checkCancellation()
                 let header = try readHeaderOnly(at: inputURL)
                 let params = BackupKeyManager.KdfParams(
                     algorithm: header.kdfAlgorithm,
@@ -274,6 +373,16 @@ final class LocalBackupService: @unchecked Sendable {
                     at: inputURL,
                     vaultRoot: vaultRoot
                 )
+                let totalBytes = verifiedHeader.assets.reduce(Int64(0)) { $0 + max(0, $1.sizeBytes) }
+                publishProgress(LongRunningTaskProgress(
+                    phase: .restoring,
+                    current: 0,
+                    total: verifiedHeader.assets.count,
+                    currentFileName: nil,
+                    bytesWritten: 0,
+                    totalBytes: totalBytes,
+                    cancellable: true
+                ), to: progress)
 
                 guard let bodyStream = InputStream(url: inputURL) else {
                     throw BackupError.io("cannot open backup")
@@ -291,8 +400,19 @@ final class LocalBackupService: @unchecked Sendable {
                 var restored = 0
                 var skipped = 0
                 var failed = 0
+                var processedBytes: Int64 = 0
 
-                for asset in verifiedHeader.assets {
+                for (index, asset) in verifiedHeader.assets.enumerated() {
+                    try Task.checkCancellation()
+                    publishProgress(LongRunningTaskProgress(
+                        phase: .restoring,
+                        current: index + 1,
+                        total: verifiedHeader.assets.count,
+                        currentFileName: URL(fileURLWithPath: asset.relativePath).lastPathComponent,
+                        bytesWritten: processedBytes,
+                        totalBytes: totalBytes,
+                        cancellable: true
+                    ), to: progress)
                     do {
                         let target = try BackupIntegrityVerifier.resolvedAssetURL(
                             relativePath: asset.relativePath,
@@ -302,8 +422,10 @@ final class LocalBackupService: @unchecked Sendable {
                            cipher.decryptedSha256Hex(at: target) == asset.sha256Hex {
                             skipped += 1
                             for _ in 0 ..< asset.frameCount {
+                                try Task.checkCancellation()
                                 _ = try reader.readNextChunk()
                             }
+                            processedBytes += max(0, asset.sizeBytes)
                             continue
                         }
                         try FileManager.default.createDirectory(
@@ -313,10 +435,21 @@ final class LocalBackupService: @unchecked Sendable {
                         var digest = SHA256()
                         try cipher.encryptFileFromChunks(to: target) { emit in
                             for _ in 0 ..< asset.frameCount {
+                                try Task.checkCancellation()
                                 guard let plain = try reader.readNextChunk() else {
                                     throw BackupError.io("unexpected EOF")
                                 }
                                 digest.update(data: plain)
+                                processedBytes += Int64(plain.count)
+                                publishProgress(LongRunningTaskProgress(
+                                    phase: .restoring,
+                                    current: index + 1,
+                                    total: verifiedHeader.assets.count,
+                                    currentFileName: URL(fileURLWithPath: asset.relativePath).lastPathComponent,
+                                    bytesWritten: processedBytes,
+                                    totalBytes: totalBytes,
+                                    cancellable: true
+                                ), to: progress)
                                 try emit(plain)
                             }
                         }
@@ -326,20 +459,41 @@ final class LocalBackupService: @unchecked Sendable {
                             throw BackupError.io("checksum mismatch")
                         }
                         restored += 1
+                    } catch is CancellationError {
+                        if let target = try? BackupIntegrityVerifier.resolvedAssetURL(
+                            relativePath: asset.relativePath,
+                            vaultRoot: vaultRoot
+                        ) {
+                            try? FileManager.default.removeItem(at: target)
+                        }
+                        throw CancellationError()
                     } catch {
                         failed += 1
+                        processedBytes += max(0, asset.sizeBytes)
                     }
                 }
 
                 await MainActor.run {
                     VaultStore.shared.invalidateCache()
                 }
+                publishProgress(LongRunningTaskProgress(
+                    phase: .completed,
+                    current: verifiedHeader.assets.count,
+                    total: verifiedHeader.assets.count,
+                    currentFileName: nil,
+                    bytesWritten: totalBytes,
+                    totalBytes: totalBytes,
+                    cancellable: false
+                ), to: progress)
                 return .success(
                     restored: restored,
                     skipped: skipped,
                     failed: failed,
                     backupId: verifiedHeader.backupId
                 )
+            } catch is CancellationError {
+                publishProgress(.initial(phase: .cancelled, cancellable: false), to: progress)
+                return .cancelled()
             } catch BackupError.wrongPin {
                 return .failure(L10n.tr("restore_error_wrong_pin"))
             } catch let e as BackupError {
@@ -347,7 +501,12 @@ final class LocalBackupService: @unchecked Sendable {
             } catch {
                 return .failure(error.localizedDescription)
             }
-        }.value
+        }
+        return await withTaskCancellationHandler {
+            await work.value
+        } onCancel: {
+            work.cancel()
+        }
     }
 
     // MARK: - Internal
@@ -356,6 +515,16 @@ final class LocalBackupService: @unchecked Sendable {
         let relativePath: String
         let sizeBytes: Int64
         let sha256Hex: String
+    }
+
+    private func publishProgress(
+        _ value: LongRunningTaskProgress,
+        to handler: LongRunningTaskProgressHandler?
+    ) {
+        guard let handler else { return }
+        Task { @MainActor in
+            handler(value)
+        }
     }
 
     private func vaultRootURL() throws -> URL {
@@ -391,6 +560,7 @@ final class LocalBackupService: @unchecked Sendable {
 
         var assets: [VaultAsset] = []
         for case let file as URL in enumerator {
+            try Task.checkCancellation()
             let name = file.lastPathComponent
             if name == ".vault_encrypted_v1" || name.contains(".enc_tmp_") { continue }
             let values = try file.resourceValues(forKeys: [.isRegularFileKey])
@@ -406,6 +576,7 @@ final class LocalBackupService: @unchecked Sendable {
         var digest = SHA256()
         var plainSize: Int64 = 0
         try cipher.decryptStream(at: file) { chunk in
+            try Task.checkCancellation()
             digest.update(data: chunk)
             plainSize += Int64(chunk.count)
         }
@@ -423,7 +594,8 @@ final class LocalBackupService: @unchecked Sendable {
         writingFile: URL,
         backupKey: Data,
         headerBase: BackupPackageV1.HeaderBase,
-        assets: [VaultAsset]
+        assets: [VaultAsset],
+        progress: LongRunningTaskProgressHandler?
     ) throws -> Int64 {
         FileManager.default.createFile(atPath: bodyFile.path, contents: nil)
         let bodyStream = OutputStream(url: bodyFile, append: false)!
@@ -432,9 +604,21 @@ final class LocalBackupService: @unchecked Sendable {
 
         let bodyWriter = BackupPackageV1.newBodyWriter(output: bodyStream, backupKey: backupKey)
         var chunkBuf = [UInt8](repeating: 0, count: BackupPackageV1.chunkMaxPlainBytes)
+        let totalBytes = assets.reduce(Int64(0)) { $0 + $1.sizeBytes }
+        var processedBytes: Int64 = 0
 
-        for asset in assets {
-            try bodyWriter.beginAsset(
+        for (index, asset) in assets.enumerated() {
+            try Task.checkCancellation()
+            publishProgress(LongRunningTaskProgress(
+                phase: .backingUp,
+                current: index + 1,
+                total: assets.count,
+                currentFileName: URL(fileURLWithPath: asset.relativePath).lastPathComponent,
+                bytesWritten: processedBytes,
+                totalBytes: totalBytes,
+                cancellable: true
+            ), to: progress)
+            bodyWriter.beginAsset(
                 relativePath: asset.relativePath,
                 sha256Hex: asset.sha256Hex,
                 sizeBytes: asset.sizeBytes
@@ -442,6 +626,7 @@ final class LocalBackupService: @unchecked Sendable {
             var chunkFill = 0
             let source = vaultRoot.appendingPathComponent(asset.relativePath)
             try cipher.decryptStream(at: source) { data in
+                try Task.checkCancellation()
                 var offset = 0
                 while offset < data.count {
                     let take = min(BackupPackageV1.chunkMaxPlainBytes - chunkFill, data.count - offset)
@@ -455,6 +640,16 @@ final class LocalBackupService: @unchecked Sendable {
                         chunkFill = 0
                     }
                 }
+                processedBytes += Int64(data.count)
+                publishProgress(LongRunningTaskProgress(
+                    phase: .backingUp,
+                    current: index + 1,
+                    total: assets.count,
+                    currentFileName: URL(fileURLWithPath: asset.relativePath).lastPathComponent,
+                    bytesWritten: processedBytes,
+                    totalBytes: totalBytes,
+                    cancellable: true
+                ), to: progress)
             }
             if chunkFill > 0 {
                 try bodyWriter.writeChunk(Data(chunkBuf[0 ..< chunkFill]))

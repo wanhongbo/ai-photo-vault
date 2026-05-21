@@ -64,6 +64,11 @@ struct VideoPlayerView: View {
         .onDisappear {
             cleanupPlayback()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemFailedToPlayToEndTime)) { _ in
+            loadError = L10n.tr("video_decrypt_failed")
+            isLoading = false
+            cleanupPlayback()
+        }
         .overlay { dialogs }
     }
 
@@ -133,6 +138,7 @@ struct VideoPlayerView: View {
             avPlayer.play()
         } catch {
             loadError = error.localizedDescription
+            cleanupPlayback()
         }
         isLoading = false
     }
@@ -155,12 +161,12 @@ struct VideoPlayerView: View {
 
     private func infoItems() -> [(String, String)] {
         let url = URL(fileURLWithPath: path)
-        let size = (try? FileManager.default.attributesOfItem(atPath: path)[.size] as? Int64) ?? 0
-        let formatter = ByteCountFormatter()
-        formatter.countStyle = .file
-        return [
-            ("Name", url.lastPathComponent),
-            ("Size", formatter.string(fromByteCount: size)),
-        ]
+        let record = VaultMetadataStore.shared.mediaRecord(forPath: path)
+        return mediaInfoItems(
+            fallbackURL: url,
+            fallbackPath: path,
+            record: record,
+            fallbackKind: .video
+        )
     }
 }

@@ -11,6 +11,7 @@ final class VaultHomeViewModel: ObservableObject {
     @Published var showPermissionDenied = false
     @Published var showCreateAlbum = false
     @Published var newAlbumName = ""
+    @Published var duplicateImportDialogMessage: String?
     @Published private(set) var snapshot: VaultSnapshot?
     @Published private(set) var hasPinConfigured = debugSkipsPin || SecuritySettingsStore.shared.hasPinConfigured
 
@@ -68,6 +69,7 @@ final class VaultHomeViewModel: ObservableObject {
             let summary = await PhotosPickerVaultImporter.importItems(items, into: vaultDefaultAlbumName, vaultStore: vaultStore)
             vaultStore.endImportBatch()
             await vaultStore.finalizeImportBatch(summary)
+            duplicateImportDialogMessage = VaultImportFeedback.duplicateDialogMessage(for: summary)
             snapshot = vaultStore.snapshot
         }
         return true
@@ -85,6 +87,16 @@ final class VaultHomeViewModel: ObservableObject {
             await vaultStore.loadSnapshot()
             snapshot = vaultStore.snapshot
         }
+    }
+}
+
+enum VaultImportFeedback {
+    static func duplicateDialogMessage(for summary: VaultImportSummary) -> String? {
+        guard summary.duplicate > 0, summary.added == 0, summary.failed == 0 else { return nil }
+        if summary.duplicate == 1 {
+            return L10n.tr("home_import_duplicate_dialog_message")
+        }
+        return L10n.tr("home_import_duplicate_dialog_message_count", summary.duplicate)
     }
 }
 

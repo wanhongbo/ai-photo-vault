@@ -11,10 +11,11 @@ struct RouteDestinationView: View {
             case .albumList: AlbumListView()
             case .recentList: RecentPhotosView()
             case .album(let name): AlbumView(albumName: name)
-            case .photoViewer(let path, let isTrash):
+            case .photoViewer(let path, let isTrash, let source):
                 PhotoViewerView(
                     path: path,
                     isTrash: isTrash,
+                    source: source,
                     onOpenAlbum: isTrash ? { album in
                         router.selectedTab = .vault
                         router.pushVault(.album(name: album))

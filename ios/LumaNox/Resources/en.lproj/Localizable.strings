@@ -73,6 +73,14 @@
 "photo_viewer_delete_message" = "Item moves to trash. Restore or purge from Settings.";
 "photo_viewer_info_title" = "File Info";
 "photo_viewer_info_name" = "Name";
+"photo_viewer_info_album" = "Album";
+"photo_viewer_info_type" = "Type";
+"photo_viewer_info_type_image" = "Image";
+"photo_viewer_info_type_video" = "Video";
+"photo_viewer_info_type_other" = "File";
+"photo_viewer_info_dimensions" = "Dimensions";
+"photo_viewer_info_dimensions_value" = "%d × %d";
+"photo_viewer_info_duration" = "Duration";
 "photo_viewer_info_size" = "Size";
 "photo_viewer_info_modified" = "Modified";
 "video_viewer_delete_title" = "Delete Video";
@@ -242,6 +250,10 @@
 "lock_setup_required_hint" = "Set up your 6-digit PIN to access the vault";
 "home_import_success_count" = "Imported %d item(s) into vault";
 "home_import_duplicate_count" = "Skipped %d duplicate(s)";
+"home_import_multi_result" = "Import complete: %d added, %d duplicate, %d failed";
+"home_import_duplicate_dialog_title" = "Duplicate skipped";
+"home_import_duplicate_dialog_message" = "This item is already in the current album, so it was not imported again.";
+"home_import_duplicate_dialog_message_count" = "%d items are already in the current album, so they were not imported again.";
 "home_import_failed" = "Import failed. Please try again.";
 "home_import_none" = "Nothing to import";
 "home_permission_title" = "Photo Library Access";

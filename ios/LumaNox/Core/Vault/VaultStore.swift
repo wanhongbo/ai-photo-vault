@@ -225,6 +225,9 @@ final class VaultStore: ObservableObject {
     }
 
     private func formatImportMessage(_ s: VaultImportSummary) -> String {
+        if s.added > 0 && (s.duplicate > 0 || s.failed > 0) {
+            return L10n.tr("home_import_multi_result", s.added, s.duplicate, s.failed)
+        }
         if s.added > 0 {
             return L10n.tr("home_import_success_count", s.added)
         }

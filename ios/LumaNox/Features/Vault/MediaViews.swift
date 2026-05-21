@@ -115,7 +115,7 @@ struct RecentPhotosView: View {
         if item.isVideo {
             router.pushVault(.videoPlayer(path: item.path))
         } else {
-            router.pushVault(.photoViewer(path: item.path))
+            router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .recent))
         }
     }
 }
@@ -386,6 +386,7 @@ struct AlbumView: View {
     @Environment(\.dismiss) private var dismiss
     let albumName: String
     @State private var pickerItems: [PhotosPickerItem] = []
+    @State private var duplicateImportDialogMessage: String?
 
     private var safeAlbumName: String {
         vaultStore.sanitizeAlbumName(albumName)
@@ -422,13 +423,23 @@ struct AlbumView: View {
         .onChange(of: pickerItems) { _ in
             importSelectedItems()
         }
+        .overlay {
+            if let duplicateMessage = duplicateImportDialogMessage {
+                LNDialog(
+                    title: L10n.tr("home_import_duplicate_dialog_title"),
+                    message: duplicateMessage,
+                    confirmTitle: L10n.commonOk,
+                    onConfirm: { duplicateImportDialogMessage = nil }
+                )
+            }
+        }
     }
 
     private func open(_ item: LNMediaItem) {
         if item.isVideo {
             router.pushVault(.videoPlayer(path: item.path))
         } else {
-            router.pushVault(.photoViewer(path: item.path))
+            router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .album(name: safeAlbumName)))
         }
     }
 
@@ -446,6 +457,7 @@ struct AlbumView: View {
             let summary = await PhotosPickerVaultImporter.importItems(items, into: safeAlbumName, vaultStore: vaultStore)
             vaultStore.endImportBatch()
             await vaultStore.finalizeImportBatch(summary)
+            duplicateImportDialogMessage = VaultImportFeedback.duplicateDialogMessage(for: summary)
         }
     }
 }
@@ -471,7 +483,7 @@ struct VaultSearchView: View {
                 if item.isVideo {
                     router.pushVault(.videoPlayer(path: item.path))
                 } else {
-                    router.pushVault(.photoViewer(path: item.path))
+                    router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .search(query: query)))
                 }
             }
         }
@@ -485,6 +497,7 @@ struct PhotoViewerView: View {
     @Environment(\.dismiss) private var dismiss
     let path: String
     var isTrash: Bool = false
+    var source: PhotoViewerSource = .recent
     var onOpenAlbum: ((String) -> Void)? = nil
 
     @State private var showDelete = false
@@ -497,9 +510,15 @@ struct PhotoViewerView: View {
     @State private var showShareSheet = false
     @State private var showShareFailure = false
 
-    init(path: String, isTrash: Bool = false, onOpenAlbum: ((String) -> Void)? = nil) {
+    init(
+        path: String,
+        isTrash: Bool = false,
+        source: PhotoViewerSource = .recent,
+        onOpenAlbum: ((String) -> Void)? = nil
+    ) {
         self.path = path
         self.isTrash = isTrash
+        self.source = source
         self.onOpenAlbum = onOpenAlbum
         _currentPath = State(initialValue: path)
         _orderedPaths = State(initialValue: [path])
@@ -556,6 +575,12 @@ struct PhotoViewerView: View {
                     .ignoresSafeArea()
             }
         }
+        .onChange(of: showShareSheet) { isPresented in
+            if !isPresented, let shareURL {
+                PlaintextTempFileManager.shared.removeItem(shareURL)
+                self.shareURL = nil
+            }
+        }
         .alert(L10n.tr("photo_viewer_share_failed"), isPresented: $showShareFailure) {
             Button(L10n.commonOk, role: .cancel) {}
         }
@@ -580,14 +605,28 @@ struct PhotoViewerView: View {
     private func reloadOrderedPaths() async {
         currentPath = path
         let paths: [String]
-        if isTrash {
+        if isTrash || source == .trash {
             let items = await vaultStore.listTrashItems()
             paths = items.filter { !$0.isVideo }.map(\.path)
         } else {
-            await vaultStore.loadSnapshot()
-            paths = vaultStore.snapshot?.recentPhotos
-                .filter { !$0.isVideo }
-                .map(\.path) ?? []
+            switch source {
+            case .album(let name):
+                await vaultStore.loadSnapshot()
+                let safeName = vaultStore.sanitizeAlbumName(name)
+                paths = vaultStore.photos(in: safeName)
+                    .filter { !$0.isVideo }
+                    .map(\.path)
+            case .search(let query):
+                await vaultStore.loadSnapshot()
+                paths = vaultStore.searchPhotos(query: query)
+                    .filter { !$0.isVideo }
+                    .map(\.path)
+            case .recent, .trash:
+                await vaultStore.loadSnapshot()
+                paths = vaultStore.snapshot?.recentPhotos
+                    .filter { !$0.isVideo }
+                    .map(\.path) ?? []
+            }
         }
         orderedPaths = paths.contains(path) ? paths : [path] + paths
     }
@@ -617,6 +656,10 @@ struct PhotoViewerView: View {
                 }
             } catch {
                 await MainActor.run {
+                    if let staleShareURL = shareURL {
+                        PlaintextTempFileManager.shared.removeItem(staleShareURL)
+                        shareURL = nil
+                    }
                     isPreparingShare = false
                     showShareFailure = true
                 }
@@ -685,17 +728,13 @@ struct PhotoViewerView: View {
 
     private func photoInfoItems() -> [(String, String)] {
         let url = URL(fileURLWithPath: currentPath)
-        let size = (try? FileManager.default.attributesOfItem(atPath: currentPath)[.size] as? Int64) ?? 0
-        let formatter = ByteCountFormatter()
-        formatter.countStyle = .file
-        let modified = (try? FileManager.default.attributesOfItem(atPath: currentPath)[.modificationDate] as? Date) ?? Date()
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd HH:mm"
-        return [
-            (L10n.tr("photo_viewer_info_name"), url.lastPathComponent),
-            (L10n.tr("photo_viewer_info_size"), formatter.string(fromByteCount: size)),
-            (L10n.tr("photo_viewer_info_modified"), df.string(from: modified)),
-        ]
+        let record = VaultMetadataStore.shared.mediaRecord(forPath: currentPath)
+        return mediaInfoItems(
+            fallbackURL: url,
+            fallbackPath: currentPath,
+            record: record,
+            fallbackKind: .image
+        )
     }
 }
 
@@ -906,7 +945,7 @@ struct TrashBinView: View {
                     if item.isVideo {
                         router.pushSettings(.videoPlayer(path: item.path, isTrash: true))
                     } else {
-                        router.pushSettings(.photoViewer(path: item.path, isTrash: true))
+                        router.pushSettings(.photoViewer(path: item.path, isTrash: true, source: .trash))
                     }
                 }
             }

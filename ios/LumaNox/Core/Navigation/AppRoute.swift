@@ -9,13 +9,20 @@ enum MainTab: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum PhotoViewerSource: Hashable {
+    case recent
+    case album(name: String)
+    case search(query: String)
+    case trash
+}
+
 enum AppRoute: Hashable {
     // Vault / media
     case vaultSearch
     case albumList
     case recentList
     case album(name: String)
-    case photoViewer(path: String, isTrash: Bool = false)
+    case photoViewer(path: String, isTrash: Bool, source: PhotoViewerSource)
     case videoPlayer(path: String, isTrash: Bool = false)
 
     // Camera

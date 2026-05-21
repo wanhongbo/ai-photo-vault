@@ -11,6 +11,7 @@
       "y": 0,
       "width": 393,
       "height": 852,
+      "clip": true,
       "padding": 16,
       "gap": 16,
       "children": [
@@ -99,9 +100,37 @@
               "height": 115,
               "gap": 8,
               "children": [
-                { "type": "frame", "id": "bulk_export_cell_1", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#142741", "stroke": { "fill": "#4A9EFF", "thickness": 2 } },
+                {
+                  "type": "frame",
+                  "id": "bulk_export_cell_1",
+                  "layout": "none",
+                  "clip": true,
+                  "width": 115,
+                  "height": 115,
+                  "cornerRadius": 12,
+                  "fill": "#142741",
+                  "stroke": { "fill": "#4A9EFF", "thickness": 2 },
+                  "children": [
+                    { "type": "ellipse", "id": "bulk_export_cell_1_check_bg", "x": 84, "y": 8, "width": 24, "height": 24, "fill": "#4A9EFF" },
+                    { "type": "text", "id": "bulk_export_cell_1_check", "x": 90, "y": 7, "content": "✓", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#07101C" }
+                  ]
+                },
                 { "type": "frame", "id": "bulk_export_cell_2", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#20324A", "stroke": { "fill": "#223247", "thickness": 1 } },
-                { "type": "frame", "id": "bulk_export_cell_3", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#183C31", "stroke": { "fill": "#4A9EFF", "thickness": 2 } }
+                {
+                  "type": "frame",
+                  "id": "bulk_export_cell_3",
+                  "layout": "none",
+                  "clip": true,
+                  "width": 115,
+                  "height": 115,
+                  "cornerRadius": 12,
+                  "fill": "#183C31",
+                  "stroke": { "fill": "#4A9EFF", "thickness": 2 },
+                  "children": [
+                    { "type": "ellipse", "id": "bulk_export_cell_3_check_bg", "x": 84, "y": 8, "width": 24, "height": 24, "fill": "#4A9EFF" },
+                    { "type": "text", "id": "bulk_export_cell_3_check", "x": 90, "y": 7, "content": "✓", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#07101C" }
+                  ]
+                }
               ]
             },
             {
@@ -114,7 +143,21 @@
               "gap": 8,
               "children": [
                 { "type": "frame", "id": "bulk_export_cell_4", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#2B2748", "stroke": { "fill": "#223247", "thickness": 1 } },
-                { "type": "frame", "id": "bulk_export_cell_5", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#142741", "stroke": { "fill": "#4A9EFF", "thickness": 2 } },
+                {
+                  "type": "frame",
+                  "id": "bulk_export_cell_5",
+                  "layout": "none",
+                  "clip": true,
+                  "width": 115,
+                  "height": 115,
+                  "cornerRadius": 12,
+                  "fill": "#142741",
+                  "stroke": { "fill": "#4A9EFF", "thickness": 2 },
+                  "children": [
+                    { "type": "ellipse", "id": "bulk_export_cell_5_check_bg", "x": 84, "y": 8, "width": 24, "height": 24, "fill": "#4A9EFF" },
+                    { "type": "text", "id": "bulk_export_cell_5_check", "x": 90, "y": 7, "content": "✓", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#07101C" }
+                  ]
+                },
                 { "type": "frame", "id": "bulk_export_cell_6", "width": 115, "height": 115, "cornerRadius": 12, "fill": "#20324A", "stroke": { "fill": "#223247", "thickness": 1 } }
               ]
             }
@@ -124,10 +167,24 @@
           "type": "frame",
           "id": "bulk_export_cta",
           "name": "Export selected button",
+          "layout": "horizontal",
+          "alignItems": "center",
+          "justifyContent": "center",
           "width": 361,
           "height": 54,
           "cornerRadius": 16,
-          "fill": "#4A9EFF"
+          "fill": "#4A9EFF",
+          "children": [
+            {
+              "type": "text",
+              "id": "bulk_export_cta_label",
+              "content": "Export selected",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "650",
+              "fill": "#FFFFFF"
+            }
+          ]
         }
       ]
     }

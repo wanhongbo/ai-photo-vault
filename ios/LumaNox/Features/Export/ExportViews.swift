@@ -46,67 +46,111 @@ struct BulkExportView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
 
-    private let columns = [
-        GridItem(.flexible(), spacing: LNSpacing.gridGap),
-        GridItem(.flexible(), spacing: LNSpacing.gridGap),
-        GridItem(.flexible(), spacing: LNSpacing.gridGap),
-    ]
-
     var body: some View {
-        LNScreenScaffold(title: L10n.tr("bulk_export_title"), onBack: { dismiss() }) {
-            VStack(spacing: 16) {
-                summaryCard
+        GeometryReader { proxy in
+            let contentWidth = max(0, proxy.size.width - LNSpacing.screenHorizontal * 2)
+            let cellSize = max(0, floor((contentWidth - LNSpacing.gridGap * 2) / 3))
 
-                if isLoading {
-                    ProgressView()
-                        .tint(LNColor.brandBlue)
-                        .frame(maxWidth: .infinity, minHeight: 180)
-                } else if let errorMessage {
-                    LNEmptyStateCard(
-                        title: L10n.tr("bulk_export_error_title"),
-                        message: errorMessage,
-                        actionTitle: L10n.tr("bulk_export_retry"),
-                        action: { Task { await loadRecords() } }
-                    )
-                } else if records.isEmpty {
-                    LNEmptyStateCard(
-                        title: L10n.tr("bulk_export_empty_title"),
-                        message: L10n.tr("bulk_export_empty_message"),
-                        actionTitle: L10n.commonOk,
-                        action: { dismiss() }
-                    )
-                } else {
-                    exportGrid
-                    LNButton(
-                        title: L10n.tr("bulk_export_start"),
-                        variant: .primary,
-                        enabled: !selectedIds.isEmpty
-                    ) {
-                        let selected = records.filter { selectedIds.contains($0.id) }
-                        ExportRuntimeState.enqueue(records: selected)
-                        router.pushInCurrentTab(.exportProgress)
-                    }
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    penNavigation
+                    summaryCard
+                    stateContent(contentWidth: contentWidth, cellSize: cellSize)
                 }
+                .padding(.horizontal, LNSpacing.screenHorizontal)
+                .padding(.bottom, 24)
+                .frame(width: proxy.size.width, alignment: .topLeading)
             }
+            .background(LNColor.bgBottom.ignoresSafeArea())
         }
         .task { await loadRecords() }
+    }
+
+    private var penNavigation: some View {
+        HStack(spacing: 0) {
+            Button(action: { dismiss() }) {
+                Text("‹")
+                    .font(.system(size: 30, weight: .medium))
+                    .foregroundStyle(LNColor.title)
+                    .frame(width: LNSpacing.minTouchTarget, height: 52, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.commonBack)
+            .accessibilityIdentifier("bulk_export_back")
+
+            Text(L10n.tr("bulk_export_title"))
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(LNColor.title)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 52)
     }
 
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(L10n.tr("bulk_export_select_title"))
-                .font(LNTypography.titleMedium())
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(LNColor.title)
             Text(L10n.tr("bulk_export_selected_count", selectedIds.count))
-                .font(LNTypography.bodyMedium())
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(LNColor.subtitle)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .lnCard()
+        .padding(16)
+        .background(LNColor.sectionBg)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(LNColor.stroke, lineWidth: 1)
+        )
     }
 
-    private var exportGrid: some View {
-        LazyVGrid(columns: columns, spacing: LNSpacing.gridGap) {
+    @ViewBuilder
+    private func stateContent(contentWidth: CGFloat, cellSize: CGFloat) -> some View {
+        if isLoading {
+            ProgressView()
+                .tint(LNColor.brandBlue)
+                .frame(width: contentWidth)
+                .frame(minHeight: 180)
+        } else if let errorMessage {
+            LNEmptyStateCard(
+                title: L10n.tr("bulk_export_error_title"),
+                message: errorMessage,
+                actionTitle: L10n.tr("bulk_export_retry"),
+                action: { Task { await loadRecords() } }
+            )
+        } else if records.isEmpty {
+            LNEmptyStateCard(
+                title: L10n.tr("bulk_export_empty_title"),
+                message: L10n.tr("bulk_export_empty_message"),
+                actionTitle: L10n.commonOk,
+                action: { dismiss() }
+            )
+        } else {
+            exportGrid(cellSize: cellSize)
+            LNButton(
+                title: L10n.tr("bulk_export_start"),
+                variant: .primary,
+                enabled: !selectedIds.isEmpty
+            ) {
+                let selected = records.filter { selectedIds.contains($0.id) }
+                ExportRuntimeState.enqueue(records: selected)
+                router.pushInCurrentTab(.exportProgress)
+            }
+            .frame(width: contentWidth)
+        }
+    }
+
+    private func exportGrid(cellSize: CGFloat) -> some View {
+        let fixedColumns = Array(
+            repeating: GridItem(.fixed(cellSize), spacing: LNSpacing.gridGap),
+            count: 3
+        )
+
+        return LazyVGrid(columns: fixedColumns, spacing: LNSpacing.gridGap) {
             ForEach(records) { record in
                 let selected = selectedIds.contains(record.id)
                 Button {
@@ -118,18 +162,23 @@ struct BulkExportView: View {
                         contentMode: .fill,
                         targetPixelSize: 360
                     )
-                    .aspectRatio(1, contentMode: .fit)
+                    .frame(width: cellSize, height: cellSize)
                     .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeThumb))
                     .overlay(
                         RoundedRectangle(cornerRadius: LNRadius.homeThumb)
                             .stroke(selected ? LNColor.brandBlue : LNColor.stroke, lineWidth: selected ? 2 : 1)
                     )
                     .overlay(alignment: .topTrailing) {
-                        Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 23, weight: .semibold))
-                            .foregroundStyle(selected ? LNColor.brandBlue : LNColor.title.opacity(0.72))
-                            .padding(7)
-                            .shadow(radius: 3)
+                        if selected {
+                            ZStack {
+                                Circle().fill(LNColor.brandBlue)
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(LNColor.bgBottom)
+                            }
+                            .frame(width: 24, height: 24)
+                            .padding(8)
+                        }
                     }
                 }
                 .buttonStyle(.plain)
@@ -137,6 +186,8 @@ struct BulkExportView: View {
                 .accessibilityAddTraits(selected ? [.isSelected] : [])
             }
         }
+        .frame(width: cellSize * 3 + LNSpacing.gridGap * 2, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func toggle(_ record: VaultMediaRecord) {

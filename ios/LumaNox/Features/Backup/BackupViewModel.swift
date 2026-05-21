@@ -43,16 +43,8 @@ final class BackupRestoreViewModel: ObservableObject {
             pinError = L10n.tr("restore_error_cannot_read_file")
             return nil
         }
-        let result = await LocalBackupService.shared.restore(from: localURL, pin: pin)
-        if result.success {
-            await VaultStore.shared.loadSnapshot()
-            BackupFlowState.lastRestore = result
-            pendingRestoreURL = nil
-            await AutoBackupScheduler.runOnceNow(reason: .manualRestoreSync)
-            return localURL
-        }
-        pinError = result.message.isEmpty ? L10n.tr("restore_error_wrong_pin") : result.message
-        return nil
+        pendingRestoreURL = nil
+        return localURL
     }
 
     func runBackup(to outputURL: URL, router: AppRouter) async -> BackupExecutionResult? {
@@ -79,64 +71,106 @@ enum BackupFlowState {
 
 @MainActor
 final class BackupProgressViewModel: ObservableObject {
-    @Published var progress: Double = 0
-    @Published var statusText = ""
+    @Published var progress = LongRunningTaskProgress.initial(phase: .preparing)
     @Published var finished = false
     @Published var failed = false
     @Published var errorMessage: String?
 
     let outputURL: URL
+    private var task: Task<Void, Never>?
 
     init(outputURL: URL) {
         self.outputURL = outputURL
     }
 
-    func start() async {
-        statusText = L10n.tr("backup_progress_title")
-        progress = 0.1
-        let result = await LocalBackupService.shared.createManualBackup(to: outputURL)
-        progress = 1
-        if result.success {
-            BackupFlowState.lastBackup = result
-            finished = true
-            statusText = L10n.tr("backup_result_success")
-        } else {
-            failed = true
-            errorMessage = result.message
+    func start(onFinished: @escaping @MainActor () -> Void) {
+        guard task == nil else { return }
+        task = Task {
+            let result = await LocalBackupService.shared.createManualBackup(to: outputURL) { [weak self] next in
+                self?.progress = next
+            }
+            guard !Task.isCancelled else { return }
+            if result.success {
+                BackupFlowState.lastBackup = result
+                finished = true
+                progress = LongRunningTaskProgress(
+                    phase: .completed,
+                    current: result.assetCount,
+                    total: result.assetCount,
+                    currentFileName: outputURL.lastPathComponent,
+                    bytesWritten: result.outputSizeBytes,
+                    totalBytes: result.outputSizeBytes,
+                    cancellable: false
+                )
+                onFinished()
+            } else if result.cancelled {
+                finished = false
+            } else {
+                failed = true
+                errorMessage = result.message
+            }
         }
+    }
+
+    func cancel() {
+        task?.cancel()
+        task = nil
+        try? FileManager.default.removeItem(at: outputURL)
     }
 }
 
 @MainActor
 final class RestoreProgressViewModel: ObservableObject {
-    @Published var progress: Double = 0
-    @Published var statusText = ""
+    @Published var progress = LongRunningTaskProgress.initial(phase: .verifying)
     @Published var finished = false
     @Published var failed = false
     @Published var errorMessage: String?
 
     let inputURL: URL
     let pin: String
+    private var task: Task<Void, Never>?
 
     init(inputURL: URL, pin: String) {
         self.inputURL = inputURL
         self.pin = pin
     }
 
-    func start() async {
-        statusText = L10n.tr("restore_progress_title")
-        progress = 0.15
-        let result = await LocalBackupService.shared.restore(from: inputURL, pin: pin)
-        progress = 1
-        if result.success {
-            await VaultStore.shared.loadSnapshot()
-            BackupFlowState.lastRestore = result
-            finished = true
-            statusText = L10n.tr("restore_result_success")
-        } else {
-            failed = true
-            errorMessage = result.message
+    func start(onFinished: @escaping @MainActor () -> Void) {
+        guard task == nil else { return }
+        task = Task {
+            let result = await LocalBackupService.shared.restore(from: inputURL, pin: pin) { [weak self] next in
+                self?.progress = next
+            }
+            PlaintextTempFileManager.shared.removeItem(inputURL)
+            guard !Task.isCancelled else { return }
+            if result.success {
+                await VaultStore.shared.loadSnapshot()
+                BackupFlowState.lastRestore = result
+                finished = true
+                progress = LongRunningTaskProgress(
+                    phase: .completed,
+                    current: result.restored + result.skipped + result.failed,
+                    total: result.restored + result.skipped + result.failed,
+                    currentFileName: nil,
+                    bytesWritten: progress.totalBytes,
+                    totalBytes: progress.totalBytes,
+                    cancellable: false
+                )
+                await AutoBackupScheduler.runOnceNow(reason: .manualRestoreSync)
+                onFinished()
+            } else if result.cancelled {
+                finished = false
+            } else {
+                failed = true
+                errorMessage = result.message
+            }
         }
+    }
+
+    func cancel() {
+        task?.cancel()
+        task = nil
+        PlaintextTempFileManager.shared.removeItem(inputURL)
     }
 }
 

@@ -42,6 +42,7 @@
 		45CFD584AD99A36121C859D9 /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD2828BB1A11E50AB9D5DCD1 /* LocalAuthentication.framework */; };
 		49891495A9906516FA27049C /* Argon2idKdf.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8C14963566802D704E3C1C /* Argon2idKdf.swift */; };
 		4D53235C038A42DA3DCF7570 /* PaywallViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53E9255003D4588EA511C8F6 /* PaywallViewModel.swift */; };
+		4DC9510F80581CE56E40FDF9 /* MediaInfoItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55EDC7C4C9D33D6C3DC074E9 /* MediaInfoItems.swift */; };
 		51BB7EB4601FC3984CF5B6CC /* AESCBC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BBEE63722F0B9B727EF9FD /* AESCBC.swift */; };
 		51CD6649210725CD16A20DF5 /* FirstLaunchRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA23EEFE7CB8F5D3B0A673D7 /* FirstLaunchRouter.swift */; };
 		54EB481684EBCCAE90777F31 /* runtime_lock_keypad_moved_up.png in Resources */ = {isa = PBXBuildFile; fileRef = 12026A53779F2E96027AADE0 /* runtime_lock_keypad_moved_up.png */; };
@@ -155,6 +156,7 @@
 		4D434010CE450260448B125E /* PrivateCameraViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateCameraViewModel.swift; sourceTree = "<group>"; };
 		5324047407C827B2FCD59CC9 /* LNBottomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNBottomTabBar.swift; sourceTree = "<group>"; };
 		53E9255003D4588EA511C8F6 /* PaywallViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewModel.swift; sourceTree = "<group>"; };
+		55EDC7C4C9D33D6C3DC074E9 /* MediaInfoItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaInfoItems.swift; sourceTree = "<group>"; };
 		5658AA8CC3EAA2DF80478F21 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		5667342175EF5C9780F9C450 /* LumaNoxStyleGuide.pen */ = {isa = PBXFileReference; path = LumaNoxStyleGuide.pen; sourceTree = "<group>"; };
 		56815CA88C4EA9F91ABED32F /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
@@ -596,6 +598,7 @@
 			children = (
 				24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */,
 				98B565F3A27E7022FDFF239A /* AlbumView.pen */,
+				55EDC7C4C9D33D6C3DC074E9 /* MediaInfoItems.swift */,
 				8C4EBFA92B5775EFFACB9756 /* MediaViews.swift */,
 				9F170F7D5870A110226CEC61 /* PhotoViewerView.pen */,
 				0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */,
@@ -775,6 +778,7 @@
 				CC82FF4B1BB35290DD6872BF /* LumaNoxBillingIds.swift in Sources */,
 				2359B8A2914F99510BCFCF1A /* MainTabView.swift in Sources */,
 				9742D13DB7F40BAD4A601440 /* MediaExportService.swift in Sources */,
+				4DC9510F80581CE56E40FDF9 /* MediaInfoItems.swift in Sources */,
 				0BCC71CECF76A8B21435B477 /* MediaMetadataExtractor.swift in Sources */,
 				07B79188BEB63573E604C247 /* MediaViews.swift in Sources */,
 				B6AD5599CE78A695888F9EE7 /* MockModels.swift in Sources */,

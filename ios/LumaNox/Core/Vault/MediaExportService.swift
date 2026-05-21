@@ -1,16 +1,5 @@
 import Foundation
 
-struct MediaExportProgress: Equatable {
-    var completed: Int
-    var total: Int
-    var currentFileName: String?
-
-    var fraction: Double {
-        guard total > 0 else { return 0 }
-        return min(1, max(0, Double(completed) / Double(total)))
-    }
-}
-
 struct MediaExportFailure: Identifiable, Hashable {
     var id: String { recordId }
     let recordId: String
@@ -52,7 +41,7 @@ final class MediaExportService: @unchecked Sendable {
 
     func export(
         records: [VaultMediaRecord],
-        progress: @MainActor @escaping (MediaExportProgress) -> Void
+        progress: @escaping LongRunningTaskProgressHandler
     ) async -> MediaExportBatchResult {
         guard !records.isEmpty else { return .empty }
 
@@ -72,8 +61,18 @@ final class MediaExportService: @unchecked Sendable {
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         var exported: [URL] = []
         var failures: [MediaExportFailure] = []
+        let totalBytes = records.reduce(Int64(0)) { $0 + max(0, $1.encryptedSizeBytes) }
+        var processedBytes: Int64 = 0
 
-        await progress(MediaExportProgress(completed: 0, total: records.count, currentFileName: nil))
+        await progress(LongRunningTaskProgress(
+            phase: .exporting,
+            current: 0,
+            total: records.count,
+            currentFileName: nil,
+            bytesWritten: 0,
+            totalBytes: totalBytes,
+            cancellable: true
+        ))
 
         for (index, record) in records.enumerated() {
             if Task.isCancelled {
@@ -88,7 +87,15 @@ final class MediaExportService: @unchecked Sendable {
             }
 
             let displayName = exportDisplayName(for: record)
-            await progress(MediaExportProgress(completed: index, total: records.count, currentFileName: displayName))
+            await progress(LongRunningTaskProgress(
+                phase: .exporting,
+                current: index + 1,
+                total: records.count,
+                currentFileName: displayName,
+                bytesWritten: processedBytes,
+                totalBytes: totalBytes,
+                cancellable: true
+            ))
 
             do {
                 let sourceURL = record.absoluteURL(documentsDirectory: documentsDirectory)
@@ -98,8 +105,17 @@ final class MediaExportService: @unchecked Sendable {
             } catch {
                 failures.append(failure(for: record, error: error))
             }
+            processedBytes += max(0, record.encryptedSizeBytes)
 
-            await progress(MediaExportProgress(completed: index + 1, total: records.count, currentFileName: displayName))
+            await progress(LongRunningTaskProgress(
+                phase: .exporting,
+                current: index + 1,
+                total: records.count,
+                currentFileName: displayName,
+                bytesWritten: processedBytes,
+                totalBytes: totalBytes,
+                cancellable: true
+            ))
         }
 
         if exported.isEmpty {
@@ -128,6 +144,7 @@ final class MediaExportService: @unchecked Sendable {
         let handle = try FileHandle(forWritingTo: outputURL)
         do {
             try cipher.decryptStream(at: sourceURL) { chunk in
+                try Task.checkCancellation()
                 try handle.write(contentsOf: chunk)
             }
             try handle.close()

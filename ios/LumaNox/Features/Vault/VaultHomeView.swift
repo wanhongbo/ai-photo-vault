@@ -49,6 +49,14 @@ struct VaultHomeView: View {
                     onDismiss: { viewModel.showCreateAlbum = false }
                 )
             }
+            if let duplicateMessage = viewModel.duplicateImportDialogMessage {
+                LNDialog(
+                    title: L10n.tr("home_import_duplicate_dialog_title"),
+                    message: duplicateMessage,
+                    confirmTitle: L10n.commonOk,
+                    onConfirm: { viewModel.duplicateImportDialogMessage = nil }
+                )
+            }
         }
         .accessibilityIdentifier("vault_home_view")
     }
@@ -291,7 +299,7 @@ struct VaultHomeView: View {
                         if item.isVideo {
                             router.pushVault(.videoPlayer(path: item.path))
                         } else {
-                            router.pushVault(.photoViewer(path: item.path))
+                            router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .recent))
                         }
                     } label: {
                         VaultMediaThumbnailView(

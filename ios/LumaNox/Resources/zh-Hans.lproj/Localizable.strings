@@ -73,6 +73,14 @@
 "photo_viewer_delete_message" = "此项目将移入回收站，可在设置中恢复或永久删除。";
 "photo_viewer_info_title" = "文件信息";
 "photo_viewer_info_name" = "文件名";
+"photo_viewer_info_album" = "相册";
+"photo_viewer_info_type" = "类型";
+"photo_viewer_info_type_image" = "图片";
+"photo_viewer_info_type_video" = "视频";
+"photo_viewer_info_type_other" = "文件";
+"photo_viewer_info_dimensions" = "尺寸";
+"photo_viewer_info_dimensions_value" = "%d × %d";
+"photo_viewer_info_duration" = "时长";
 "photo_viewer_info_size" = "大小";
 "photo_viewer_info_modified" = "修改时间";
 "video_viewer_delete_title" = "删除视频";
@@ -242,6 +250,10 @@
 "lock_setup_required_hint" = "请先完成 6 位 PIN 设置，才能使用保险箱";
 "home_import_success_count" = "已成功导入 %d 项到保险箱";
 "home_import_duplicate_count" = "%d 项已存在，已跳过";
+"home_import_multi_result" = "导入完成：新增 %d，重复 %d，失败 %d";
+"home_import_duplicate_dialog_title" = "已跳过重复导入";
+"home_import_duplicate_dialog_message" = "该内容已在当前相册中，未重复导入。";
+"home_import_duplicate_dialog_message_count" = "%d 项内容已在当前相册中，未重复导入。";
 "home_import_failed" = "导入失败，请重试";
 "home_import_none" = "未选择可导入的内容";
 "home_permission_title" = "允许访问相册";

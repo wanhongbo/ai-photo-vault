@@ -393,6 +393,114 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "photo_info_metadata_state",
+      "name": "PhotoViewer Info Dialog - metadata fields",
+      "layout": "none",
+      "fill": "#05080D",
+      "x": 430,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "children": [
+        {
+          "type": "frame",
+          "id": "photo_info_dim",
+          "fill": "#00000099",
+          "x": 0,
+          "y": 0,
+          "width": 393,
+          "height": 852
+        },
+        {
+          "type": "frame",
+          "id": "photo_info_card",
+          "name": "Metadata info dialog",
+          "layout": "vertical",
+          "gap": 14,
+          "padding": 20,
+          "fill": "#101722",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "cornerRadius": 22,
+          "x": 28,
+          "y": 236,
+          "width": 337,
+          "height": "fit_content",
+          "children": [
+            {
+              "type": "text",
+              "id": "photo_info_title",
+              "content": "File Info",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "700",
+              "letterSpacing": 0,
+              "fill": "#EAF1FF"
+            },
+            {
+              "type": "frame",
+              "id": "photo_info_rows",
+              "layout": "vertical",
+              "gap": 10,
+              "width": "fill_container",
+              "height": "fit_content",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "photo_info_row_original",
+                  "layout": "horizontal",
+                  "gap": 12,
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "children": [
+                    { "type": "text", "id": "photo_info_label_original", "content": "Original name", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "letterSpacing": 0, "fill": "#8EA2C0" },
+                    { "type": "text", "id": "photo_info_value_original", "content": "IMG_2048.HEIC", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "600", "letterSpacing": 0, "fill": "#EAF1FF" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "photo_info_row_album",
+                  "layout": "horizontal",
+                  "gap": 12,
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "children": [
+                    { "type": "text", "id": "photo_info_label_album", "content": "Album", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "letterSpacing": 0, "fill": "#8EA2C0" },
+                    { "type": "text", "id": "photo_info_value_album", "content": "Default", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "600", "letterSpacing": 0, "fill": "#EAF1FF" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "photo_info_row_dimensions",
+                  "layout": "horizontal",
+                  "gap": 12,
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "children": [
+                    { "type": "text", "id": "photo_info_label_dimensions", "content": "Dimensions", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "letterSpacing": 0, "fill": "#8EA2C0" },
+                    { "type": "text", "id": "photo_info_value_dimensions", "content": "4032 x 3024", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "600", "letterSpacing": 0, "fill": "#EAF1FF" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "photo_info_row_size",
+                  "layout": "horizontal",
+                  "gap": 12,
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "children": [
+                    { "type": "text", "id": "photo_info_label_size", "content": "Size", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "letterSpacing": 0, "fill": "#8EA2C0" },
+                    { "type": "text", "id": "photo_info_value_size", "content": "4.8 MB", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "600", "letterSpacing": 0, "fill": "#EAF1FF" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }
