@@ -394,6 +394,9 @@
 "settings_l1_data_sub" = "用量、导出和回收站";
 "settings_l1_general_sub" = "语言和更多设置";
 "settings_l1_about_sub" = "法律、版本和支持";
+"settings_sec_unlock" = "解锁与锁定";
+"settings_sec_privacy" = "隐私保护";
+"settings_sec_privacy_hint" = "后续可扩展：伪装模式、入侵者抓拍、防截图等。";
 "settings_pin_title" = "修改 PIN";
 "settings_pin_success_title" = "PIN 已更新";
 "settings_pin_success_title_first" = "PIN 设置成功";
@@ -425,6 +428,8 @@
 "language_effective_label" = "当前生效语言：%@";
 "privacy_policy_title" = "隐私政策";
 "terms_title" = "服务条款";
+"settings_contact_support" = "联系支持";
+"settings_mail_client_required" = "请先配置邮件客户端";
 "legal_placeholder" = "法务页面占位，后续同步 Android raw HTML。";
 "legal_load_failed" = "无法加载该法务文档，请稍后重试。";
 

@@ -384,15 +384,71 @@ struct SettingsGeneralView: View {
 struct SettingsAboutView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @State private var toastMessage: String?
+
+    private let supportEmail = "service@xipengxin.com"
 
     var body: some View {
         LNScreenScaffold(title: L10n.settingsAbout, onBack: { dismiss() }) {
             LNSettingsRow(title: L10n.privacyPolicyTitle) { router.pushSettings(.privacyPolicy) }
             LNSettingsRow(title: L10n.termsTitle) { router.pushSettings(.termsOfService) }
+            LNSettingsRow(title: L10n.tr("settings_contact_support"), subtitle: supportEmail) {
+                contactSupport()
+            }
             Text("LumaNox v0.2.0")
                 .font(LNTypography.labelMedium())
                 .foregroundStyle(LNColor.subtitle)
         }
+        .overlay(alignment: .bottom) {
+            if let toastMessage {
+                SettingsToast(message: toastMessage)
+                    .padding(.horizontal, LNSpacing.screenHorizontal)
+                    .padding(.bottom, 28)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: toastMessage)
+    }
+
+    private func contactSupport() {
+        guard let url = URL(string: "mailto:\(supportEmail)") else {
+            showToast(L10n.tr("settings_mail_client_required"))
+            return
+        }
+        openURL(url) { accepted in
+            if !accepted {
+                showToast(L10n.tr("settings_mail_client_required"))
+            }
+        }
+    }
+
+    private func showToast(_ message: String) {
+        toastMessage = message
+        Task {
+            try? await Task.sleep(nanoseconds: 2_200_000_000)
+            if toastMessage == message {
+                toastMessage = nil
+            }
+        }
+    }
+}
+
+private struct SettingsToast: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(LNColor.title)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color(hex: 0x101722, alpha: 0.94))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0x2F4564), lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.25), radius: 12, y: 8)
+            .accessibilityIdentifier("settings_toast")
     }
 }
 

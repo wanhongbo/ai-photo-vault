@@ -1,0 +1,263 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "name": "SettingsAboutView",
+      "layout": "vertical",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "rotation": 180,
+        "colors": [
+          {
+            "color": "#0B1324",
+            "position": 0
+          },
+          {
+            "color": "#05080D",
+            "position": 1
+          }
+        ]
+      },
+      "padding": [
+        54,
+        16,
+        34,
+        16
+      ],
+      "gap": 28,
+      "children": [
+        {
+          "type": "frame",
+          "name": "Navigation",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 44,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "name": "Back Button",
+              "layout": "horizontal",
+              "width": 44,
+              "height": 44,
+              "fill": "#0E1726",
+              "cornerRadius": 14,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "chevron-left",
+                  "width": 22,
+                  "height": 22,
+                  "fill": "#EAF1FF"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "About & Support",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700",
+              "fill": "#EAF1FF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "About Rows",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "name": "Privacy Policy Row",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 68,
+              "fill": "#0C1523",
+              "cornerRadius": 12,
+              "padding": [
+                10,
+                12,
+                10,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "content": "Privacy Policy",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600",
+                  "fill": "#EAF1FF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "icon_font",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "chevron-right",
+                  "width": 22,
+                  "height": 22,
+                  "fill": "#8EA2C0"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "name": "Terms Row",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 68,
+              "fill": "#0C1523",
+              "cornerRadius": 12,
+              "padding": [
+                10,
+                12,
+                10,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "content": "Terms of Service",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600",
+                  "fill": "#EAF1FF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "icon_font",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "chevron-right",
+                  "width": 22,
+                  "height": 22,
+                  "fill": "#8EA2C0"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "name": "Contact Support Row",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 76,
+              "fill": "#0C1523",
+              "cornerRadius": 12,
+              "padding": [
+                10,
+                12,
+                10,
+                12
+              ],
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "name": "Contact Text",
+                  "layout": "vertical",
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "gap": 3,
+                  "children": [
+                    {
+                      "type": "text",
+                      "content": "Contact Support",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600",
+                      "fill": "#EAF1FF",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container"
+                    },
+                    {
+                      "type": "text",
+                      "content": "service@xipengxin.com",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500",
+                      "fill": "#8EA2C0",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container"
+                    }
+                  ]
+                },
+                {
+                  "type": "icon_font",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "mail",
+                  "width": 22,
+                  "height": 22,
+                  "fill": "#8EA2C0"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "LumaNox v0.2.0",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "fill": "#8EA2C0",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "textAlign": "center"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Mail Client Toast",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": "fit_content",
+          "fill": "#101722",
+          "stroke": {
+            "thickness": 1,
+            "fill": "#2F4564"
+          },
+          "cornerRadius": 14,
+          "padding": [
+            10,
+            16,
+            10,
+            16
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "content": "请先配置邮件客户端",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "fill": "#EAF1FF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "textAlign": "center"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

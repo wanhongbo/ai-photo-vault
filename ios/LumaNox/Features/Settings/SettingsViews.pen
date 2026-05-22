@@ -476,7 +476,7 @@
                     {
                       "type": "text",
                       "id": "txt_s",
-                      "content": "Usage, export, and reset",
+                      "content": "Usage, export, and trash",
                       "fontFamily": "Inter",
                       "fill": "#8EA2C0",
                       "fontSize": 12,

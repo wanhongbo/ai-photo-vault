@@ -394,6 +394,9 @@
 "settings_l1_data_sub" = "Usage, export, and trash";
 "settings_l1_general_sub" = "Language and more";
 "settings_l1_about_sub" = "Legal, version, and support";
+"settings_sec_unlock" = "Unlock & Lock";
+"settings_sec_privacy" = "Privacy protection";
+"settings_sec_privacy_hint" = "Coming later: decoy mode, intruder capture, anti-screenshot, and more.";
 "settings_pin_title" = "Change PIN";
 "settings_pin_success_title" = "PIN Updated";
 "settings_pin_success_title_first" = "PIN Set";
@@ -425,6 +428,8 @@
 "language_effective_label" = "Current language: %@";
 "privacy_policy_title" = "Privacy Policy";
 "terms_title" = "Terms of Service";
+"settings_contact_support" = "Contact Support";
+"settings_mail_client_required" = "Please configure a mail client first.";
 "legal_placeholder" = "Legal page placeholder; sync Android raw HTML later.";
 "legal_load_failed" = "Unable to load this legal document. Please try again later.";
 
