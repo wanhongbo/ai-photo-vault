@@ -72,6 +72,13 @@ final class VaultAIAnalysisService: ObservableObject {
     private init() {}
 
     func refreshSummary() {
+        let cachedRecords = metadataStore.activeMediaRecords()
+        records = cachedRecords
+        summary = Self.makeSummary(from: cachedRecords)
+        lastError = nil
+    }
+
+    func reconcileSummary() {
         do {
             let metadata = try metadataStore.reconcile(
                 vaultRoot: try vaultStore.rootDirectory(),
@@ -98,6 +105,9 @@ final class VaultAIAnalysisService: ObservableObject {
         let documents = documentsDirectory()
         let previousIndexByID = Dictionary(uniqueKeysWithValues: indexStore.load().records.map { ($0.recordID, $0) })
         var results: [VaultAIAnalyzer.Result] = []
+        results.reserveCapacity(targets.count)
+        var completed = 0
+        let progressStride = max(1, min(25, targets.count / 50))
 
         for record in targets {
             do {
@@ -130,7 +140,11 @@ final class VaultAIAnalysisService: ObservableObject {
                     subjectKind: nil
                 ))
             }
-            progress.done += 1
+            completed += 1
+            if completed == targets.count || completed % progressStride == 0 {
+                progress.done = completed
+                await Task.yield()
+            }
         }
 
         markDuplicates(in: &results)
@@ -243,16 +257,25 @@ final class VaultAIAnalysisService: ObservableObject {
             parent[rightRoot] = leftRoot
         }
 
-        for left in 0..<hashes.count {
-            for right in (left + 1)..<hashes.count {
-                let leftResult = results[hashes[left].0]
-                let rightResult = results[hashes[right].0]
-                guard isDuplicateEligible(leftResult.ai), isDuplicateEligible(rightResult.ai) else { continue }
-                if (hashes[left].1 ^ hashes[right].1).nonzeroBitCount <= 2,
-                   rgbDistance(hashes[left].2, hashes[right].2) <= 5.0 {
-                    union(left, right)
+        var seenByHash: [UInt64: [Int]] = [:]
+        for current in hashes.indices {
+            let currentResult = results[hashes[current].0]
+            guard isDuplicateEligible(currentResult.ai) else {
+                seenByHash[hashes[current].1, default: []].append(current)
+                continue
+            }
+
+            forEachNearbyDHash(hashes[current].1) { candidateHash in
+                guard let previousIndexes = seenByHash[candidateHash] else { return }
+                for previous in previousIndexes {
+                    let previousResult = results[hashes[previous].0]
+                    guard isDuplicateEligible(previousResult.ai) else { continue }
+                    if rgbDistance(hashes[current].2, hashes[previous].2) <= 5.0 {
+                        union(previous, current)
+                    }
                 }
             }
+            seenByHash[hashes[current].1, default: []].append(current)
         }
 
         var groups: [Int: [Int]] = [:]
@@ -305,6 +328,18 @@ final class VaultAIAnalysisService: ObservableObject {
             hash &*= 0x100000001b3
         }
         return String(format: "%016llx", hash)
+    }
+
+    private func forEachNearbyDHash(_ hash: UInt64, _ visit: (UInt64) -> Void) {
+        visit(hash)
+        for firstBit in 0..<64 {
+            let firstMask = UInt64(1) << UInt64(firstBit)
+            let oneBitHash = hash ^ firstMask
+            visit(oneBitHash)
+            for secondBit in (firstBit + 1)..<64 {
+                visit(oneBitHash ^ (UInt64(1) << UInt64(secondBit)))
+            }
+        }
     }
 
     private func makeAIIndexPayload(from results: [VaultAIAnalyzer.Result]) -> (
