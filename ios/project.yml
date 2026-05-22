@@ -71,3 +71,14 @@ targets:
     dependencies:
       - target: LumaNox
     hostApplication: LumaNox
+schemes:
+  LumaNox:
+    build:
+      targets:
+        LumaNox: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - LumaNoxTests

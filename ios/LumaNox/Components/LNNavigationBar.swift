@@ -54,5 +54,6 @@ struct LNScreenScaffold<Content: View>: View {
             }
         }
         .lnScreenBackground()
+        .edgeSwipeBack(action: onBack)
     }
 }

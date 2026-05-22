@@ -939,6 +939,7 @@ struct LegalWebView: View {
                 .padding(.horizontal, LNSpacing.screenHorizontal)
         }
         .lnScreenBackground()
+        .edgeSwipeBack { dismiss() }
     }
 }
 

@@ -29,6 +29,11 @@ struct PaywallView: View {
             guard let toast, !toast.isEmpty else { return }
             // Toast via alert-free: subtitle area shows message briefly via surfaceError clear
         }
+        .edgeSwipeBack {
+            if dismissable {
+                closePaywall()
+            }
+        }
         .accessibilityIdentifier("paywall_view")
     }
 

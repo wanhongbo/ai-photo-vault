@@ -135,6 +135,7 @@ struct VaultListScreenChrome<Content: View>: View {
                 }
             }
             .background(LNColor.bgBottom.ignoresSafeArea())
+            .edgeSwipeBack(action: onBack)
         }
     }
 
@@ -598,6 +599,7 @@ struct PhotoViewerView: View {
         .alert(L10n.tr("photo_viewer_share_failed"), isPresented: $showShareFailure) {
             Button(L10n.commonOk, role: .cancel) {}
         }
+        .edgeSwipeBack { dismiss() }
     }
 
     private func restoreFromTrash() async {

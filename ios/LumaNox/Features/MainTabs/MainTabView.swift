@@ -15,6 +15,7 @@ struct MainTabView: View {
                             .routeNavigationDestinations()
                             .toolbar(.hidden, for: .navigationBar)
                     }
+                    .swipeBackEnabled()
                 case .camera:
                     CameraHomeView()
                 case .ai:
@@ -23,12 +24,14 @@ struct MainTabView: View {
                             .routeNavigationDestinations()
                             .toolbar(.hidden, for: .navigationBar)
                     }
+                    .swipeBackEnabled()
                 case .settings:
                     NavigationStack(path: $router.settingsPath) {
                         SettingsHomeView()
                             .routeNavigationDestinations()
                             .toolbar(.hidden, for: .navigationBar)
                     }
+                    .swipeBackEnabled()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -51,6 +54,7 @@ struct MainTabView: View {
                     RouteDestinationView(route: route)
                         .toolbar(.hidden, for: .navigationBar)
                 }
+                .swipeBackEnabled()
             }
         }
         .onAppear {

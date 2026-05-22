@@ -841,6 +841,7 @@ struct PrivacyRedactView: View {
                 self.shareURL = nil
             }
         }
+        .edgeSwipeBack { dismiss() }
         .accessibilityIdentifier("privacy_redact_view")
     }
 

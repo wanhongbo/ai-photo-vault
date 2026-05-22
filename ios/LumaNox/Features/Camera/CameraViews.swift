@@ -170,6 +170,7 @@ struct PrivateCameraView: View {
         .animation(.easeInOut(duration: 0.18), value: viewModel.showSettingsPanel)
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
+        .edgeSwipeBack { dismiss() }
         .accessibilityIdentifier("private_camera_view")
     }
 
