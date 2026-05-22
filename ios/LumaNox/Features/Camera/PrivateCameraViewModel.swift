@@ -55,6 +55,10 @@ final class PrivateCameraViewModel: ObservableObject {
         controller.configure()
     }
 
+    func prepareForFastStart() {
+        controller.prepareForFastStart()
+    }
+
     func onDisappear() {
         countdownTask?.cancel()
         focusClearTask?.cancel()

@@ -71,6 +71,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     private var captureCompletion: ((Result<URL, Error>) -> Void)?
     private var discardRecordingOnStop = false
     private var discardPhotoOnStop = false
+    private var hasConfiguredSession = false
 
     func configure() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -89,6 +90,11 @@ final class CameraSessionController: NSObject, ObservableObject {
         default:
             permissionDenied = true
         }
+    }
+
+    func prepareForFastStart() {
+        guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { return }
+        reconfigure(position: currentPosition, startAfterConfigure: false, reuseConfiguredSession: true)
     }
 
     func stop(discardPendingRecording: Bool = true) {
@@ -259,12 +265,26 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     private func startSession() {
-        reconfigure(position: currentPosition, startAfterConfigure: true)
+        reconfigure(position: currentPosition, startAfterConfigure: true, reuseConfiguredSession: true)
     }
 
-    private func reconfigure(position: AVCaptureDevice.Position, startAfterConfigure: Bool = false) {
+    private func reconfigure(
+        position: AVCaptureDevice.Position,
+        startAfterConfigure: Bool = false,
+        reuseConfiguredSession: Bool = false
+    ) {
         sessionQueue.async { [weak self] in
             guard let self else { return }
+            if reuseConfiguredSession, hasConfiguredSession {
+                if startAfterConfigure, !session.isRunning {
+                    session.startRunning()
+                }
+                Task { @MainActor in
+                    self.isRunning = self.session.isRunning
+                }
+                return
+            }
+
             session.beginConfiguration()
             session.inputs.forEach { self.session.removeInput($0) }
             session.outputs.forEach { self.session.removeOutput($0) }
@@ -272,6 +292,7 @@ final class CameraSessionController: NSObject, ObservableObject {
             let requestedDevice = Self.preferredDevice(position: position) ?? Self.preferredDevice(position: .back) ?? Self.preferredDevice(position: .front)
             guard let device = requestedDevice, let input = try? AVCaptureDeviceInput(device: device) else {
                 session.commitConfiguration()
+                hasConfiguredSession = false
                 Task { @MainActor in
                     self.capabilities = .unavailable
                     self.isRunning = false
@@ -297,8 +318,9 @@ final class CameraSessionController: NSObject, ObservableObject {
             configureSessionPreset()
             applyVideoFrameRateLocked()
             session.commitConfiguration()
+            hasConfiguredSession = true
 
-            if startAfterConfigure || !session.isRunning {
+            if startAfterConfigure, !session.isRunning {
                 session.startRunning()
             }
 

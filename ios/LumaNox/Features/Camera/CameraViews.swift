@@ -102,8 +102,14 @@ private struct CameraCorners: Shape {
 struct PrivateCameraView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel = PrivateCameraViewModel()
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var viewModel: PrivateCameraViewModel
     @State private var zoomGestureBase: CGFloat = 1
+
+    @MainActor
+    init(viewModel: PrivateCameraViewModel? = nil) {
+        _viewModel = StateObject(wrappedValue: viewModel ?? PrivateCameraViewModel())
+    }
 
     var body: some View {
         ZStack {
@@ -167,6 +173,16 @@ struct PrivateCameraView: View {
         .animation(.easeInOut(duration: 0.18), value: viewModel.showSettingsPanel)
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
+        .onChange(of: scenePhase) { phase in
+            switch phase {
+            case .active:
+                viewModel.onAppear()
+            case .inactive, .background:
+                viewModel.onDisappear()
+            @unknown default:
+                break
+            }
+        }
         .edgeSwipeBack { dismiss() }
         .accessibilityIdentifier("private_camera_view")
     }

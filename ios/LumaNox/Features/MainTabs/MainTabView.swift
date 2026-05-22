@@ -2,7 +2,9 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject private var router: AppRouter
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var vaultHomeViewModel = VaultHomeViewModel()
+    @StateObject private var privateCameraViewModel = PrivateCameraViewModel()
     @State private var didApplyDebugStartRoute = false
 
     var body: some View {
@@ -51,17 +53,54 @@ struct MainTabView: View {
         )) {
             if let route = router.presentedRoute {
                 NavigationStack {
-                    RouteDestinationView(route: route)
-                        .toolbar(.hidden, for: .navigationBar)
+                    switch route {
+                    case .privateCamera:
+                        PrivateCameraView(viewModel: privateCameraViewModel)
+                    default:
+                        RouteDestinationView(route: route)
+                    }
                 }
+                .toolbar(.hidden, for: .navigationBar)
                 .swipeBackEnabled()
             }
+        }
+        .onChange(of: scenePhase) { phase in
+            handleScenePhase(phase)
+        }
+        .onChange(of: router.presentedRoute) { route in
+            guard route == nil else { return }
+            prewarmCameraIfPossible()
+        }
+        .onChange(of: router.phase) { _ in
+            prewarmCameraIfPossible()
         }
         .onAppear {
             scheduleOnboardingPaywallIfNeeded()
             applyDebugStartRouteIfNeeded()
+            prewarmCameraIfPossible()
         }
         .accessibilityIdentifier("main_tab_view")
+    }
+
+    private func handleScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .active:
+            prewarmCameraIfPossible()
+        case .inactive, .background:
+            if router.presentedRoute != .privateCamera {
+                privateCameraViewModel.controller.stop(discardPendingRecording: true)
+            }
+        @unknown default:
+            break
+        }
+    }
+
+    private func prewarmCameraIfPossible() {
+        guard scenePhase == .active,
+              router.phase == .main,
+              router.presentedRoute != .privateCamera
+        else { return }
+        privateCameraViewModel.prepareForFastStart()
     }
 
     /// 首启软墙：进入主页 5s 后展示可关闭 Paywall（对齐 Android MainActivity）。
