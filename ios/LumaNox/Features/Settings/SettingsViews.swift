@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import WebKit
 
 struct SettingsHomeView: View {
     @EnvironmentObject private var router: AppRouter
@@ -162,15 +163,72 @@ struct SettingsSubscriptionView: View {
 struct SettingsSecurityView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
-    @State private var biometric = true
+    @ObservedObject private var securityStore = SecuritySettingsStore.shared
+    @State private var errorMessage: String?
 
     var body: some View {
         LNScreenScaffold(title: L10n.settingsSecurity, onBack: { dismiss() }) {
-            LNSettingsGroupCard(title: L10n.settingsSecurity) {
-                LNSettingsSwitchRow(title: "Face ID", subtitle: "Quick unlock", isOn: $biometric)
+            LNSettingsGroupCard(title: L10n.tr("settings_sec_unlock")) {
+                LNSettingsSwitchRow(
+                    title: L10n.tr("settings_biometric_title"),
+                    subtitle: L10n.tr("settings_biometric_desc"),
+                    isOn: Binding(
+                        get: { securityStore.biometricEnabled },
+                        set: { updateBiometric($0) }
+                    )
+                )
                 LNSettingsRow(title: L10n.changePinTitle) { router.pushSettings(.changePin) }
+                settingsInfoRow(
+                    title: L10n.tr("settings_auto_lock_title"),
+                    subtitle: L10n.tr("settings_auto_lock_desc")
+                )
+            }
+            LNSettingsGroupCard(title: L10n.tr("settings_sec_privacy")) {
+                Text(L10n.tr("settings_sec_privacy_hint"))
+                    .font(LNTypography.bodyMedium())
+                    .foregroundStyle(LNColor.subtitle)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .overlay {
+            if let errorMessage {
+                LNDialog(
+                    title: L10n.tr("settings_pin_error_title"),
+                    message: errorMessage,
+                    confirmTitle: L10n.tr("settings_pin_error_action"),
+                    onConfirm: { self.errorMessage = nil }
+                )
+            }
+        }
+    }
+
+    private func updateBiometric(_ enabled: Bool) {
+        do {
+            try securityStore.setBiometricEnabled(enabled)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func settingsInfoRow(title: String, subtitle: String) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(LNTypography.titleMedium())
+                    .foregroundStyle(LNColor.title)
+                Text(subtitle)
+                    .font(LNTypography.labelMedium())
+                    .foregroundStyle(LNColor.subtitle)
+            }
+            Spacer()
+            Image(systemName: "lock.rotation")
+                .foregroundStyle(LNColor.subtitle)
+        }
+        .frame(minHeight: LNSpacing.minTouchTarget)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(LNColor.sectionBg.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
     }
 }
 
@@ -182,6 +240,7 @@ struct SettingsBackupSyncView: View {
 
     var body: some View {
         LNScreenScaffold(title: L10n.settingsBackup, onBack: { dismiss() }) {
+            backupStatusCard
             LNSettingsGroupCard(title: L10n.tr("backup_auto_section")) {
                 LNSettingsSwitchRow(
                     title: L10n.tr("backup_auto_enable"),
@@ -256,6 +315,37 @@ struct SettingsBackupSyncView: View {
             }
         }
     }
+
+    private var backupStatusCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: viewModel.statusIconName)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(viewModel.statusTint)
+                Text(viewModel.statusTitle)
+                    .font(LNTypography.titleMedium())
+                    .foregroundStyle(LNColor.title)
+                Spacer()
+            }
+            Text(viewModel.statusDetail)
+                .font(LNTypography.bodyMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if let last = viewModel.lastBackupText {
+                Text(L10n.tr("backup_auto_last_fmt", last))
+                    .font(LNTypography.labelMedium())
+                    .foregroundStyle(LNColor.subtitle.opacity(0.85))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(LNSpacing.cardPadding)
+        .background(LNColor.sectionBg)
+        .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: LNRadius.homeCard)
+                .stroke(LNColor.stroke, lineWidth: 1)
+        )
+    }
 }
 
 struct SettingsDataStorageView: View {
@@ -308,9 +398,10 @@ struct SettingsAboutView: View {
 
 struct ChangePinView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var pin = ""
+    @State private var currentPin = ""
+    @State private var newPin = ""
     @State private var confirmPin = ""
-    @State private var step = 0
+    @State private var step: ChangePinStep = SecuritySettingsStore.shared.hasPinConfigured ? .verifyCurrent : .enterNew
     @State private var showSuccess = false
     @State private var showError = false
     @State private var errorMessage = ""
@@ -320,12 +411,18 @@ struct ChangePinView: View {
 
     var body: some View {
         LNScreenScaffold(title: L10n.changePinTitle, onBack: { dismiss() }) {
-            Text(step == 0 ? L10n.tr("lock_setup_enter_subtitle") : L10n.tr("lock_setup_confirm_subtitle"))
+            Text(step.subtitle)
+                .font(LNTypography.bodyMedium())
                 .foregroundStyle(LNColor.subtitle)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(step.progressText)
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(LNColor.subtitle.opacity(0.85))
+                .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 8) {
                 ForEach(0..<pinLength, id: \.self) { i in
                     Circle()
-                        .fill(i < currentPin.count ? LNColor.brandBlue : LNColor.stroke)
+                        .fill(i < activeInput.count ? LNColor.brandBlue : LNColor.stroke)
                         .frame(width: 10, height: 10)
                 }
             }
@@ -334,7 +431,13 @@ struct ChangePinView: View {
         .overlay { pinDialogs }
     }
 
-    private var currentPin: String { step == 0 ? pin : confirmPin }
+    private var activeInput: String {
+        switch step {
+        case .verifyCurrent: currentPin
+        case .enterNew: newPin
+        case .confirmNew: confirmPin
+        }
+    }
 
     private var keypad: some View {
         let keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"]
@@ -357,11 +460,16 @@ struct ChangePinView: View {
     }
 
     private func appendDigit(_ d: String) {
-        if step == 0 {
-            guard pin.count < pinLength else { return }
-            pin.append(d)
-            if pin.count == pinLength { step = 1 }
-        } else {
+        switch step {
+        case .verifyCurrent:
+            guard currentPin.count < pinLength else { return }
+            currentPin.append(d)
+            if currentPin.count == pinLength { verifyCurrentPin() }
+        case .enterNew:
+            guard newPin.count < pinLength else { return }
+            newPin.append(d)
+            if newPin.count == pinLength { step = .confirmNew }
+        case .confirmNew:
             guard confirmPin.count < pinLength else { return }
             confirmPin.append(d)
             if confirmPin.count == pinLength { submitChange() }
@@ -369,21 +477,39 @@ struct ChangePinView: View {
     }
 
     private func deleteLast() {
-        if step == 0, !pin.isEmpty { pin.removeLast() }
-        else if step == 1, !confirmPin.isEmpty { confirmPin.removeLast() }
+        switch step {
+        case .verifyCurrent where !currentPin.isEmpty:
+            currentPin.removeLast()
+        case .enterNew where !newPin.isEmpty:
+            newPin.removeLast()
+        case .confirmNew where !confirmPin.isEmpty:
+            confirmPin.removeLast()
+        default:
+            break
+        }
+    }
+
+    private func verifyCurrentPin() {
+        guard securityStore.verifyPin(currentPin) else {
+            errorMessage = L10n.tr("settings_pin_current_wrong")
+            showError = true
+            currentPin = ""
+            return
+        }
+        step = .enterNew
     }
 
     private func submitChange() {
-        guard pin == confirmPin else {
+        guard newPin == confirmPin else {
             errorMessage = L10n.tr("lock_error_mismatch")
             showError = true
-            pin = ""
+            newPin = ""
             confirmPin = ""
-            step = 0
+            step = .enterNew
             return
         }
         do {
-            try securityStore.savePin(pin, enableBiometric: securityStore.biometricEnabled)
+            try securityStore.savePin(newPin, enableBiometric: securityStore.biometricEnabled)
             showSuccess = true
         } catch {
             errorMessage = error.localizedDescription
@@ -404,10 +530,38 @@ struct ChangePinView: View {
         if showError {
             LNDialog(
                 title: L10n.tr("settings_pin_error_title"),
-                message: L10n.tr("placeholder_feature"),
+                message: errorMessage,
                 confirmTitle: L10n.tr("settings_pin_error_action"),
                 onConfirm: { showError = false }
             )
+        }
+    }
+}
+
+private enum ChangePinStep {
+    case verifyCurrent
+    case enterNew
+    case confirmNew
+
+    var subtitle: String {
+        switch self {
+        case .verifyCurrent:
+            return L10n.tr("settings_pin_step_verify_desc")
+        case .enterNew:
+            return L10n.tr("settings_pin_step_new_desc")
+        case .confirmNew:
+            return L10n.tr("settings_pin_step_confirm_desc")
+        }
+    }
+
+    var progressText: String {
+        switch self {
+        case .verifyCurrent:
+            return L10n.tr("settings_pin_step_verify_title")
+        case .enterNew:
+            return L10n.tr("settings_pin_step_new_title")
+        case .confirmNew:
+            return L10n.tr("settings_pin_step_confirm_title")
         }
     }
 }
@@ -492,15 +646,121 @@ struct LanguageSettingsView: View {
     }
 }
 
+enum LegalDocumentKind {
+    case privacyPolicy
+    case termsOfService
+
+    var fileName: String {
+        switch self {
+        case .privacyPolicy:
+            return "privacy_policy"
+        case .termsOfService:
+            return "terms_of_service"
+        }
+    }
+}
+
 struct LegalWebView: View {
     @Environment(\.dismiss) private var dismiss
     let title: String
+    let document: LegalDocumentKind
 
     var body: some View {
-        LNScreenScaffold(title: title, onBack: { dismiss() }) {
-            Text(L10n.tr("legal_placeholder"))
-                .font(LNTypography.bodyMedium())
-                .foregroundStyle(LNColor.subtitle)
+        VStack(spacing: 16) {
+            LNNavigationBar(title: title, onBack: { dismiss() })
+
+            LegalHTMLView(document: document)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(LNColor.sectionBg)
+                .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
+                .overlay(
+                    RoundedRectangle(cornerRadius: LNRadius.homeCard)
+                        .stroke(LNColor.stroke, lineWidth: 1)
+                )
+                .padding(.horizontal, LNSpacing.screenHorizontal)
+        }
+        .lnScreenBackground()
+    }
+}
+
+private struct LegalHTMLView: UIViewRepresentable {
+    let document: LegalDocumentKind
+    @ObservedObject private var languageManager = LanguageManager.shared
+
+    func makeUIView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = context.coordinator
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.backgroundColor = .clear
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        let localeIdentifier = languageManager.effectiveLocaleIdentifier
+        guard let htmlURL = Bundle.main.url(
+            forResource: document.fileName,
+            withExtension: "html",
+            subdirectory: nil,
+            localization: localeIdentifier
+        ) else {
+            webView.loadHTMLString(Self.errorHTML(message: L10n.tr("legal_load_failed")), baseURL: nil)
+            return
+        }
+
+        do {
+            let html = try String(contentsOf: htmlURL, encoding: .utf8)
+            webView.loadHTMLString(Self.injectAppChrome(into: html), baseURL: htmlURL.deletingLastPathComponent())
+        } catch {
+            webView.loadHTMLString(Self.errorHTML(message: L10n.tr("legal_load_failed")), baseURL: nil)
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    private static func injectAppChrome(into html: String) -> String {
+        let css = """
+        <style>
+          body { background-color: #05080D !important; color: #EAF1FF !important; }
+          .container { padding: 24px 18px 64px !important; }
+          a { color: #4A9EFF !important; }
+          table, th, td { border-color: #223247 !important; }
+        </style>
+        """
+        if html.contains("</head>") {
+            return html.replacingOccurrences(of: "</head>", with: "\(css)\n</head>")
+        }
+        return "\(css)\n\(html)"
+    }
+
+    private static func errorHTML(message: String) -> String {
+        """
+        <html>
+          <body style="background:#05080D;color:#8EA2C0;font:-apple-system-body;margin:0;padding:24px;line-height:1.5;">
+            \(message)
+          </body>
+        </html>
+        """
+    }
+
+    final class Coordinator: NSObject, WKNavigationDelegate {
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        ) {
+            guard navigationAction.navigationType == .linkActivated,
+                  let url = navigationAction.request.url,
+                  ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
+                decisionHandler(.allow)
+                return
+            }
+
+            UIApplication.shared.open(url)
+            decisionHandler(.cancel)
         }
     }
 }

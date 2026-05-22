@@ -1,0 +1,198 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_legal_web",
+      "name": "LegalWebView",
+      "layout": "vertical",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "rotation": 180,
+        "colors": [
+          {
+            "color": "#0B1324",
+            "position": 0
+          },
+          {
+            "color": "#05080D",
+            "position": 1
+          }
+        ]
+      },
+      "padding": [
+        54,
+        16,
+        34,
+        16
+      ],
+      "gap": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "legal_nav",
+          "name": "Navigation",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 44,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "legal_back_button",
+              "name": "Back Button",
+              "layout": "horizontal",
+              "width": 44,
+              "height": 44,
+              "fill": "#0E1726",
+              "cornerRadius": 14,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "legal_back_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "chevron-left",
+                  "width": 22,
+                  "height": 22,
+                  "fill": "#EAF1FF"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "legal_title",
+              "content": "Privacy Policy / Terms",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700",
+              "fill": "#EAF1FF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "legal_web_container",
+          "name": "WKWebView Container",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "#0C1523",
+          "stroke": {
+            "thickness": 1,
+            "fill": "#223247"
+          },
+          "cornerRadius": 20,
+          "padding": 18,
+          "gap": 14,
+          "children": [
+            {
+              "type": "text",
+              "id": "legal_doc_heading",
+              "content": "LumaNox legal document",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "700",
+              "fill": "#EAF1FF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            },
+            {
+              "type": "text",
+              "id": "legal_doc_summary",
+              "content": "Loads the current-language local HTML file inside the app. External links open in the system browser.",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "400",
+              "lineHeight": 1.45,
+              "fill": "#8EA2C0",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "legal_meta_card",
+              "name": "Document Metadata",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": "fit_content",
+              "fill": "#101A2A",
+              "stroke": {
+                "thickness": 1,
+                "fill": "#223247"
+              },
+              "cornerRadius": 14,
+              "padding": 14,
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "legal_meta_label",
+                  "content": "Local HTML",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600",
+                  "fill": "#8EA2C0",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container"
+                },
+                {
+                  "type": "text",
+                  "id": "legal_meta_value",
+                  "content": "privacy_policy.html / terms_of_service.html",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "600",
+                  "fill": "#EAF1FF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "legal_body_preview_1",
+              "content": "1. Local encryption and offline processing",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "500",
+              "fill": "#EAF1FF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            },
+            {
+              "type": "text",
+              "id": "legal_body_preview_2",
+              "content": "2. Photos and videos never leave the device",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "500",
+              "fill": "#EAF1FF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            },
+            {
+              "type": "text",
+              "id": "legal_body_preview_3",
+              "content": "3. Backups and restores are user-controlled",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "500",
+              "fill": "#EAF1FF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

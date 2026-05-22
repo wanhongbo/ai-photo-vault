@@ -278,6 +278,13 @@
 "backup_auto_status_title" = "Auto backup";
 "backup_auto_status_unlinked" = "No folder linked";
 "backup_auto_status_ready" = "Ready — writes to backup.dat";
+"backup_auto_status_ready_title" = "Auto backup ready";
+"backup_auto_status_disabled" = "Auto backup off";
+"backup_auto_status_disabled_desc" = "Turn it on and choose a folder to write encrypted backup.dat to Files.";
+"backup_auto_status_needs_folder" = "Choose a backup folder";
+"backup_auto_status_needs_folder_desc" = "Pick a writable Files folder for the encrypted backup.dat file.";
+"backup_auto_status_locked" = "Unlock required";
+"backup_auto_status_locked_desc" = "The backup key is cached only after unlock. Unlock the app again before backing up.";
 "backup_error_vault_empty" = "Vault is empty, nothing to backup.";
 "backup_error_running" = "Another backup or restore is already running.";
 "backup_error_failed_fmt" = "Backup failed: %@";
@@ -384,7 +391,7 @@
 "settings_backup_banner" = "Album files cannot be recovered after deleting the app. Please back up your files in time.";
 "settings_l1_security_sub" = "Unlock, PIN, and privacy options";
 "settings_l1_backup_sub" = "Auto backup and manual restore";
-"settings_l1_data_sub" = "Usage, export, and reset";
+"settings_l1_data_sub" = "Usage, export, and trash";
 "settings_l1_general_sub" = "Language and more";
 "settings_l1_about_sub" = "Legal, version, and support";
 "settings_pin_title" = "Change PIN";
@@ -393,6 +400,17 @@
 "settings_pin_success_message" = "Remember your PIN to unlock the vault.";
 "settings_pin_error_title" = "Error";
 "settings_pin_error_action" = "OK";
+"settings_pin_current_wrong" = "Current PIN is incorrect. Please try again.";
+"settings_pin_step_verify_title" = "Verify current PIN";
+"settings_pin_step_verify_desc" = "Enter your current 6-digit PIN before setting a new one.";
+"settings_pin_step_new_title" = "Enter new PIN";
+"settings_pin_step_new_desc" = "Enter a new 6-digit PIN.";
+"settings_pin_step_confirm_title" = "Confirm new PIN";
+"settings_pin_step_confirm_desc" = "Enter the new PIN again to confirm.";
+"settings_biometric_title" = "Face ID / Touch ID";
+"settings_biometric_desc" = "Use system biometrics to unlock your vault quickly";
+"settings_auto_lock_title" = "Auto lock";
+"settings_auto_lock_desc" = "The app asks to unlock again after 60 seconds in the background";
 "storage_usage_title" = "Storage";
 "storage_usage_placeholder" = "Storage stats coming soon";
 "storage_usage_active_count" = "Vault items";
@@ -408,6 +426,7 @@
 "privacy_policy_title" = "Privacy Policy";
 "terms_title" = "Terms of Service";
 "legal_placeholder" = "Legal page placeholder; sync Android raw HTML later.";
+"legal_load_failed" = "Unable to load this legal document. Please try again later.";
 
 "lock_title" = "Enter PIN";
 "lock_subtitle" = "Unlock your vault";

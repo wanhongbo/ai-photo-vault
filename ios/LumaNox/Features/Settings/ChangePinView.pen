@@ -1,0 +1,37 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_change_pin",
+      "name": "ChangePinView",
+      "layout": "vertical",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": "#05080D",
+      "padding": [54, 16, 24, 16],
+      "gap": 20,
+      "children": [
+        { "type": "text", "id": "change_pin_title", "content": "修改 PIN", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+        {
+          "type": "frame",
+          "id": "change_pin_steps",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "cornerRadius": 20,
+          "padding": 18,
+          "gap": 12,
+          "children": [
+            { "type": "text", "id": "step_verify", "content": "1. 验证当前 PIN", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "step_new", "content": "2. 输入新 PIN", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "step_confirm", "content": "3. 再次确认新 PIN", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        }
+      ]
+    }
+  ]
+}

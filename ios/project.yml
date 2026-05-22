@@ -58,6 +58,7 @@ targets:
       - sdk: AVFoundation.framework
       - sdk: Vision.framework
       - sdk: CryptoKit.framework
+      - sdk: WebKit.framework
   LumaNoxTests:
     type: bundle.unit-test
     platform: iOS

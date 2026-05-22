@@ -1,0 +1,51 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_settings_security",
+      "name": "SettingsSecurityView",
+      "layout": "vertical",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": "#05080D",
+      "padding": [54, 16, 24, 16],
+      "gap": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "security_nav",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 44,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            { "type": "icon_font", "id": "security_back", "iconFontFamily": "lucide", "iconFontName": "chevron-left", "width": 24, "height": 24, "fill": "#EAF1FF" },
+            { "type": "text", "id": "security_title", "content": "安全与隐私", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "security_group",
+          "name": "Unlock and Lock",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "cornerRadius": 20,
+          "padding": 18,
+          "gap": 12,
+          "children": [
+            { "type": "text", "id": "security_group_title", "content": "解锁与锁定", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "security_biometric", "content": "Face ID / Touch ID · 真实开关", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "500", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "security_pin", "content": "修改 PIN · 先验证当前 PIN", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "500", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "security_autolock", "content": "后台超过 60 秒自动锁定", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        }
+      ]
+    }
+  ]
+}

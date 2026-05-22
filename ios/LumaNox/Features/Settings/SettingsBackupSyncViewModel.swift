@@ -15,6 +15,52 @@ final class SettingsBackupSyncViewModel: ObservableObject {
         refresh()
     }
 
+    var statusTitle: String {
+        if !autoBackupEnabled {
+            return L10n.tr("backup_auto_status_disabled")
+        }
+        if !folderWritable {
+            return L10n.tr("backup_auto_status_needs_folder")
+        }
+        if !BackupSecretsStore.hasCached {
+            return L10n.tr("backup_auto_status_locked")
+        }
+        return L10n.tr("backup_auto_status_ready_title")
+    }
+
+    var statusDetail: String {
+        if !autoBackupEnabled {
+            return L10n.tr("backup_auto_status_disabled_desc")
+        }
+        if !folderWritable {
+            return L10n.tr("backup_auto_status_needs_folder_desc")
+        }
+        if !BackupSecretsStore.hasCached {
+            return L10n.tr("backup_auto_status_locked_desc")
+        }
+        return folderPath ?? L10n.tr("backup_auto_status_ready")
+    }
+
+    var statusIconName: String {
+        if !autoBackupEnabled {
+            return "pause.circle.fill"
+        }
+        if folderWritable && BackupSecretsStore.hasCached {
+            return "checkmark.shield.fill"
+        }
+        return "exclamationmark.triangle.fill"
+    }
+
+    var statusTint: Color {
+        if !autoBackupEnabled {
+            return LNColor.subtitle
+        }
+        if folderWritable && BackupSecretsStore.hasCached {
+            return LNColor.success
+        }
+        return LNColor.amberWarning
+    }
+
     func refresh() {
         folderWritable = ExternalBackupLocation.isWritable()
         folderPath = ExternalBackupLocation.displayPath

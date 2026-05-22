@@ -278,6 +278,13 @@
 "backup_auto_status_title" = "自动备份";
 "backup_auto_status_unlinked" = "未关联文件夹";
 "backup_auto_status_ready" = "已就绪，将写入 backup.dat";
+"backup_auto_status_ready_title" = "自动备份已就绪";
+"backup_auto_status_disabled" = "自动备份已关闭";
+"backup_auto_status_disabled_desc" = "打开开关并选择文件夹后，LumaNox 会把加密 backup.dat 写入「文件」。";
+"backup_auto_status_needs_folder" = "需要选择备份文件夹";
+"backup_auto_status_needs_folder_desc" = "请选择一个可写入的「文件」文件夹，用于保存加密 backup.dat。";
+"backup_auto_status_locked" = "需要先解锁";
+"backup_auto_status_locked_desc" = "备份密钥只在解锁后缓存。请重新解锁应用后再执行备份。";
 "backup_error_vault_empty" = "保险箱为空，没有可备份的内容。";
 "backup_error_running" = "已有备份或恢复任务在进行中。";
 "backup_error_failed_fmt" = "备份失败：%@";
@@ -384,7 +391,7 @@
 "settings_backup_banner" = "卸载应用后相册文件无法恢复，请及时备份文件。";
 "settings_l1_security_sub" = "解锁、PIN 和隐私选项";
 "settings_l1_backup_sub" = "自动备份和手动恢复";
-"settings_l1_data_sub" = "用量、导出和重置";
+"settings_l1_data_sub" = "用量、导出和回收站";
 "settings_l1_general_sub" = "语言和更多设置";
 "settings_l1_about_sub" = "法律、版本和支持";
 "settings_pin_title" = "修改 PIN";
@@ -393,6 +400,17 @@
 "settings_pin_success_message" = "请牢记您的 PIN，用于解锁保险箱。";
 "settings_pin_error_title" = "出错了";
 "settings_pin_error_action" = "知道了";
+"settings_pin_current_wrong" = "当前 PIN 不正确，请重试。";
+"settings_pin_step_verify_title" = "验证当前 PIN";
+"settings_pin_step_verify_desc" = "请输入当前 6 位 PIN，验证通过后才能设置新 PIN。";
+"settings_pin_step_new_title" = "输入新 PIN";
+"settings_pin_step_new_desc" = "请输入新的 6 位数字 PIN。";
+"settings_pin_step_confirm_title" = "确认新 PIN";
+"settings_pin_step_confirm_desc" = "请再次输入新 PIN 以确认。";
+"settings_biometric_title" = "Face ID / Touch ID";
+"settings_biometric_desc" = "使用系统生物识别快速解锁保险箱";
+"settings_auto_lock_title" = "自动锁定";
+"settings_auto_lock_desc" = "应用进入后台超过 60 秒后会要求重新解锁";
 "storage_usage_title" = "存储占用";
 "storage_usage_placeholder" = "存储统计功能开发中";
 "storage_usage_active_count" = "保险箱项目";
@@ -408,6 +426,7 @@
 "privacy_policy_title" = "隐私政策";
 "terms_title" = "服务条款";
 "legal_placeholder" = "法务页面占位，后续同步 Android raw HTML。";
+"legal_load_failed" = "无法加载该法务文档，请稍后重试。";
 
 "lock_title" = "输入 PIN";
 "lock_subtitle" = "解锁您的保险箱";

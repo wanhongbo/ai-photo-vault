@@ -53,8 +53,8 @@ struct RouteDestinationView: View {
             case .settingsDataStorage: SettingsDataStorageView()
             case .settingsGeneral: SettingsGeneralView()
             case .settingsAbout: SettingsAboutView()
-            case .privacyPolicy: LegalWebView(title: L10n.privacyPolicyTitle)
-            case .termsOfService: LegalWebView(title: L10n.termsTitle)
+            case .privacyPolicy: LegalWebView(title: L10n.privacyPolicyTitle, document: .privacyPolicy)
+            case .termsOfService: LegalWebView(title: L10n.termsTitle, document: .termsOfService)
             case .trashBin: TrashBinView()
             case .paywall(let dismissable, let source):
                 PaywallView(dismissable: dismissable, source: source)

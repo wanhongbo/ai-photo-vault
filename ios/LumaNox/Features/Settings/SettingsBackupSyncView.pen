@@ -1,0 +1,53 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_settings_backup_sync",
+      "name": "SettingsBackupSyncView",
+      "layout": "vertical",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": "#05080D",
+      "padding": [54, 16, 24, 16],
+      "gap": 16,
+      "children": [
+        { "type": "text", "id": "backup_title", "content": "备份与同步", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+        {
+          "type": "frame",
+          "id": "backup_status_card",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "cornerRadius": 20,
+          "padding": 18,
+          "gap": 10,
+          "children": [
+            { "type": "text", "id": "backup_status_title", "content": "自动备份状态", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "backup_status_body", "content": "已就绪 / 需要授权 / 已关闭，显示明确恢复动作。", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "backup_controls",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "cornerRadius": 20,
+          "padding": 18,
+          "gap": 12,
+          "children": [
+            { "type": "text", "id": "backup_toggle", "content": "启用自动备份", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "500", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "backup_folder", "content": "选择备份文件夹", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "500", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "backup_now", "content": "立即备份 / 手动备份恢复", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "500", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        }
+      ]
+    }
+  ]
+}
