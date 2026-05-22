@@ -79,9 +79,11 @@ struct SettingsHomeView: View {
                     .foregroundStyle(subscription.isPremium ? LNColor.paywallGold : LNColor.navItemActive)
             }
             .padding(LNSpacing.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .lnOutlinedCard(stroke: subscription.isPremium ? LNColor.paywallGold : LNColor.stroke)
+            .contentShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
     }
 
     private var backupBanner: some View {
@@ -125,10 +127,11 @@ struct SettingsHomeView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
-            .frame(minHeight: 70)
+            .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
             .lnOutlinedCard(cornerRadius: LNRadius.homeAlbumCard, fill: LNColor.sectionBg)
+            .contentShape(RoundedRectangle(cornerRadius: LNRadius.homeAlbumCard))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
     }
 }
 
@@ -692,6 +695,7 @@ struct ChangePinView: View {
                         .background(LNColor.sectionBg)
                         .clipShape(Circle())
                 }
+                .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
                 .disabled(key.isEmpty)
                 .opacity(key.isEmpty ? 0 : 1)
             }

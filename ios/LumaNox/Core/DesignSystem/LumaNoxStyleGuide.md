@@ -42,3 +42,4 @@ Generated on 2026-05-20 from Android `UiTokens.kt` and iOS `LNColor/LNTokens`.
 - Rows use 12pt radius, 12pt vertical/horizontal padding, 44pt minimum tap target.
 - Dialogs use max width 308pt, 22pt padding, 22pt radius, title/body spacing 11pt, button spacing 12pt.
 - Bottom nav is 88pt high, 24pt radius, active item uses blue 12% fill + 1pt blue stroke.
+- Tappable controls use the shared pressed state: scale 0.96-0.98, opacity 0.78-0.88, and a quick ease-out return. Disabled controls do not animate.

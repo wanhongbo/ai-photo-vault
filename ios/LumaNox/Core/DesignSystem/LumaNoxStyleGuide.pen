@@ -1541,6 +1541,113 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "Kq27a",
+          "name": "Interaction Feedback",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "width": 312,
+          "x": 1084,
+          "y": 596,
+          "cornerRadius": 20,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#223247"
+          },
+          "padding": 16,
+          "gap": 12,
+          "children": [
+            {
+              "type": "text",
+              "id": "zruYi",
+              "content": "Interaction Feedback",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 18,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "N3HV1",
+              "content": "All tappable controls use the same pressed state: scale 0.96-0.98, opacity 0.78-0.88, quick ease-out return. Keep selected state visible while pressed.",
+              "fontFamily": "Inter",
+              "fill": "#97A8C0",
+              "fontSize": 14,
+              "fontWeight": "normal",
+              "lineHeight": 1.35,
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "f4vr7c",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 64,
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "yDPPW",
+                  "layout": "horizontal",
+                  "width": "fill_container",
+                  "height": 48,
+                  "cornerRadius": 14,
+                  "fill": "#4A9EFF",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GuIFl",
+                      "content": "Normal",
+                      "fontFamily": "Inter",
+                      "fill": "#FFFFFF",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "YT6iS",
+                  "layout": "horizontal",
+                  "width": "fill_container",
+                  "height": 46,
+                  "cornerRadius": 14,
+                  "fill": "#4A9EFFDD",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HfKVS",
+                      "content": "Pressed",
+                      "fontFamily": "Inter",
+                      "fill": "#FFFFFF",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "o7qWV",
+              "content": "Use on buttons, tab items, media tiles, settings rows, picker labels, and icon controls. Disabled controls do not animate.",
+              "fontFamily": "Inter",
+              "fill": "#8EA2C0",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "lineHeight": 1.35,
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            }
+          ]
         }
       ]
     }

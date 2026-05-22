@@ -80,6 +80,7 @@
 		7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */; };
 		7DDF6F0954B25AA09F7577B4 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F121E8D7BA0C5DAC6610309 /* WebKit.framework */; };
 		811B27A1D4A459FCA8E7616D /* LNSharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B240AAE981FCB70074771 /* LNSharedViews.swift */; };
+		822681C2E21F67CD30F6A9A3 /* LNInteractionStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DAA306B576EE339FD68A3B /* LNInteractionStyles.swift */; };
 		84441A178A24A141295D4C56 /* VaultCipherV2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA098E95640BF4765E38462 /* VaultCipherV2Tests.swift */; };
 		850CF95F443B9B31A9CEF679 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = E5FDDF8C579C61B9C8511E44 /* RevenueCat */; };
 		87BC961C807397BEE3450FC9 /* frm_3k.png in Resources */ = {isa = PBXBuildFile; fileRef = 6B9ED3B67D64C37F7D98B215 /* frm_3k.png */; };
@@ -182,6 +183,7 @@
 		0BF1855A4D106CFD1B09EDDE /* AIRecognitionFixtureImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIRecognitionFixtureImportTests.swift; sourceTree = "<group>"; };
 		0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */ = {isa = PBXFileReference; path = RecentPhotosListView.pen; sourceTree = "<group>"; };
 		10735D531A260565D68C8DE8 /* VaultSearchView.pen */ = {isa = PBXFileReference; path = VaultSearchView.pen; sourceTree = "<group>"; };
+		11DAA306B576EE339FD68A3B /* LNInteractionStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNInteractionStyles.swift; sourceTree = "<group>"; };
 		12026A53779F2E96027AADE0 /* runtime_lock_keypad_moved_up.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = runtime_lock_keypad_moved_up.png; sourceTree = "<group>"; };
 		153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */ = {isa = PBXFileReference; path = RestoreProgressView.pen; sourceTree = "<group>"; };
 		1766E374467294BEF5A81EE6 /* VaultHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHomeView.swift; sourceTree = "<group>"; };
@@ -469,6 +471,7 @@
 				5324047407C827B2FCD59CC9 /* LNBottomTabBar.swift */,
 				EFC860BF4A7D035FEC038759 /* LNButton.swift */,
 				A6D7C45A745A3B56970E7DB4 /* LNDialog.swift */,
+				11DAA306B576EE339FD68A3B /* LNInteractionStyles.swift */,
 				A6DF05A9EBD589A872E42357 /* LNNavigationBar.swift */,
 				5BE981D8224A4925C036A472 /* LNSettingsComponents.swift */,
 				CC2B240AAE981FCB70074771 /* LNSharedViews.swift */,
@@ -968,6 +971,7 @@
 				D26B1A60C96500B4D6409E94 /* LNButton.swift in Sources */,
 				230AE9BAD70B051C8C01D17C /* LNColor.swift in Sources */,
 				174A73A8E20833EA2F97A686 /* LNDialog.swift in Sources */,
+				822681C2E21F67CD30F6A9A3 /* LNInteractionStyles.swift in Sources */,
 				5E4CF33D5D76D5F15913AAA9 /* LNNavigationBar.swift in Sources */,
 				DBB0204DE74419911B845B9F /* LNSettingsComponents.swift in Sources */,
 				811B27A1D4A459FCA8E7616D /* LNSharedViews.swift in Sources */,

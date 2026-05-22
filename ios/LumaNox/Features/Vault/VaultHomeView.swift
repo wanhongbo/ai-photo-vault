@@ -83,6 +83,7 @@ struct VaultHomeView: View {
                     .frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
                     .lnOutlinedCard(cornerRadius: LNRadius.topBarButton, fill: LNColor.sectionBg)
             }
+            .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
             .disabled(viewModel.isImporting)
         }
         .padding(.horizontal, LNSpacing.screenHorizontal)
@@ -120,7 +121,7 @@ struct VaultHomeView: View {
             .padding(.vertical, 12)
             .lnOutlinedCard(cornerRadius: LNRadius.homeCard, fill: LNColor.sectionBg, stroke: LNColor.error.opacity(0.45))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
     }
 
     @ViewBuilder
@@ -194,6 +195,7 @@ struct VaultHomeView: View {
                     .background(LNColor.buttonPrimaryBg)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.88))
             Button { router.openPrivateCamera() } label: {
                 Text(L10n.tr("home_camera_empty_action"))
                     .font(LNTypography.button())
@@ -203,7 +205,7 @@ struct VaultHomeView: View {
                     .background(LNColor.buttonSecondaryBg)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lnPressable())
         }
         .padding(.vertical, 32)
         .padding(.horizontal, LNSpacing.cardPadding)
@@ -220,6 +222,7 @@ struct VaultHomeView: View {
                 Button(L10n.tr("home_albums_view_all")) { router.pushVault(.albumList) }
                     .font(LNTypography.labelMedium())
                     .foregroundStyle(LNColor.navItemActive)
+                    .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -251,7 +254,7 @@ struct VaultHomeView: View {
             .frame(width: LNSpacing.albumCardWidth)
             .lnOutlinedCard(cornerRadius: LNRadius.homeAlbumCard, fill: LNColor.bgBottom)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
     }
 
     private var createAlbumCard: some View {
@@ -275,7 +278,7 @@ struct VaultHomeView: View {
             .frame(width: LNSpacing.albumCardWidth)
             .lnOutlinedCard(cornerRadius: LNRadius.homeAlbumCard, fill: LNColor.bgBottom)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
     }
 
     private var recentSection: some View {
@@ -288,6 +291,7 @@ struct VaultHomeView: View {
                 Button(L10n.tr("home_recent_view_more")) { router.pushVault(.recentList) }
                     .font(LNTypography.labelMedium())
                     .foregroundStyle(LNColor.navItemActive)
+                    .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
             }
 
             LazyVGrid(
@@ -315,7 +319,7 @@ struct VaultHomeView: View {
                                 .stroke(LNColor.stroke, lineWidth: 1)
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lnPressable())
                 }
             }
         }

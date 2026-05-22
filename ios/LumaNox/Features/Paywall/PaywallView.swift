@@ -103,6 +103,7 @@ struct PaywallView: View {
                         .font(LNTypography.titleMedium())
                         .foregroundStyle(LNColor.brandBlue)
                 }
+                .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
                 .disabled(viewModel.purchasing)
                 Text(L10n.tr("paywall_footer"))
                     .font(LNTypography.labelMedium())
@@ -139,6 +140,7 @@ struct PaywallView: View {
                         .background(LNColor.sectionBg)
                         .clipShape(Circle())
                 }
+                .buttonStyle(.lnPressable(scale: 0.92, pressedOpacity: 0.76))
                 .accessibilityLabel(L10n.tr("paywall_close_cd"))
             }
         }
@@ -225,7 +227,7 @@ struct PaywallView: View {
                     .stroke(selected ? LNColor.brandBlue : LNColor.stroke, lineWidth: selected ? 2 : 1)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
     }
 
     private func periodLabel(for kind: PaywallPlanKind) -> String {

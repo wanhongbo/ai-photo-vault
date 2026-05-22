@@ -52,7 +52,7 @@ struct LNBottomTabBar: View {
                     .stroke(isSelected ? LNColor.brandBlue : Color.clear, lineWidth: 1)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
         .accessibilityIdentifier("ln_tab_\(tab.rawValue)")
     }
 

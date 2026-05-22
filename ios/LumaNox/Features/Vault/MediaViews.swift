@@ -28,13 +28,13 @@ struct AlbumListView: View {
                                 coverItem: coverItem(for: album)
                             )
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.lnPressable())
                     }
 
                     Button { showCreate = true } label: {
                         VaultCreateAlbumListCard(width: cardWidth)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lnPressable())
                 }
             }
             .padding(.horizontal, LNSpacing.screenHorizontal)
@@ -148,6 +148,7 @@ struct VaultListScreenChrome<Content: View>: View {
                     .background(LNColor.navBarBg.opacity(0.8))
                     .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
             }
+            .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
             .accessibilityLabel(L10n.commonBack)
             .accessibilityIdentifier("vault_list_back")
 
@@ -319,7 +320,7 @@ struct VaultMediaGridCard: View {
                     VaultMediaImportGridTile(size: cellWidth, isImporting: isImporting)
                 }
                 .disabled(isImporting)
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable())
                 .accessibilityLabel(L10n.tr("album_import_media_action"))
                 .accessibilityIdentifier("album_import_media_tile")
             }
@@ -341,7 +342,7 @@ struct VaultMediaGridCard: View {
                             .stroke(LNColor.stroke, lineWidth: 1)
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable())
             }
         }
         .padding(LNSpacing.cardPadding)
@@ -774,6 +775,7 @@ private struct PhotoViewerTopChrome: View {
                             .background(LNColor.navBarBg.opacity(0.8))
                             .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
                     }
+                    .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
                     .accessibilityLabel(L10n.commonBack)
 
                     Spacer()
@@ -906,14 +908,8 @@ private struct PhotoViewerDockButton: View {
             .background(background)
             .clipShape(RoundedRectangle(cornerRadius: 21))
         }
-        .buttonStyle(LNViewerDockButtonStyle())
+        .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.76))
         .accessibilityLabel(title)
-    }
-}
-
-private struct LNViewerDockButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label.opacity(configuration.isPressed ? 0.72 : 1)
     }
 }
 

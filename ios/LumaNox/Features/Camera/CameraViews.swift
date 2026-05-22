@@ -15,7 +15,7 @@ struct CameraHomeView: View {
             Button { router.openPrivateCamera() } label: {
                 CameraPreviewCard()
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lnPressable())
             .padding(.horizontal, 20)
             .padding(.bottom, LNSpacing.homeNavBarHeight + 20)
         }
@@ -282,6 +282,7 @@ struct PrivateCameraView: View {
                 .frame(width: 78, height: 78)
                 .overlay(Circle().stroke(LNColor.navItemActive, lineWidth: 2))
             }
+            .buttonStyle(.lnPressable(scale: 0.92, pressedOpacity: 0.82))
             .disabled(viewModel.isSaving || viewModel.countdownRemaining != nil)
             .accessibilityIdentifier("private_camera_shutter")
             .accessibilityLabel(L10n.tr("camera_shutter"))
@@ -306,7 +307,7 @@ struct PrivateCameraView: View {
                         .background(viewModel.captureMode == mode ? LNColor.brandBlue : Color.clear)
                         .clipShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
             }
         }
         .padding(5)
@@ -485,7 +486,7 @@ private struct CameraOptionChip: View {
                 .background(selected ? LNColor.brandBlue : Color(hex: 0x3A3A3C))
                 .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.80))
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.36)
     }
@@ -518,7 +519,7 @@ private struct ZoomRail: View {
                         .background(isSelected(preset) ? LNColor.brandBlue : Color.clear)
                         .clipShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.80))
                 .disabled(!enabled)
             }
         }
@@ -621,7 +622,7 @@ private struct CameraIconButton: View {
                 .clipShape(Circle())
                 .overlay(Circle().stroke(.white.opacity(0.14), lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable(scale: 0.92, pressedOpacity: 0.76))
         .accessibilityLabel(label)
     }
 }

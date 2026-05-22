@@ -222,7 +222,7 @@ struct LockView: View {
             }
             .frame(width: 78, height: 78)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
         .disabled(viewModel.state.success || viewModel.state.isLoading)
     }
 
@@ -235,6 +235,7 @@ struct LockView: View {
                 .foregroundStyle(LNColor.brandBlue)
                 .frame(minHeight: LNSpacing.minTouchTarget)
         }
+        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
         .accessibilityIdentifier("lock_biometric_button")
     }
 

@@ -37,13 +37,14 @@ struct LNSettingsRow: View {
                 Image(systemName: "chevron.right")
                     .foregroundStyle(LNColor.subtitle)
             }
-            .frame(minHeight: LNSpacing.minTouchTarget)
+            .frame(maxWidth: .infinity, minHeight: LNSpacing.minTouchTarget, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(LNColor.sectionBg.opacity(0.5))
             .clipShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
+            .contentShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
         .accessibilityIdentifier("ln_settings_row_\(title)")
     }
 }
@@ -87,12 +88,13 @@ struct LNSettingsDangerRow: View {
                 Spacer()
                 Image(systemName: "chevron.right").foregroundStyle(LNColor.error)
             }
-            .frame(minHeight: LNSpacing.minTouchTarget)
+            .frame(maxWidth: .infinity, minHeight: LNSpacing.minTouchTarget, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(LNColor.buttonDangerBg)
             .clipShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
+            .contentShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
     }
 }

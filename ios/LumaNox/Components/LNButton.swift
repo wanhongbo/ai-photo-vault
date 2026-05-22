@@ -31,7 +31,7 @@ struct LNButton: View {
             .background(background)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
-        .buttonStyle(LNPressButtonStyle())
+        .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.88))
         .disabled(!enabled || loading)
         .accessibilityIdentifier("ln_button_\(title)")
     }
@@ -60,12 +60,5 @@ struct LNButton: View {
         case .secondary: return LNColor.buttonSecondaryFg
         case .danger: return LNColor.buttonDangerFg
         }
-    }
-}
-
-private struct LNPressButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .opacity(configuration.isPressed ? 0.85 : 1)
     }
 }

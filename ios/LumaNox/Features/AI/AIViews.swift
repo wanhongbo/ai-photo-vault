@@ -139,13 +139,14 @@ struct AIHomeView: View {
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
             }
             .padding(14)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .frame(height: 86)
             .background(LNColor.sectionBg)
             .clipShape(RoundedRectangle(cornerRadius: 18))
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(tool.stroke, lineWidth: 1))
+            .contentShape(RoundedRectangle(cornerRadius: 18))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
         .accessibilityIdentifier(tool.accessibilityIdentifier)
     }
 
@@ -301,7 +302,7 @@ private struct AISummaryActionButton: View {
                     }
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
         .disabled(!enabled)
     }
 }
@@ -543,7 +544,7 @@ private struct AISensitiveReviewHeaderCard: View {
                 .background(loading ? LNColor.buttonDisabledBg : LNColor.brandBlue)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.88))
             .disabled(loading)
             .accessibilityIdentifier("ai_sensitive_scan_now")
         }
@@ -854,7 +855,7 @@ struct PrivacyRedactView: View {
                         .background(LNColor.navBarBg.opacity(0.8))
                         .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
                 .accessibilityLabel(L10n.commonBack)
                 .accessibilityIdentifier("privacy_redact_back")
 
@@ -917,7 +918,7 @@ struct PrivacyRedactView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(redactMode == .manual ? LNColor.success : LNColor.brandBlue, lineWidth: 1))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
             .disabled(!canEditRedaction)
             .opacity(canEditRedaction ? 1 : 0.55)
             .accessibilityIdentifier("privacy_redact_manual_done")
@@ -964,7 +965,7 @@ struct PrivacyRedactView: View {
                 .background(activeIsVideo || saveRegions.isEmpty ? LNColor.buttonDisabledBg : LNColor.brandBlue)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.88))
             .disabled(redactionService.isSaving || activeIsVideo || saveRegions.isEmpty)
             .accessibilityIdentifier("privacy_redact_save_vault")
 
@@ -1213,7 +1214,7 @@ struct PrivacyRedactView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(selectedStyle == style ? Color(hex: 0x818CF8) : LNColor.stroke, lineWidth: 1))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
                 }
             }
         }
@@ -1530,7 +1531,7 @@ private struct PrivacyRedactSmallChip: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
         .disabled(!isEnabled)
         .accessibilityIdentifier(identifier)
     }
@@ -1561,7 +1562,7 @@ private struct PrivacyRedactStylePicker: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(styleStroke(style), lineWidth: 1))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
                 .disabled(!isEnabled)
                 .accessibilityIdentifier("privacy_redact_style_\(style.rawValue)")
             }
@@ -1615,7 +1616,7 @@ private struct PrivacyRedactSecondaryAction: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lnPressable())
         .disabled(!isEnabled)
         .accessibilityIdentifier(identifier)
     }
@@ -1797,7 +1798,7 @@ private struct AIDuplicateThumbnail: View {
                     }
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lnPressable(scale: 0.96, pressedOpacity: 0.78))
 
             Button(action: onKeep) {
                 Text(isKept ? L10n.tr("ai_cleanup_keep_selected_short") : L10n.tr("ai_cleanup_keep_action"))
@@ -1808,7 +1809,7 @@ private struct AIDuplicateThumbnail: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(isKept ? LNColor.success : LNColor.stroke, lineWidth: 1))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
         }
     }
 }
@@ -1886,63 +1887,15 @@ private struct AISensitiveCandidateRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Button(action: onOpen) {
-                VaultMediaThumbnailView(
-                    encryptedPath: mediaItem(record).path,
-                    isVideo: record.isVideo,
-                    contentMode: .fill,
-                    targetPixelSize: 240
-                )
-                .frame(width: 76, height: 76)
-                .clipShape(RoundedRectangle(cornerRadius: 15))
-                .overlay(RoundedRectangle(cornerRadius: 15).stroke(Color(hex: 0x2D4563), lineWidth: 1))
-                .overlay(alignment: .topLeading) {
-                    HStack(spacing: 4) {
-                        Image(systemName: riskBadgeIcon(record))
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(sensitiveRiskColor(record))
-                        Text(sensitiveRiskScore(record))
-                            .font(.system(size: 10, weight: .heavy))
-                            .foregroundStyle(Color.white)
-                    }
-                    .frame(height: 23)
-                    .padding(.horizontal, 7)
-                    .background(Color.black.opacity(0.72))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(8)
+                HStack(spacing: 12) {
+                    thumbnail
+                    info
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    Text(sensitiveRiskLabel(record))
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(sensitiveRiskColor(record))
-                        .frame(height: 24)
-                        .padding(.horizontal, 8)
-                        .background(sensitiveRiskColor(record).opacity(0.13))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(sensitiveRiskColor(record), lineWidth: 1))
-                    Text(sensitiveHitSummary(record))
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color(hex: 0xB7C6DD))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.78)
-                }
-
-                Text(mediaItem(record).fileName)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(LNColor.title)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
-
-                Text(L10n.tr("ai_sensitive_preview_hint"))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0x66758A))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.78)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.82))
+            .accessibilityLabel(mediaItem(record).fileName)
 
             VStack(alignment: .trailing, spacing: 8) {
                 Button(action: onRedact) {
@@ -1960,7 +1913,7 @@ private struct AISensitiveCandidateRow: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: 0x2A5B8C), lineWidth: 1))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
 
                 Button(action: onIgnore) {
                     HStack(spacing: 5) {
@@ -1977,12 +1930,71 @@ private struct AISensitiveCandidateRow: View {
                     .clipShape(RoundedRectangle(cornerRadius: 11))
                     .overlay(RoundedRectangle(cornerRadius: 11).stroke(LNColor.stroke, lineWidth: 1))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
             }
         }
         .padding(.horizontal, 14)
         .frame(height: 124)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var thumbnail: some View {
+        VaultMediaThumbnailView(
+            encryptedPath: mediaItem(record).path,
+            isVideo: record.isVideo,
+            contentMode: .fill,
+            targetPixelSize: 240
+        )
+        .frame(width: 76, height: 76)
+        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .overlay(RoundedRectangle(cornerRadius: 15).stroke(Color(hex: 0x2D4563), lineWidth: 1))
+        .overlay(alignment: .topLeading) {
+            HStack(spacing: 4) {
+                Image(systemName: riskBadgeIcon(record))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(sensitiveRiskColor(record))
+                Text(sensitiveRiskScore(record))
+                    .font(.system(size: 10, weight: .heavy))
+                    .foregroundStyle(Color.white)
+            }
+            .frame(height: 23)
+            .padding(.horizontal, 7)
+            .background(Color.black.opacity(0.72))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .padding(8)
+        }
+    }
+
+    private var info: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(sensitiveRiskLabel(record))
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(sensitiveRiskColor(record))
+                    .frame(height: 24)
+                    .padding(.horizontal, 8)
+                    .background(sensitiveRiskColor(record).opacity(0.13))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(sensitiveRiskColor(record), lineWidth: 1))
+                Text(sensitiveHitSummary(record))
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Color(hex: 0xB7C6DD))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+            }
+
+            Text(mediaItem(record).fileName)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(LNColor.title)
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+
+            Text(L10n.tr("ai_sensitive_preview_hint"))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(hex: 0x66758A))
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+        }
     }
 
     private func sensitiveRiskScore(_ record: VaultMediaRecord) -> String {
@@ -2022,7 +2034,7 @@ private struct AIClassifyTagFilterBar: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(selectedTag == tag ? LNColor.brandBlue : LNColor.stroke, lineWidth: 1))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
                 }
             }
         }

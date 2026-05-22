@@ -155,7 +155,7 @@ struct BulkExportView: View {
                         }
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lnPressable(scale: 0.96, pressedOpacity: 0.78))
                 .accessibilityLabel(record.originalFileName ?? record.fileName)
                 .accessibilityAddTraits(selected ? [.isSelected] : [])
             }
