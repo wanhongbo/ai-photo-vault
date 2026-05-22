@@ -1,21 +1,70 @@
 import AVFoundation
 import UIKit
 
+enum CameraCaptureMode: String, CaseIterable {
+    case photo
+    case video
+}
+
+enum CameraFlashMode: String, CaseIterable {
+    case off
+    case auto
+    case on
+}
+
+enum CameraTimerOption: Int, CaseIterable {
+    case off = 0
+    case three = 3
+    case ten = 10
+}
+
+enum CameraVideoResolution: String, CaseIterable {
+    case fhd
+    case uhd4K
+}
+
+enum CameraVideoFPS: Int, CaseIterable {
+    case thirty = 30
+    case sixty = 60
+}
+
+struct CameraCapabilities: Equatable {
+    var hasFlash = false
+    var hasTorch = false
+    var minZoom: CGFloat = 1
+    var maxZoom: CGFloat = 1
+    var minExposureBias: Float = 0
+    var maxExposureBias: Float = 0
+    var supports4K = false
+    var supports60FPS = false
+
+    static let unavailable = CameraCapabilities()
+}
+
 @MainActor
 final class CameraSessionController: NSObject, ObservableObject {
     @Published private(set) var isRunning = false
     @Published private(set) var permissionDenied = false
-    @Published private(set) var flashMode: AVCaptureDevice.FlashMode = .off
+    @Published private(set) var microphoneDenied = false
     @Published private(set) var isRecording = false
+    @Published private(set) var capabilities = CameraCapabilities.unavailable
+    @Published private(set) var currentPosition: AVCaptureDevice.Position = .back
+    @Published var flashMode: CameraFlashMode = .off
+    @Published var videoResolution: CameraVideoResolution = .fhd
+    @Published var videoFPS: CameraVideoFPS = .thirty
+    @Published var zoomFactor: CGFloat = 1
+    @Published var exposureBias: Float = 0
 
     let session = AVCaptureSession()
+
     private let sessionQueue = DispatchQueue(label: "com.xpx.vault.camera.session")
     private var photoOutput = AVCapturePhotoOutput()
     private var movieOutput = AVCaptureMovieFileOutput()
     private var currentInput: AVCaptureDeviceInput?
-    private var currentPosition: AVCaptureDevice.Position = .back
+    private var currentAudioInput: AVCaptureDeviceInput?
+    private var currentDevice: AVCaptureDevice?
     private var recordingURL: URL?
-    private var photoCompletion: ((Result<URL, Error>) -> Void)?
+    private var captureCompletion: ((Result<URL, Error>) -> Void)?
 
     func configure() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -37,6 +86,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     func stop() {
+        stopRecording()
         sessionQueue.async { [weak self] in
             self?.session.stopRunning()
             Task { @MainActor in self?.isRunning = false }
@@ -52,79 +102,358 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     func flipCamera() {
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            let next: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: next),
-                  let input = try? AVCaptureDeviceInput(device: device) else { return }
-            session.beginConfiguration()
-            if let currentInput { session.removeInput(currentInput) }
-            if session.canAddInput(input) {
-                session.addInput(input)
-                currentInput = input
-                currentPosition = next
-            }
-            session.commitConfiguration()
+        let next: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
+        reconfigure(position: next)
+    }
+
+    func setFlashMode(_ mode: CameraFlashMode) {
+        if !capabilities.hasFlash && !capabilities.hasTorch {
+            flashMode = .off
+            return
+        }
+        flashMode = mode
+        if isRecording {
+            setTorchEnabled(mode == .on)
         }
     }
 
-    func cycleFlash() {
-        flashMode = switch flashMode {
-        case .off: .on
-        case .on: .auto
-        default: .off
+    func setVideoResolution(_ resolution: CameraVideoResolution) {
+        guard resolution != .uhd4K || capabilities.supports4K else {
+            videoResolution = .fhd
+            return
+        }
+        videoResolution = resolution
+        reconfigure(position: currentPosition)
+    }
+
+    func setVideoFPS(_ fps: CameraVideoFPS) {
+        guard fps != .sixty || capabilities.supports60FPS else {
+            videoFPS = .thirty
+            return
+        }
+        videoFPS = fps
+        applyVideoFrameRate()
+    }
+
+    func setZoomFactor(_ value: CGFloat) {
+        let target = min(max(value, capabilities.minZoom), capabilities.maxZoom)
+        zoomFactor = target
+        sessionQueue.async { [weak self] in
+            guard let self, let device = currentDevice else { return }
+            do {
+                try device.lockForConfiguration()
+                device.videoZoomFactor = min(max(target, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
+                device.unlockForConfiguration()
+            } catch {}
+        }
+    }
+
+    func setExposureBias(_ value: Float) {
+        let target = min(max(value, capabilities.minExposureBias), capabilities.maxExposureBias)
+        exposureBias = target
+        sessionQueue.async { [weak self] in
+            guard let self, let device = currentDevice, device.isExposureModeSupported(.continuousAutoExposure) else { return }
+            do {
+                try device.lockForConfiguration()
+                device.setExposureTargetBias(target)
+                device.unlockForConfiguration()
+            } catch {}
+        }
+    }
+
+    func focusAndExpose(at normalizedPoint: CGPoint) {
+        sessionQueue.async { [weak self] in
+            guard let device = self?.currentDevice else { return }
+            let point = CGPoint(
+                x: min(max(normalizedPoint.x, 0), 1),
+                y: min(max(normalizedPoint.y, 0), 1)
+            )
+            do {
+                try device.lockForConfiguration()
+                if device.isFocusPointOfInterestSupported {
+                    device.focusPointOfInterest = point
+                    if device.isFocusModeSupported(.autoFocus) {
+                        device.focusMode = .autoFocus
+                    }
+                }
+                if device.isExposurePointOfInterestSupported {
+                    device.exposurePointOfInterest = point
+                    if device.isExposureModeSupported(.continuousAutoExposure) {
+                        device.exposureMode = .continuousAutoExposure
+                    }
+                }
+                device.unlockForConfiguration()
+            } catch {}
         }
     }
 
     func capturePhoto(completion: @escaping (Result<URL, Error>) -> Void) {
-        photoCompletion = completion
+        captureCompletion = completion
         let settings = AVCapturePhotoSettings()
-        if photoOutput.supportedFlashModes.contains(flashMode) {
-            settings.flashMode = flashMode
+        let avFlashMode = avCaptureFlashMode(for: flashMode)
+        if photoOutput.supportedFlashModes.contains(avFlashMode) {
+            settings.flashMode = avFlashMode
         }
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
 
-    func toggleRecording(completion: @escaping (Result<URL, Error>) -> Void) {
-        if isRecording {
-            photoCompletion = { result in completion(result) }
-            movieOutput.stopRecording()
-            return
-        }
-        AVCaptureDevice.requestAccess(for: .audio) { _ in }
-        Task { @MainActor in
-            do {
-                let url = try VaultStore.shared.reserveCameraTempFile(extension: "mov")
-                recordingURL = url
-                photoCompletion = { result in completion(result) }
-                movieOutput.startRecording(to: url, recordingDelegate: self)
-                isRecording = true
-            } catch {
-                completion(.failure(error))
+    func startRecording(
+        onStarted: @escaping () -> Void = {},
+        completion: @escaping (Result<URL, Error>) -> Void
+    ) {
+        guard !isRecording else { return }
+        prepareAudioInputForRecording { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                do {
+                    let url = try VaultStore.shared.reserveCameraTempFile(extension: "mov")
+                    self.recordingURL = url
+                    self.captureCompletion = completion
+                    self.setTorchEnabled(self.flashMode == .on)
+                    self.movieOutput.startRecording(to: url, recordingDelegate: self)
+                    self.isRecording = true
+                    onStarted()
+                } catch {
+                    completion(.failure(error))
+                }
             }
         }
     }
 
+    func stopRecording() {
+        guard isRecording else { return }
+        movieOutput.stopRecording()
+    }
+
     private func startSession() {
+        reconfigure(position: currentPosition, startAfterConfigure: true)
+    }
+
+    private func reconfigure(position: AVCaptureDevice.Position, startAfterConfigure: Bool = false) {
         sessionQueue.async { [weak self] in
             guard let self else { return }
             session.beginConfiguration()
-            session.sessionPreset = .high
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-                  let input = try? AVCaptureDeviceInput(device: device) else {
+            session.inputs.forEach { self.session.removeInput($0) }
+            session.outputs.forEach { self.session.removeOutput($0) }
+
+            let requestedDevice = Self.preferredDevice(position: position) ?? Self.preferredDevice(position: .back) ?? Self.preferredDevice(position: .front)
+            guard let device = requestedDevice, let input = try? AVCaptureDeviceInput(device: device) else {
                 session.commitConfiguration()
+                Task { @MainActor in
+                    self.capabilities = .unavailable
+                    self.isRunning = false
+                }
                 return
             }
+
             if session.canAddInput(input) {
                 session.addInput(input)
                 currentInput = input
+                currentDevice = device
             }
+            if AVCaptureDevice.authorizationStatus(for: .audio) == .authorized {
+                addAudioInputLocked()
+            } else {
+                currentAudioInput = nil
+            }
+
+            photoOutput = AVCapturePhotoOutput()
+            movieOutput = AVCaptureMovieFileOutput()
             if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
             if session.canAddOutput(movieOutput) { session.addOutput(movieOutput) }
+            configureSessionPreset()
+            applyVideoFrameRateLocked()
             session.commitConfiguration()
-            session.startRunning()
-            Task { @MainActor in self.isRunning = true }
+
+            if startAfterConfigure || !session.isRunning {
+                session.startRunning()
+            }
+
+            let nextCapabilities = Self.capabilities(for: device)
+            Task { @MainActor in
+                self.currentPosition = device.position
+                self.capabilities = nextCapabilities
+                if !nextCapabilities.hasFlash && !nextCapabilities.hasTorch {
+                    self.flashMode = .off
+                }
+                if self.videoResolution == .uhd4K && !nextCapabilities.supports4K {
+                    self.videoResolution = .fhd
+                }
+                if self.videoFPS == .sixty && !nextCapabilities.supports60FPS {
+                    self.videoFPS = .thirty
+                }
+                self.zoomFactor = min(max(self.zoomFactor, nextCapabilities.minZoom), nextCapabilities.maxZoom)
+                self.exposureBias = min(max(self.exposureBias, nextCapabilities.minExposureBias), nextCapabilities.maxExposureBias)
+                self.isRunning = self.session.isRunning
+            }
         }
+    }
+
+    private func configureSessionPreset() {
+        let preset: AVCaptureSession.Preset = videoResolution == .uhd4K ? .hd4K3840x2160 : .high
+        if session.canSetSessionPreset(preset) {
+            session.sessionPreset = preset
+        } else if session.canSetSessionPreset(.high) {
+            session.sessionPreset = .high
+        }
+    }
+
+    private func applyVideoFrameRate() {
+        sessionQueue.async { [weak self] in
+            self?.applyVideoFrameRateLocked()
+        }
+    }
+
+    private func applyVideoFrameRateLocked() {
+        guard let device = currentDevice else { return }
+        let targetFPS = Double(videoFPS.rawValue)
+        guard let format = Self.bestFormat(for: device, resolution: videoResolution, fps: targetFPS) else { return }
+        do {
+            try device.lockForConfiguration()
+            device.activeFormat = format
+            let duration = CMTime(value: 1, timescale: CMTimeScale(Int32(targetFPS)))
+            device.activeVideoMinFrameDuration = duration
+            device.activeVideoMaxFrameDuration = duration
+            device.unlockForConfiguration()
+        } catch {}
+    }
+
+    private func prepareAudioInputForRecording(completion: @escaping () -> Void) {
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .authorized:
+            microphoneDenied = false
+            addAudioInputIfPossible(completion: completion)
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
+                Task { @MainActor in
+                    self?.microphoneDenied = !granted
+                }
+                if granted {
+                    self?.addAudioInputIfPossible(completion: completion)
+                } else {
+                    DispatchQueue.main.async(execute: completion)
+                }
+            }
+        case .denied, .restricted:
+            microphoneDenied = true
+            DispatchQueue.main.async(execute: completion)
+        @unknown default:
+            microphoneDenied = true
+            DispatchQueue.main.async(execute: completion)
+        }
+    }
+
+    private func addAudioInputIfPossible(completion: @escaping () -> Void) {
+        sessionQueue.async { [weak self] in
+            guard let self else {
+                DispatchQueue.main.async(execute: completion)
+                return
+            }
+            if currentAudioInput != nil {
+                DispatchQueue.main.async(execute: completion)
+                return
+            }
+            session.beginConfiguration()
+            addAudioInputLocked()
+            session.commitConfiguration()
+            DispatchQueue.main.async(execute: completion)
+        }
+    }
+
+    private func addAudioInputLocked() {
+        guard currentAudioInput == nil,
+              let microphone = AVCaptureDevice.default(for: .audio),
+              let audioInput = try? AVCaptureDeviceInput(device: microphone),
+              session.canAddInput(audioInput)
+        else { return }
+        session.addInput(audioInput)
+        currentAudioInput = audioInput
+    }
+
+    private func setTorchEnabled(_ enabled: Bool) {
+        sessionQueue.async { [weak self] in
+            guard let device = self?.currentDevice, device.hasTorch else { return }
+            do {
+                try device.lockForConfiguration()
+                if enabled {
+                    try device.setTorchModeOn(level: AVCaptureDevice.maxAvailableTorchLevel)
+                } else {
+                    device.torchMode = .off
+                }
+                device.unlockForConfiguration()
+            } catch {}
+        }
+    }
+
+    private func avCaptureFlashMode(for mode: CameraFlashMode) -> AVCaptureDevice.FlashMode {
+        switch mode {
+        case .off: return .off
+        case .auto: return .auto
+        case .on: return .on
+        }
+    }
+
+    private static func preferredDevice(position: AVCaptureDevice.Position) -> AVCaptureDevice? {
+        let types: [AVCaptureDevice.DeviceType] = [
+            .builtInTripleCamera,
+            .builtInDualWideCamera,
+            .builtInDualCamera,
+            .builtInWideAngleCamera
+        ]
+        for type in types {
+            if let device = AVCaptureDevice.default(type, for: .video, position: position) {
+                return device
+            }
+        }
+        return nil
+    }
+
+    private static func capabilities(for device: AVCaptureDevice) -> CameraCapabilities {
+        let maxZoom = min(device.maxAvailableVideoZoomFactor, 10)
+        return CameraCapabilities(
+            hasFlash: device.hasFlash,
+            hasTorch: device.hasTorch,
+            minZoom: max(0.5, device.minAvailableVideoZoomFactor),
+            maxZoom: max(1, maxZoom),
+            minExposureBias: device.minExposureTargetBias,
+            maxExposureBias: device.maxExposureTargetBias,
+            supports4K: supportsResolution(device, minWidth: 3840, minHeight: 2160),
+            supports60FPS: supportsFPS(device, fps: 60)
+        )
+    }
+
+    private static func supportsResolution(_ device: AVCaptureDevice, minWidth: Int32, minHeight: Int32) -> Bool {
+        device.formats.contains { format in
+            let dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
+            return dimensions.width >= minWidth && dimensions.height >= minHeight
+        }
+    }
+
+    private static func supportsFPS(_ device: AVCaptureDevice, fps: Double) -> Bool {
+        device.formats.contains { format in
+            format.videoSupportedFrameRateRanges.contains { $0.maxFrameRate >= fps }
+        }
+    }
+
+    private static func bestFormat(
+        for device: AVCaptureDevice,
+        resolution: CameraVideoResolution,
+        fps: Double
+    ) -> AVCaptureDevice.Format? {
+        let minimumWidth: Int32 = resolution == .uhd4K ? 3840 : 1920
+        return device.formats
+            .filter { format in
+                let dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
+                let supportsResolution = dimensions.width >= minimumWidth
+                let supportsFPS = format.videoSupportedFrameRateRanges.contains { $0.maxFrameRate >= fps }
+                return supportsResolution && supportsFPS
+            }
+            .sorted { lhs, rhs in
+                let l = CMVideoFormatDescriptionGetDimensions(lhs.formatDescription)
+                let r = CMVideoFormatDescriptionGetDimensions(rhs.formatDescription)
+                return (l.width * l.height) < (r.width * r.height)
+            }
+            .first
     }
 }
 
@@ -136,23 +465,23 @@ extension CameraSessionController: AVCapturePhotoCaptureDelegate {
     ) {
         Task { @MainActor in
             if let error {
-                photoCompletion?(.failure(error))
-                photoCompletion = nil
+                captureCompletion?(.failure(error))
+                captureCompletion = nil
                 return
             }
             guard let data = photo.fileDataRepresentation() else {
-                photoCompletion?(.failure(CameraError.noData))
-                photoCompletion = nil
+                captureCompletion?(.failure(CameraError.noData))
+                captureCompletion = nil
                 return
             }
             do {
                 let url = try VaultStore.shared.reserveCameraTempFile(extension: "jpg")
                 try data.write(to: url, options: .atomic)
-                photoCompletion?(.success(url))
+                captureCompletion?(.success(url))
             } catch {
-                photoCompletion?(.failure(error))
+                captureCompletion?(.failure(error))
             }
-            photoCompletion = nil
+            captureCompletion = nil
         }
     }
 }
@@ -166,12 +495,13 @@ extension CameraSessionController: AVCaptureFileOutputRecordingDelegate {
     ) {
         Task { @MainActor in
             isRecording = false
+            setTorchEnabled(false)
             if let error {
-                photoCompletion?(.failure(error))
+                captureCompletion?(.failure(error))
             } else {
-                photoCompletion?(.success(outputFileURL))
+                captureCompletion?(.success(outputFileURL))
             }
-            photoCompletion = nil
+            captureCompletion = nil
         }
     }
 }

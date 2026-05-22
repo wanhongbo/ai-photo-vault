@@ -120,6 +120,7 @@
 		CD248D5986AE3AD9D2B31751 /* VaultHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EAB2D89D8473CB2D20EBDE /* VaultHomeViewModel.swift */; };
 		CE8D914F5B2A3B015F982488 /* SettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C532FB51C0B341CAADA062 /* SettingsViews.swift */; };
 		D20BB3AE3A53AE26F906D67D /* screen_15.png in Resources */ = {isa = PBXBuildFile; fileRef = E1EC20C0DDB6D96BED47D1FC /* screen_15.png */; };
+		D244A8B62D208C46EF689034 /* CameraHomeView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 179AFC6FAAC0DD9C5AAB40E8 /* CameraHomeView.pen */; };
 		D26B1A60C96500B4D6409E94 /* LNButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFC860BF4A7D035FEC038759 /* LNButton.swift */; };
 		D4231525816B3C57E3411970 /* VaultCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F131249226B498888052AA /* VaultCipher.swift */; };
 		D5BD1B304BBCD65491F2A4B3 /* BackupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D6BF66338A668F2039EA68 /* BackupViewModel.swift */; };
@@ -138,6 +139,7 @@
 		F08C2E275153E01C1EE8777C /* RecentPhotosListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */; };
 		F392FCEE3EB37C002F0AB1F8 /* LNBottomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5324047407C827B2FCD59CC9 /* LNBottomTabBar.swift */; };
 		F531804D21BDA4B00CFEC9F0 /* PaywallNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201DCA4E25932076994F40AC /* PaywallNavigation.swift */; };
+		F548A4960AE663233E2D61C4 /* PrivateCameraView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 3BAB828DB79FA00FEC28F19C /* PrivateCameraView.pen */; };
 		F67B4AEF6A0FBAA2E269CA44 /* TrashBinView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 62320789F14A1082ED747B00 /* TrashBinView.pen */; };
 		F762EE90D58061C4E37FA9BE /* BackupKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02D8ED422B709C36CEF8A98C /* BackupKeyManager.swift */; };
 		FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657135709B6C821B72DC1DBD /* ThumbnailService.swift */; };
@@ -170,6 +172,7 @@
 		12026A53779F2E96027AADE0 /* runtime_lock_keypad_moved_up.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = runtime_lock_keypad_moved_up.png; sourceTree = "<group>"; };
 		153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */ = {isa = PBXFileReference; path = RestoreProgressView.pen; sourceTree = "<group>"; };
 		1766E374467294BEF5A81EE6 /* VaultHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHomeView.swift; sourceTree = "<group>"; };
+		179AFC6FAAC0DD9C5AAB40E8 /* CameraHomeView.pen */ = {isa = PBXFileReference; path = CameraHomeView.pen; sourceTree = "<group>"; };
 		1CA58E68F5BA60F23E6D0201 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		1FBC69DE179BB30C69A3742C /* VaultStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultStore.swift; sourceTree = "<group>"; };
 		201DCA4E25932076994F40AC /* PaywallNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallNavigation.swift; sourceTree = "<group>"; };
@@ -187,6 +190,7 @@
 		34CCF694E9032616FD67D5E6 /* AppRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRouter.swift; sourceTree = "<group>"; };
 		35715BBBEB5046052E8116DF /* fKM7q.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = fKM7q.png; sourceTree = "<group>"; };
 		3B36C7EB0368F50AB6AC2BFC /* CameraViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViews.swift; sourceTree = "<group>"; };
+		3BAB828DB79FA00FEC28F19C /* PrivateCameraView.pen */ = {isa = PBXFileReference; path = PrivateCameraView.pen; sourceTree = "<group>"; };
 		3FB8CFCE0552877BBDAA93D1 /* AICleanupView.pen */ = {isa = PBXFileReference; path = AICleanupView.pen; sourceTree = "<group>"; };
 		407A509AE813C75AE5E073FF /* screen_1j.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_1j.png; sourceTree = "<group>"; };
 		46CFF782A0797B87261A0450 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
@@ -345,9 +349,11 @@
 		0F44DB2A8C820916EF77730B /* Camera */ = {
 			isa = PBXGroup;
 			children = (
+				179AFC6FAAC0DD9C5AAB40E8 /* CameraHomeView.pen */,
 				27665673957BB60EB122DCF2 /* CameraSessionController.swift */,
 				333F8541164155B7909DB4DD /* CameraViews.pen */,
 				3B36C7EB0368F50AB6AC2BFC /* CameraViews.swift */,
+				3BAB828DB79FA00FEC28F19C /* PrivateCameraView.pen */,
 				4D434010CE450260448B125E /* PrivateCameraViewModel.swift */,
 			);
 			path = Camera;
@@ -826,6 +832,7 @@
 				AC4EAF0F6CC7E3910582B224 /* Assets.xcassets in Resources */,
 				89D87CBFB6E082FCACF2B661 /* BackupProgressView.pen in Resources */,
 				36378B57D1367F7307E82EEB /* BulkExportView.pen in Resources */,
+				D244A8B62D208C46EF689034 /* CameraHomeView.pen in Resources */,
 				5AB18B8BB4EA156F3ACB6AA7 /* CameraViews.pen in Resources */,
 				9C65DB619883E5806D30DEF0 /* ExportProgressView.pen in Resources */,
 				E6668EFF41673FC41F08B8C0 /* ExportResultView.pen in Resources */,
@@ -836,6 +843,7 @@
 				BE094B5F4A4227D4324EAA22 /* LumaNoxStyleGuide.pen in Resources */,
 				27A063DD7AD399ABA10FDE6E /* PhotoViewerView.pen in Resources */,
 				486B75BFD5833E43971EAA68 /* PrivacyRedactView.pen in Resources */,
+				F548A4960AE663233E2D61C4 /* PrivateCameraView.pen in Resources */,
 				F08C2E275153E01C1EE8777C /* RecentPhotosListView.pen in Resources */,
 				7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */,
 				2070853F7557A89E25EC1510 /* SettingsViews.pen in Resources */,
