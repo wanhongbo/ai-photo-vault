@@ -517,13 +517,15 @@ struct PhotoViewerView: View {
 
     @State private var showDelete = false
     @State private var showPurge = false
-    @State private var showInfo = false
     @State private var currentPath: String
     @State private var orderedPaths: [String]
     @State private var isPreparingShare = false
+    @State private var isExportingSystem = false
     @State private var shareURL: URL?
     @State private var showShareSheet = false
     @State private var showShareFailure = false
+    @State private var exportAlertMessage: String?
+    @State private var showExportAlert = false
 
     init(
         path: String,
@@ -571,9 +573,10 @@ struct PhotoViewerView: View {
                     PhotoViewerActionDock(
                         bottomInset: proxy.safeAreaInsets.bottom,
                         isPreparingShare: isPreparingShare,
+                        isExportingSystem: isExportingSystem,
                         onShare: prepareShare,
                         onRedact: { router.pushInCurrentTab(.privacyRedact(path: currentPath)) },
-                        onInfo: { showInfo = true },
+                        onExportSystem: exportToSystemPhotos,
                         onDelete: { showDelete = true }
                     )
                 }
@@ -597,6 +600,9 @@ struct PhotoViewerView: View {
             }
         }
         .alert(L10n.tr("photo_viewer_share_failed"), isPresented: $showShareFailure) {
+            Button(L10n.commonOk, role: .cancel) {}
+        }
+        .alert(exportAlertMessage ?? "", isPresented: $showExportAlert) {
             Button(L10n.commonOk, role: .cancel) {}
         }
         .edgeSwipeBack { dismiss() }
@@ -683,6 +689,43 @@ struct PhotoViewerView: View {
         }
     }
 
+    private func exportToSystemPhotos() {
+        guard !isExportingSystem else { return }
+        isExportingSystem = true
+        let pathToExport = currentPath
+        Task {
+            var tempURL: URL?
+            defer {
+                if let tempURL {
+                    PlaintextTempFileManager.shared.removeItem(tempURL)
+                }
+            }
+
+            do {
+                let url = try await makeShareURL(for: pathToExport)
+                tempURL = url
+                try await SystemPhotoLibraryExportService.shared.export(fileURL: url)
+                await MainActor.run {
+                    exportAlertMessage = L10n.tr("photo_viewer_export_success")
+                    showExportAlert = true
+                    isExportingSystem = false
+                }
+            } catch SystemPhotoLibraryExportError.authorizationDenied {
+                await MainActor.run {
+                    exportAlertMessage = L10n.tr("photo_viewer_export_denied")
+                    showExportAlert = true
+                    isExportingSystem = false
+                }
+            } catch {
+                await MainActor.run {
+                    exportAlertMessage = L10n.tr("photo_viewer_export_failed")
+                    showExportAlert = true
+                    isExportingSystem = false
+                }
+            }
+        }
+    }
+
     private func makeShareURL(for path: String) async throws -> URL {
         try await Task.detached(priority: .userInitiated) {
             let sourceURL = URL(fileURLWithPath: path)
@@ -732,25 +775,6 @@ struct PhotoViewerView: View {
                 onDismiss: { showPurge = false }
             )
         }
-        if showInfo {
-            LNMediaInfoDialog(
-                title: L10n.tr("photo_viewer_info_title"),
-                items: photoInfoItems(),
-                confirmTitle: L10n.commonOk,
-                onDismiss: { showInfo = false }
-            )
-        }
-    }
-
-    private func photoInfoItems() -> [(String, String)] {
-        let url = URL(fileURLWithPath: currentPath)
-        let record = VaultMetadataStore.shared.mediaRecord(forPath: currentPath)
-        return mediaInfoItems(
-            fallbackURL: url,
-            fallbackPath: currentPath,
-            record: record,
-            fallbackKind: .image
-        )
     }
 }
 
@@ -803,9 +827,10 @@ private struct PhotoViewerTopChrome: View {
 private struct PhotoViewerActionDock: View {
     let bottomInset: CGFloat
     let isPreparingShare: Bool
+    let isExportingSystem: Bool
     let onShare: () -> Void
     let onRedact: () -> Void
-    let onInfo: () -> Void
+    let onExportSystem: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -832,10 +857,10 @@ private struct PhotoViewerActionDock: View {
                         action: onRedact
                     )
                     PhotoViewerDockButton(
-                        title: L10n.tr("photo_viewer_info"),
-                        systemImage: "info.circle",
+                        title: L10n.tr("photo_viewer_export_system"),
+                        systemImage: isExportingSystem ? "hourglass" : "square.and.arrow.down",
                         foreground: LNColor.title,
-                        action: onInfo
+                        action: onExportSystem
                     )
                     PhotoViewerDockButton(
                         title: L10n.tr("photo_viewer_delete"),

@@ -360,8 +360,8 @@
                   "alignItems": "center",
                   "justifyContent": "center",
                   "children": [
-                    { "type": "icon_font", "id": "GwRII", "iconFontFamily": "lucide", "iconFontName": "info", "fill": "#EAF1FF", "width": 21, "height": 21 },
-                    { "type": "text", "id": "DXpTX", "content": "Info", "fontFamily": "Inter", "fontSize": 11, "fontWeight": "600", "letterSpacing": 0, "fill": "#EAF1FF" }
+                    { "type": "icon_font", "id": "GwRII", "iconFontFamily": "lucide", "iconFontName": "download", "fill": "#EAF1FF", "width": 21, "height": 21 },
+                    { "type": "text", "id": "DXpTX", "content": "Export", "fontFamily": "Inter", "fontSize": 11, "fontWeight": "600", "letterSpacing": 0, "fill": "#EAF1FF" }
                   ]
                 },
                 {

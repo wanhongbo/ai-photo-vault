@@ -175,7 +175,7 @@
 "privacy_redact_share_redacted" = "Share redacted";
 "privacy_redact_export_pending" = "Export will be available after saving a redacted copy.";
 "privacy_redact_share_pending" = "Sharing will be available after saving a redacted copy.";
-"privacy_redact_export_success" = "Exported to Photos.";
+"privacy_redact_export_success" = "Exported to the LumaNox album in Photos.";
 "privacy_redact_export_failed" = "Could not export to Photos.";
 "privacy_redact_export_denied" = "Allow Photos write access before exporting.";
 "privacy_redact_share_failed" = "Could not share the redacted image.";
@@ -196,9 +196,12 @@
 "photo_viewer_counter" = "%d / %d";
 "photo_viewer_share" = "Share";
 "photo_viewer_redact" = "Redact";
-"photo_viewer_info" = "Info";
+"photo_viewer_export_system" = "Export";
 "photo_viewer_delete" = "Delete";
 "photo_viewer_share_failed" = "Share failed";
+"photo_viewer_export_success" = "Exported to the LumaNox album in Photos.";
+"photo_viewer_export_failed" = "Could not export to Photos. Please try again.";
+"photo_viewer_export_denied" = "Allow Photos write access before exporting.";
 "photo_viewer_delete_title" = "Move to Trash";
 "photo_viewer_delete_message" = "Item moves to trash. Restore or purge from Settings.";
 "photo_viewer_info_title" = "File Info";

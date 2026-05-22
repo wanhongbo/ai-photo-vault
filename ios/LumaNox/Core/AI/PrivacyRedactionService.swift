@@ -1,6 +1,5 @@
 import Foundation
 import CoreImage
-import Photos
 import UIKit
 import Vision
 
@@ -138,20 +137,15 @@ final class PrivacyRedactionService: ObservableObject {
         guard let tempURL = await makeRedactedTemporaryFile(path: path, regions: regions, scene: .export) else { return false }
         defer { tempManager.removeItem(tempURL) }
 
-        let status = await requestPhotoAddAuthorization()
-        guard status == .authorized || status == .limited else {
-            lastMessage = L10n.tr("privacy_redact_export_denied")
-            lastIsError = true
-            return false
-        }
-
         do {
-            try await PHPhotoLibrary.shared().performChanges {
-                PHAssetCreationRequest.creationRequestForAssetFromImage(atFileURL: tempURL)
-            }
+            try await SystemPhotoLibraryExportService.shared.export(fileURL: tempURL)
             lastMessage = L10n.tr("privacy_redact_export_success")
             lastIsError = false
             return true
+        } catch SystemPhotoLibraryExportError.authorizationDenied {
+            lastMessage = L10n.tr("privacy_redact_export_denied")
+            lastIsError = true
+            return false
         } catch {
             lastMessage = L10n.tr("privacy_redact_export_failed")
             lastIsError = true
@@ -204,15 +198,6 @@ final class PrivacyRedactionService: ObservableObject {
         }
     }
 
-    private func requestPhotoAddAuthorization() async -> PHAuthorizationStatus {
-        let current = PHPhotoLibrary.authorizationStatus(for: .addOnly)
-        guard current == .notDetermined else { return current }
-        return await withCheckedContinuation { continuation in
-            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-                continuation.resume(returning: status)
-            }
-        }
-    }
 }
 
 private enum PrivacyRedactor {

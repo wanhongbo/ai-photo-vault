@@ -137,6 +137,7 @@
 		D26B1A60C96500B4D6409E94 /* LNButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFC860BF4A7D035FEC038759 /* LNButton.swift */; };
 		D4231525816B3C57E3411970 /* VaultCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F131249226B498888052AA /* VaultCipher.swift */; };
 		D5BD1B304BBCD65491F2A4B3 /* BackupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D6BF66338A668F2039EA68 /* BackupViewModel.swift */; };
+		D683DC8BE9491B0820EB0B3B /* SystemPhotoLibraryExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE00040593CA7BF93D29C8F /* SystemPhotoLibraryExportService.swift */; };
 		D6D3FA80DAFBC686A2B5E510 /* AIClassifyDetailView.pen in Resources */ = {isa = PBXBuildFile; fileRef = BE6AA7F5102C5480C5BB950C /* AIClassifyDetailView.pen */; };
 		DB8AC892BAA7C6A6E7CF08A7 /* AIViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D4F776A7ACB59085A82B3F /* AIViews.swift */; };
 		DBB0204DE74419911B845B9F /* LNSettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE981D8224A4925C036A472 /* LNSettingsComponents.swift */; };
@@ -247,6 +248,7 @@
 		7DBA6BD3F7D19B0BEE46B366 /* LumaNox.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LumaNox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F121E8D7BA0C5DAC6610309 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		7F34D29FA076FE9CC7A66378 /* VaultAIAnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultAIAnalysisService.swift; sourceTree = "<group>"; };
+		7FE00040593CA7BF93D29C8F /* SystemPhotoLibraryExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPhotoLibraryExportService.swift; sourceTree = "<group>"; };
 		826020A1A0EC371A3DA0B66F /* RouteDestinationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDestinationView.swift; sourceTree = "<group>"; };
 		83D4F776A7ACB59085A82B3F /* AIViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIViews.swift; sourceTree = "<group>"; };
 		85EAB2D89D8473CB2D20EBDE /* VaultHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHomeViewModel.swift; sourceTree = "<group>"; };
@@ -458,6 +460,7 @@
 			children = (
 				D672F551AEBE8981A9F344D0 /* MediaExportService.swift */,
 				7B224DC7450B7689747A1F9E /* PlaintextTempFileManager.swift */,
+				7FE00040593CA7BF93D29C8F /* SystemPhotoLibraryExportService.swift */,
 				657135709B6C821B72DC1DBD /* ThumbnailService.swift */,
 				AED24C08D30394D9D28E1B1F /* VaultMaintenanceService.swift */,
 				ECA0AF35AC07F37BA5F1622F /* VaultModels.swift */,
@@ -1012,6 +1015,7 @@
 				C99A12AC265413E4875E4C0D /* SplashView.swift in Sources */,
 				DE5E1DD8859752E46109681D /* SubscriptionService.swift in Sources */,
 				237FC14D29AF8213947A012D /* SwipeBackNavigationModifier.swift in Sources */,
+				D683DC8BE9491B0820EB0B3B /* SystemPhotoLibraryExportService.swift in Sources */,
 				FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */,
 				87F2096A12CE0926BAC5892C /* VaultAIAnalysisService.swift in Sources */,
 				0C03878D97F142FB377DE203 /* VaultAICategoryMapper.swift in Sources */,
@@ -1164,7 +1168,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "LumaNox needs camera access for private capture.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "LumaNox uses Face ID to unlock your vault.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LumaNox needs microphone access to record private videos.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LumaNox needs permission to export redacted images to Photos.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LumaNox needs permission to export photos and videos to the LumaNox album in Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "LumaNox needs photo library access to import media into your vault.";
 				INFOPLIST_KEY_REVENUECAT_API_KEY = "$(REVENUECAT_API_KEY)";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1194,7 +1198,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "LumaNox needs camera access for private capture.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "LumaNox uses Face ID to unlock your vault.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LumaNox needs microphone access to record private videos.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LumaNox needs permission to export redacted images to Photos.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LumaNox needs permission to export photos and videos to the LumaNox album in Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "LumaNox needs photo library access to import media into your vault.";
 				INFOPLIST_KEY_REVENUECAT_API_KEY = "$(REVENUECAT_API_KEY)";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
