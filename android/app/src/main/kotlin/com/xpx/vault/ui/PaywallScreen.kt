@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -339,6 +340,8 @@ private fun PaywallTierCard(
     val stroke = if (selected) UiColors.Paywall.cardStrokeSelected else UiColors.Paywall.cardStroke
     val strokeW = if (selected) 2.dp else 1.dp
     val priceColor = if (selected) UiColors.Paywall.priceSelected else UiColors.Paywall.priceIdle
+    val title = remember(offer.title) { offer.title.compactStoreText() }
+    val description = remember(offer.description) { offer.description.compactStoreText() }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -353,36 +356,39 @@ private fun PaywallTierCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = offer.title,
-                        color = UiColors.Paywall.tierTitle,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    if (offer.showBestValueBadge || offer.savingsPercent != null) {
-                        Spacer(Modifier.width(8.dp))
-                        val badgeText = if (offer.savingsPercent != null) {
-                            stringResource(R.string.paywall_best_value) + " -${offer.savingsPercent}%"
-                        } else {
-                            stringResource(R.string.paywall_best_value)
-                        }
-                        Text(
-                            text = badgeText,
-                            color = UiColors.Paywall.badgeText,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(100))
-                                .background(UiColors.Paywall.badgeBg)
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                        )
+                Text(
+                    text = title,
+                    color = UiColors.Paywall.tierTitle,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 21.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (offer.showBestValueBadge || offer.savingsPercent != null) {
+                    Spacer(Modifier.height(6.dp))
+                    val badgeText = if (offer.savingsPercent != null) {
+                        stringResource(R.string.paywall_best_value) + " -${offer.savingsPercent}%"
+                    } else {
+                        stringResource(R.string.paywall_best_value)
                     }
+                    Text(
+                        text = badgeText,
+                        color = UiColors.Paywall.badgeText,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(100))
+                            .background(UiColors.Paywall.badgeBg)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
                 }
-                if (offer.description.isNotBlank()) {
+                if (description.isNotBlank()) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = offer.description,
+                        text = description,
                         color = UiColors.Paywall.tierMeta,
                         fontSize = 12.sp,
                         maxLines = 2,
@@ -399,18 +405,26 @@ private fun PaywallTierCard(
                     )
                 }
             }
-            Column(horizontalAlignment = Alignment.End) {
+            Spacer(Modifier.width(12.dp))
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.widthIn(min = 82.dp, max = 112.dp),
+            ) {
                 Text(
-                    text = offer.pricePrimary,
+                    text = offer.pricePrimary.trim(),
                     color = priceColor,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = periodLabel(offer.kind),
                     color = UiColors.Paywall.tierMeta,
                     fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -425,6 +439,11 @@ private fun periodLabel(kind: PaywallPlanKind): String =
         PaywallPlanKind.LIFETIME -> stringResource(R.string.paywall_period_lifetime)
         PaywallPlanKind.OTHER -> stringResource(R.string.paywall_period_other)
     }
+
+private val storeTextWhitespaceRegex = Regex("\\s+")
+
+private fun String.compactStoreText(): String =
+    trim().replace(storeTextWhitespaceRegex, " ")
 
 @Composable
 private fun PaywallFeatureList() {
