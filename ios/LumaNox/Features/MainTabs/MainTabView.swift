@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject private var router: AppRouter
+    @StateObject private var vaultHomeViewModel = VaultHomeViewModel()
     @State private var didApplyDebugStartRoute = false
 
     var body: some View {
@@ -10,7 +11,7 @@ struct MainTabView: View {
                 switch router.selectedTab {
                 case .vault:
                     NavigationStack(path: $router.vaultPath) {
-                        VaultHomeView()
+                        VaultHomeView(viewModel: vaultHomeViewModel)
                             .routeNavigationDestinations()
                             .toolbar(.hidden, for: .navigationBar)
                     }

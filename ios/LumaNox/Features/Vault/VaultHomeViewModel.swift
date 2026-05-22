@@ -13,9 +13,15 @@ final class VaultHomeViewModel: ObservableObject {
     @Published var newAlbumName = ""
     @Published var duplicateImportDialogMessage: String?
     @Published private(set) var snapshot: VaultSnapshot?
+    @Published private(set) var isLoadingSnapshot = false
     @Published private(set) var hasPinConfigured = debugSkipsPin || SecuritySettingsStore.shared.hasPinConfigured
 
     private let vaultStore = VaultStore.shared
+
+    init() {
+        self.snapshot = vaultStore.snapshot
+        self.isLoadingSnapshot = vaultStore.snapshot == nil
+    }
 
     var isImporting: Bool { vaultStore.isImporting }
     var importTip: String? { vaultStore.lastImportMessage }
@@ -30,6 +36,8 @@ final class VaultHomeViewModel: ObservableObject {
     }
 
     var isEmpty: Bool { recentPhotos.isEmpty }
+    var shouldShowInitialLoading: Bool { snapshot == nil && isLoadingSnapshot }
+    var shouldShowEmptyState: Bool { snapshot != nil && isEmpty && !isImporting }
     var totalCount: Int { snapshot?.totalCount ?? 0 }
     var imageCount: Int { snapshot?.recentPhotos.filter { !$0.isVideo }.count ?? 0 }
     var videoCount: Int { snapshot?.recentPhotos.filter(\.isVideo).count ?? 0 }
@@ -38,8 +46,12 @@ final class VaultHomeViewModel: ObservableObject {
         refreshAuthorization()
         hasPinConfigured = debugSkipsPin || SecuritySettingsStore.shared.hasPinConfigured
         Task {
+            if snapshot == nil {
+                isLoadingSnapshot = true
+            }
             await vaultStore.loadSnapshot()
             snapshot = vaultStore.snapshot
+            isLoadingSnapshot = false
         }
     }
 

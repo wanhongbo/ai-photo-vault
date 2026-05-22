@@ -3,7 +3,11 @@ import SwiftUI
 
 struct VaultHomeView: View {
     @EnvironmentObject private var router: AppRouter
-    @StateObject private var viewModel = VaultHomeViewModel()
+    @ObservedObject private var viewModel: VaultHomeViewModel
+
+    init(viewModel: VaultHomeViewModel) {
+        self.viewModel = viewModel
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,7 +25,9 @@ struct VaultHomeView: View {
 
                     if viewModel.showPermissionDenied {
                         permissionCard
-                    } else if viewModel.isEmpty && !viewModel.isImporting {
+                    } else if viewModel.shouldShowInitialLoading {
+                        loadingVaultCard
+                    } else if viewModel.shouldShowEmptyState {
                         emptyVaultCard
                     } else {
                         albumsSection
@@ -59,6 +65,20 @@ struct VaultHomeView: View {
             }
         }
         .accessibilityIdentifier("vault_home_view")
+    }
+
+    private var loadingVaultCard: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .tint(LNColor.brandBlue)
+            Text(L10n.commonLoading)
+                .font(LNTypography.bodyMedium())
+                .foregroundStyle(LNColor.subtitle)
+            Spacer()
+        }
+        .padding(.vertical, 18)
+        .padding(.horizontal, LNSpacing.cardPadding)
+        .lnOutlinedCard()
     }
 
     private var header: some View {
