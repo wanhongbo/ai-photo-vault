@@ -73,14 +73,18 @@ final class CameraSessionController: NSObject, ObservableObject {
     private var discardPhotoOnStop = false
     private var hasConfiguredSession = false
     private var hasConfiguredMovieOutput = false
+    private var isRequestingVideoAccess = false
 
     func configure() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             startSession()
         case .notDetermined:
+            guard !isRequestingVideoAccess else { return }
+            isRequestingVideoAccess = true
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 Task { @MainActor in
+                    self?.isRequestingVideoAccess = false
                     if granted {
                         self?.startSession()
                     } else {
@@ -116,14 +120,6 @@ final class CameraSessionController: NSObject, ObservableObject {
                 self.isRunning = false
             }
         }
-    }
-
-    func attachPreview(to view: UIView) {
-        let layer = AVCaptureVideoPreviewLayer(session: session)
-        layer.videoGravity = .resizeAspectFill
-        layer.frame = view.bounds
-        view.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
-        view.layer.addSublayer(layer)
     }
 
     func flipCamera() {

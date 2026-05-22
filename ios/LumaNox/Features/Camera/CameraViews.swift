@@ -794,33 +794,47 @@ private struct CameraIconButton: View {
     }
 }
 
+private final class CameraPreviewUIView: UIView {
+    override class var layerClass: AnyClass {
+        AVCaptureVideoPreviewLayer.self
+    }
+
+    var previewLayer: AVCaptureVideoPreviewLayer {
+        layer as! AVCaptureVideoPreviewLayer
+    }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .black
+        previewLayer.videoGravity = .resizeAspectFill
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func bind(session: AVCaptureSession) {
+        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.session = session
+    }
+}
+
 private struct CameraPreviewRepresentable: UIViewRepresentable {
     let controller: CameraSessionController
 
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: .zero)
-        view.backgroundColor = .black
-        DispatchQueue.main.async {
-            controller.attachPreview(to: view)
-        }
+    func makeUIView(context: Context) -> CameraPreviewUIView {
+        let view = CameraPreviewUIView(frame: .zero)
+        view.bind(session: controller.session)
         return view
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        if let layer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
-            layer.frame = uiView.bounds
-        } else {
-            controller.attachPreview(to: uiView)
-        }
+    func updateUIView(_ uiView: CameraPreviewUIView, context: Context) {
+        uiView.bind(session: controller.session)
     }
 
-    static func dismantleUIView(_ uiView: UIView, coordinator: ()) {
-        uiView.layer.sublayers?.forEach { layer in
-            if let previewLayer = layer as? AVCaptureVideoPreviewLayer {
-                previewLayer.session = nil
-            }
-            layer.removeFromSuperlayer()
-        }
+    static func dismantleUIView(_ uiView: CameraPreviewUIView, coordinator: ()) {
+        uiView.previewLayer.session = nil
     }
 }
 

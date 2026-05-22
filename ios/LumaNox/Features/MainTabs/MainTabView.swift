@@ -75,6 +75,9 @@ struct MainTabView: View {
             prewarmCameraIfPossible()
         }
         .onAppear {
+            router.preparePrivateCameraForPresentation = { [privateCameraViewModel] in
+                privateCameraViewModel.startForPresentation()
+            }
             scheduleOnboardingPaywallIfNeeded()
             applyDebugStartRouteIfNeeded()
             prewarmCameraIfPossible()

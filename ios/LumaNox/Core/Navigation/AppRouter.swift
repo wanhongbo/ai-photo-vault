@@ -8,6 +8,7 @@ final class AppRouter: ObservableObject {
     @Published var settingsPath = NavigationPath()
     @Published var aiPath = NavigationPath()
     @Published var presentedRoute: AppRoute?
+    var preparePrivateCameraForPresentation: (() -> Void)?
 
     var shouldShowBottomTabBar: Bool {
         switch selectedTab {
@@ -30,6 +31,7 @@ final class AppRouter: ObservableObject {
     }
 
     func openPrivateCamera() {
+        preparePrivateCameraForPresentation?()
         presentedRoute = .privateCamera
     }
 

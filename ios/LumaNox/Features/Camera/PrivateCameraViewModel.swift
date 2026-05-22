@@ -55,6 +55,10 @@ final class PrivateCameraViewModel: ObservableObject {
         controller.configure()
     }
 
+    func startForPresentation() {
+        controller.configure()
+    }
+
     func prepareForFastStart() {
         controller.prepareForFastStart()
     }
