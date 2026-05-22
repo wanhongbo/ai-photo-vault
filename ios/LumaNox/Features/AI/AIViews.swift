@@ -449,16 +449,17 @@ struct AISensitiveReviewView: View {
     var body: some View {
         VaultListScreenChrome(title: L10n.tr("ai_sensitive_files_title"), onBack: { dismiss() }) { availableWidth in
             let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
+            let records = sensitiveRecords
 
-            VStack(spacing: 16) {
+            LazyVStack(spacing: 16) {
                 AISensitiveReviewHeaderCard(
-                    count: sensitiveRecords.count,
+                    count: records.count,
                     loading: aiService.progress.running,
                     onScan: { Task { await aiService.scanVault() } }
                 )
                 .frame(width: cardWidth)
 
-                if sensitiveRecords.isEmpty {
+                if records.isEmpty {
                     AIEmptyActionView(
                         systemImage: "checkmark.shield",
                         title: L10n.tr("ai_sensitive_empty_title"),
@@ -466,8 +467,8 @@ struct AISensitiveReviewView: View {
                     )
                     .frame(width: cardWidth)
                 } else {
-                    VStack(spacing: 10) {
-                        ForEach(sensitiveRecords) { record in
+                    LazyVStack(spacing: 10) {
+                        ForEach(records) { record in
                             AISensitiveCandidateCard(
                                 record: record,
                                 width: cardWidth,
