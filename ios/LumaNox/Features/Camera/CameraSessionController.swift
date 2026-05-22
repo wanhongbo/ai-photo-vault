@@ -2,6 +2,7 @@ import AVFoundation
 import UIKit
 
 private let cameraPhotoProcessingQueue = DispatchQueue(label: "com.xpx.vault.camera.photo-processing", qos: .userInitiated)
+private let cameraSessionQueue = DispatchQueue(label: "com.xpx.vault.camera.session")
 
 enum CameraCaptureMode: String, CaseIterable {
     case photo
@@ -59,7 +60,7 @@ final class CameraSessionController: NSObject, ObservableObject {
 
     let session = AVCaptureSession()
 
-    private let sessionQueue = DispatchQueue(label: "com.xpx.vault.camera.session")
+    private let sessionQueue = cameraSessionQueue
     private var photoOutput = AVCapturePhotoOutput()
     private var movieOutput = AVCaptureMovieFileOutput()
     private var currentInput: AVCaptureDeviceInput?
@@ -96,8 +97,13 @@ final class CameraSessionController: NSObject, ObservableObject {
         }
         stopRecording(discard: discardPendingRecording)
         sessionQueue.async { [weak self] in
-            self?.session.stopRunning()
-            Task { @MainActor in self?.isRunning = false }
+            guard let self else { return }
+            if self.session.isRunning {
+                self.session.stopRunning()
+            }
+            Task { @MainActor in
+                self.isRunning = false
+            }
         }
     }
 
