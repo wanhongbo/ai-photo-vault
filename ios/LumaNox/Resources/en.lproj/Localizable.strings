@@ -324,6 +324,12 @@
 "camera_flip_lens" = "Switch camera";
 "camera_shutter" = "Camera shutter";
 "camera_view_last_media" = "View recent capture";
+"camera_capturing_photo" = "Capturing photo...";
+"camera_saving_to_vault" = "Encrypting into vault...";
+"camera_preparing_video" = "Preparing video...";
+"camera_photo_mode_hint" = "Photo mode";
+"camera_video_mode_hint" = "Video mode: tap shutter to record";
+"camera_zoom_status" = "Zoom %@";
 "export_progress_title" = "Exporting";
 "export_result_title" = "Export Complete";
 "export_cancel_title" = "Cancel Export";

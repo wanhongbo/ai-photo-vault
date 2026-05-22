@@ -394,11 +394,11 @@
             {
               "type": "text",
               "id": "zoom_07",
-              "content": ".7",
+              "content": ".7x",
               "fontFamily": "Inter",
               "fontSize": 12,
               "fontWeight": "600",
-              "fill": "#8EA2C0"
+              "fill": "#B7D7FF"
             },
             {
               "type": "frame",
@@ -425,11 +425,79 @@
             {
               "type": "text",
               "id": "zoom_2",
-              "content": "2",
+              "content": "2x",
               "fontFamily": "Inter",
               "fontSize": 12,
               "fontWeight": "600",
-              "fill": "#8EA2C0"
+              "fill": "#B7D7FF"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "capture_feedback_pill",
+          "name": "Capture feedback pill",
+          "layout": "horizontal",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "gap": 8,
+          "x": 98,
+          "y": 568,
+          "width": 198,
+          "height": 36,
+          "cornerRadius": 18,
+          "fill": "#111827CC",
+          "stroke": { "fill": "#4A9EFF66", "thickness": 1 },
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "capture_feedback_dot",
+              "width": 8,
+              "height": 8,
+              "fill": "#4A9EFF"
+            },
+            {
+              "type": "text",
+              "id": "capture_feedback_text",
+              "content": "Encrypting capture...",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "700",
+              "fill": "#EAF1FF"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "video_mode_cue",
+          "name": "Video mode cue",
+          "layout": "horizontal",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "gap": 8,
+          "x": 112,
+          "y": 652,
+          "width": 168,
+          "height": 32,
+          "cornerRadius": 16,
+          "fill": "#3A101ACC",
+          "stroke": { "fill": "#FF437266", "thickness": 1 },
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "video_mode_dot",
+              "width": 8,
+              "height": 8,
+              "fill": "#FF4372"
+            },
+            {
+              "type": "text",
+              "id": "video_mode_text",
+              "content": "Video ready",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "700",
+              "fill": "#FFFFFF"
             }
           ]
         },
@@ -470,9 +538,7 @@
             {
               "type": "frame",
               "id": "shutter_button",
-              "layout": "horizontal",
-              "justifyContent": "center",
-              "alignItems": "center",
+              "layout": "none",
               "width": 78,
               "height": 78,
               "cornerRadius": 39,
@@ -482,32 +548,78 @@
                 {
                   "type": "ellipse",
                   "id": "shutter_inner",
+                  "x": 12,
+                  "y": 12,
                   "width": 54,
                   "height": 54,
                   "fill": "#EAF1FF"
+                },
+                {
+                  "type": "ellipse",
+                  "id": "capture_progress_ring",
+                  "name": "Capture progress ring",
+                  "x": -5,
+                  "y": -5,
+                  "width": 88,
+                  "height": 88,
+                  "fill": "transparent",
+                  "stroke": { "fill": "#4A9EFFAA", "thickness": 3 }
                 }
               ]
             },
             {
               "type": "frame",
               "id": "last_capture",
-              "layout": "horizontal",
-              "justifyContent": "center",
-              "alignItems": "center",
+              "layout": "none",
               "width": 48,
               "height": 48,
               "cornerRadius": 24,
-              "fill": "#FFFFFF22",
-              "stroke": { "fill": "#FFFFFF33", "thickness": 1 },
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "rotation": 135,
+                "size": { "height": 1 },
+                "colors": [
+                  { "color": "#31445F", "position": 0 },
+                  { "color": "#5FA8FF", "position": 0.48 },
+                  { "color": "#101827", "position": 1 }
+                ]
+              },
+              "stroke": { "fill": "#4A9EFF", "thickness": 2 },
               "children": [
                 {
                   "type": "icon_font",
                   "id": "last_capture_icon",
+                  "x": 15,
+                  "y": 15,
                   "iconFontFamily": "lucide",
                   "iconFontName": "image",
-                  "fill": "#EAF1FF",
-                  "width": 24,
-                  "height": 24
+                  "fill": "#FFFFFFDD",
+                  "width": 18,
+                  "height": 18
+                },
+                {
+                  "type": "frame",
+                  "id": "last_capture_badge",
+                  "name": "Last capture video/photo badge",
+                  "layout": "horizontal",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "x": 27,
+                  "y": 27,
+                  "width": 18,
+                  "height": 18,
+                  "cornerRadius": 9,
+                  "fill": "#05080DCC",
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "last_capture_badge_dot",
+                      "width": 6,
+                      "height": 6,
+                      "fill": "#21C277"
+                    }
+                  ]
                 }
               ]
             }
@@ -557,7 +669,8 @@
               "height": "fill_container",
               "width": "fill_container",
               "cornerRadius": 15,
-              "fill": "transparent",
+              "fill": "#FF437222",
+              "stroke": { "fill": "#FF437266", "thickness": 1 },
               "children": [
                 {
                   "type": "text",
@@ -565,8 +678,8 @@
                   "content": "Video",
                   "fontFamily": "Inter",
                   "fontSize": 13,
-                  "fontWeight": "600",
-                  "fill": "#EAF1FF"
+                  "fontWeight": "700",
+                  "fill": "#FFFFFF"
                 }
               ]
             }

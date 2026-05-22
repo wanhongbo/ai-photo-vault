@@ -324,6 +324,12 @@
 "camera_flip_lens" = "切换前后摄像头";
 "camera_shutter" = "相机快门";
 "camera_view_last_media" = "查看最近拍摄";
+"camera_capturing_photo" = "正在拍照...";
+"camera_saving_to_vault" = "正在加密保存...";
+"camera_preparing_video" = "正在准备录像...";
+"camera_photo_mode_hint" = "拍照模式";
+"camera_video_mode_hint" = "视频模式：点击快门开始录制";
+"camera_zoom_status" = "变焦 %@";
 "export_progress_title" = "正在导出";
 "export_result_title" = "导出完成";
 "export_cancel_title" = "取消导出";

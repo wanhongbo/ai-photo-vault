@@ -134,16 +134,13 @@ struct PrivateCameraView: View {
 
                 Spacer()
 
-                if let message = viewModel.message {
-                    Text(message)
-                        .font(LNTypography.bodyMedium())
-                        .foregroundStyle(LNColor.title)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(.black.opacity(0.48))
-                        .clipShape(Capsule())
-                        .padding(.bottom, 12)
+                if let statusText = viewModel.statusText {
+                    CameraStatusPill(
+                        text: statusText,
+                        isVideoMode: viewModel.captureMode == .video,
+                        isBusy: viewModel.isBusy
+                    )
+                    .padding(.bottom, 12)
                 }
 
                 if viewModel.controller.isRecording {
@@ -234,7 +231,7 @@ struct PrivateCameraView: View {
 
             Spacer()
 
-            if viewModel.isSaving {
+            if viewModel.isBusy {
                 ProgressView()
                     .tint(LNColor.brandBlue)
                     .frame(width: 44, height: 44)
@@ -271,27 +268,30 @@ struct PrivateCameraView: View {
                 guard router.guardProFeature(.vaultImport) else { return }
                 viewModel.triggerShutter()
             } label: {
-                ZStack {
-                    Circle()
-                        .fill(viewModel.controller.isRecording ? LNColor.error.opacity(0.92) : LNColor.title.opacity(0.95))
-                        .frame(width: viewModel.controller.isRecording ? 58 : 72, height: viewModel.controller.isRecording ? 58 : 72)
-                    RoundedRectangle(cornerRadius: viewModel.controller.isRecording ? 6 : 29)
-                        .fill(viewModel.controller.isRecording ? LNColor.title : LNColor.title)
-                        .frame(width: viewModel.controller.isRecording ? 28 : 56, height: viewModel.controller.isRecording ? 28 : 56)
-                        .opacity(viewModel.controller.isRecording ? 1 : 0.92)
-                }
-                .frame(width: 78, height: 78)
-                .overlay(Circle().stroke(LNColor.navItemActive, lineWidth: 2))
+                ShutterButtonVisual(
+                    mode: viewModel.captureMode,
+                    isRecording: viewModel.controller.isRecording,
+                    isBusy: viewModel.isBusy,
+                    isPressedFeedback: viewModel.shutterFeedback
+                )
             }
             .buttonStyle(.lnPressable(scale: 0.92, pressedOpacity: 0.82))
-            .disabled(viewModel.isSaving || viewModel.countdownRemaining != nil)
+            .disabled(viewModel.isBusy && !viewModel.controller.isRecording)
             .accessibilityIdentifier("private_camera_shutter")
             .accessibilityLabel(L10n.tr("camera_shutter"))
 
             Spacer()
 
-            CameraIconButton(systemName: "photo", label: L10n.tr("camera_view_last_media")) {}
-                .opacity(0.75)
+            Button {
+                openLastCapture()
+            } label: {
+                LastCaptureThumbnail(lastCapture: viewModel.lastCapture)
+            }
+            .buttonStyle(.lnPressable(scale: 0.92, pressedOpacity: 0.76))
+            .disabled(viewModel.lastCapture == nil)
+            .opacity(viewModel.lastCapture == nil ? 0.75 : 1)
+            .accessibilityIdentifier("private_camera_last_capture")
+            .accessibilityLabel(L10n.tr("camera_view_last_media"))
         }
     }
 
@@ -299,13 +299,13 @@ struct PrivateCameraView: View {
         HStack(spacing: 4) {
             ForEach(CameraCaptureMode.allCases, id: \.self) { mode in
                 Button {
-                    viewModel.captureMode = mode
+                    viewModel.setCaptureMode(mode)
                 } label: {
                     Text(mode.localizedTitle)
                         .font(LNTypography.labelMedium().weight(viewModel.captureMode == mode ? .bold : .semibold))
                         .foregroundStyle(viewModel.captureMode == mode ? Color.white : LNColor.title)
                         .frame(width: 62, height: 30)
-                        .background(viewModel.captureMode == mode ? LNColor.brandBlue : Color.clear)
+                        .background(selectedModeFill(for: mode))
                         .clipShape(Capsule())
                 }
                 .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
@@ -315,6 +315,25 @@ struct PrivateCameraView: View {
         .background(.white.opacity(0.14))
         .clipShape(Capsule())
         .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 1))
+    }
+
+    private func selectedModeFill(for mode: CameraCaptureMode) -> Color {
+        guard viewModel.captureMode == mode else { return .clear }
+        return mode == .video ? LNColor.error : LNColor.brandBlue
+    }
+
+    private func openLastCapture() {
+        guard let capture = viewModel.lastCapture else { return }
+        router.selectedTab = .vault
+        router.dismissPresented()
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 220_000_000)
+            if capture.isVideo {
+                router.pushVault(.videoPlayer(path: capture.path))
+            } else {
+                router.pushVault(.photoViewer(path: capture.path, isTrash: false, source: .recent))
+            }
+        }
     }
 
     private var permissionDenied: some View {
@@ -511,7 +530,7 @@ private struct ZoomRail: View {
             ForEach(presets, id: \.self) { preset in
                 let enabled = preset >= minZoom && preset <= maxZoom
                 Button {
-                    onSelect(preset)
+                    onSelect(clampedPreset(preset))
                 } label: {
                     Text(label(for: preset))
                         .font(LNTypography.labelMedium().weight(isSelected(preset) ? .bold : .semibold))
@@ -521,7 +540,7 @@ private struct ZoomRail: View {
                         .clipShape(Capsule())
                 }
                 .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.80))
-                .disabled(!enabled)
+                .opacity(enabled ? 1 : 0.62)
             }
         }
         .padding(.horizontal, 10)
@@ -536,7 +555,138 @@ private struct ZoomRail: View {
     }
 
     private func label(for preset: CGFloat) -> String {
-        preset == 1 ? "1x" : preset == 0.7 ? ".7" : "2"
+        preset == 1 ? "1x" : preset == 0.7 ? ".7x" : "2x"
+    }
+
+    private func clampedPreset(_ preset: CGFloat) -> CGFloat {
+        min(max(preset, minZoom), maxZoom)
+    }
+}
+
+private struct CameraStatusPill: View {
+    let text: String
+    let isVideoMode: Bool
+    let isBusy: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if isBusy {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(LNColor.title)
+            } else {
+                Circle()
+                    .fill(isVideoMode ? LNColor.error : LNColor.brandBlue)
+                    .frame(width: 8, height: 8)
+            }
+            Text(text)
+                .font(LNTypography.labelMedium().weight(.bold))
+                .foregroundStyle(LNColor.title)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 36)
+        .background(statusBackground)
+        .clipShape(Capsule())
+        .overlay(Capsule().stroke(statusStroke, lineWidth: 1))
+    }
+
+    private var statusBackground: Color {
+        isVideoMode ? LNColor.error.opacity(0.20) : Color.black.opacity(0.52)
+    }
+
+    private var statusStroke: Color {
+        isVideoMode ? LNColor.error.opacity(0.45) : LNColor.brandBlue.opacity(0.38)
+    }
+}
+
+private struct ShutterButtonVisual: View {
+    let mode: CameraCaptureMode
+    let isRecording: Bool
+    let isBusy: Bool
+    let isPressedFeedback: Bool
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(outerStroke, lineWidth: isPressedFeedback || isBusy ? 4 : 2)
+                .frame(width: isPressedFeedback ? 86 : 78, height: isPressedFeedback ? 86 : 78)
+                .opacity(isPressedFeedback || isBusy ? 1 : 0.92)
+
+            Circle()
+                .fill(outerFill)
+                .frame(width: isRecording ? 58 : 72, height: isRecording ? 58 : 72)
+
+            RoundedRectangle(cornerRadius: innerCornerRadius)
+                .fill(innerFill)
+                .frame(width: innerSize.width, height: innerSize.height)
+                .opacity(isBusy ? 0.62 : 0.95)
+
+            if isBusy {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(mode == .video ? LNColor.error : LNColor.brandBlue)
+            }
+        }
+        .frame(width: 88, height: 88)
+        .animation(.easeOut(duration: 0.16), value: isPressedFeedback)
+        .animation(.easeOut(duration: 0.16), value: isBusy)
+        .animation(.easeOut(duration: 0.16), value: mode)
+    }
+
+    private var outerStroke: Color {
+        if isRecording || mode == .video { return LNColor.error }
+        return LNColor.navItemActive
+    }
+
+    private var outerFill: Color {
+        if isRecording { return LNColor.error.opacity(0.92) }
+        if mode == .video { return LNColor.error.opacity(0.20) }
+        return LNColor.title.opacity(0.95)
+    }
+
+    private var innerFill: Color {
+        isRecording || mode == .video ? LNColor.error : LNColor.title
+    }
+
+    private var innerCornerRadius: CGFloat {
+        isRecording ? 6 : (mode == .video ? 18 : 29)
+    }
+
+    private var innerSize: CGSize {
+        if isRecording { return CGSize(width: 28, height: 28) }
+        if mode == .video { return CGSize(width: 36, height: 36) }
+        return CGSize(width: 56, height: 56)
+    }
+}
+
+private struct LastCaptureThumbnail: View {
+    let lastCapture: LastCameraCapture?
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.white.opacity(0.14))
+
+            if let lastCapture {
+                VaultMediaThumbnailView(
+                    encryptedPath: lastCapture.path,
+                    isVideo: lastCapture.isVideo,
+                    contentMode: .fill,
+                    targetPixelSize: 180
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            } else {
+                Image(systemName: "photo")
+                    .font(.system(size: 21, weight: .semibold))
+                    .foregroundStyle(LNColor.title)
+            }
+        }
+        .frame(width: 48, height: 48)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(lastCapture == nil ? .white.opacity(0.20) : LNColor.brandBlue, lineWidth: lastCapture == nil ? 1 : 2)
+        )
     }
 }
 
