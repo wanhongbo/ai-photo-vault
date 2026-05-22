@@ -14,7 +14,15 @@ struct LNNavigationBar: View {
                     .background(LNColor.navBarBg.opacity(0.8))
                     .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
             }
-            .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
+            .buttonStyle(
+                .lnPressable(
+                    scale: 0.90,
+                    pressedOpacity: 0.70,
+                    pressedBrightness: 0.12,
+                    pressedOverlayOpacity: 0.16,
+                    cornerRadius: LNRadius.topBarButton
+                )
+            )
             .accessibilityLabel(L10n.commonBack)
             .accessibilityIdentifier("ln_nav_back")
 

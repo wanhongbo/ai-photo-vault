@@ -83,7 +83,15 @@ struct SettingsHomeView: View {
             .lnOutlinedCard(stroke: subscription.isPremium ? LNColor.paywallGold : LNColor.stroke)
             .contentShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
         }
-        .buttonStyle(.lnPressable())
+        .buttonStyle(
+            .lnPressable(
+                scale: 0.955,
+                pressedOpacity: 0.72,
+                pressedBrightness: 0.10,
+                pressedOverlayOpacity: 0.12,
+                cornerRadius: LNRadius.homeCard
+            )
+        )
     }
 
     private var backupBanner: some View {
@@ -131,7 +139,15 @@ struct SettingsHomeView: View {
             .lnOutlinedCard(cornerRadius: LNRadius.homeAlbumCard, fill: LNColor.sectionBg)
             .contentShape(RoundedRectangle(cornerRadius: LNRadius.homeAlbumCard))
         }
-        .buttonStyle(.lnPressable())
+        .buttonStyle(
+            .lnPressable(
+                scale: 0.955,
+                pressedOpacity: 0.72,
+                pressedBrightness: 0.10,
+                pressedOverlayOpacity: 0.12,
+                cornerRadius: LNRadius.homeAlbumCard
+            )
+        )
     }
 }
 

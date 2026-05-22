@@ -1571,7 +1571,7 @@
             {
               "type": "text",
               "id": "N3HV1",
-              "content": "All tappable controls use the same pressed state: scale 0.96-0.98, opacity 0.78-0.88, quick ease-out return. Keep selected state visible while pressed.",
+              "content": "All tappable controls use the same pressed state: scale 0.96-0.98, opacity 0.78-0.88, subtle overlay, quick ease-out return. Settings rows and back buttons use stronger feedback.",
               "fontFamily": "Inter",
               "fill": "#97A8C0",
               "fontSize": 14,
@@ -1638,7 +1638,7 @@
             {
               "type": "text",
               "id": "o7qWV",
-              "content": "Use on buttons, tab items, media tiles, settings rows, picker labels, and icon controls. Disabled controls do not animate.",
+              "content": "Use on buttons, tab items, media tiles, settings rows, picker labels, and icon controls. Settings rows/back buttons must show an obvious pressed state. Disabled controls do not animate.",
               "fontFamily": "Inter",
               "fill": "#8EA2C0",
               "fontSize": 12,

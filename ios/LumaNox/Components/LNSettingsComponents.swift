@@ -44,7 +44,15 @@ struct LNSettingsRow: View {
             .clipShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
             .contentShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
         }
-        .buttonStyle(.lnPressable())
+        .buttonStyle(
+            .lnPressable(
+                scale: 0.955,
+                pressedOpacity: 0.72,
+                pressedBrightness: 0.10,
+                pressedOverlayOpacity: 0.12,
+                cornerRadius: LNRadius.settingsRow
+            )
+        )
         .accessibilityIdentifier("ln_settings_row_\(title)")
     }
 }
@@ -95,6 +103,14 @@ struct LNSettingsDangerRow: View {
             .clipShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
             .contentShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
         }
-        .buttonStyle(.lnPressable())
+        .buttonStyle(
+            .lnPressable(
+                scale: 0.955,
+                pressedOpacity: 0.72,
+                pressedBrightness: 0.10,
+                pressedOverlayOpacity: 0.10,
+                cornerRadius: LNRadius.settingsRow
+            )
+        )
     }
 }
