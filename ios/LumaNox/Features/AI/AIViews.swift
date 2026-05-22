@@ -443,7 +443,9 @@ struct AISensitiveReviewView: View {
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
 
     private var sensitiveRecords: [VaultMediaRecord] {
-        aiService.records.filter { VaultAIAnalysisService.isSensitive($0) }
+        aiService.records
+            .filter { VaultAIAnalysisService.isSensitive($0) }
+            .sorted { ($0.ai.sensitiveScore ?? 0) > ($1.ai.sensitiveScore ?? 0) }
     }
 
     var body: some View {
@@ -467,29 +469,34 @@ struct AISensitiveReviewView: View {
                     )
                     .frame(width: cardWidth)
                 } else {
-                    LazyVStack(spacing: 10) {
-                        ForEach(records) { record in
-                            AISensitiveCandidateCard(
-                                record: record,
-                                width: cardWidth,
-                                onRedact: {
-                                    router.pushAI(.privacyRedact(path: mediaItem(record).path))
-                                },
-                                onIgnore: {
-                                    aiService.ignoreSensitiveCandidate(recordID: record.id)
-                                }
-                            )
+                    AISensitiveCandidateListPanel(
+                        records: records,
+                        width: cardWidth,
+                        onOpen: { open(mediaItem($0)) },
+                        onRedact: { record in
+                            router.pushAI(.privacyRedact(path: mediaItem(record).path))
+                        },
+                        onIgnore: { record in
+                            aiService.ignoreSensitiveCandidate(recordID: record.id)
                         }
-                    }
+                    )
                     .accessibilityIdentifier("ai_sensitive_candidates_list")
                 }
             }
             .padding(.horizontal, LNSpacing.screenHorizontal)
             .padding(.top, 22)
-            .padding(.bottom, 28)
+            .padding(.bottom, 44)
         }
         .task { aiService.refreshSummary() }
         .accessibilityIdentifier("ai_sensitive_review_view")
+    }
+
+    private func open(_ item: LNMediaItem) {
+        if item.isVideo {
+            router.pushAI(.videoPlayer(path: item.path, isTrash: false))
+        } else {
+            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .recent))
+        }
     }
 }
 
@@ -1805,76 +1812,187 @@ private struct AIDuplicateThumbnail: View {
     }
 }
 
-private struct AISensitiveCandidateCard: View {
-    let record: VaultMediaRecord
+private struct AISensitiveCandidateListPanel: View {
+    let records: [VaultMediaRecord]
     let width: CGFloat
+    let onOpen: (VaultMediaRecord) -> Void
+    let onRedact: (VaultMediaRecord) -> Void
+    let onIgnore: (VaultMediaRecord) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                Text(L10n.tr("ai_sensitive_queue_title"))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(LNColor.title)
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.down.line")
+                        .font(.system(size: 11, weight: .bold))
+                    Text(L10n.tr("ai_sensitive_queue_sort"))
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundStyle(Color(hex: 0xB7C6DD))
+                .frame(height: 30)
+                .padding(.horizontal, 10)
+                .background(Color(hex: 0x14233A))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 14)
+            .padding(.bottom, 10)
+
+            Rectangle()
+                .fill(LNColor.stroke)
+                .frame(height: 1)
+                .padding(.horizontal, 14)
+
+            ForEach(Array(records.enumerated()), id: \.element.id) { index, record in
+                AISensitiveCandidateRow(
+                    record: record,
+                    onOpen: { onOpen(record) },
+                    onRedact: { onRedact(record) },
+                    onIgnore: { onIgnore(record) }
+                )
+
+                if index < records.count - 1 {
+                    Rectangle()
+                        .fill(Color(hex: 0x17263A))
+                        .frame(height: 1)
+                        .padding(.horizontal, 14)
+                }
+            }
+
+            Color.clear
+                .frame(height: 24)
+        }
+        .frame(width: width, alignment: .leading)
+        .background(Color(hex: 0x0B1421))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: 0x2B405A), lineWidth: 1))
+    }
+}
+
+private struct AISensitiveCandidateRow: View {
+    let record: VaultMediaRecord
+    let onOpen: () -> Void
     let onRedact: () -> Void
     let onIgnore: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
-            Button(action: onRedact) {
+            Button(action: onOpen) {
                 VaultMediaThumbnailView(
                     encryptedPath: mediaItem(record).path,
                     isVideo: record.isVideo,
                     contentMode: .fill,
                     targetPixelSize: 240
                 )
-                .frame(width: 74, height: 74)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
+                .frame(width: 76, height: 76)
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .overlay(RoundedRectangle(cornerRadius: 15).stroke(Color(hex: 0x2D4563), lineWidth: 1))
+                .overlay(alignment: .topLeading) {
+                    HStack(spacing: 4) {
+                        Image(systemName: riskBadgeIcon(record))
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(sensitiveRiskColor(record))
+                        Text(sensitiveRiskScore(record))
+                            .font(.system(size: 10, weight: .heavy))
+                            .foregroundStyle(Color.white)
+                    }
+                    .frame(height: 23)
+                    .padding(.horizontal, 7)
+                    .background(Color.black.opacity(0.72))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(8)
+                }
             }
             .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     Text(sensitiveRiskLabel(record))
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(sensitiveRiskColor(record))
+                        .frame(height: 24)
+                        .padding(.horizontal, 8)
+                        .background(sensitiveRiskColor(record).opacity(0.13))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(sensitiveRiskColor(record), lineWidth: 1))
                     Text(sensitiveHitSummary(record))
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(Color(hex: 0xB7C6DD))
                         .lineLimit(1)
                         .minimumScaleFactor(0.78)
                 }
 
                 Text(mediaItem(record).fileName)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(LNColor.title)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.78)
 
-                HStack(spacing: 8) {
-                    Button(action: onRedact) {
+                Text(L10n.tr("ai_sensitive_preview_hint"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x66758A))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            VStack(alignment: .trailing, spacing: 8) {
+                Button(action: onRedact) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "wand.and.stars")
+                            .font(.system(size: 12, weight: .bold))
                         Text(L10n.tr("ai_sensitive_redact_action"))
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(height: 32)
-                            .padding(.horizontal, 12)
-                            .background(LNColor.brandBlue)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
                     }
-                    .buttonStyle(.plain)
+                    .foregroundStyle(.white)
+                    .frame(width: 74, height: 38)
+                    .background(LNColor.brandBlue)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
 
-                    Button(action: onIgnore) {
+                Button(action: onIgnore) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "eye.slash")
+                            .font(.system(size: 12, weight: .bold))
                         Text(L10n.tr("ai_sensitive_ignore_action"))
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(Color(hex: 0xB7C6DD))
-                            .frame(height: 32)
-                            .padding(.horizontal, 12)
-                            .background(Color(hex: 0x122033))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
                     }
-                    .buttonStyle(.plain)
+                    .foregroundStyle(Color(hex: 0xB7C6DD))
+                    .frame(width: 74, height: 34)
+                    .background(Color(hex: 0x122033))
+                    .clipShape(RoundedRectangle(cornerRadius: 11))
+                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(LNColor.stroke, lineWidth: 1))
                 }
+                .buttonStyle(.plain)
             }
-            Spacer(minLength: 0)
         }
-        .padding(12)
-        .frame(width: width, alignment: .leading)
-        .background(LNColor.sectionBg)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(hex: 0x314765), lineWidth: 1))
+        .padding(.horizontal, 14)
+        .frame(height: 124)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func sensitiveRiskScore(_ record: VaultMediaRecord) -> String {
+        let score = Int(((record.ai.sensitiveScore ?? 0) * 100).rounded())
+        return "\(max(0, min(score, 99)))"
+    }
+
+    private func riskBadgeIcon(_ record: VaultMediaRecord) -> String {
+        let score = record.ai.sensitiveScore ?? 0
+        if score >= 0.78 { return "exclamationmark.octagon" }
+        if score >= 0.58 { return "viewfinder" }
+        return "text.bubble"
     }
 }
 

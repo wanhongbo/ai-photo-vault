@@ -116,6 +116,9 @@
 "ai_sensitive_risk_medium" = "中风险";
 "ai_sensitive_risk_low" = "低风险";
 "ai_sensitive_hit_unknown" = "敏感信号";
+"ai_sensitive_queue_title" = "审核队列";
+"ai_sensitive_queue_sort" = "按风险排序";
+"ai_sensitive_preview_hint" = "点击缩略图预览原图";
 "ai_sensitive_redact_action" = "打码";
 "ai_sensitive_ignore_action" = "忽略";
 "ai_classify_summary_fmt" = "%d 个分类";
@@ -140,7 +143,7 @@
 "ai_tag_duplicate" = "重复";
 "ai_tag_face" = "人脸";
 "ai_tag_text" = "文字";
-"ai_tag_barcode" = "码";
+"ai_tag_barcode" = "二维码";
 "ai_tag_id_card" = "证件";
 "ai_tag_bank_card" = "银行卡";
 "ai_tag_contact" = "联系方式";

@@ -116,6 +116,9 @@
 "ai_sensitive_risk_medium" = "Medium risk";
 "ai_sensitive_risk_low" = "Low risk";
 "ai_sensitive_hit_unknown" = "Sensitive signal";
+"ai_sensitive_queue_title" = "Review queue";
+"ai_sensitive_queue_sort" = "Sorted by risk";
+"ai_sensitive_preview_hint" = "Tap thumbnail to preview";
 "ai_sensitive_redact_action" = "Redact";
 "ai_sensitive_ignore_action" = "Ignore";
 "ai_classify_summary_fmt" = "%d categories";
