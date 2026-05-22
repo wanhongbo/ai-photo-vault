@@ -319,7 +319,7 @@ struct PrivateCameraView: View {
 
     private func selectedModeFill(for mode: CameraCaptureMode) -> Color {
         guard viewModel.captureMode == mode else { return .clear }
-        return mode == .video ? LNColor.error : LNColor.brandBlue
+        return mode == .video ? LNColor.amberWarning : LNColor.brandBlue
     }
 
     private func openLastCapture() {
@@ -576,7 +576,7 @@ private struct CameraStatusPill: View {
                     .tint(LNColor.title)
             } else {
                 Circle()
-                    .fill(isVideoMode ? LNColor.error : LNColor.brandBlue)
+                    .fill(isVideoMode ? LNColor.amberWarning : LNColor.brandBlue)
                     .frame(width: 8, height: 8)
             }
             Text(text)
@@ -592,11 +592,11 @@ private struct CameraStatusPill: View {
     }
 
     private var statusBackground: Color {
-        isVideoMode ? LNColor.error.opacity(0.20) : Color.black.opacity(0.52)
+        isVideoMode ? LNColor.amberWarning.opacity(0.20) : Color.black.opacity(0.52)
     }
 
     private var statusStroke: Color {
-        isVideoMode ? LNColor.error.opacity(0.45) : LNColor.brandBlue.opacity(0.38)
+        isVideoMode ? LNColor.amberWarning.opacity(0.45) : LNColor.brandBlue.opacity(0.38)
     }
 }
 
@@ -625,7 +625,7 @@ private struct ShutterButtonVisual: View {
             if isBusy {
                 ProgressView()
                     .controlSize(.small)
-                    .tint(mode == .video ? LNColor.error : LNColor.brandBlue)
+                    .tint(mode == .video ? LNColor.amberWarning : LNColor.brandBlue)
             }
         }
         .frame(width: 88, height: 88)
@@ -635,18 +635,18 @@ private struct ShutterButtonVisual: View {
     }
 
     private var outerStroke: Color {
-        if isRecording || mode == .video { return LNColor.error }
+        if isRecording || mode == .video { return LNColor.amberWarning }
         return LNColor.navItemActive
     }
 
     private var outerFill: Color {
-        if isRecording { return LNColor.error.opacity(0.92) }
-        if mode == .video { return LNColor.error.opacity(0.20) }
+        if isRecording { return LNColor.amberWarning.opacity(0.92) }
+        if mode == .video { return LNColor.amberWarning.opacity(0.20) }
         return LNColor.title.opacity(0.95)
     }
 
     private var innerFill: Color {
-        isRecording || mode == .video ? LNColor.error : LNColor.title
+        isRecording || mode == .video ? LNColor.amberWarning : LNColor.title
     }
 
     private var innerCornerRadius: CGFloat {
@@ -745,7 +745,7 @@ private struct RecordingBadge: View {
     var body: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(LNColor.error)
+                .fill(LNColor.amberWarning)
                 .frame(width: 8, height: 8)
             Text(text)
                 .font(LNTypography.labelMedium().weight(.bold))

@@ -480,15 +480,15 @@
           "width": 168,
           "height": 32,
           "cornerRadius": 16,
-          "fill": "#3A101ACC",
-          "stroke": { "fill": "#FF437266", "thickness": 1 },
+          "fill": "#3A3210CC",
+          "stroke": { "fill": "#E8C54766", "thickness": 1 },
           "children": [
             {
               "type": "ellipse",
               "id": "video_mode_dot",
               "width": 8,
               "height": 8,
-              "fill": "#FF4372"
+              "fill": "#E8C547"
             },
             {
               "type": "text",
@@ -669,8 +669,8 @@
               "height": "fill_container",
               "width": "fill_container",
               "cornerRadius": 15,
-              "fill": "#FF437222",
-              "stroke": { "fill": "#FF437266", "thickness": 1 },
+              "fill": "#E8C54722",
+              "stroke": { "fill": "#E8C54766", "thickness": 1 },
               "children": [
                 {
                   "type": "text",
