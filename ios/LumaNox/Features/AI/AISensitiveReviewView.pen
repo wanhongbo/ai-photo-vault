@@ -457,13 +457,17 @@
                       "type": "frame",
                       "id": "sensitive_row_high_redact",
                       "layout": "horizontal",
-                      "fill": "#4A9EFF",
+                      "fill": "#142741",
                       "width": 74,
                       "height": 38,
                       "gap": 5,
                       "alignItems": "center",
                       "justifyContent": "center",
                       "cornerRadius": 12,
+                      "stroke": {
+                        "fill": "#2A5B8C",
+                        "thickness": 1
+                      },
                       "children": [
                         {
                           "type": "icon_font",
@@ -472,14 +476,14 @@
                           "iconFontName": "wand-sparkles",
                           "width": 13,
                           "height": 13,
-                          "fill": "#FFFFFF"
+                          "fill": "#DCEBFF"
                         },
                         {
                           "type": "text",
                           "id": "sensitive_row_high_redact_text",
                           "content": "打码",
                           "fontFamily": "Inter",
-                          "fill": "#FFFFFF",
+                          "fill": "#DCEBFF",
                           "fontSize": 12,
                           "fontWeight": "800"
                         }
@@ -702,13 +706,17 @@
                       "type": "frame",
                       "id": "sensitive_row_medium_redact",
                       "layout": "horizontal",
-                      "fill": "#4A9EFF",
+                      "fill": "#142741",
                       "width": 74,
                       "height": 38,
                       "gap": 5,
                       "alignItems": "center",
                       "justifyContent": "center",
                       "cornerRadius": 12,
+                      "stroke": {
+                        "fill": "#2A5B8C",
+                        "thickness": 1
+                      },
                       "children": [
                         {
                           "type": "icon_font",
@@ -717,14 +725,14 @@
                           "iconFontName": "wand-sparkles",
                           "width": 13,
                           "height": 13,
-                          "fill": "#FFFFFF"
+                          "fill": "#DCEBFF"
                         },
                         {
                           "type": "text",
                           "id": "sensitive_row_medium_redact_text",
                           "content": "打码",
                           "fontFamily": "Inter",
-                          "fill": "#FFFFFF",
+                          "fill": "#DCEBFF",
                           "fontSize": 12,
                           "fontWeight": "800"
                         }
@@ -947,13 +955,17 @@
                       "type": "frame",
                       "id": "sensitive_row_low_redact",
                       "layout": "horizontal",
-                      "fill": "#4A9EFF",
+                      "fill": "#142741",
                       "width": 74,
                       "height": 38,
                       "gap": 5,
                       "alignItems": "center",
                       "justifyContent": "center",
                       "cornerRadius": 12,
+                      "stroke": {
+                        "fill": "#2A5B8C",
+                        "thickness": 1
+                      },
                       "children": [
                         {
                           "type": "icon_font",
@@ -962,14 +974,14 @@
                           "iconFontName": "wand-sparkles",
                           "width": 13,
                           "height": 13,
-                          "fill": "#FFFFFF"
+                          "fill": "#DCEBFF"
                         },
                         {
                           "type": "text",
                           "id": "sensitive_row_low_redact_text",
                           "content": "打码",
                           "fontFamily": "Inter",
-                          "fill": "#FFFFFF",
+                          "fill": "#DCEBFF",
                           "fontSize": 12,
                           "fontWeight": "800"
                         }

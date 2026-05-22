@@ -60,6 +60,7 @@ final class VaultAIAnalysisService: ObservableObject {
     nonisolated static let currentAnalyzerVersion = 4
 
     @Published private(set) var records: [VaultMediaRecord] = []
+    @Published private(set) var sensitiveRecords: [VaultMediaRecord] = []
     @Published private(set) var summary = VaultAISummary()
     @Published private(set) var progress = VaultAIProgress()
     @Published private(set) var lastError: String?
@@ -73,8 +74,7 @@ final class VaultAIAnalysisService: ObservableObject {
 
     func refreshSummary() {
         let cachedRecords = metadataStore.activeMediaRecords()
-        records = cachedRecords
-        summary = Self.makeSummary(from: cachedRecords)
+        publishRecords(cachedRecords)
         lastError = nil
     }
 
@@ -84,12 +84,10 @@ final class VaultAIAnalysisService: ObservableObject {
                 vaultRoot: try vaultStore.rootDirectory(),
                 trashRoot: try vaultStore.trashDirectory()
             )
-            records = metadata.activeMedia.sorted { $0.modifiedAtMs > $1.modifiedAtMs }
-            summary = Self.makeSummary(from: records)
+            publishRecords(metadata.activeMedia.sorted { $0.modifiedAtMs > $1.modifiedAtMs })
             lastError = nil
         } catch {
-            records = metadataStore.activeMediaRecords()
-            summary = Self.makeSummary(from: records)
+            publishRecords(metadataStore.activeMediaRecords())
             lastError = error.localizedDescription
         }
     }
@@ -178,11 +176,14 @@ final class VaultAIAnalysisService: ObservableObject {
     }
 
     func ignoreSensitiveCandidate(recordID: String) {
-        guard var record = records.first(where: { $0.id == recordID }) else { return }
+        guard let index = records.firstIndex(where: { $0.id == recordID }) else { return }
+        var record = records[index]
         record.ai.sensitiveIgnoredAtMs = Self.nowMs()
         do {
             try metadataStore.updateAiMetadata([record.id: record.ai])
-            refreshSummary()
+            records[index] = record
+            sensitiveRecords.removeAll { $0.id == recordID }
+            summary = Self.makeSummary(from: records)
         } catch {
             lastError = error.localizedDescription
         }
@@ -220,6 +221,25 @@ final class VaultAIAnalysisService: ObservableObject {
             cleanupCount: cleanup,
             categoryCounts: categoryCounts
         )
+    }
+
+    private func publishRecords(_ nextRecords: [VaultMediaRecord]) {
+        records = nextRecords
+        sensitiveRecords = Self.makeSensitiveRecords(from: nextRecords)
+        summary = Self.makeSummary(from: nextRecords)
+    }
+
+    private static func makeSensitiveRecords(from records: [VaultMediaRecord]) -> [VaultMediaRecord] {
+        records
+            .filter { isSensitive($0) }
+            .sorted {
+                let leftScore = $0.ai.sensitiveScore ?? 0
+                let rightScore = $1.ai.sensitiveScore ?? 0
+                if leftScore == rightScore {
+                    return $0.modifiedAtMs > $1.modifiedAtMs
+                }
+                return leftScore > rightScore
+            }
     }
 
     private func markDuplicates(in results: inout [VaultAIAnalyzer.Result]) {

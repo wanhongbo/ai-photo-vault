@@ -161,7 +161,7 @@
                       "type": "frame",
                       "id": "ai_summary_icon_box",
                       "layout": "none",
-                      "fill": "#1F4A9EFF",
+                      "fill": "#18283D",
                       "width": 44,
                       "height": 44,
                       "cornerRadius": 13,
@@ -173,7 +173,7 @@
                           "iconFontName": "sparkles",
                           "width": 22,
                           "height": 22,
-                          "fill": "#4A9EFF",
+                          "fill": "#B7D7FF",
                           "x": 11,
                           "y": 11
                         }
@@ -192,7 +192,7 @@
                           "id": "ai_summary_label",
                           "content": "Local AI scan",
                           "fontFamily": "Inter",
-                          "fill": "#B7D7FF",
+                          "fill": "#B7C6DD",
                           "fontSize": 12,
                           "letterSpacing": 0,
                           "fontWeight": "600"

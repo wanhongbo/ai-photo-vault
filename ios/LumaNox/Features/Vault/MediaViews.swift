@@ -570,7 +570,7 @@ struct PhotoViewerView: View {
                         bottomInset: proxy.safeAreaInsets.bottom,
                         isPreparingShare: isPreparingShare,
                         onShare: prepareShare,
-                        onRedact: { router.pushVault(.privacyRedact(path: currentPath)) },
+                        onRedact: { router.pushInCurrentTab(.privacyRedact(path: currentPath)) },
                         onInfo: { showInfo = true },
                         onDelete: { showDelete = true }
                     )

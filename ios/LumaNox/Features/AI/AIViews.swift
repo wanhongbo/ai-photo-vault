@@ -47,7 +47,7 @@ struct AIHomeView: View {
     private var aiScanSummaryCard: some View {
         VStack(alignment: .leading, spacing: 13) {
             HStack(spacing: 12) {
-                iconWell(systemName: summaryIcon, foreground: summaryAccent, background: summaryAccent.opacity(0.20), size: 44)
+                iconWell(systemName: summaryIcon, foreground: summaryAccent, background: summaryIconBackground, size: 44)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(summaryBadge)
                         .font(.system(size: 12, weight: .semibold))
@@ -200,10 +200,15 @@ struct AIHomeView: View {
     }
 
     private var summaryAccent: Color {
-        if aiService.summary.sensitiveCount > 0 { return LNColor.amberWarning }
+        if aiService.summary.sensitiveCount > 0 { return Color(hex: 0xB7C6DD) }
         if aiService.summary.cleanupCount > 0 { return LNColor.cleanupOrange }
         if !aiService.summary.hasUnscanned && aiService.summary.totalCount > 0 { return LNColor.success }
         return LNColor.brandBlue
+    }
+
+    private var summaryIconBackground: Color {
+        if aiService.summary.sensitiveCount > 0 { return Color(hex: 0x18283D) }
+        return summaryAccent.opacity(0.20)
     }
 
     private var summaryIcon: String {
@@ -442,16 +447,10 @@ struct AISensitiveReviewView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
 
-    private var sensitiveRecords: [VaultMediaRecord] {
-        aiService.records
-            .filter { VaultAIAnalysisService.isSensitive($0) }
-            .sorted { ($0.ai.sensitiveScore ?? 0) > ($1.ai.sensitiveScore ?? 0) }
-    }
-
     var body: some View {
         VaultListScreenChrome(title: L10n.tr("ai_sensitive_files_title"), onBack: { dismiss() }) { availableWidth in
             let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
-            let records = sensitiveRecords
+            let records = aiService.sensitiveRecords
 
             LazyVStack(spacing: 16) {
                 AISensitiveReviewHeaderCard(
@@ -997,9 +996,11 @@ struct PrivacyRedactView: View {
     private func reloadDetectedRegions(for path: String) async {
         selectedStyle = .mosaic
         redactMode = .automatic
+        autoRegions.removeAll()
         manualRegions.removeAll()
         draftRegion = nil
         selectedManualRegionID = nil
+        redactedPreviewImage = nil
         toastMessage = nil
         let detectedRegions = await redactionService.detectRegions(path: path)
         autoRegions = detectedRegions
@@ -1319,7 +1320,7 @@ private struct PrivacyRedactCanvas: View {
                         PrivacyRedactRegionView(
                             region: region,
                             isSelectedManual: region.id == selectedManualRegionID,
-                            drawsEffect: previewImage == nil
+                            drawsEffect: false
                         )
                         .frame(
                             width: max(1, region.normalizedRect.width * contentRect.width),
@@ -1820,7 +1821,7 @@ private struct AISensitiveCandidateListPanel: View {
     let onIgnore: (VaultMediaRecord) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
+        LazyVStack(spacing: 0) {
             HStack(spacing: 10) {
                 Text(L10n.tr("ai_sensitive_queue_title"))
                     .font(.system(size: 16, weight: .bold))
@@ -1850,7 +1851,7 @@ private struct AISensitiveCandidateListPanel: View {
                 .frame(height: 1)
                 .padding(.horizontal, 14)
 
-            ForEach(Array(records.enumerated()), id: \.element.id) { index, record in
+            ForEach(records) { record in
                 AISensitiveCandidateRow(
                     record: record,
                     onOpen: { onOpen(record) },
@@ -1858,7 +1859,7 @@ private struct AISensitiveCandidateListPanel: View {
                     onIgnore: { onIgnore(record) }
                 )
 
-                if index < records.count - 1 {
+                if record.id != records.last?.id {
                     Rectangle()
                         .fill(Color(hex: 0x17263A))
                         .frame(height: 1)
@@ -1953,10 +1954,11 @@ private struct AISensitiveCandidateRow: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.78)
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color(hex: 0xDCEBFF))
                     .frame(width: 74, height: 38)
-                    .background(LNColor.brandBlue)
+                    .background(Color(hex: 0x142741))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: 0x2A5B8C), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
 
