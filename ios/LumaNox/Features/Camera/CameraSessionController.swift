@@ -1,6 +1,8 @@
 import AVFoundation
 import UIKit
 
+private let cameraPhotoProcessingQueue = DispatchQueue(label: "com.xpx.vault.camera.photo-processing", qos: .userInitiated)
+
 enum CameraCaptureMode: String, CaseIterable {
     case photo
     case video
@@ -64,8 +66,10 @@ final class CameraSessionController: NSObject, ObservableObject {
     private var currentAudioInput: AVCaptureDeviceInput?
     private var currentDevice: AVCaptureDevice?
     private var recordingURL: URL?
+    private var pendingPhotoURL: URL?
     private var captureCompletion: ((Result<URL, Error>) -> Void)?
     private var discardRecordingOnStop = false
+    private var discardPhotoOnStop = false
 
     func configure() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -87,6 +91,9 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     func stop(discardPendingRecording: Bool = true) {
+        if discardPendingRecording {
+            discardPhotoOnStop = true
+        }
         stopRecording(discard: discardPendingRecording)
         sessionQueue.async { [weak self] in
             self?.session.stopRunning()
@@ -103,6 +110,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     func flipCamera() {
+        guard !isRecording else { return }
         let next: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
         reconfigure(position: next)
     }
@@ -119,6 +127,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     func setVideoResolution(_ resolution: CameraVideoResolution) {
+        guard !isRecording else { return }
         guard resolution != .uhd4K || capabilities.supports4K else {
             videoResolution = .fhd
             return
@@ -128,6 +137,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     func setVideoFPS(_ fps: CameraVideoFPS) {
+        guard !isRecording else { return }
         guard fps != .sixty || capabilities.supports60FPS else {
             videoFPS = .thirty
             return
@@ -189,7 +199,14 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     func capturePhoto(completion: @escaping (Result<URL, Error>) -> Void) {
-        captureCompletion = completion
+        do {
+            pendingPhotoURL = try VaultStore.shared.reserveCameraTempFile(extension: "jpg")
+            captureCompletion = completion
+            discardPhotoOnStop = false
+        } catch {
+            completion(.failure(error))
+            return
+        }
         let settings = AVCapturePhotoSettings()
         let avFlashMode = avCaptureFlashMode(for: flashMode)
         if photoOutput.supportedFlashModes.contains(avFlashMode) {
@@ -228,6 +245,11 @@ final class CameraSessionController: NSObject, ObservableObject {
             discardRecordingOnStop = true
         }
         movieOutput.stopRecording()
+    }
+
+    private func finishPhotoCapture(_ result: Result<URL, Error>) {
+        captureCompletion?(result)
+        captureCompletion = nil
     }
 
     private func startSession() {
@@ -470,23 +492,46 @@ extension CameraSessionController: AVCapturePhotoCaptureDelegate {
     ) {
         Task { @MainActor in
             if let error {
-                captureCompletion?(.failure(error))
+                if let pendingPhotoURL {
+                    PlaintextTempFileManager.shared.removeItem(pendingPhotoURL)
+                    self.pendingPhotoURL = nil
+                }
+                finishPhotoCapture(.failure(error))
+                return
+            }
+            guard let url = pendingPhotoURL else {
+                finishPhotoCapture(.failure(CameraError.noData))
+                return
+            }
+            pendingPhotoURL = nil
+            if discardPhotoOnStop {
+                discardPhotoOnStop = false
+                PlaintextTempFileManager.shared.removeItem(url)
                 captureCompletion = nil
                 return
             }
-            guard let data = photo.fileDataRepresentation() else {
-                captureCompletion?(.failure(CameraError.noData))
-                captureCompletion = nil
-                return
+
+            cameraPhotoProcessingQueue.async { [weak self] in
+                let result: Result<URL, Error>
+                if let data = photo.fileDataRepresentation() {
+                    do {
+                        try data.write(to: url, options: .atomic)
+                        result = .success(url)
+                    } catch {
+                        PlaintextTempFileManager.shared.removeItem(url)
+                        result = .failure(error)
+                    }
+                } else {
+                    PlaintextTempFileManager.shared.removeItem(url)
+                    result = .failure(CameraError.noData)
+                }
+
+                DispatchQueue.main.async {
+                    Task { @MainActor in
+                        self?.finishPhotoCapture(result)
+                    }
+                }
             }
-            do {
-                let url = try VaultStore.shared.reserveCameraTempFile(extension: "jpg")
-                try data.write(to: url, options: .atomic)
-                captureCompletion?(.success(url))
-            } catch {
-                captureCompletion?(.failure(error))
-            }
-            captureCompletion = nil
         }
     }
 }

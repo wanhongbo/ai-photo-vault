@@ -797,6 +797,15 @@ private struct CameraPreviewRepresentable: UIViewRepresentable {
             controller.attachPreview(to: uiView)
         }
     }
+
+    static func dismantleUIView(_ uiView: UIView, coordinator: ()) {
+        uiView.layer.sublayers?.forEach { layer in
+            if let previewLayer = layer as? AVCaptureVideoPreviewLayer {
+                previewLayer.session = nil
+            }
+            layer.removeFromSuperlayer()
+        }
+    }
 }
 
 private extension CameraCaptureMode {
