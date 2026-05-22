@@ -142,6 +142,9 @@ final class PrivateCameraViewModel: ObservableObject {
     func setCaptureMode(_ mode: CameraCaptureMode) {
         guard captureMode != mode else { return }
         captureMode = mode
+        if mode == .video {
+            controller.prepareForVideoMode()
+        }
         showTransientStatus(mode == .video ? L10n.tr("camera_video_mode_hint") : L10n.tr("camera_photo_mode_hint"))
     }
 

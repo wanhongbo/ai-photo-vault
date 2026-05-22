@@ -72,6 +72,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     private var discardRecordingOnStop = false
     private var discardPhotoOnStop = false
     private var hasConfiguredSession = false
+    private var hasConfiguredMovieOutput = false
 
     func configure() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -94,7 +95,11 @@ final class CameraSessionController: NSObject, ObservableObject {
 
     func prepareForFastStart() {
         guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { return }
-        reconfigure(position: currentPosition, startAfterConfigure: false, reuseConfiguredSession: true)
+        reconfigure(position: currentPosition, startAfterConfigure: false, reuseConfiguredSession: !hasConfiguredMovieOutput)
+    }
+
+    func prepareForVideoMode() {
+        prepareRecordingOutputs { _ in }
     }
 
     func stop(discardPendingRecording: Bool = true) {
@@ -145,7 +150,9 @@ final class CameraSessionController: NSObject, ObservableObject {
             return
         }
         videoResolution = resolution
-        reconfigure(position: currentPosition)
+        if hasConfiguredMovieOutput {
+            prepareRecordingOutputs { _ in }
+        }
     }
 
     func setVideoFPS(_ fps: CameraVideoFPS) {
@@ -155,7 +162,9 @@ final class CameraSessionController: NSObject, ObservableObject {
             return
         }
         videoFPS = fps
-        applyVideoFrameRate()
+        if hasConfiguredMovieOutput {
+            applyVideoFrameRate()
+        }
     }
 
     func setZoomFactor(_ value: CGFloat) {
@@ -232,20 +241,28 @@ final class CameraSessionController: NSObject, ObservableObject {
         completion: @escaping (Result<URL, Error>) -> Void
     ) {
         guard !isRecording else { return }
-        prepareAudioInputForRecording { [weak self] in
+        prepareRecordingOutputs { [weak self] ready in
             Task { @MainActor in
-                guard let self else { return }
-                do {
-                    let url = try VaultStore.shared.reserveCameraTempFile(extension: "mov")
-                    self.recordingURL = url
-                    self.captureCompletion = completion
-                    self.discardRecordingOnStop = false
-                    self.setTorchEnabled(self.flashMode == .on)
-                    self.movieOutput.startRecording(to: url, recordingDelegate: self)
-                    self.isRecording = true
-                    onStarted()
-                } catch {
-                    completion(.failure(error))
+                guard let self, ready else {
+                    completion(.failure(CameraError.noData))
+                    return
+                }
+                self.prepareAudioInputForRecording { [weak self] in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        do {
+                            let url = try VaultStore.shared.reserveCameraTempFile(extension: "mov")
+                            self.recordingURL = url
+                            self.captureCompletion = completion
+                            self.discardRecordingOnStop = false
+                            self.setTorchEnabled(self.flashMode == .on)
+                            self.movieOutput.startRecording(to: url, recordingDelegate: self)
+                            self.isRecording = true
+                            onStarted()
+                        } catch {
+                            completion(.failure(error))
+                        }
+                    }
                 }
             }
         }
@@ -288,6 +305,7 @@ final class CameraSessionController: NSObject, ObservableObject {
             session.beginConfiguration()
             session.inputs.forEach { self.session.removeInput($0) }
             session.outputs.forEach { self.session.removeOutput($0) }
+            hasConfiguredMovieOutput = false
 
             let requestedDevice = Self.preferredDevice(position: position) ?? Self.preferredDevice(position: .back) ?? Self.preferredDevice(position: .front)
             guard let device = requestedDevice, let input = try? AVCaptureDeviceInput(device: device) else {
@@ -305,18 +323,11 @@ final class CameraSessionController: NSObject, ObservableObject {
                 currentInput = input
                 currentDevice = device
             }
-            if AVCaptureDevice.authorizationStatus(for: .audio) == .authorized {
-                addAudioInputLocked()
-            } else {
-                currentAudioInput = nil
-            }
+            currentAudioInput = nil
 
             photoOutput = AVCapturePhotoOutput()
-            movieOutput = AVCaptureMovieFileOutput()
             if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
-            if session.canAddOutput(movieOutput) { session.addOutput(movieOutput) }
-            configureSessionPreset()
-            applyVideoFrameRateLocked()
+            configurePhotoSessionPreset()
             session.commitConfiguration()
             hasConfiguredSession = true
 
@@ -344,12 +355,48 @@ final class CameraSessionController: NSObject, ObservableObject {
         }
     }
 
-    private func configureSessionPreset() {
+    private func configurePhotoSessionPreset() {
+        if session.canSetSessionPreset(.photo) {
+            session.sessionPreset = .photo
+        } else if session.canSetSessionPreset(.high) {
+            session.sessionPreset = .high
+        }
+    }
+
+    private func configureVideoSessionPreset() {
         let preset: AVCaptureSession.Preset = videoResolution == .uhd4K ? .hd4K3840x2160 : .high
         if session.canSetSessionPreset(preset) {
             session.sessionPreset = preset
         } else if session.canSetSessionPreset(.high) {
             session.sessionPreset = .high
+        }
+    }
+
+    private func prepareRecordingOutputs(completion: @escaping (Bool) -> Void) {
+        sessionQueue.async { [weak self] in
+            guard let self, currentDevice != nil else {
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+
+            var isReady = true
+            session.beginConfiguration()
+            if !hasConfiguredMovieOutput {
+                movieOutput = AVCaptureMovieFileOutput()
+                if session.canAddOutput(movieOutput) {
+                    session.addOutput(movieOutput)
+                    hasConfiguredMovieOutput = true
+                } else {
+                    isReady = false
+                }
+            }
+            if isReady {
+                configureVideoSessionPreset()
+                applyVideoFrameRateLocked()
+            }
+            session.commitConfiguration()
+
+            DispatchQueue.main.async { completion(isReady) }
         }
     }
 
