@@ -103,7 +103,9 @@ final class VaultMetadataStore {
         plainURL: URL,
         plainSha256Hex: String,
         source: VaultMediaSource,
-        originalFileName: String? = nil
+        originalFileName: String? = nil,
+        mediaDetails: MediaMetadataDetails? = nil,
+        encryptedSha256Hex precomputedEncryptedSha256Hex: String? = nil
     ) throws {
         let docs = documentsDirectory()
         let storagePath = encryptedURL.relativePath(from: docs)
@@ -111,7 +113,7 @@ final class VaultMetadataStore {
         let now = Date().epochMs
         let createdAtMs = (values.creationDate ?? Date()).epochMs
         let modifiedAtMs = (values.contentModificationDate ?? Date()).epochMs
-        let details = MediaMetadataExtractor.extract(from: plainURL)
+        let details = mediaDetails ?? MediaMetadataExtractor.extract(from: plainURL)
         var snapshot = load()
         snapshot.media.removeAll { $0.storagePath == storagePath }
         snapshot.media.append(VaultMediaRecord(
@@ -123,7 +125,7 @@ final class VaultMetadataStore {
             state: .active,
             encryptedSizeBytes: Int64(values.fileSize ?? 0),
             originalSha256Hex: plainSha256Hex,
-            encryptedSha256Hex: encryptedSha256Hex(encryptedURL),
+            encryptedSha256Hex: precomputedEncryptedSha256Hex ?? encryptedSha256Hex(encryptedURL),
             originalFileName: originalFileName,
             mimeType: details.mimeType,
             uti: details.uti,
@@ -302,8 +304,7 @@ final class VaultMetadataStore {
     }
 
     private func encryptedSha256Hex(_ file: URL) -> String? {
-        guard let data = try? Data(contentsOf: file) else { return nil }
-        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        try? VaultFileHasher.sha256Hex(of: file)
     }
 
     private func inferSource(fileName: String, state: VaultMediaState) -> VaultMediaSource {

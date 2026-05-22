@@ -76,6 +76,7 @@
 		6E4CDE16543127CC885AB154 /* LocalBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6F3676571E36687F9C5E02C /* LocalBackupService.swift */; };
 		6E754462B3AC3EC44289DC14 /* VaultMetadataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4774BDE54BCD166B53833A58 /* VaultMetadataModels.swift */; };
 		6EC7870A56FEE386F2E854F9 /* AIClassificationRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F750D28346CAB57E2755170B /* AIClassificationRuleTests.swift */; };
+		6ED84B872EAE1F6E6DECE280 /* VaultFileHasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C5CCDED95D15E599EE79B1 /* VaultFileHasher.swift */; };
 		72E1C705EF5A964F9E32C6AF /* VaultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC69DE179BB30C69A3742C /* VaultStore.swift */; };
 		782B97ECE55A70B2FA3E6608 /* AlbumListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */; };
 		7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */; };
@@ -215,6 +216,7 @@
 		3FB8CFCE0552877BBDAA93D1 /* AICleanupView.pen */ = {isa = PBXFileReference; path = AICleanupView.pen; sourceTree = "<group>"; };
 		407A509AE813C75AE5E073FF /* screen_1j.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_1j.png; sourceTree = "<group>"; };
 		4241EDA5491F0E3F4AF4FAD5 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = "zh-Hans"; path = "zh-Hans.lproj/privacy_policy.html"; sourceTree = "<group>"; };
+		42C5CCDED95D15E599EE79B1 /* VaultFileHasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultFileHasher.swift; sourceTree = "<group>"; };
 		46CFF782A0797B87261A0450 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		4774BDE54BCD166B53833A58 /* VaultMetadataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultMetadataModels.swift; sourceTree = "<group>"; };
 		4D434010CE450260448B125E /* PrivateCameraViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateCameraViewModel.swift; sourceTree = "<group>"; };
@@ -462,6 +464,7 @@
 				7B224DC7450B7689747A1F9E /* PlaintextTempFileManager.swift */,
 				7FE00040593CA7BF93D29C8F /* SystemPhotoLibraryExportService.swift */,
 				657135709B6C821B72DC1DBD /* ThumbnailService.swift */,
+				42C5CCDED95D15E599EE79B1 /* VaultFileHasher.swift */,
 				AED24C08D30394D9D28E1B1F /* VaultMaintenanceService.swift */,
 				ECA0AF35AC07F37BA5F1622F /* VaultModels.swift */,
 				1FBC69DE179BB30C69A3742C /* VaultStore.swift */,
@@ -1023,6 +1026,7 @@
 				A3C95D375296E51D3DD81D40 /* VaultCipher+Stream.swift in Sources */,
 				D4231525816B3C57E3411970 /* VaultCipher.swift in Sources */,
 				A261250DF2A1F8149EB5C344 /* VaultFileFormat.swift in Sources */,
+				6ED84B872EAE1F6E6DECE280 /* VaultFileHasher.swift in Sources */,
 				121063FB10E9EE11F641A065 /* VaultHomeView.swift in Sources */,
 				CD248D5986AE3AD9D2B31751 /* VaultHomeViewModel.swift in Sources */,
 				A9458970705182089F8C8DCC /* VaultMaintenanceService.swift in Sources */,
