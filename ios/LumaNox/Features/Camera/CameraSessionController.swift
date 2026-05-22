@@ -65,6 +65,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     private var currentDevice: AVCaptureDevice?
     private var recordingURL: URL?
     private var captureCompletion: ((Result<URL, Error>) -> Void)?
+    private var discardRecordingOnStop = false
 
     func configure() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -85,8 +86,8 @@ final class CameraSessionController: NSObject, ObservableObject {
         }
     }
 
-    func stop() {
-        stopRecording()
+    func stop(discardPendingRecording: Bool = true) {
+        stopRecording(discard: discardPendingRecording)
         sessionQueue.async { [weak self] in
             self?.session.stopRunning()
             Task { @MainActor in self?.isRunning = false }
@@ -209,6 +210,7 @@ final class CameraSessionController: NSObject, ObservableObject {
                     let url = try VaultStore.shared.reserveCameraTempFile(extension: "mov")
                     self.recordingURL = url
                     self.captureCompletion = completion
+                    self.discardRecordingOnStop = false
                     self.setTorchEnabled(self.flashMode == .on)
                     self.movieOutput.startRecording(to: url, recordingDelegate: self)
                     self.isRecording = true
@@ -220,8 +222,11 @@ final class CameraSessionController: NSObject, ObservableObject {
         }
     }
 
-    func stopRecording() {
+    func stopRecording(discard: Bool = false) {
         guard isRecording else { return }
+        if discard {
+            discardRecordingOnStop = true
+        }
         movieOutput.stopRecording()
     }
 
@@ -494,8 +499,16 @@ extension CameraSessionController: AVCaptureFileOutputRecordingDelegate {
         error: Error?
     ) {
         Task { @MainActor in
+            let shouldDiscard = discardRecordingOnStop
+            discardRecordingOnStop = false
             isRecording = false
             setTorchEnabled(false)
+            recordingURL = nil
+            if shouldDiscard {
+                PlaintextTempFileManager.shared.removeItem(outputFileURL)
+                captureCompletion = nil
+                return
+            }
             if let error {
                 captureCompletion?(.failure(error))
             } else {
