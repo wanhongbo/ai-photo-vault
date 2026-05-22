@@ -1,0 +1,20 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "name": "StorageUsageView",
+      "layout": "vertical",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": { "type": "gradient", "gradientType": "linear", "rotation": 180, "colors": [{ "color": "#0B1324", "position": 0 }, { "color": "#05080D", "position": 1 }] },
+      "padding": [54, 16, 34, 16],
+      "gap": 24,
+      "children": [
+        { "type": "frame", "name": "Navigation", "layout": "horizontal", "width": "fill_container", "height": 44, "gap": 12, "alignItems": "center", "children": [{ "type": "frame", "name": "Back Button", "width": 44, "height": 44, "fill": "#0E1726", "cornerRadius": 14, "justifyContent": "center", "alignItems": "center", "children": [{ "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "chevron-left", "width": 22, "height": 22, "fill": "#EAF1FF" }] }, { "type": "text", "content": "Storage", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" }] },
+        { "type": "frame", "name": "Usage Group", "layout": "vertical", "width": "fill_container", "height": "fit_content", "gap": 12, "fill": "#0C1523", "cornerRadius": 20, "padding": [18, 18, 18, 18], "children": [{ "type": "text", "content": "Storage", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" }, { "type": "text", "content": "Vault items                                      0", "fontFamily": "Inter", "fontSize": 14, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }, { "type": "text", "content": "Trash items                                      0", "fontFamily": "Inter", "fontSize": 14, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }, { "type": "text", "content": "Albums                                           0", "fontFamily": "Inter", "fontSize": 14, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }, { "type": "text", "content": "Encrypted size                                  0 KB", "fontFamily": "Inter", "fontSize": 14, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }, { "type": "text", "content": "Index updated                                   -", "fontFamily": "Inter", "fontSize": 14, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }] }
+      ]
+    }
+  ]
+}

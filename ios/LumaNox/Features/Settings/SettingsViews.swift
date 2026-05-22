@@ -136,27 +136,204 @@ struct SettingsSubscriptionView: View {
     @EnvironmentObject private var router: AppRouter
     @EnvironmentObject private var subscription: SubscriptionService
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @State private var isRestoring = false
+    @State private var statusMessage: String?
+    @State private var quotaSnapshot = SettingsQuotaSnapshot.empty
 
     var body: some View {
         LNScreenScaffold(title: L10n.settingsSubscription, onBack: { dismiss() }) {
-            if subscription.isPremium {
-                Text(L10n.tr("paywall_premium_active"))
-                    .font(LNTypography.bodyMedium())
-                    .foregroundStyle(LNColor.success)
-            } else {
-                Text(L10n.tr("paywall_subtitle"))
-                    .font(LNTypography.bodyMedium())
-                    .foregroundStyle(LNColor.subtitle)
+            subscriptionStatusCard
+
+            LNSettingsGroupCard(title: L10n.tr("settings_subscription_quota_title")) {
+                quotaMetricRow(quotaSnapshot.vaultItems)
+                quotaMetricRow(quotaSnapshot.backups)
+                quotaMetricRow(quotaSnapshot.aiScans)
             }
-            LNButton(title: L10n.tr("paywall_action_upgrade"), variant: .primary) {
-                router.present(.paywall(dismissable: true, source: PaywallSource.manual))
-            }
-            LNButton(title: L10n.tr("paywall_restore"), variant: .secondary) {
-                Task {
-                    _ = await subscription.restorePurchases()
+
+            LNSettingsGroupCard(title: L10n.tr("settings_subscription_actions_title")) {
+                LNButton(title: L10n.tr("paywall_action_upgrade"), variant: .primary) {
+                    router.present(.paywall(dismissable: true, source: PaywallSource.manual))
+                }
+                LNButton(title: L10n.tr("paywall_restore"), variant: .secondary, loading: isRestoring) {
+                    Task { await restorePurchases() }
+                }
+                LNButton(title: L10n.tr("settings_subscription_manage"), variant: .secondary) {
+                    openManageSubscriptions()
                 }
             }
+
+            Text(L10n.tr("settings_subscription_footer"))
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .lineSpacing(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .onAppear {
+            Task { await refreshQuota() }
+        }
+        .overlay {
+            if let statusMessage {
+                LNDialog(
+                    title: L10n.settingsSubscription,
+                    message: statusMessage,
+                    confirmTitle: L10n.commonOk,
+                    onConfirm: { self.statusMessage = nil }
+                )
+            }
+        }
+    }
+
+    private var subscriptionStatusCard: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: subscription.isPremium ? "crown.fill" : "person.crop.circle.badge.exclamationmark")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(subscription.isPremium ? Color.black : LNColor.title)
+                .frame(width: 48, height: 48)
+                .background(subscription.isPremium ? LNColor.paywallGold : LNColor.brandBlue.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            VStack(alignment: .leading, spacing: 6) {
+                Text(subscription.isPremium ? L10n.tr("settings_subscription_status_premium") : L10n.tr("settings_subscription_status_free"))
+                    .font(LNTypography.titleLarge())
+                    .foregroundStyle(subscription.isPremium ? LNColor.paywallGold : LNColor.title)
+                Text(subscriptionStatusDetail)
+                    .font(LNTypography.bodyMedium())
+                    .foregroundStyle(LNColor.subtitle)
+                    .lineSpacing(2)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(LNSpacing.cardPadding)
+        .lnOutlinedCard(stroke: subscription.isPremium ? LNColor.paywallGold : LNColor.stroke)
+    }
+
+    private var subscriptionStatusDetail: String {
+        if subscription.isPremium {
+            return L10n.tr("settings_subscription_status_premium_desc")
+        }
+        if subscription.isSdkConfigured {
+            return L10n.tr("settings_subscription_status_free_desc")
+        }
+        return L10n.tr("paywall_not_configured")
+    }
+
+    private func quotaMetricRow(_ metric: SettingsQuotaMetric) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(metric.title)
+                    .font(LNTypography.titleMedium())
+                    .foregroundStyle(LNColor.title)
+                Spacer()
+                Text(metric.displayValue(isPremium: subscription.isPremium))
+                    .font(LNTypography.labelMedium())
+                    .foregroundStyle(subscription.isPremium ? LNColor.paywallGold : metric.tint)
+            }
+            ProgressView(value: metric.progress(isPremium: subscription.isPremium))
+                .tint(subscription.isPremium ? LNColor.paywallGold : metric.tint)
+                .background(LNColor.stroke.opacity(0.45))
+            Text(metric.subtitle(isPremium: subscription.isPremium))
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
+        .background(LNColor.sectionBg.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: LNRadius.settingsRow))
+    }
+
+    private func refreshQuota() async {
+        await VaultStore.shared.loadSnapshot()
+        let quota = QuotaManager.shared
+        quotaSnapshot = SettingsQuotaSnapshot(
+            vaultItems: SettingsQuotaMetric(
+                title: L10n.tr("settings_subscription_quota_vault"),
+                used: quota.vaultCount,
+                limit: FreeQuota.maxVaultItems,
+                freeSubtitle: L10n.tr("settings_subscription_quota_vault_desc"),
+                premiumSubtitle: L10n.tr("settings_subscription_quota_unlimited_desc"),
+                tint: quota.isVaultFull(isPremium: false) ? LNColor.error : LNColor.brandBlue
+            ),
+            backups: SettingsQuotaMetric(
+                title: L10n.tr("settings_subscription_quota_backup"),
+                used: quota.backupCount,
+                limit: FreeQuota.maxBackupCount,
+                freeSubtitle: L10n.tr("settings_subscription_quota_backup_desc"),
+                premiumSubtitle: L10n.tr("settings_subscription_quota_unlimited_desc"),
+                tint: quota.isBackupExhausted(isPremium: false) ? LNColor.error : LNColor.success
+            ),
+            aiScans: SettingsQuotaMetric(
+                title: L10n.tr("settings_subscription_quota_ai"),
+                used: quota.aiMonthlyCount,
+                limit: FreeQuota.maxAiMonthly,
+                freeSubtitle: L10n.tr("settings_subscription_quota_ai_desc"),
+                premiumSubtitle: L10n.tr("settings_subscription_quota_unlimited_desc"),
+                tint: quota.isAiExhausted(isPremium: false) ? LNColor.error : LNColor.amberWarning
+            )
+        )
+    }
+
+    private func restorePurchases() async {
+        guard !isRestoring else { return }
+        isRestoring = true
+        let result = await subscription.restorePurchases()
+        isRestoring = false
+        switch result {
+        case .success:
+            statusMessage = subscription.isPremium
+                ? L10n.tr("paywall_restore_success")
+                : L10n.tr("paywall_restore_no_purchase")
+        case .failure:
+            statusMessage = L10n.tr("paywall_restore_failed")
+        }
+    }
+
+    private func openManageSubscriptions() {
+        guard let url = URL(string: "https://apps.apple.com/account/subscriptions") else {
+            statusMessage = L10n.tr("settings_subscription_manage_failed")
+            return
+        }
+        openURL(url) { accepted in
+            if !accepted {
+                statusMessage = L10n.tr("settings_subscription_manage_failed")
+            }
+        }
+    }
+}
+
+private struct SettingsQuotaSnapshot {
+    let vaultItems: SettingsQuotaMetric
+    let backups: SettingsQuotaMetric
+    let aiScans: SettingsQuotaMetric
+
+    static let empty = SettingsQuotaSnapshot(
+        vaultItems: SettingsQuotaMetric(title: "", used: 0, limit: FreeQuota.maxVaultItems, freeSubtitle: "", premiumSubtitle: "", tint: LNColor.brandBlue),
+        backups: SettingsQuotaMetric(title: "", used: 0, limit: FreeQuota.maxBackupCount, freeSubtitle: "", premiumSubtitle: "", tint: LNColor.success),
+        aiScans: SettingsQuotaMetric(title: "", used: 0, limit: FreeQuota.maxAiMonthly, freeSubtitle: "", premiumSubtitle: "", tint: LNColor.amberWarning)
+    )
+}
+
+private struct SettingsQuotaMetric {
+    let title: String
+    let used: Int
+    let limit: Int
+    let freeSubtitle: String
+    let premiumSubtitle: String
+    let tint: Color
+
+    func displayValue(isPremium: Bool) -> String {
+        if isPremium { return L10n.tr("settings_subscription_quota_unlimited") }
+        return "\(min(used, limit))/\(limit)"
+    }
+
+    func progress(isPremium: Bool) -> Double {
+        if isPremium { return 1 }
+        guard limit > 0 else { return 0 }
+        return min(Double(used) / Double(limit), 1)
+    }
+
+    func subtitle(isPremium: Bool) -> String {
+        isPremium ? premiumSubtitle : freeSubtitle
     }
 }
 
@@ -396,7 +573,7 @@ struct SettingsAboutView: View {
             LNSettingsRow(title: L10n.tr("settings_contact_support"), subtitle: supportEmail) {
                 contactSupport()
             }
-            Text("LumaNox v0.2.0")
+            Text(appVersionText)
                 .font(LNTypography.labelMedium())
                 .foregroundStyle(LNColor.subtitle)
         }
@@ -430,6 +607,12 @@ struct SettingsAboutView: View {
                 toastMessage = nil
             }
         }
+    }
+
+    private var appVersionText: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "-"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "-"
+        return L10n.tr("settings_about_version_fmt", version, build)
     }
 }
 

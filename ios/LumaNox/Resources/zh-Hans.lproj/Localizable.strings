@@ -388,6 +388,23 @@
 "settings_l1_subscription_premium_title" = "LumaNox Premium";
 "settings_l1_subscription_premium_sub" = "高级版已生效";
 "settings_l1_subscription_sub" = "查看订阅计划和续费";
+"settings_subscription_status_free" = "免费版";
+"settings_subscription_status_free_desc" = "保险箱仍保持本地加密。Premium 可移除使用限制，并解锁高级隐私工具。";
+"settings_subscription_status_premium" = "Premium 已生效";
+"settings_subscription_status_premium_desc" = "本设备已可使用全部 Premium 隐私、AI、导出和备份能力。";
+"settings_subscription_quota_title" = "免费版额度";
+"settings_subscription_quota_vault" = "保险箱容量";
+"settings_subscription_quota_vault_desc" = "免费版最多支持 50 个加密保险箱项目。";
+"settings_subscription_quota_backup" = "备份导出";
+"settings_subscription_quota_backup_desc" = "免费版包含 1 次加密备份导出。";
+"settings_subscription_quota_ai" = "AI 扫描";
+"settings_subscription_quota_ai_desc" = "免费版每月包含 10 次本地 AI 扫描。";
+"settings_subscription_quota_unlimited" = "无限制";
+"settings_subscription_quota_unlimited_desc" = "Premium 会移除该额度限制。";
+"settings_subscription_actions_title" = "订阅操作";
+"settings_subscription_manage" = "管理订阅";
+"settings_subscription_manage_failed" = "无法打开 App Store 订阅管理。";
+"settings_subscription_footer" = "购买由 App Store 与 RevenueCat 处理。LumaNox 不会接收付款详情。";
 "settings_backup_banner" = "卸载应用后相册文件无法恢复，请及时备份文件。";
 "settings_l1_security_sub" = "解锁、PIN 和隐私选项";
 "settings_l1_backup_sub" = "自动备份和手动恢复";
@@ -430,6 +447,7 @@
 "terms_title" = "服务条款";
 "settings_contact_support" = "联系支持";
 "settings_mail_client_required" = "请先配置邮件客户端";
+"settings_about_version_fmt" = "LumaNox v%@ (%@)";
 "legal_placeholder" = "法务页面占位，后续同步 Android raw HTML。";
 "legal_load_failed" = "无法加载该法务文档，请稍后重试。";
 

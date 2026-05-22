@@ -212,7 +212,7 @@
             },
             {
               "type": "text",
-              "content": "LumaNox v0.2.0",
+              "content": "LumaNox v0.2.0 (1)",
               "fontFamily": "Inter",
               "fontSize": 12,
               "fontWeight": "500",

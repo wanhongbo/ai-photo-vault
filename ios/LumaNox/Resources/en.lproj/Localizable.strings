@@ -388,6 +388,23 @@
 "settings_l1_subscription_premium_title" = "LumaNox Premium";
 "settings_l1_subscription_premium_sub" = "Premium is active";
 "settings_l1_subscription_sub" = "See your plan and renewal";
+"settings_subscription_status_free" = "Free plan";
+"settings_subscription_status_free_desc" = "Your vault stays local and encrypted. Premium removes usage limits and unlocks advanced privacy tools.";
+"settings_subscription_status_premium" = "Premium active";
+"settings_subscription_status_premium_desc" = "All Premium privacy, AI, export, and backup features are available on this device.";
+"settings_subscription_quota_title" = "Free plan quotas";
+"settings_subscription_quota_vault" = "Vault storage";
+"settings_subscription_quota_vault_desc" = "Free plan supports up to 50 encrypted vault items.";
+"settings_subscription_quota_backup" = "Backup exports";
+"settings_subscription_quota_backup_desc" = "Free plan includes 1 encrypted backup export.";
+"settings_subscription_quota_ai" = "AI scans";
+"settings_subscription_quota_ai_desc" = "Free plan includes 10 local AI scans per month.";
+"settings_subscription_quota_unlimited" = "Unlimited";
+"settings_subscription_quota_unlimited_desc" = "Premium removes this quota.";
+"settings_subscription_actions_title" = "Subscription actions";
+"settings_subscription_manage" = "Manage subscriptions";
+"settings_subscription_manage_failed" = "Unable to open App Store subscription management.";
+"settings_subscription_footer" = "Purchases are handled by the App Store and RevenueCat. LumaNox never receives payment details.";
 "settings_backup_banner" = "Album files cannot be recovered after deleting the app. Please back up your files in time.";
 "settings_l1_security_sub" = "Unlock, PIN, and privacy options";
 "settings_l1_backup_sub" = "Auto backup and manual restore";
@@ -430,6 +447,7 @@
 "terms_title" = "Terms of Service";
 "settings_contact_support" = "Contact Support";
 "settings_mail_client_required" = "Please configure a mail client first.";
+"settings_about_version_fmt" = "LumaNox v%@ (%@)";
 "legal_placeholder" = "Legal page placeholder; sync Android raw HTML later.";
 "legal_load_failed" = "Unable to load this legal document. Please try again later.";
 

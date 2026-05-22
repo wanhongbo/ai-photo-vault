@@ -1,0 +1,170 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "name": "SettingsSubscriptionView",
+      "layout": "vertical",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "rotation": 180,
+        "colors": [
+          { "color": "#0B1324", "position": 0 },
+          { "color": "#05080D", "position": 1 }
+        ]
+      },
+      "padding": [54, 16, 34, 16],
+      "gap": 18,
+      "children": [
+        {
+          "type": "frame",
+          "name": "Navigation",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 44,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "name": "Back Button",
+              "width": 44,
+              "height": 44,
+              "fill": "#0E1726",
+              "cornerRadius": 14,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "chevron-left", "width": 22, "height": 22, "fill": "#EAF1FF" }
+              ]
+            },
+            { "type": "text", "content": "Subscription", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Plan Status Card",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 14,
+          "fill": "#0C1523",
+          "stroke": "#223247",
+          "strokeWidth": 1,
+          "cornerRadius": 20,
+          "padding": [18, 18, 18, 18],
+          "children": [
+            {
+              "type": "frame",
+              "name": "Plan Icon",
+              "width": 48,
+              "height": 48,
+              "fill": "#1A3458",
+              "cornerRadius": 14,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "user-round-cog", "width": 24, "height": 24, "fill": "#EAF1FF" }
+              ]
+            },
+            {
+              "type": "frame",
+              "name": "Plan Copy",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": "fit_content",
+              "gap": 6,
+              "children": [
+                { "type": "text", "content": "Free plan", "fontFamily": "Inter", "fontSize": 20, "fontWeight": "700", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" },
+                { "type": "text", "content": "Your vault stays local and encrypted. Premium removes usage limits and unlocks advanced privacy tools.", "fontFamily": "Inter", "fontSize": 14, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Quota Group",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 10,
+          "fill": "#0C1523",
+          "cornerRadius": 20,
+          "padding": [18, 18, 18, 18],
+          "children": [
+            { "type": "text", "content": "Free plan quotas", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" },
+            {
+              "type": "frame",
+              "name": "Quota Vault",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": 76,
+              "gap": 8,
+              "fill": "#101B2D",
+              "cornerRadius": 12,
+              "padding": [12, 12, 12, 12],
+              "children": [
+                { "type": "text", "content": "Vault storage 0/50", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "600", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" },
+                { "type": "rectangle", "name": "Progress Track", "width": "fill_container", "height": 5, "fill": "#223247", "cornerRadius": 3 },
+                { "type": "text", "content": "Free plan supports up to 50 encrypted vault items.", "fontFamily": "Inter", "fontSize": 12, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }
+              ]
+            },
+            {
+              "type": "frame",
+              "name": "Quota Backup",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": 76,
+              "gap": 8,
+              "fill": "#101B2D",
+              "cornerRadius": 12,
+              "padding": [12, 12, 12, 12],
+              "children": [
+                { "type": "text", "content": "Backup exports 0/1", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "600", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" },
+                { "type": "rectangle", "name": "Progress Track", "width": "fill_container", "height": 5, "fill": "#223247", "cornerRadius": 3 },
+                { "type": "text", "content": "Free plan includes 1 encrypted backup export.", "fontFamily": "Inter", "fontSize": 12, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }
+              ]
+            },
+            {
+              "type": "frame",
+              "name": "Quota AI",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": 76,
+              "gap": 8,
+              "fill": "#101B2D",
+              "cornerRadius": 12,
+              "padding": [12, 12, 12, 12],
+              "children": [
+                { "type": "text", "content": "AI scans 0/10", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "600", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" },
+                { "type": "rectangle", "name": "Progress Track", "width": "fill_container", "height": 5, "fill": "#223247", "cornerRadius": 3 },
+                { "type": "text", "content": "Free plan includes 10 local AI scans per month.", "fontFamily": "Inter", "fontSize": 12, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Actions",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 10,
+          "fill": "#0C1523",
+          "cornerRadius": 20,
+          "padding": [18, 18, 18, 18],
+          "children": [
+            { "type": "text", "content": "Subscription actions", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" },
+            { "type": "frame", "name": "Upgrade Button", "width": "fill_container", "height": 54, "fill": "#4A9EFF", "cornerRadius": 16, "justifyContent": "center", "alignItems": "center", "children": [{ "type": "text", "content": "Upgrade now", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#FFFFFF" }] },
+            { "type": "frame", "name": "Restore Button", "width": "fill_container", "height": 48, "fill": "#1A202C", "cornerRadius": 14, "justifyContent": "center", "alignItems": "center", "children": [{ "type": "text", "content": "Restore purchases", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF" }] },
+            { "type": "frame", "name": "Manage Button", "width": "fill_container", "height": 48, "fill": "#1A202C", "cornerRadius": 14, "justifyContent": "center", "alignItems": "center", "children": [{ "type": "text", "content": "Manage subscriptions", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF" }] }
+          ]
+        }
+      ]
+    }
+  ]
+}
