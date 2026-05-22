@@ -423,6 +423,7 @@
     <string name="paywall_feat_ai">AI 隐私检测与整理（按套餐额度）</string>
     <string name="paywall_feat_backup">本地加密备份与恢复</string>
     <string name="paywall_cta_continue">继续购买</string>
+    <string name="paywall_cta_start_trial">开始 %1$s</string>
     <string name="paywall_restore">恢复购买</string>
         <string name="paywall_purchase_success">购买成功，已解锁 Premium！</string>
         <string name="paywall_restore_success">恢复成功，Premium 已激活</string>

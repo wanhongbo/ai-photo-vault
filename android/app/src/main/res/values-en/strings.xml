@@ -422,6 +422,7 @@
     <string name="paywall_feat_ai">AI privacy scan &amp; cleanup (per plan limits)</string>
     <string name="paywall_feat_backup">Local encrypted backup &amp; restore</string>
     <string name="paywall_cta_continue">Continue</string>
+    <string name="paywall_cta_start_trial">Start %1$s</string>
     <string name="paywall_restore">Restore purchases</string>
         <string name="paywall_purchase_success">Purchase successful, Premium unlocked!</string>
         <string name="paywall_restore_success">Restored successfully, Premium activated</string>

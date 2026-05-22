@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -126,6 +127,19 @@ fun PaywallScreen(
     val purchaseHost = remember(activity) {
         PurchaseActivityHost { activity }
     }
+    val readyState = offerings as? PaywallOfferingsState.Ready
+    val selectedOffer = readyState?.packages?.getOrNull(selectedIndex)
+    val ctaEnabled = selectedOffer != null && activity != null && readyState?.isPremium != true
+    val ctaText = selectedOffer?.freeTrialLabel?.let { trial ->
+        stringResource(R.string.paywall_cta_start_trial, trial)
+    } ?: stringResource(R.string.paywall_cta_continue)
+    val onPurchaseSelected = {
+        val offer = selectedOffer
+        if (offer != null && activity != null) {
+            viewModel.clearError()
+            viewModel.purchase(purchaseHost, offer.packageIdentifier)
+        }
+    }
 
     // 埋点：记录支付墙展示
     val paywallAnalytics = remember {
@@ -241,54 +255,22 @@ fun PaywallScreen(
                     Spacer(Modifier.height(8.dp))
                     PaywallFeatureList()
                     Spacer(Modifier.height(22.dp))
-                    surfaceError?.let { err ->
-                        Text(
-                            text = err,
-                            color = UiColors.Paywall.error,
-                            fontSize = 13.sp,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(Modifier.height(10.dp))
-                    }
-                    val selected = s.packages.getOrNull(selectedIndex)
-                    val ctaEnabled = selected != null && activity != null && !s.isPremium
-                    AppButton(
-                        text = stringResource(R.string.paywall_cta_continue),
-                        onClick = {
-                            if (selected != null && activity != null) {
-                                viewModel.clearError()
-                                viewModel.purchase(purchaseHost, selected.packageIdentifier)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = ctaEnabled,
-                        loading = purchasing,
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    TextButton(
-                        onClick = { viewModel.restorePurchases() },
-                        enabled = !purchasing && activity != null,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.paywall_restore),
-                            color = UiColors.Paywall.subtitle,
-                            fontSize = 14.sp,
-                        )
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(R.string.paywall_footer),
-                        color = UiColors.Paywall.footer,
-                        fontSize = 11.sp,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 16.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Spacer(Modifier.height(196.dp))
                 }
             }
             Spacer(Modifier.height(24.dp))
+        }
+
+        if (readyState != null && !readyState.isPremium) {
+            PaywallStickyPurchaseBar(
+                ctaText = ctaText,
+                ctaEnabled = ctaEnabled,
+                purchasing = purchasing,
+                error = surfaceError,
+                restoreEnabled = !purchasing && activity != null,
+                onPurchase = onPurchaseSelected,
+                onRestore = { viewModel.restorePurchases() },
+            )
         }
     }
 }
@@ -327,6 +309,74 @@ private fun PaywallHero(isPremium: Boolean) {
             fontSize = UiTextSize.homeSubtitle,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 12.dp),
+        )
+    }
+}
+
+@Composable
+private fun BoxScope.PaywallStickyPurchaseBar(
+    ctaText: String,
+    ctaEnabled: Boolean,
+    purchasing: Boolean,
+    error: String?,
+    restoreEnabled: Boolean,
+    onPurchase: () -> Unit,
+    onRestore: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        UiColors.Paywall.bgBottom.copy(alpha = 0f),
+                        UiColors.Paywall.bgBottom,
+                        UiColors.Paywall.bgBottom,
+                    ),
+                ),
+            )
+            .padding(horizontal = 22.dp)
+            .padding(top = 24.dp, bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        error?.let { message ->
+            Text(
+                text = message,
+                color = UiColors.Paywall.error,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+            )
+        }
+        AppButton(
+            text = ctaText,
+            onClick = onPurchase,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = ctaEnabled,
+            loading = purchasing,
+        )
+        Spacer(Modifier.height(6.dp))
+        TextButton(
+            onClick = onRestore,
+            enabled = restoreEnabled,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = stringResource(R.string.paywall_restore),
+                color = UiColors.Paywall.subtitle,
+                fontSize = 14.sp,
+            )
+        }
+        Text(
+            text = stringResource(R.string.paywall_footer),
+            color = UiColors.Paywall.footer,
+            fontSize = 11.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 16.sp,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
