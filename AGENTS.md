@@ -109,6 +109,18 @@ xcodebuild -scheme LumaNox -project LumaNox.xcodeproj -sdk iphonesimulator -dest
 
 After every iOS code change, install and launch the app on an iOS simulator and capture a screenshot. A passing compile is not enough. Prefer `iPhone 16` unless the task requires another device class.
 
+## Delivery & Commit Policy
+
+For code or documentation changes in this repository, after implementation and the required validation pass, automatically create a git commit for the changes made in the current task.
+
+Rules:
+- Only stage files changed for the current task.
+- Never stage or commit unrelated dirty worktree changes.
+- Do not commit if build, tests, lint, or required simulator validation fail.
+- Mention validation results in the final response.
+- If unrelated changes overlap the same files and cannot be separated safely, ask the user before committing.
+- If the task is documentation-only and has no build impact, validate with a focused file/diff check and commit the documentation change.
+
 ## Architecture Patterns
 
 ### Clean Architecture
