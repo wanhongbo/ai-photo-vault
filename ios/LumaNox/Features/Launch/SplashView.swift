@@ -29,12 +29,8 @@ struct SplashView: View {
             securityStore.reload()
             withAnimation(.linear(duration: 1.2)) { progress = 1 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                // 首次启动必须完成 PIN 设置向导（锁屏页 setup 流程），不可跳过进入主页。
-                #if DEBUG
-                router.finishSplash(goToLock: false)
-                #else
-                router.finishSplash(goToLock: true)
-                #endif
+                // 真机必须完成 PIN 设置向导；仅 DEBUG 模拟器允许直达主页以便快速调试。
+                router.finishSplash(goToLock: !AppDebugPolicy.skipsPinGate)
             }
         }
         .accessibilityIdentifier("splash_view")

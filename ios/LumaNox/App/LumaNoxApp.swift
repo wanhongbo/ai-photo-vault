@@ -28,9 +28,7 @@ struct LumaNoxApp: App {
                 .preferredColorScheme(.dark)
                 .onChange(of: scenePhase) { phase in
                     appLock.handleScenePhase(phase)
-                    #if DEBUG
-                    return
-                    #endif
+                    if AppDebugPolicy.skipsPinGate { return }
                     if appLock.requireUnlock, router.phase == .main {
                         router.phase = .lock
                     }
@@ -67,9 +65,7 @@ struct RootView: View {
     }
 
     private func enforcePinGate() {
-        #if DEBUG
-        return
-        #endif
+        if AppDebugPolicy.skipsPinGate { return }
         if router.phase == .main, !SecuritySettingsStore.shared.hasPinConfigured {
             router.phase = .lock
         }
@@ -77,6 +73,7 @@ struct RootView: View {
 
     #if DEBUG
     private func applyDebugLaunchRouteIfNeeded() {
+        guard AppDebugPolicy.skipsPinGate else { return }
         guard ProcessInfo.processInfo.arguments.contains("-uiTestPrivacyRedact"),
               router.aiPath.isEmpty else { return }
         router.phase = .main

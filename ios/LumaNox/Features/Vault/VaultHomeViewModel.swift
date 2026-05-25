@@ -14,7 +14,7 @@ final class VaultHomeViewModel: ObservableObject {
     @Published var duplicateImportDialogMessage: String?
     @Published private(set) var snapshot: VaultSnapshot?
     @Published private(set) var isLoadingSnapshot = false
-    @Published private(set) var hasPinConfigured = debugSkipsPin || SecuritySettingsStore.shared.hasPinConfigured
+    @Published private(set) var hasPinConfigured = AppDebugPolicy.skipsPinGate || SecuritySettingsStore.shared.hasPinConfigured
 
     private let vaultStore = VaultStore.shared
 
@@ -44,7 +44,7 @@ final class VaultHomeViewModel: ObservableObject {
 
     func onAppear() {
         refreshAuthorization()
-        hasPinConfigured = debugSkipsPin || SecuritySettingsStore.shared.hasPinConfigured
+        hasPinConfigured = AppDebugPolicy.skipsPinGate || SecuritySettingsStore.shared.hasPinConfigured
         Task {
             if snapshot == nil {
                 isLoadingSnapshot = true
@@ -110,14 +110,6 @@ enum VaultImportFeedback {
         }
         return L10n.tr("home_import_duplicate_dialog_message_count", summary.duplicate)
     }
-}
-
-private var debugSkipsPin: Bool {
-    #if DEBUG
-    true
-    #else
-    false
-    #endif
 }
 
 private struct VaultPickedMediaFile: Transferable {

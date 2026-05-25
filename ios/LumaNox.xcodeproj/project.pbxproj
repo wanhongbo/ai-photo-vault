@@ -43,6 +43,7 @@
 		34069B28B2C4DAED63FAAA47 /* SecuritySettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04602047CD1F734811BE882A /* SecuritySettingsStore.swift */; };
 		34146A40106106BE27FE4BFA /* RouteDestinationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826020A1A0EC371A3DA0B66F /* RouteDestinationView.swift */; };
 		36378B57D1367F7307E82EEB /* BulkExportView.pen in Resources */ = {isa = PBXBuildFile; fileRef = A237B652FBD8B3CF7F75AE16 /* BulkExportView.pen */; };
+		367BCAB5A90F626E7C2DCBFE /* AppDebugPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = E088F83476527ADA5F945E5E /* AppDebugPolicy.swift */; };
 		384FEFBD55A1310242224FA7 /* BackupPackageV1.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA1258102ECC2A8B19A0B635 /* BackupPackageV1.swift */; };
 		3A75B14358F2B402AE3BCADD /* PrivacyRedactionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70B6D9D38622E858F4385298 /* PrivacyRedactionService.swift */; };
 		3C533D1937B2DC69F9BC5ABA /* RealWorldAIRecognitionDatasetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 266B639224CC819B5C54174E /* RealWorldAIRecognitionDatasetTests.swift */; };
@@ -313,6 +314,7 @@
 		DEDD0ED9EC7F20ACE3E2AF92 /* SettingsSecurityView.pen */ = {isa = PBXFileReference; path = SettingsSecurityView.pen; sourceTree = "<group>"; };
 		DEDD1F18244EC60A00AF3AB8 /* LanguageSettingsView.pen */ = {isa = PBXFileReference; path = LanguageSettingsView.pen; sourceTree = "<group>"; };
 		DEE1A4782F64EDCC50A50E9B /* screen_1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_1x.png; sourceTree = "<group>"; };
+		E088F83476527ADA5F945E5E /* AppDebugPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDebugPolicy.swift; sourceTree = "<group>"; };
 		E090E7F707328EB78816CB6F /* PasswordHasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordHasher.swift; sourceTree = "<group>"; };
 		E1EC20C0DDB6D96BED47D1FC /* screen_15.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_15.png; sourceTree = "<group>"; };
 		E27328F5DEBCC6B1F4274BD9 /* LegalWebView.pen */ = {isa = PBXFileReference; path = LegalWebView.pen; sourceTree = "<group>"; };
@@ -681,6 +683,7 @@
 		A3DF34D607ED4F6ABBB7E7E2 /* Setup */ = {
 			isa = PBXGroup;
 			children = (
+				E088F83476527ADA5F945E5E /* AppDebugPolicy.swift */,
 				DA23EEFE7CB8F5D3B0A673D7 /* FirstLaunchRouter.swift */,
 			);
 			path = Setup;
@@ -956,6 +959,7 @@
 			files = (
 				51BB7EB4601FC3984CF5B6CC /* AESCBC.swift in Sources */,
 				DB8AC892BAA7C6A6E7CF08A7 /* AIViews.swift in Sources */,
+				367BCAB5A90F626E7C2DCBFE /* AppDebugPolicy.swift in Sources */,
 				C0F71E4C886E99A6E043BE85 /* AppLockManager.swift in Sources */,
 				633386DC1460112546285D53 /* AppRoute.swift in Sources */,
 				3268354FBDCA1CF4F082F119 /* AppRouter.swift in Sources */,
