@@ -8,8 +8,10 @@ final class AppLockManager: ObservableObject {
 
     @Published private(set) var requireUnlock = false
     @Published private(set) var protectsAppSwitcherSnapshot = false
+    @Published private(set) var foregroundUnlockBiometricRequestID = 0
 
     private var wasBackgrounded = false
+    private var hasPendingForegroundBiometricRequest = false
     private let securityStore = SecuritySettingsStore.shared
 
     private init() {
@@ -20,6 +22,7 @@ final class AppLockManager: ObservableObject {
         requireUnlock = false
         protectsAppSwitcherSnapshot = false
         wasBackgrounded = false
+        hasPendingForegroundBiometricRequest = false
     }
 
     func refreshPinConfigured() {
@@ -28,6 +31,7 @@ final class AppLockManager: ObservableObject {
             requireUnlock = false
             protectsAppSwitcherSnapshot = false
             wasBackgrounded = false
+            hasPendingForegroundBiometricRequest = false
         }
     }
 
@@ -38,14 +42,22 @@ final class AppLockManager: ObservableObject {
                 wasBackgrounded = true
                 requireUnlock = true
                 protectsAppSwitcherSnapshot = true
+                hasPendingForegroundBiometricRequest = true
             }
         case .active:
             protectsAppSwitcherSnapshot = false
             guard securityStore.hasPinConfigured, wasBackgrounded else { return }
             wasBackgrounded = false
             requireUnlock = true
+            if hasPendingForegroundBiometricRequest {
+                foregroundUnlockBiometricRequestID += 1
+            }
         @unknown default:
             break
         }
+    }
+
+    func consumeForegroundBiometricRequest() {
+        hasPendingForegroundBiometricRequest = false
     }
 }

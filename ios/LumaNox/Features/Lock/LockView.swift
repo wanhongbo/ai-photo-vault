@@ -1,9 +1,11 @@
 import SwiftUI
 import LocalAuthentication
+import UIKit
 import UniformTypeIdentifiers
 
 struct LockView: View {
     @EnvironmentObject private var router: AppRouter
+    @EnvironmentObject private var appLock: AppLockManager
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel = LockViewModel()
     @State private var biometricDismissedAt: Date?
@@ -70,17 +72,23 @@ struct LockView: View {
         }
         .onChange(of: viewModel.state.stage) { stage in
             if stage == .unlock, viewModel.state.biometricEnabled {
-                scheduleAutoBiometric()
+                scheduleAutoBiometric(consumeForegroundRequest: false)
             }
         }
         .onChange(of: scenePhase) { phase in
             if phase == .active {
-                scheduleAutoBiometric()
+                scheduleAutoBiometric(consumeForegroundRequest: false)
             } else if phase == .inactive || phase == .background {
                 pendingAutoBiometricTask?.cancel()
                 pendingAutoBiometricTask = nil
                 biometricDismissedAt = nil
             }
+        }
+        .onChange(of: appLock.foregroundUnlockBiometricRequestID) { _ in
+            scheduleAutoBiometric(consumeForegroundRequest: true)
+        }
+        .task(id: autoBiometricReadinessKey) {
+            scheduleAutoBiometric(consumeForegroundRequest: false)
         }
         .onDisappear {
             pendingAutoBiometricTask?.cancel()
@@ -268,24 +276,54 @@ struct LockView: View {
         viewModel.state.success ? LNColor.success : LNColor.brandBlue
     }
 
-    private func scheduleAutoBiometric() {
-        guard scenePhase == .active else { return }
+    private var autoBiometricReadinessKey: String {
+        [
+            "\(viewModel.state.stage)",
+            "\(viewModel.state.biometricEnabled)",
+            "\(viewModel.state.isLoading)",
+            "\(viewModel.state.success)",
+            "\(appLock.foregroundUnlockBiometricRequestID)"
+        ].joined(separator: ":")
+    }
+
+    private func scheduleAutoBiometric(consumeForegroundRequest: Bool) {
         guard viewModel.state.stage == .unlock, viewModel.state.biometricEnabled else { return }
         guard !viewModel.state.isLoading, !viewModel.state.success else { return }
         if let dismissed = biometricDismissedAt, Date().timeIntervalSince(dismissed) < 4 { return }
+        if consumeForegroundRequest {
+            appLock.consumeForegroundBiometricRequest()
+        }
 
         pendingAutoBiometricTask?.cancel()
         pendingAutoBiometricTask = Task {
-            try? await Task.sleep(nanoseconds: 650_000_000)
-            guard !Task.isCancelled else { return }
-            await runBiometric(userInitiated: false)
+            for attempt in 0..<10 {
+                let delay: UInt64 = attempt == 0 ? 650_000_000 : 250_000_000
+                try? await Task.sleep(nanoseconds: delay)
+                guard !Task.isCancelled else { return }
+                let isReady = await MainActor.run { isReadyForAutoBiometric() }
+                if isReady {
+                    await runBiometric(userInitiated: false)
+                    return
+                }
+            }
         }
+    }
+
+    @MainActor
+    private func isReadyForAutoBiometric() -> Bool {
+        guard UIApplication.shared.applicationState == .active else { return false }
+        guard viewModel.state.stage == .unlock, viewModel.state.biometricEnabled else { return false }
+        guard !viewModel.state.isLoading, !viewModel.state.success else { return false }
+        if let dismissed = biometricDismissedAt, Date().timeIntervalSince(dismissed) < 4 {
+            return false
+        }
+        return true
     }
 
     @MainActor
     private func runBiometric(userInitiated: Bool) async {
         guard !biometricAttemptInFlight else { return }
-        guard userInitiated || scenePhase == .active else { return }
+        guard userInitiated || UIApplication.shared.applicationState == .active else { return }
         pendingAutoBiometricTask?.cancel()
         pendingAutoBiometricTask = nil
         biometricAttemptInFlight = true
