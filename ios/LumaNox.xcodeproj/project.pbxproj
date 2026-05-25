@@ -71,6 +71,7 @@
 		60AE2DB6FF59E1024DF04184 /* pencil_preview_contact_sheet.jpg in Resources */ = {isa = PBXBuildFile; fileRef = B401A4DA60A82577398F1C20 /* pencil_preview_contact_sheet.jpg */; };
 		6111016DB603E2EACA8F5C2A /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6497A795A1127220137BD699 /* LanguageManager.swift */; };
 		633386DC1460112546285D53 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18EF7279A90DDB314CF977D /* AppRoute.swift */; };
+		6693604DAF263C3F3F2A0957 /* BackupRestoreView.pen in Resources */ = {isa = PBXBuildFile; fileRef = DD549E477191C93BEDB3AEB8 /* BackupRestoreView.pen */; };
 		6899DE3305F6F4EFFBC42C0D /* runtime_lock_after_nav_pin_fix.png in Resources */ = {isa = PBXBuildFile; fileRef = 018D70E35D85115A60687CA8 /* runtime_lock_after_nav_pin_fix.png */; };
 		6A803FD648FAE91CCE86E104 /* Argon2Swift in Frameworks */ = {isa = PBXBuildFile; productRef = 3A503BAE4274FB0FE761E137 /* Argon2Swift */; };
 		6B224CDA3D0D3CC06A69F5B0 /* SettingsHomeView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 28233DBC7BB8D878D19D5660 /* SettingsHomeView.pen */; };
@@ -115,6 +116,7 @@
 		A5C20C25445C0F0CF60A00E9 /* VaultModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA0AF35AC07F37BA5F1622F /* VaultModels.swift */; };
 		A66C9C638B759A414E448ED3 /* QuotaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727B91FB477025D1B3A19427 /* QuotaManager.swift */; };
 		A6EB4FA274288306A693DCDE /* AISensitiveReviewView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 025A53DD2F6B332F7E7CBB30 /* AISensitiveReviewView.pen */; };
+		A7FD1E8FEE16024663637A7D /* RestoreResultView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 0C2ADF20FA466A23114C995B /* RestoreResultView.pen */; };
 		A9458970705182089F8C8DCC /* VaultMaintenanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AED24C08D30394D9D28E1B1F /* VaultMaintenanceService.swift */; };
 		AC4EAF0F6CC7E3910582B224 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D1DBEE64A524C4C990F99981 /* Assets.xcassets */; };
 		ADC67DC6E153B321BD0B3137 /* VaultHomeView.pen in Resources */ = {isa = PBXBuildFile; fileRef = D14852B36C14B00552F54878 /* VaultHomeView.pen */; };
@@ -148,6 +150,7 @@
 		DBCF6493F396C9CA81EF741C /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B16AD56BCEEDF77339C36A4B /* Vision.framework */; };
 		DC60E148161FD21F6A3E8D63 /* AIViews.pen in Resources */ = {isa = PBXBuildFile; fileRef = 6ECB0E3F2D108BED30E7C031 /* AIViews.pen */; };
 		DCFFDDED81FDA7FF3E08431D /* AICleanupView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 3FB8CFCE0552877BBDAA93D1 /* AICleanupView.pen */; };
+		DD0E0C3AF21EFD9D879D7149 /* BackupResultView.pen in Resources */ = {isa = PBXBuildFile; fileRef = B961D164F157FCE70CE5CBC6 /* BackupResultView.pen */; };
 		DE5E1DD8859752E46109681D /* SubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9644AD884D86508FA10EC6 /* SubscriptionService.swift */; };
 		E2E4068C1A1AD14A40EB983E /* SettingsSecurityView.pen in Resources */ = {isa = PBXBuildFile; fileRef = DEDD0ED9EC7F20ACE3E2AF92 /* SettingsSecurityView.pen */; };
 		E46605FC4D554B7EEFA28064 /* AlbumView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 98B565F3A27E7022FDFF239A /* AlbumView.pen */; };
@@ -187,6 +190,7 @@
 		086918DA1D5BF1214B8545AA /* BackupMeta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupMeta.swift; sourceTree = "<group>"; };
 		09816F34E8E45378A70CB76F /* LumaNoxStyleGuide.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LumaNoxStyleGuide.md; sourceTree = "<group>"; };
 		0BF1855A4D106CFD1B09EDDE /* AIRecognitionFixtureImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIRecognitionFixtureImportTests.swift; sourceTree = "<group>"; };
+		0C2ADF20FA466A23114C995B /* RestoreResultView.pen */ = {isa = PBXFileReference; path = RestoreResultView.pen; sourceTree = "<group>"; };
 		0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */ = {isa = PBXFileReference; path = RecentPhotosListView.pen; sourceTree = "<group>"; };
 		10735D531A260565D68C8DE8 /* VaultSearchView.pen */ = {isa = PBXFileReference; path = VaultSearchView.pen; sourceTree = "<group>"; };
 		11DAA306B576EE339FD68A3B /* LNInteractionStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNInteractionStyles.swift; sourceTree = "<group>"; };
@@ -290,6 +294,7 @@
 		B401A4DA60A82577398F1C20 /* pencil_preview_contact_sheet.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = pencil_preview_contact_sheet.jpg; sourceTree = "<group>"; };
 		B54F71A283BE867B7C0AC126 /* PrivacyRedactView.pen */ = {isa = PBXFileReference; path = PrivacyRedactView.pen; sourceTree = "<group>"; };
 		B5D6BF66338A668F2039EA68 /* BackupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupViewModel.swift; sourceTree = "<group>"; };
+		B961D164F157FCE70CE5CBC6 /* BackupResultView.pen */ = {isa = PBXFileReference; path = BackupResultView.pen; sourceTree = "<group>"; };
 		BA1258102ECC2A8B19A0B635 /* BackupPackageV1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupPackageV1.swift; sourceTree = "<group>"; };
 		BE6AA7F5102C5480C5BB950C /* AIClassifyDetailView.pen */ = {isa = PBXFileReference; path = AIClassifyDetailView.pen; sourceTree = "<group>"; };
 		BF1674AF1625ADE4939F2370 /* SwipeBackNavigationModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeBackNavigationModifier.swift; sourceTree = "<group>"; };
@@ -314,6 +319,7 @@
 		DA6D80E8EF90C3A5A0326DF4 /* VaultMetadataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultMetadataStore.swift; sourceTree = "<group>"; };
 		DA8EFDB435B5DE29A788A662 /* PaywallAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallAnalytics.swift; sourceTree = "<group>"; };
 		DC0EF53851E2A97335530387 /* NetworkAIDatasetPhotoLibrarySeedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkAIDatasetPhotoLibrarySeedTests.swift; sourceTree = "<group>"; };
+		DD549E477191C93BEDB3AEB8 /* BackupRestoreView.pen */ = {isa = PBXFileReference; path = BackupRestoreView.pen; sourceTree = "<group>"; };
 		DD9644AD884D86508FA10EC6 /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
 		DEDD0ED9EC7F20ACE3E2AF92 /* SettingsSecurityView.pen */ = {isa = PBXFileReference; path = SettingsSecurityView.pen; sourceTree = "<group>"; };
 		DEDD1F18244EC60A00AF3AB8 /* LanguageSettingsView.pen */ = {isa = PBXFileReference; path = LanguageSettingsView.pen; sourceTree = "<group>"; };
@@ -440,9 +446,12 @@
 			isa = PBXGroup;
 			children = (
 				87C23ADE74A9807AC907076E /* BackupProgressView.pen */,
+				DD549E477191C93BEDB3AEB8 /* BackupRestoreView.pen */,
+				B961D164F157FCE70CE5CBC6 /* BackupResultView.pen */,
 				B5D6BF66338A668F2039EA68 /* BackupViewModel.swift */,
 				F4C456534536B3DE53A4E8BC /* BackupViews.swift */,
 				153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */,
+				0C2ADF20FA466A23114C995B /* RestoreResultView.pen */,
 			);
 			path = Backup;
 			sourceTree = "<group>";
@@ -894,6 +903,8 @@
 				E46605FC4D554B7EEFA28064 /* AlbumView.pen in Resources */,
 				AC4EAF0F6CC7E3910582B224 /* Assets.xcassets in Resources */,
 				89D87CBFB6E082FCACF2B661 /* BackupProgressView.pen in Resources */,
+				6693604DAF263C3F3F2A0957 /* BackupRestoreView.pen in Resources */,
+				DD0E0C3AF21EFD9D879D7149 /* BackupResultView.pen in Resources */,
 				36378B57D1367F7307E82EEB /* BulkExportView.pen in Resources */,
 				D244A8B62D208C46EF689034 /* CameraHomeView.pen in Resources */,
 				5AB18B8BB4EA156F3ACB6AA7 /* CameraViews.pen in Resources */,
@@ -911,6 +922,7 @@
 				F548A4960AE663233E2D61C4 /* PrivateCameraView.pen in Resources */,
 				F08C2E275153E01C1EE8777C /* RecentPhotosListView.pen in Resources */,
 				7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */,
+				A7FD1E8FEE16024663637A7D /* RestoreResultView.pen in Resources */,
 				2E1F88B970C3A51B0214990F /* SettingsAboutView.pen in Resources */,
 				F099E41F5A95C5D217C1FA96 /* SettingsBackupSyncView.pen in Resources */,
 				2FBFB90C6D4866359C5BD5A7 /* SettingsDataStorageView.pen in Resources */,

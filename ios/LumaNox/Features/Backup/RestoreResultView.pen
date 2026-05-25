@@ -1,0 +1,54 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_restore_result",
+      "name": "RestoreResultView",
+      "layout": "vertical",
+      "fill": "#05080D",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "padding": 16,
+      "gap": 18,
+      "children": [
+        {
+          "type": "frame",
+          "id": "restore_result_nav",
+          "layout": "horizontal",
+          "fill": "transparent",
+          "width": 361,
+          "height": 52,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            { "type": "text", "id": "restore_result_back", "content": "‹", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "600", "fill": "#EAF1FF", "width": 32 },
+            { "type": "text", "id": "restore_result_title", "content": "恢复完成", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "width": 300 }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "restore_result_card",
+          "name": "Result card",
+          "layout": "vertical",
+          "alignItems": "center",
+          "fill": "#0C1523",
+          "width": 361,
+          "padding": 22,
+          "gap": 12,
+          "cornerRadius": 20,
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            { "type": "text", "id": "restore_result_icon", "content": "✓", "fontFamily": "Inter", "fontSize": 36, "fontWeight": "700", "fill": "#21C277", "width": 317 },
+            { "type": "text", "id": "restore_result_success", "content": "恢复成功", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "width": 317 },
+            { "type": "text", "id": "restore_result_stats", "content": "已恢复 128 项，跳过 2 项，失败 0 项。", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "fill": "#8EA2C0", "width": 317 },
+            { "type": "text", "id": "restore_result_hint", "content": "恢复完成后会尝试触发一次自动备份，使 backup.dat 与当前保险箱保持一致。", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "500", "fill": "#8EA2C0", "width": 317 }
+          ]
+        },
+        { "type": "frame", "id": "restore_result_done", "name": "Done button", "width": 361, "height": 54, "cornerRadius": 16, "fill": "#4A9EFF" }
+      ]
+    }
+  ]
+}

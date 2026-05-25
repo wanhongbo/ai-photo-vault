@@ -1,0 +1,86 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_backup_restore",
+      "name": "BackupRestoreView",
+      "layout": "vertical",
+      "fill": "#05080D",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "padding": 16,
+      "gap": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "backup_restore_nav",
+          "layout": "horizontal",
+          "fill": "transparent",
+          "width": 361,
+          "height": 52,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            { "type": "text", "id": "backup_restore_back", "content": "‹", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "600", "fill": "#EAF1FF", "width": 32 },
+            { "type": "text", "id": "backup_restore_title", "content": "备份与恢复", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "width": 300 }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "backup_restore_status",
+          "name": "Auto backup status card",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "width": 361,
+          "padding": 16,
+          "gap": 8,
+          "cornerRadius": 20,
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            { "type": "text", "id": "backup_restore_status_title", "content": "自动备份", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "width": 329 },
+            { "type": "text", "id": "backup_restore_status_body", "content": "已就绪，将写入 backup.dat", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "fill": "#8EA2C0", "width": 329 },
+            { "type": "text", "id": "backup_restore_status_path", "content": "iCloud Drive / AIVault", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "500", "fill": "#8EA2C0", "width": 329 }
+          ]
+        },
+        { "type": "text", "id": "backup_restore_hint", "content": "手动备份会加密导出保险箱内容，恢复时需输入与备份时相同的 6 位 PIN。", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "fill": "#8EA2C0", "width": 361 },
+        {
+          "type": "frame",
+          "id": "backup_restore_export_card",
+          "name": "Manual backup card",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "width": 361,
+          "padding": 16,
+          "gap": 14,
+          "cornerRadius": 20,
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            { "type": "text", "id": "backup_restore_export_title", "content": "导出备份", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "width": 329 },
+            { "type": "text", "id": "backup_restore_export_desc", "content": "生成一个加密 .aivb 文件，完成后再选择保存位置。", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "fill": "#8EA2C0", "width": 329 },
+            { "type": "frame", "id": "backup_restore_export_button", "name": "Start backup button", "width": 329, "height": 54, "cornerRadius": 16, "fill": "#4A9EFF" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "backup_restore_import_card",
+          "name": "Manual restore card",
+          "layout": "vertical",
+          "fill": "#0C1523",
+          "width": 361,
+          "padding": 16,
+          "gap": 14,
+          "cornerRadius": 20,
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            { "type": "text", "id": "backup_restore_import_title", "content": "从备份恢复", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "width": 329 },
+            { "type": "text", "id": "backup_restore_import_desc", "content": "选择历史 .aivb 备份，并输入创建备份时的 6 位 PIN。", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "fill": "#8EA2C0", "width": 329 },
+            { "type": "frame", "id": "backup_restore_import_button", "name": "Choose backup file button", "width": 329, "height": 48, "cornerRadius": 14, "fill": "#1A202C", "stroke": { "fill": "#223247", "thickness": 1 } }
+          ]
+        }
+      ]
+    }
+  ]
+}
