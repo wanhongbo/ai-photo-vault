@@ -5,23 +5,24 @@ enum BackupKeyRefresh {
     /// Derive backup key from vault PIN and cache it (Android `launchRefreshBackupKey`).
     static func refresh(pin: String, force: Bool = false, triggerAutoBackup: Bool = false) {
         Task.detached(priority: .utility) {
-            if !force, BackupSecretsStore.hasCached {
-                if triggerAutoBackup {
-                    await AutoBackupScheduler.runOnceNow(reason: .passwordChanged)
-                }
-                return
+            try? await refreshNow(pin: pin, force: force, triggerAutoBackup: triggerAutoBackup)
+        }
+    }
+
+    static func refreshNow(pin: String, force: Bool = false, triggerAutoBackup: Bool = false) async throws {
+        if !force, BackupSecretsStore.hasCached {
+            if triggerAutoBackup {
+                await AutoBackupScheduler.runOnceNow(reason: .passwordChanged)
             }
-            do {
-                let km = BackupKeyManager()
-                let params = km.getOrCreateKdfParams()
-                let material = try km.deriveKey(password: pin, params: params)
-                try BackupSecretsStore.cache(backupKey: material.key)
-                if triggerAutoBackup {
-                    await AutoBackupScheduler.runOnceNow(reason: .passwordChanged)
-                }
-            } catch {
-                // Best-effort; backup UI will prompt unlock if missing.
-            }
+            return
+        }
+
+        let km = BackupKeyManager()
+        let params = km.getOrCreateKdfParams()
+        let material = try km.deriveKey(password: pin, params: params)
+        try BackupSecretsStore.cache(backupKey: material.key)
+        if triggerAutoBackup {
+            await AutoBackupScheduler.runOnceNow(reason: .passwordChanged)
         }
     }
 }

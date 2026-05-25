@@ -663,6 +663,7 @@ struct ChangePinView: View {
     @State private var showSuccess = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var isSaving = false
 
     private let pinLength = 6
     private let securityStore = SecuritySettingsStore.shared
@@ -685,6 +686,7 @@ struct ChangePinView: View {
                 }
             }
             keypad
+                .disabled(isSaving)
         }
         .overlay { pinDialogs }
     }
@@ -719,6 +721,7 @@ struct ChangePinView: View {
     }
 
     private func appendDigit(_ d: String) {
+        guard !isSaving else { return }
         switch step {
         case .verifyCurrent:
             guard currentPin.count < pinLength else { return }
@@ -736,6 +739,7 @@ struct ChangePinView: View {
     }
 
     private func deleteLast() {
+        guard !isSaving else { return }
         switch step {
         case .verifyCurrent where !currentPin.isEmpty:
             currentPin.removeLast()
@@ -759,6 +763,7 @@ struct ChangePinView: View {
     }
 
     private func submitChange() {
+        guard !isSaving else { return }
         guard newPin == confirmPin else {
             errorMessage = L10n.tr("lock_error_mismatch")
             showError = true
@@ -767,8 +772,16 @@ struct ChangePinView: View {
             step = .enterNew
             return
         }
+        Task { await persistPinChange(pin: newPin) }
+    }
+
+    private func persistPinChange(pin: String) async {
+        isSaving = true
+        defer { isSaving = false }
         do {
-            try securityStore.savePin(newPin, enableBiometric: securityStore.biometricEnabled)
+            try securityStore.savePin(pin, enableBiometric: securityStore.biometricEnabled)
+            try await BackupKeyRefresh.refreshNow(pin: pin, force: true, triggerAutoBackup: false)
+            BackupKeyRefresh.refresh(pin: pin, force: false, triggerAutoBackup: true)
             showSuccess = true
         } catch {
             errorMessage = error.localizedDescription
@@ -793,6 +806,11 @@ struct ChangePinView: View {
                 confirmTitle: L10n.tr("settings_pin_error_action"),
                 onConfirm: { showError = false }
             )
+        }
+        if isSaving {
+            Color.black.opacity(0.35).ignoresSafeArea()
+            ProgressView(L10n.commonLoading)
+                .tint(LNColor.brandBlue)
         }
     }
 }
