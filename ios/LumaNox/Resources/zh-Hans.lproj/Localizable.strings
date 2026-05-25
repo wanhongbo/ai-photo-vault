@@ -198,6 +198,7 @@
 "photo_viewer_redact" = "打码";
 "photo_viewer_export_system" = "导出";
 "photo_viewer_delete" = "删除";
+"photo_viewer_info" = "信息";
 "photo_viewer_share_failed" = "分享失败";
 "photo_viewer_export_success" = "已导出到系统相册 LumaNox。";
 "photo_viewer_export_failed" = "导出到系统相册失败，请重试。";
@@ -227,6 +228,12 @@
 "trash_retain_hint" = "项目保留 30 天后将自动永久删除";
 "video_player_title" = "播放视频";
 "video_decrypt_failed" = "视频解密失败，无法播放";
+"video_player_play" = "播放";
+"video_player_pause" = "暂停";
+"video_player_mute" = "静音";
+"video_player_unmute" = "取消静音";
+"video_player_rewind_10" = "后退 10 秒";
+"video_player_forward_10" = "前进 10 秒";
 
 "backup_restore_title" = "备份与恢复";
 "backup_progress_title" = "正在备份";

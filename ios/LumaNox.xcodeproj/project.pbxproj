@@ -146,6 +146,7 @@
 		D5BD1B304BBCD65491F2A4B3 /* BackupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D6BF66338A668F2039EA68 /* BackupViewModel.swift */; };
 		D683DC8BE9491B0820EB0B3B /* SystemPhotoLibraryExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE00040593CA7BF93D29C8F /* SystemPhotoLibraryExportService.swift */; };
 		D6D3FA80DAFBC686A2B5E510 /* AIClassifyDetailView.pen in Resources */ = {isa = PBXBuildFile; fileRef = BE6AA7F5102C5480C5BB950C /* AIClassifyDetailView.pen */; };
+		DA3A58246B11579E05F52408 /* VideoPlayerView.pen in Resources */ = {isa = PBXBuildFile; fileRef = EAB85975DBB8E783CD004684 /* VideoPlayerView.pen */; };
 		DB8AC892BAA7C6A6E7CF08A7 /* AIViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D4F776A7ACB59085A82B3F /* AIViews.swift */; };
 		DBB0204DE74419911B845B9F /* LNSettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE981D8224A4925C036A472 /* LNSettingsComponents.swift */; };
 		DBCF6493F396C9CA81EF741C /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B16AD56BCEEDF77339C36A4B /* Vision.framework */; };
@@ -335,6 +336,7 @@
 		E610D041074E032FA40C8808 /* BackupIntegrityVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupIntegrityVerifier.swift; sourceTree = "<group>"; };
 		E8BA57850FD7756DA83C995F /* PaywallModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallModels.swift; sourceTree = "<group>"; };
 		EA54B97DE1D53DA59FA3FCD6 /* runtime_lock_or_main.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = runtime_lock_or_main.png; sourceTree = "<group>"; };
+		EAB85975DBB8E783CD004684 /* VideoPlayerView.pen */ = {isa = PBXFileReference; path = VideoPlayerView.pen; sourceTree = "<group>"; };
 		ECA0AF35AC07F37BA5F1622F /* VaultModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultModels.swift; sourceTree = "<group>"; };
 		EE6E2AFFDBDDAD6738326B2F /* VaultStore+Trash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VaultStore+Trash.swift"; sourceTree = "<group>"; };
 		EF999F58CEA6A27A55F505B4 /* LockView.pen */ = {isa = PBXFileReference; path = LockView.pen; sourceTree = "<group>"; };
@@ -775,6 +777,7 @@
 				1766E374467294BEF5A81EE6 /* VaultHomeView.swift */,
 				85EAB2D89D8473CB2D20EBDE /* VaultHomeViewModel.swift */,
 				10735D531A260565D68C8DE8 /* VaultSearchView.pen */,
+				EAB85975DBB8E783CD004684 /* VideoPlayerView.pen */,
 				46CFF782A0797B87261A0450 /* VideoPlayerView.swift */,
 			);
 			path = Vault;
@@ -938,6 +941,7 @@
 				F67B4AEF6A0FBAA2E269CA44 /* TrashBinView.pen in Resources */,
 				ADC67DC6E153B321BD0B3137 /* VaultHomeView.pen in Resources */,
 				4BC9E3A6722DE909D27985FF /* VaultSearchView.pen in Resources */,
+				DA3A58246B11579E05F52408 /* VideoPlayerView.pen in Resources */,
 				8864791C62F7365323C11741 /* fKM7q.png in Resources */,
 				87BC961C807397BEE3450FC9 /* frm_3k.png in Resources */,
 				60AE2DB6FF59E1024DF04184 /* pencil_preview_contact_sheet.jpg in Resources */,

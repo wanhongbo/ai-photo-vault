@@ -198,6 +198,7 @@
 "photo_viewer_redact" = "Redact";
 "photo_viewer_export_system" = "Export";
 "photo_viewer_delete" = "Delete";
+"photo_viewer_info" = "Info";
 "photo_viewer_share_failed" = "Share failed";
 "photo_viewer_export_success" = "Exported to the LumaNox album in Photos.";
 "photo_viewer_export_failed" = "Could not export to Photos. Please try again.";
@@ -227,6 +228,12 @@
 "trash_retain_hint" = "Items are permanently deleted after 30 days";
 "video_player_title" = "Video";
 "video_decrypt_failed" = "Failed to decrypt video for playback";
+"video_player_play" = "Play";
+"video_player_pause" = "Pause";
+"video_player_mute" = "Mute";
+"video_player_unmute" = "Unmute";
+"video_player_rewind_10" = "Rewind 10 seconds";
+"video_player_forward_10" = "Forward 10 seconds";
 
 "backup_restore_title" = "Backup & Restore";
 "backup_progress_title" = "Backing Up";
