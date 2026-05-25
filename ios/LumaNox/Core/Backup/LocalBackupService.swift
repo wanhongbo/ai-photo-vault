@@ -413,6 +413,8 @@ final class LocalBackupService: @unchecked Sendable {
                         totalBytes: totalBytes,
                         cancellable: true
                     ), to: progress)
+                    var tempTarget: URL?
+                    var consumedFrames = 0
                     do {
                         let target = try BackupIntegrityVerifier.resolvedAssetURL(
                             relativePath: asset.relativePath,
@@ -424,6 +426,7 @@ final class LocalBackupService: @unchecked Sendable {
                             for _ in 0 ..< asset.frameCount {
                                 try Task.checkCancellation()
                                 _ = try reader.readNextChunk()
+                                consumedFrames += 1
                             }
                             processedBytes += max(0, asset.sizeBytes)
                             continue
@@ -432,13 +435,18 @@ final class LocalBackupService: @unchecked Sendable {
                             at: target.deletingLastPathComponent(),
                             withIntermediateDirectories: true
                         )
+                        let restoreTemp = target
+                            .deletingLastPathComponent()
+                            .appendingPathComponent(".restore_tmp_\(UUID().uuidString)")
+                        tempTarget = restoreTemp
                         var digest = SHA256()
-                        try cipher.encryptFileFromChunks(to: target) { emit in
+                        try cipher.encryptFileFromChunks(to: restoreTemp) { emit in
                             for _ in 0 ..< asset.frameCount {
                                 try Task.checkCancellation()
                                 guard let plain = try reader.readNextChunk() else {
                                     throw BackupError.io("unexpected EOF")
                                 }
+                                consumedFrames += 1
                                 digest.update(data: plain)
                                 processedBytes += Int64(plain.count)
                                 publishProgress(LongRunningTaskProgress(
@@ -455,21 +463,26 @@ final class LocalBackupService: @unchecked Sendable {
                         }
                         let hash = digest.finalize().hexString
                         if hash != asset.sha256Hex {
-                            try? FileManager.default.removeItem(at: target)
+                            try? FileManager.default.removeItem(at: restoreTemp)
                             throw BackupError.io("checksum mismatch")
                         }
+                        try replaceRestoredAsset(temp: restoreTemp, target: target)
+                        tempTarget = nil
                         restored += 1
                     } catch is CancellationError {
-                        if let target = try? BackupIntegrityVerifier.resolvedAssetURL(
-                            relativePath: asset.relativePath,
-                            vaultRoot: vaultRoot
-                        ) {
-                            try? FileManager.default.removeItem(at: target)
+                        if let tempTarget {
+                            try? FileManager.default.removeItem(at: tempTarget)
                         }
                         throw CancellationError()
                     } catch {
+                        if let tempTarget {
+                            try? FileManager.default.removeItem(at: tempTarget)
+                        }
+                        let remainingFrames = max(0, asset.frameCount - consumedFrames)
+                        if remainingFrames > 0 {
+                            processedBytes += try drainFrames(reader, count: remainingFrames)
+                        }
                         failed += 1
-                        processedBytes += max(0, asset.sizeBytes)
                     }
                 }
 
@@ -549,6 +562,33 @@ final class LocalBackupService: @unchecked Sendable {
             return true
         }
         return cap >= needBytes
+    }
+
+    private func replaceRestoredAsset(temp: URL, target: URL) throws {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: target.path) {
+            try fm.replaceItemAt(
+                target,
+                withItemAt: temp,
+                backupItemName: nil,
+                options: []
+            )
+        } else {
+            try fm.moveItem(at: temp, to: target)
+        }
+    }
+
+    private func drainFrames(_ reader: BackupPackageV1.Reader, count: Int) throws -> Int64 {
+        guard count > 0 else { return 0 }
+        var bytes: Int64 = 0
+        for _ in 0 ..< count {
+            try Task.checkCancellation()
+            guard let plain = try reader.readNextChunk() else {
+                throw BackupError.io("unexpected EOF")
+            }
+            bytes += Int64(plain.count)
+        }
+        return bytes
     }
 
     private func scanVaultAssets(vaultRoot: URL) throws -> [VaultAsset] {

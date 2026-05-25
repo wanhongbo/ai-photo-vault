@@ -13,13 +13,28 @@ final class BackupRestoreViewModel: ObservableObject {
     private var pendingRestoreURL: URL?
 
     func beginRestore(url: URL) {
-        pendingRestoreURL = url
         pinError = nil
-        showPinDialog = true
+        do {
+            if let pendingRestoreURL {
+                PlaintextTempFileManager.shared.removeItem(pendingRestoreURL)
+            }
+            pendingRestoreURL = try PlaintextTempFileManager.shared.copyFileToTemporary(
+                sourceURL: url,
+                scene: .restore,
+                preferredName: "restore_in_\(UUID().uuidString).aivb"
+            )
+            showPinDialog = true
+        } catch {
+            pendingRestoreURL = nil
+            errorMessage = L10n.tr("restore_error_cannot_read_file")
+        }
     }
 
     func cancelPin() {
         showPinDialog = false
+        if let pendingRestoreURL {
+            PlaintextTempFileManager.shared.removeItem(pendingRestoreURL)
+        }
         pendingRestoreURL = nil
         pinError = nil
     }
@@ -32,19 +47,8 @@ final class BackupRestoreViewModel: ObservableObject {
             isBusy = false
             showPinDialog = false
         }
-        let localURL: URL
-        do {
-            localURL = try PlaintextTempFileManager.shared.copyFileToTemporary(
-                sourceURL: inputURL,
-                scene: .restore,
-                preferredName: "restore_in_\(UUID().uuidString).aivb"
-            )
-        } catch {
-            pinError = L10n.tr("restore_error_cannot_read_file")
-            return nil
-        }
         pendingRestoreURL = nil
-        return localURL
+        return inputURL
     }
 
     func runBackup(to outputURL: URL, router: AppRouter) async -> BackupExecutionResult? {
