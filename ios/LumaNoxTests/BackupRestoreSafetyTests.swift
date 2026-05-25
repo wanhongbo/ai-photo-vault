@@ -96,6 +96,30 @@ final class BackupRestoreSafetyTests: XCTestCase {
         XCTAssertEqual(writer.snapshot().map(\.relativePath), ["\(vaultDefaultAlbumName)/asset_valid.jpeg"])
     }
 
+    func testManualBackupLegacyPlaintextMedia() throws {
+        let legacyMedia = Data([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0xFF, 0xD9])
+        let legacyURL = vaultRoot
+            .appendingPathComponent(vaultDefaultAlbumName, isDirectory: true)
+            .appendingPathComponent("asset_legacy_plaintext.jpeg")
+        try legacyMedia.write(to: legacyURL, options: .atomic)
+
+        try BackupSecretsStore.cache(backupKey: deterministicData(byteCount: 32, seed: 53))
+        let output = tempDirectory.appendingPathComponent("legacy_plaintext_backup.aivb")
+        let expectation = expectation(description: "manual backup completes")
+        var result: BackupExecutionResult?
+
+        Task {
+            result = await LocalBackupService.shared.createManualBackup(to: output)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 10)
+
+        let unwrapped = try XCTUnwrap(result)
+        XCTAssertTrue(unwrapped.success, unwrapped.message)
+        XCTAssertEqual(unwrapped.assetCount, 1)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: output.path))
+    }
+
     private func makeBackupPackage(
         relativePath: String,
         plain: Data,

@@ -527,6 +527,12 @@ final class LocalBackupService: @unchecked Sendable {
         let relativePath: String
         let sizeBytes: Int64
         let sha256Hex: String
+        let source: VaultAssetSource
+    }
+
+    private enum VaultAssetSource {
+        case encryptedVault
+        case plaintextLegacy
     }
 
     private struct BackupWriteResult {
@@ -626,6 +632,10 @@ final class LocalBackupService: @unchecked Sendable {
     }
 
     private func buildAsset(vaultRoot: URL, file: URL) throws -> VaultAsset {
+        if isPlaintextMediaFile(file) {
+            return try buildPlaintextAsset(vaultRoot: vaultRoot, file: file)
+        }
+
         var digest = SHA256()
         var plainSize: Int64 = 0
         try cipher.decryptStream(at: file) { chunk in
@@ -637,7 +647,24 @@ final class LocalBackupService: @unchecked Sendable {
         return VaultAsset(
             relativePath: rel,
             sizeBytes: plainSize,
-            sha256Hex: digest.finalize().hexString
+            sha256Hex: digest.finalize().hexString,
+            source: .encryptedVault
+        )
+    }
+
+    private func buildPlaintextAsset(vaultRoot: URL, file: URL) throws -> VaultAsset {
+        var digest = SHA256()
+        var plainSize: Int64 = 0
+        try streamRawFile(at: file) { chunk in
+            digest.update(data: chunk)
+            plainSize += Int64(chunk.count)
+        }
+        let rel = file.path.replacingOccurrences(of: vaultRoot.path + "/", with: "")
+        return VaultAsset(
+            relativePath: rel,
+            sizeBytes: plainSize,
+            sha256Hex: digest.finalize().hexString,
+            source: .plaintextLegacy
         )
     }
 
@@ -683,7 +710,7 @@ final class LocalBackupService: @unchecked Sendable {
             )
             var chunkFill = 0
             do {
-                try cipher.decryptStream(at: source) { data in
+                try streamPlainAsset(asset, at: source) { data in
                     try Task.checkCancellation()
                     var offset = 0
                     while offset < data.count {
@@ -736,6 +763,55 @@ final class LocalBackupService: @unchecked Sendable {
             finalOutput: outStream
         )
         return BackupWriteResult(outputSizeBytes: bytes, writtenAssets: writtenAssets)
+    }
+
+    private func streamPlainAsset(_ asset: VaultAsset, at sourceURL: URL, sink: (Data) throws -> Void) throws {
+        switch asset.source {
+        case .encryptedVault:
+            try cipher.decryptStream(at: sourceURL, sink: sink)
+        case .plaintextLegacy:
+            try streamRawFile(at: sourceURL, sink: sink)
+        }
+    }
+
+    private func streamRawFile(at sourceURL: URL, sink: (Data) throws -> Void) throws {
+        let handle = try FileHandle(forReadingFrom: sourceURL)
+        defer { try? handle.close() }
+
+        while let chunk = try handle.read(upToCount: VaultFileFormat.v2DefaultChunkSize), !chunk.isEmpty {
+            try Task.checkCancellation()
+            try sink(chunk)
+        }
+    }
+
+    private func isPlaintextMediaFile(_ url: URL) -> Bool {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? handle.close() }
+        guard let prefix = try? handle.read(upToCount: 16), !prefix.isEmpty else { return false }
+        if prefix == VaultFileFormat.v2Magic { return false }
+        return looksLikeMediaData(prefix)
+    }
+
+    private func looksLikeMediaData(_ data: Data) -> Bool {
+        let bytes = Array(data.prefix(16))
+        guard bytes.count >= 4 else { return false }
+
+        if bytes.starts(with: [0xFF, 0xD8, 0xFF]) { return true }
+        if bytes.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return true }
+        if bytes.starts(with: [0x47, 0x49, 0x46, 0x38]) { return true }
+        if bytes.starts(with: [0x49, 0x49, 0x2A, 0x00]) || bytes.starts(with: [0x4D, 0x4D, 0x00, 0x2A]) {
+            return true
+        }
+        if bytes.count >= 12,
+           bytes[0...3].elementsEqual([0x52, 0x49, 0x46, 0x46]),
+           bytes[8...11].elementsEqual([0x57, 0x45, 0x42, 0x50]) {
+            return true
+        }
+        if bytes.count >= 12,
+           bytes[4...7].elementsEqual([0x66, 0x74, 0x79, 0x70]) {
+            return true
+        }
+        return false
     }
 
     private func readHeaderOnly(at url: URL) throws -> BackupPackageV1.Header {
