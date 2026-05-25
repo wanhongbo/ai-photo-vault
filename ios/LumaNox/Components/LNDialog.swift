@@ -114,6 +114,7 @@ struct LNPinDialog: View {
     let onDismiss: () -> Void
 
     @State private var pin = ""
+    @FocusState private var pinFieldFocused: Bool
     private let pinLength = 6
 
     var body: some View {
@@ -133,6 +134,8 @@ struct LNPinDialog: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
+                .contentShape(Rectangle())
+                .onTapGesture { focusPinField() }
 
                 if let errorMessage {
                     Text(errorMessage)
@@ -143,8 +146,11 @@ struct LNPinDialog: View {
                 TextField("", text: $pin)
                     .keyboardType(.numberPad)
                     .textContentType(.oneTimeCode)
+                    .focused($pinFieldFocused)
                     .opacity(0.01)
-                    .frame(height: 1)
+                    .frame(width: 1, height: 1)
+                    .accessibilityIdentifier("ln_pin_dialog_hidden_field")
+                    .disabled(busy)
                     .onChange(of: pin) { newValue in
                         let filtered = String(newValue.filter(\.isNumber).prefix(pinLength))
                         if filtered != pin { pin = filtered }
@@ -153,7 +159,14 @@ struct LNPinDialog: View {
 
                 HStack(spacing: LNSpacing.dialogButtonGap) {
                     LNButton(title: dismissTitle, variant: .secondary, enabled: !busy, action: onDismiss)
-                    LNButton(title: confirmTitle, variant: .primary, enabled: !busy, loading: busy) {}
+                    LNButton(
+                        title: confirmTitle,
+                        variant: .primary,
+                        enabled: !busy && pin.count == pinLength,
+                        loading: busy
+                    ) {
+                        onConfirm(pin)
+                    }
                 }
                 .padding(.top, LNSpacing.dialogButtonTopGap)
             }
@@ -163,8 +176,21 @@ struct LNPinDialog: View {
             .clipShape(RoundedRectangle(cornerRadius: LNRadius.dialog))
             .overlay(RoundedRectangle(cornerRadius: LNRadius.dialog).stroke(LNColor.stroke, lineWidth: 1))
             .padding(.horizontal, LNSpacing.screenHorizontal)
+            .contentShape(Rectangle())
+            .onTapGesture { focusPinField() }
         }
         .accessibilityIdentifier("ln_pin_dialog")
+        .onAppear { focusPinField() }
+        .onChange(of: busy) { isBusy in
+            if !isBusy { focusPinField() }
+        }
+    }
+
+    private func focusPinField() {
+        guard !busy else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            pinFieldFocused = true
+        }
     }
 }
 
