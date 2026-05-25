@@ -1,15 +1,15 @@
 import Foundation
 import SwiftUI
 
-/// 与 Android `AppLockManager` 对齐：冷启动需解锁；后台超时回前台再上锁。
+/// 冷启动需解锁；iOS 进入后台或 App Switcher 时立即保护内容并要求重新解锁。
 @MainActor
 final class AppLockManager: ObservableObject {
     static let shared = AppLockManager()
 
     @Published private(set) var requireUnlock = false
+    @Published private(set) var protectsAppSwitcherSnapshot = false
 
-    private let backgroundTimeout: TimeInterval = 60
-    private var lastBackgroundAt: Date?
+    private var wasBackgrounded = false
     private let securityStore = SecuritySettingsStore.shared
 
     private init() {
@@ -18,13 +18,16 @@ final class AppLockManager: ObservableObject {
 
     func onUnlockSucceeded() {
         requireUnlock = false
-        lastBackgroundAt = nil
+        protectsAppSwitcherSnapshot = false
+        wasBackgrounded = false
     }
 
     func refreshPinConfigured() {
         securityStore.reload()
         if !securityStore.hasPinConfigured {
             requireUnlock = false
+            protectsAppSwitcherSnapshot = false
+            wasBackgrounded = false
         }
     }
 
@@ -32,14 +35,15 @@ final class AppLockManager: ObservableObject {
         switch phase {
         case .background, .inactive:
             if securityStore.hasPinConfigured {
-                lastBackgroundAt = Date()
+                wasBackgrounded = true
+                requireUnlock = true
+                protectsAppSwitcherSnapshot = true
             }
         case .active:
-            guard securityStore.hasPinConfigured, let last = lastBackgroundAt else { return }
-            if Date().timeIntervalSince(last) >= backgroundTimeout {
-                requireUnlock = true
-            }
-            lastBackgroundAt = nil
+            protectsAppSwitcherSnapshot = false
+            guard securityStore.hasPinConfigured, wasBackgrounded else { return }
+            wasBackgrounded = false
+            requireUnlock = true
         @unknown default:
             break
         }

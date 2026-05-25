@@ -28,9 +28,12 @@ struct LumaNoxApp: App {
                 .preferredColorScheme(.dark)
                 .onChange(of: scenePhase) { phase in
                     appLock.handleScenePhase(phase)
-                    if AppDebugPolicy.skipsPinGate { return }
                     if appLock.requireUnlock, router.phase == .main {
-                        router.phase = .lock
+                        var transaction = Transaction()
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) {
+                            router.phase = .lock
+                        }
                     }
                 }
         }
@@ -53,6 +56,12 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: router.phase)
+        .overlay {
+            if appLock.protectsAppSwitcherSnapshot {
+                PrivacySnapshotLockView()
+                    .transition(.identity)
+            }
+        }
         .onAppear {
             #if DEBUG
             applyDebugLaunchRouteIfNeeded()
@@ -81,4 +90,88 @@ struct RootView: View {
         router.pushAI(.privacyRedact(path: ""))
     }
     #endif
+}
+
+private struct PrivacySnapshotLockView: View {
+    private let keypadRows = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]]
+
+    var body: some View {
+        ZStack {
+            LNColor.lockBg.ignoresSafeArea()
+            VStack(spacing: 18) {
+                Spacer(minLength: 84)
+
+                Image(systemName: "lock")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(LNColor.brandBlue)
+                    .frame(width: 86, height: 86)
+                    .background(LNColor.brandBlue.opacity(0.18))
+                    .clipShape(RoundedRectangle(cornerRadius: 26))
+                    .overlay(RoundedRectangle(cornerRadius: 26).stroke(LNColor.brandBlue.opacity(0.85), lineWidth: 1))
+
+                VStack(spacing: 8) {
+                    Text(L10n.tr("lock_title"))
+                        .font(LNTypography.pinTitle())
+                        .foregroundStyle(LNColor.title)
+                    Text(L10n.tr("lock_subtitle"))
+                        .font(LNTypography.bodyMedium())
+                        .foregroundStyle(LNColor.subtitle)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(2)
+                        .frame(width: 300)
+                }
+
+                HStack(spacing: 12) {
+                    ForEach(0..<6, id: \.self) { _ in
+                        Circle()
+                            .stroke(LNColor.brandBlue, lineWidth: 1.5)
+                            .frame(width: 12, height: 12)
+                    }
+                }
+                .padding(.top, 4)
+
+                VStack(spacing: 12) {
+                    ForEach(keypadRows, id: \.self) { row in
+                        HStack(spacing: 16) {
+                            ForEach(row, id: \.self) { key in
+                                snapshotKey(key)
+                            }
+                        }
+                    }
+                    HStack(spacing: 16) {
+                        snapshotKey("camera")
+                        snapshotKey("0")
+                        snapshotKey("delete")
+                    }
+                }
+                .padding(.top, 18)
+
+                Spacer(minLength: 48)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func snapshotKey(_ key: String) -> some View {
+        ZStack {
+            Circle()
+                .fill(Color(hex: 0x131C29))
+                .overlay(Circle().stroke(LNColor.brandBlue, lineWidth: 1.5))
+            if key == "camera" {
+                Image(systemName: "camera")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(LNColor.title)
+            } else if key == "delete" {
+                Image(systemName: "delete.left")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(LNColor.title)
+            } else {
+                Text(key)
+                    .font(LNTypography.pinDigit())
+                    .foregroundStyle(LNColor.title)
+            }
+        }
+        .frame(width: 78, height: 78)
+    }
 }
