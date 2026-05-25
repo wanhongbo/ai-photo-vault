@@ -119,9 +119,9 @@ final class LocalBackupService: @unchecked Sendable {
                 let tmpDir = try tmpDirectory()
                 let bodyFile = tmpDir.appendingPathComponent("auto_body_\(backupId).bin")
                 let writingFile = tmpDir.appendingPathComponent("auto_\(backupId).writing")
-                let bytes: Int64
+                let writeResult: BackupWriteResult
                 do {
-                    bytes = try writeBodyAndAssemble(
+                    writeResult = try writeBodyAndAssemble(
                         vaultRoot: vaultRoot,
                         bodyFile: bodyFile,
                         writingFile: writingFile,
@@ -143,11 +143,11 @@ final class LocalBackupService: @unchecked Sendable {
 
                     publishProgress(LongRunningTaskProgress(
                         phase: .assembling,
-                        current: assets.count,
-                        total: assets.count,
+                        current: writeResult.writtenAssets.count,
+                        total: writeResult.writtenAssets.count,
                         currentFileName: ExternalBackupLocation.autoFileName,
-                        bytesWritten: estimated,
-                        totalBytes: estimated,
+                        bytesWritten: writeResult.plainBytes,
+                        totalBytes: writeResult.plainBytes,
                         cancellable: true
                     ), to: progress)
                     try Task.checkCancellation()
@@ -168,7 +168,7 @@ final class LocalBackupService: @unchecked Sendable {
                         keyFingerprintHex: fingerprint,
                         kdfParams: params,
                         externalPath: externalPath,
-                        assetIndex: assets.map {
+                        assetIndex: writeResult.writtenAssets.map {
                             BackupMeta.AssetIndexEntry(
                                 relativePath: $0.relativePath,
                                 sha256Hex: $0.sha256Hex,
@@ -181,14 +181,14 @@ final class LocalBackupService: @unchecked Sendable {
                 await MainActor.run { QuotaManager.shared.recordSuccessfulBackup() }
                 publishProgress(LongRunningTaskProgress(
                     phase: .completed,
-                    current: assets.count,
-                    total: assets.count,
+                    current: writeResult.writtenAssets.count,
+                    total: writeResult.writtenAssets.count,
                     currentFileName: ExternalBackupLocation.autoFileName,
-                    bytesWritten: estimated,
-                    totalBytes: estimated,
+                    bytesWritten: writeResult.plainBytes,
+                    totalBytes: writeResult.plainBytes,
                     cancellable: false
                 ), to: progress)
-                return .success(backupId: backupId, assetCount: assets.count, bytes: bytes)
+                return .success(backupId: backupId, assetCount: writeResult.writtenAssets.count, bytes: writeResult.outputSizeBytes)
             } catch is CancellationError {
                 publishProgress(.initial(phase: .cancelled, cancellable: false), to: progress)
                 return .cancelled()
@@ -234,16 +234,15 @@ final class LocalBackupService: @unchecked Sendable {
                 publishProgress(.initial(phase: .scanning), to: progress)
                 let assets = try scanVaultAssets(vaultRoot: vaultRoot)
                 guard !assets.isEmpty else { throw BackupError.vaultEmpty }
-                let totalBytes = assets.reduce(Int64(0)) { $0 + $1.sizeBytes }
 
                 let backupId = newBackupId()
                 let now = Int64(Date().timeIntervalSince1970 * 1000)
                 let tmpDir = try tmpDirectory()
                 let bodyFile = tmpDir.appendingPathComponent("manual_body_\(backupId).bin")
                 let writingFile = tmpDir.appendingPathComponent("manual_\(backupId).writing")
-                let bytes: Int64
+                let writeResult: BackupWriteResult
                 do {
-                    bytes = try writeBodyAndAssemble(
+                    writeResult = try writeBodyAndAssemble(
                         vaultRoot: vaultRoot,
                         bodyFile: bodyFile,
                         writingFile: writingFile,
@@ -265,11 +264,11 @@ final class LocalBackupService: @unchecked Sendable {
 
                     publishProgress(LongRunningTaskProgress(
                         phase: .assembling,
-                        current: assets.count,
-                        total: assets.count,
+                        current: writeResult.writtenAssets.count,
+                        total: writeResult.writtenAssets.count,
                         currentFileName: outputURL.lastPathComponent,
-                        bytesWritten: totalBytes,
-                        totalBytes: totalBytes,
+                        bytesWritten: writeResult.plainBytes,
+                        totalBytes: writeResult.plainBytes,
                         cancellable: true
                     ), to: progress)
                     try Task.checkCancellation()
@@ -290,14 +289,14 @@ final class LocalBackupService: @unchecked Sendable {
                 await MainActor.run { QuotaManager.shared.recordSuccessfulBackup() }
                 publishProgress(LongRunningTaskProgress(
                     phase: .completed,
-                    current: assets.count,
-                    total: assets.count,
+                    current: writeResult.writtenAssets.count,
+                    total: writeResult.writtenAssets.count,
                     currentFileName: outputURL.lastPathComponent,
-                    bytesWritten: totalBytes,
-                    totalBytes: totalBytes,
+                    bytesWritten: writeResult.plainBytes,
+                    totalBytes: writeResult.plainBytes,
                     cancellable: false
                 ), to: progress)
-                return .success(backupId: backupId, assetCount: assets.count, bytes: bytes)
+                return .success(backupId: backupId, assetCount: writeResult.writtenAssets.count, bytes: writeResult.outputSizeBytes)
             } catch is CancellationError {
                 publishProgress(.initial(phase: .cancelled, cancellable: false), to: progress)
                 try? FileManager.default.removeItem(at: outputURL)
@@ -530,6 +529,15 @@ final class LocalBackupService: @unchecked Sendable {
         let sha256Hex: String
     }
 
+    private struct BackupWriteResult {
+        let outputSizeBytes: Int64
+        let writtenAssets: [VaultAsset]
+
+        var plainBytes: Int64 {
+            writtenAssets.reduce(Int64(0)) { $0 + $1.sizeBytes }
+        }
+    }
+
     private func publishProgress(
         _ value: LongRunningTaskProgress,
         to handler: LongRunningTaskProgressHandler?
@@ -603,9 +611,9 @@ final class LocalBackupService: @unchecked Sendable {
             try Task.checkCancellation()
             let name = file.lastPathComponent
             if name == ".vault_encrypted_v1" || name.contains(".enc_tmp_") { continue }
-            let values = try file.resourceValues(forKeys: [.isRegularFileKey])
-            guard values.isRegularFile == true else { continue }
             do {
+                let values = try file.resourceValues(forKeys: [.isRegularFileKey])
+                guard values.isRegularFile == true else { continue }
                 let asset = try buildAsset(vaultRoot: vaultRoot, file: file)
                 assets.append(asset)
             } catch is CancellationError {
@@ -641,7 +649,7 @@ final class LocalBackupService: @unchecked Sendable {
         headerBase: BackupPackageV1.HeaderBase,
         assets: [VaultAsset],
         progress: LongRunningTaskProgressHandler?
-    ) throws -> Int64 {
+    ) throws -> BackupWriteResult {
         FileManager.default.createFile(atPath: bodyFile.path, contents: nil)
         let bodyStream = OutputStream(url: bodyFile, append: false)!
         bodyStream.open()
@@ -651,9 +659,14 @@ final class LocalBackupService: @unchecked Sendable {
         var chunkBuf = [UInt8](repeating: 0, count: BackupPackageV1.chunkMaxPlainBytes)
         let totalBytes = assets.reduce(Int64(0)) { $0 + $1.sizeBytes }
         var processedBytes: Int64 = 0
+        var writtenAssets: [VaultAsset] = []
 
         for (index, asset) in assets.enumerated() {
             try Task.checkCancellation()
+            let source = vaultRoot.appendingPathComponent(asset.relativePath)
+            guard FileManager.default.fileExists(atPath: source.path) else {
+                continue
+            }
             publishProgress(LongRunningTaskProgress(
                 phase: .backingUp,
                 current: index + 1,
@@ -669,49 +682,60 @@ final class LocalBackupService: @unchecked Sendable {
                 sizeBytes: asset.sizeBytes
             )
             var chunkFill = 0
-            let source = vaultRoot.appendingPathComponent(asset.relativePath)
-            try cipher.decryptStream(at: source) { data in
-                try Task.checkCancellation()
-                var offset = 0
-                while offset < data.count {
-                    let take = min(BackupPackageV1.chunkMaxPlainBytes - chunkFill, data.count - offset)
-                    for i in 0 ..< take {
-                        chunkBuf[chunkFill + i] = data[data.index(data.startIndex, offsetBy: offset + i)]
+            do {
+                try cipher.decryptStream(at: source) { data in
+                    try Task.checkCancellation()
+                    var offset = 0
+                    while offset < data.count {
+                        let take = min(BackupPackageV1.chunkMaxPlainBytes - chunkFill, data.count - offset)
+                        for i in 0 ..< take {
+                            chunkBuf[chunkFill + i] = data[data.index(data.startIndex, offsetBy: offset + i)]
+                        }
+                        chunkFill += take
+                        offset += take
+                        if chunkFill == BackupPackageV1.chunkMaxPlainBytes {
+                            try bodyWriter.writeChunk(Data(chunkBuf[0 ..< chunkFill]))
+                            chunkFill = 0
+                        }
                     }
-                    chunkFill += take
-                    offset += take
-                    if chunkFill == BackupPackageV1.chunkMaxPlainBytes {
-                        try bodyWriter.writeChunk(Data(chunkBuf[0 ..< chunkFill]))
-                        chunkFill = 0
-                    }
+                    processedBytes += Int64(data.count)
+                    publishProgress(LongRunningTaskProgress(
+                        phase: .backingUp,
+                        current: index + 1,
+                        total: assets.count,
+                        currentFileName: URL(fileURLWithPath: asset.relativePath).lastPathComponent,
+                        bytesWritten: processedBytes,
+                        totalBytes: totalBytes,
+                        cancellable: true
+                    ), to: progress)
                 }
-                processedBytes += Int64(data.count)
-                publishProgress(LongRunningTaskProgress(
-                    phase: .backingUp,
-                    current: index + 1,
-                    total: assets.count,
-                    currentFileName: URL(fileURLWithPath: asset.relativePath).lastPathComponent,
-                    bytesWritten: processedBytes,
-                    totalBytes: totalBytes,
-                    cancellable: true
-                ), to: progress)
+                if chunkFill > 0 {
+                    try bodyWriter.writeChunk(Data(chunkBuf[0 ..< chunkFill]))
+                }
+                _ = try bodyWriter.endAsset()
+                writtenAssets.append(asset)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                if bodyWriter.cancelAssetIfNoFramesWritten() {
+                    continue
+                }
+                throw error
             }
-            if chunkFill > 0 {
-                try bodyWriter.writeChunk(Data(chunkBuf[0 ..< chunkFill]))
-            }
-            _ = try bodyWriter.endAsset()
         }
+        guard !writtenAssets.isEmpty else { throw BackupError.vaultEmpty }
 
         FileManager.default.createFile(atPath: writingFile.path, contents: nil)
         let outStream = OutputStream(url: writingFile, append: false)!
         outStream.open()
         defer { outStream.close() }
-        return try BackupPackageV1.finalizePackage(
+        let bytes = try BackupPackageV1.finalizePackage(
             bodyFile: bodyFile,
             bodyWriter: bodyWriter,
             headerBase: headerBase,
             finalOutput: outStream
         )
+        return BackupWriteResult(outputSizeBytes: bytes, writtenAssets: writtenAssets)
     }
 
     private func readHeaderOnly(at url: URL) throws -> BackupPackageV1.Header {

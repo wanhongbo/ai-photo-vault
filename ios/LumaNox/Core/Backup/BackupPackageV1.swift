@@ -114,6 +114,12 @@ enum BackupPackageV1 {
             return header
         }
 
+        func cancelAssetIfNoFramesWritten() -> Bool {
+            guard let b = currentAsset, frameIndex == b.fromFrame else { return false }
+            currentAsset = nil
+            return true
+        }
+
         func snapshot() -> [AssetHeader] { finalized }
     }
 

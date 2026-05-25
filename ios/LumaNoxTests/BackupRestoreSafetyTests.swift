@@ -61,6 +61,41 @@ final class BackupRestoreSafetyTests: XCTestCase {
         XCTAssertEqual(try VaultCipher.shared.decryptFile(at: target), existingPlain)
     }
 
+    func testBodyWriterCancelsAssetBeforeAnyFrameIsWritten() throws {
+        let params = BackupKeyManager.KdfParams(
+            algorithm: BackupKeyManager.KdfParams.argon2id,
+            saltHex: deterministicData(byteCount: 32, seed: 41).hexString,
+            iterations: 1,
+            memoryKb: 1_024,
+            parallelism: 1
+        )
+        let material = try BackupKeyManager().deriveKey(password: pin, params: params)
+        let bodyFile = tempDirectory.appendingPathComponent("body_cancel.bin")
+
+        FileManager.default.createFile(atPath: bodyFile.path, contents: nil)
+        let bodyStream = try XCTUnwrap(OutputStream(url: bodyFile, append: false))
+        bodyStream.open()
+        let writer = BackupPackageV1.newBodyWriter(output: bodyStream, backupKey: material.key)
+
+        writer.beginAsset(
+            relativePath: "\(vaultDefaultAlbumName)/asset_missing.jpeg",
+            sha256Hex: sha256Hex(Data([1])),
+            sizeBytes: 1
+        )
+        XCTAssertTrue(writer.cancelAssetIfNoFramesWritten())
+
+        writer.beginAsset(
+            relativePath: "\(vaultDefaultAlbumName)/asset_valid.jpeg",
+            sha256Hex: sha256Hex(Data([2])),
+            sizeBytes: 1
+        )
+        try writer.writeChunk(Data([2]))
+        _ = try writer.endAsset()
+        bodyStream.close()
+
+        XCTAssertEqual(writer.snapshot().map(\.relativePath), ["\(vaultDefaultAlbumName)/asset_valid.jpeg"])
+    }
+
     private func makeBackupPackage(
         relativePath: String,
         plain: Data,
