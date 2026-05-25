@@ -51,17 +51,34 @@ final class BackupRestoreViewModel: ObservableObject {
         return inputURL
     }
 
-    func runBackup(to outputURL: URL, router: AppRouter) async -> BackupExecutionResult? {
+    func prepareBackupExport(router: AppRouter) async -> URL? {
         guard router.guardProFeature(.backupCreate) else { return nil }
+        guard BackupSecretsStore.hasCached else {
+            errorMessage = L10n.tr("backup_error_no_key")
+            return nil
+        }
         isBusy = true
         defer { isBusy = false }
+
+        let outputURL: URL
+        do {
+            let directory = try PlaintextTempFileManager.shared.sessionDirectory(for: .backup)
+            outputURL = directory.appendingPathComponent("manual_export_\(UUID().uuidString).aivb")
+        } catch {
+            errorMessage = error.localizedDescription
+            return nil
+        }
+
         let result = await LocalBackupService.shared.createManualBackup(to: outputURL)
         if result.success {
             BackupFlowState.lastBackup = result
+            BackupFlowState.backupOutputURL = outputURL
+            return outputURL
         } else {
+            PlaintextTempFileManager.shared.removeItem(outputURL)
             errorMessage = result.message
+            return nil
         }
-        return result
     }
 }
 

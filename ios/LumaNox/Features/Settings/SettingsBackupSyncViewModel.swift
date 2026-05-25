@@ -116,17 +116,19 @@ final class SettingsBackupSyncViewModel: ObservableObject {
         }
         isRunning = true
         defer { isRunning = false }
-        if let result = await AutoBackupScheduler.runOnceNow(reason: .userManualButton) {
-            refresh()
-            if result.success {
-                statusMessage = L10n.tr(
-                    "backup_auto_success_fmt",
-                    result.assetCount,
-                    ByteCountFormatter.string(fromByteCount: result.outputSizeBytes, countStyle: .file)
-                )
-            } else {
-                statusMessage = result.message
-            }
+        let result = await LocalBackupService.shared.createAutoBackup()
+        if result.success {
+            AutoBackupScheduler.scheduleNextAppRefresh()
+        }
+        refresh()
+        if result.success {
+            statusMessage = L10n.tr(
+                "backup_auto_success_fmt",
+                result.assetCount,
+                ByteCountFormatter.string(fromByteCount: result.outputSizeBytes, countStyle: .file)
+            )
+        } else {
+            statusMessage = result.message
         }
     }
 }

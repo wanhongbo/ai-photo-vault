@@ -18,12 +18,15 @@ struct BackupRestoreView: View {
                 .foregroundStyle(LNColor.subtitle)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            LNButton(title: L10n.tr("backup_manual_export"), variant: .primary) {
-                guard router.guardProFeature(.backupCreate) else { return }
-                if BackupSecretsStore.hasCached {
+            LNButton(
+                title: L10n.tr("backup_manual_export"),
+                variant: .primary,
+                loading: viewModel.isBusy
+            ) {
+                Task {
+                    guard let outputURL = await viewModel.prepareBackupExport(router: router) else { return }
+                    exportDocument = BackupExportDocument(fileURL: outputURL)
                     showExporter = true
-                } else {
-                    viewModel.errorMessage = L10n.tr("backup_error_no_key")
                 }
             }
             LNButton(title: L10n.tr("backup_manual_import"), variant: .secondary) {
@@ -38,10 +41,19 @@ struct BackupRestoreView: View {
             defaultFilename: defaultBackupFilename
         ) { result in
             switch result {
-            case .success(let url):
-                BackupFlowState.backupOutputURL = url
-                router.pushSettings(.backupProgress(outputUri: url.path))
+            case .success:
+                if let url = BackupFlowState.backupOutputURL {
+                    PlaintextTempFileManager.shared.removeItem(url)
+                    BackupFlowState.backupOutputURL = nil
+                }
+                exportDocument = BackupExportDocument()
+                router.pushSettings(.backupResult)
             case .failure(let error):
+                if let url = BackupFlowState.backupOutputURL {
+                    PlaintextTempFileManager.shared.removeItem(url)
+                    BackupFlowState.backupOutputURL = nil
+                }
+                exportDocument = BackupExportDocument()
                 viewModel.errorMessage = error.localizedDescription
             }
         }
@@ -125,15 +137,26 @@ struct BackupRestoreView: View {
     }
 }
 
-/// Empty writable document for `.fileExporter` target selection.
+/// Writable document for completed backup exports.
 struct BackupExportDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.data] }
     static var writableContentTypes: [UTType] { [.data] }
 
-    init() {}
-    init(configuration: ReadConfiguration) throws {}
+    private let fileURL: URL?
+
+    init(fileURL: URL? = nil) {
+        self.fileURL = fileURL
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        fileURL = nil
+    }
+
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        FileWrapper(regularFileWithContents: Data())
+        guard let fileURL else {
+            return FileWrapper(regularFileWithContents: Data())
+        }
+        return try FileWrapper(url: fileURL, options: .immediate)
     }
 }
 

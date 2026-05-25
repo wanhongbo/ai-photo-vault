@@ -13,6 +13,7 @@ final class BackupRestoreSafetyTests: XCTestCase {
             .appendingPathComponent("lumanox-backup-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         try VaultCipher.shared.installTestingKeyForUnitTests(deterministicData(byteCount: 32, seed: 7))
+        configureLightweightBackupKdf()
 
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         vaultRoot = documents.appendingPathComponent("vault_albums", isDirectory: true)
@@ -26,6 +27,7 @@ final class BackupRestoreSafetyTests: XCTestCase {
     override func tearDownWithError() throws {
         try? VaultCipher.shared.installTestingKeyForUnitTests(nil)
         BackupSecretsStore.clearPersistentSecrets()
+        clearBackupKdf()
         if let vaultRoot {
             try? FileManager.default.removeItem(at: vaultRoot)
         }
@@ -96,28 +98,47 @@ final class BackupRestoreSafetyTests: XCTestCase {
         XCTAssertEqual(writer.snapshot().map(\.relativePath), ["\(vaultDefaultAlbumName)/asset_valid.jpeg"])
     }
 
-    func testManualBackupLegacyPlaintextMedia() throws {
-        let legacyMedia = Data([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0xFF, 0xD9])
-        let legacyURL = vaultRoot
+    func testManualBackupRestoreRoundTripCurrentEncryptedVault() async throws {
+        let firstPlain = deterministicData(byteCount: 73_001, seed: 61)
+        let secondPlain = deterministicData(byteCount: 2_048, seed: 67)
+        let firstPath = "\(vaultDefaultAlbumName)/asset_roundtrip_1.jpg"
+        let secondPath = "\(vaultDefaultAlbumName)/asset_roundtrip_2.png"
+        let firstURL = vaultRoot.appendingPathComponent(firstPath)
+        let secondURL = vaultRoot.appendingPathComponent(secondPath)
+
+        try VaultCipher.shared.encryptFileFromChunks(to: firstURL) { emit in try emit(firstPlain) }
+        try VaultCipher.shared.encryptFileFromChunks(to: secondURL) { emit in try emit(secondPlain) }
+        try cacheBackupKeyForTestPin()
+
+        let output = tempDirectory.appendingPathComponent("roundtrip.aivb")
+        let backup = await LocalBackupService.shared.createManualBackup(to: output)
+        XCTAssertTrue(backup.success, backup.message)
+        XCTAssertEqual(backup.assetCount, 2)
+
+        try FileManager.default.removeItem(at: vaultRoot)
+        let restore = await LocalBackupService.shared.restore(from: output, pin: pin)
+
+        XCTAssertTrue(restore.success, restore.message)
+        XCTAssertEqual(restore.restored, 2)
+        XCTAssertEqual(restore.skipped, 0)
+        XCTAssertEqual(restore.failed, 0)
+        XCTAssertEqual(try VaultCipher.shared.decryptFile(at: firstURL), firstPlain)
+        XCTAssertEqual(try VaultCipher.shared.decryptFile(at: secondURL), secondPlain)
+    }
+
+    func testManualBackupFailsOnUnreadableVaultFileInsteadOfReportingEmpty() async throws {
+        let invalidURL = vaultRoot
             .appendingPathComponent(vaultDefaultAlbumName, isDirectory: true)
-            .appendingPathComponent("asset_legacy_plaintext.jpeg")
-        try legacyMedia.write(to: legacyURL, options: .atomic)
+            .appendingPathComponent("asset_invalid.jpg")
+        try Data([0xFF, 0xD8, 0xFF, 0xD9]).write(to: invalidURL, options: .atomic)
+        try cacheBackupKeyForTestPin()
 
-        try BackupSecretsStore.cache(backupKey: deterministicData(byteCount: 32, seed: 53))
-        let output = tempDirectory.appendingPathComponent("legacy_plaintext_backup.aivb")
-        let expectation = expectation(description: "manual backup completes")
-        var result: BackupExecutionResult?
+        let result = await LocalBackupService.shared.createManualBackup(
+            to: tempDirectory.appendingPathComponent("invalid.aivb")
+        )
 
-        Task {
-            result = await LocalBackupService.shared.createManualBackup(to: output)
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 10)
-
-        let unwrapped = try XCTUnwrap(result)
-        XCTAssertTrue(unwrapped.success, unwrapped.message)
-        XCTAssertEqual(unwrapped.assetCount, 1)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: output.path))
+        XCTAssertFalse(result.success)
+        XCTAssertNotEqual(result.message, BackupError.vaultEmpty.localizedDescription)
     }
 
     private func makeBackupPackage(
@@ -175,6 +196,35 @@ final class BackupRestoreSafetyTests: XCTestCase {
 
     private func sha256Hex(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func cacheBackupKeyForTestPin() throws {
+        let manager = BackupKeyManager()
+        let params = manager.getOrCreateKdfParams()
+        let material = try manager.deriveKey(password: pin, params: params)
+        try BackupSecretsStore.cache(backupKey: material.key)
+    }
+
+    private func configureLightweightBackupKdf() {
+        let defaults = UserDefaults.standard
+        defaults.set(BackupKeyManager.KdfParams.argon2id, forKey: "backup_kdf_algorithm")
+        defaults.set(deterministicData(byteCount: 32, seed: 43).hexString, forKey: "backup_kdf_salt_hex")
+        defaults.set(1, forKey: "backup_kdf_iterations")
+        defaults.set(1_024, forKey: "backup_kdf_memory_kb")
+        defaults.set(1, forKey: "backup_kdf_parallelism")
+    }
+
+    private func clearBackupKdf() {
+        let defaults = UserDefaults.standard
+        for key in [
+            "backup_kdf_algorithm",
+            "backup_kdf_salt_hex",
+            "backup_kdf_iterations",
+            "backup_kdf_memory_kb",
+            "backup_kdf_parallelism",
+        ] {
+            defaults.removeObject(forKey: key)
+        }
     }
 
     private func deterministicData(byteCount: Int, seed: Int) -> Data {
