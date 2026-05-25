@@ -221,7 +221,7 @@ private enum PrivacyRedactor {
 
     static func renderRedactedJPEG(path: String, regions: [PrivacyRedactionRegion]) async throws -> Output {
         let rendered = try await renderRedactedImage(path: path, regions: regions)
-        guard let jpeg = rendered.image.jpegData(compressionQuality: 0.92) else {
+        guard let jpeg = VaultImageJPEGEncoder.opaqueJPEGData(from: rendered.image, compressionQuality: 0.92) else {
             throw RedactionError.renderFailed
         }
         return Output(
@@ -460,7 +460,7 @@ private enum PrivacyRedactor {
     private static func rendererFormat() -> UIGraphicsImageRendererFormat {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
-        format.opaque = false
+        format.opaque = true
         return format
     }
 

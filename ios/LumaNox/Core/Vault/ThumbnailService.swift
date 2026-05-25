@@ -137,7 +137,7 @@ final class ThumbnailService: @unchecked Sendable {
     }
 
     private func writeDiskCachedImage(_ image: UIImage, for key: String) {
-        guard let data = image.jpegData(compressionQuality: 0.82) ?? image.pngData() else { return }
+        guard let data = VaultImageJPEGEncoder.opaqueJPEGData(from: image, compressionQuality: 0.82) else { return }
         let directory = cacheDirectory()
         do {
             try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)

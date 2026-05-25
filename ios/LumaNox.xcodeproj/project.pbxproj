@@ -28,6 +28,7 @@
 		230AE9BAD70B051C8C01D17C /* LNColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8274D14DD21C2291D7836C /* LNColor.swift */; };
 		2359B8A2914F99510BCFCF1A /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9440102C3F3E10E631E0A72B /* MainTabView.swift */; };
 		237FC14D29AF8213947A012D /* SwipeBackNavigationModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1674AF1625ADE4939F2370 /* SwipeBackNavigationModifier.swift */; };
+		264CFE750C4467561E22CCF2 /* VaultImageJPEGEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 251BFD5DD386F0BEA0085C96 /* VaultImageJPEGEncoder.swift */; };
 		266AE2E51755A32226FD9004 /* PrivateCameraViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D434010CE450260448B125E /* PrivateCameraViewModel.swift */; };
 		27767A3D776081E6E7D9173F /* LockView.pen in Resources */ = {isa = PBXBuildFile; fileRef = EF999F58CEA6A27A55F505B4 /* LockView.pen */; };
 		27A063DD7AD399ABA10FDE6E /* PhotoViewerView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 9F170F7D5870A110226CEC61 /* PhotoViewerView.pen */; };
@@ -205,6 +206,7 @@
 		24104AD6F80BE9FD9BAC378D /* SettingsViews.pen */ = {isa = PBXFileReference; path = SettingsViews.pen; sourceTree = "<group>"; };
 		24988E0D2A96262B88EEA6D1 /* SettingsAboutView.pen */ = {isa = PBXFileReference; path = SettingsAboutView.pen; sourceTree = "<group>"; };
 		24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */ = {isa = PBXFileReference; path = AlbumListView.pen; sourceTree = "<group>"; };
+		251BFD5DD386F0BEA0085C96 /* VaultImageJPEGEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultImageJPEGEncoder.swift; sourceTree = "<group>"; };
 		266B639224CC819B5C54174E /* RealWorldAIRecognitionDatasetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealWorldAIRecognitionDatasetTests.swift; sourceTree = "<group>"; };
 		272AE82F2EC1285BFA48AF91 /* MediaMetadataExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaMetadataExtractor.swift; sourceTree = "<group>"; };
 		27665673957BB60EB122DCF2 /* CameraSessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSessionController.swift; sourceTree = "<group>"; };
@@ -480,6 +482,7 @@
 				7FE00040593CA7BF93D29C8F /* SystemPhotoLibraryExportService.swift */,
 				657135709B6C821B72DC1DBD /* ThumbnailService.swift */,
 				42C5CCDED95D15E599EE79B1 /* VaultFileHasher.swift */,
+				251BFD5DD386F0BEA0085C96 /* VaultImageJPEGEncoder.swift */,
 				AED24C08D30394D9D28E1B1F /* VaultMaintenanceService.swift */,
 				ECA0AF35AC07F37BA5F1622F /* VaultModels.swift */,
 				1FBC69DE179BB30C69A3742C /* VaultStore.swift */,
@@ -1053,6 +1056,7 @@
 				6ED84B872EAE1F6E6DECE280 /* VaultFileHasher.swift in Sources */,
 				121063FB10E9EE11F641A065 /* VaultHomeView.swift in Sources */,
 				CD248D5986AE3AD9D2B31751 /* VaultHomeViewModel.swift in Sources */,
+				264CFE750C4467561E22CCF2 /* VaultImageJPEGEncoder.swift in Sources */,
 				A9458970705182089F8C8DCC /* VaultMaintenanceService.swift in Sources */,
 				6E754462B3AC3EC44289DC14 /* VaultMetadataModels.swift in Sources */,
 				28AFF17608CDFBAE5EA0478F /* VaultMetadataStore.swift in Sources */,
