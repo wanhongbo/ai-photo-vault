@@ -72,6 +72,26 @@ final class AppRouter: ObservableObject {
         }
     }
 
+    func replaceCurrentTab(with route: AppRoute) {
+        switch selectedTab {
+        case .vault, .camera:
+            if vaultPath.count > 0 {
+                vaultPath.removeLast()
+            }
+            vaultPath.append(route)
+        case .ai:
+            if aiPath.count > 0 {
+                aiPath.removeLast()
+            }
+            aiPath.append(route)
+        case .settings:
+            if settingsPath.count > 0 {
+                settingsPath.removeLast()
+            }
+            settingsPath.append(route)
+        }
+    }
+
     func popCurrentTab(count: Int = 1) {
         switch selectedTab {
         case .vault, .camera:

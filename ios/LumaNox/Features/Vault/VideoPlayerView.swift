@@ -4,14 +4,17 @@ import UIKit
 
 /// 解密保险箱视频并用 AVPlayer 播放（对齐 Android ExoPlayer + video_cache 流程）。
 struct VideoPlayerView: View {
+    @EnvironmentObject private var router: AppRouter
     @EnvironmentObject private var vaultStore: VaultStore
     @Environment(\.dismiss) private var dismiss
 
     let path: String
     var isTrash: Bool = false
+    var source: PhotoViewerSource = .recent
     var onOpenAlbum: ((String) -> Void)? = nil
 
     @State private var player: AVPlayer?
+    @State private var orderedItems: [LNMediaItem] = []
     @State private var tempPlaybackURL: URL?
     @State private var timeObserver: Any?
     @State private var loadError: String?
@@ -42,6 +45,7 @@ struct VideoPlayerView: View {
                     .ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture { togglePlayback() }
+                    .highPriorityGesture(mediaSwipeGesture)
 
                 playerStateOverlay
 
@@ -98,6 +102,7 @@ struct VideoPlayerView: View {
             }
         }
         .task(id: path) {
+            await reloadOrderedItems()
             await preparePlayback()
         }
         .onDisappear {
@@ -397,6 +402,60 @@ struct VideoPlayerView: View {
         }
     }
 
+    private var currentIndex: Int? {
+        orderedItems.firstIndex { $0.path == path }
+    }
+
+    private var mediaSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 28, coordinateSpace: .local)
+            .onEnded { value in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+                guard abs(horizontal) > 72, abs(horizontal) > abs(vertical) * 1.35 else { return }
+                switchToAdjacentMedia(offset: horizontal < 0 ? 1 : -1)
+            }
+    }
+
+    @MainActor
+    private func reloadOrderedItems() async {
+        let items: [LNMediaItem]
+        if isTrash || source == .trash {
+            let trashItems = await vaultStore.listTrashItems()
+            items = trashItems.map { $0.toMediaItem() }
+        } else {
+            switch source {
+            case .album(let name):
+                await vaultStore.loadSnapshot()
+                let safeName = vaultStore.sanitizeAlbumName(name)
+                items = vaultStore.photos(in: safeName).map { $0.toMediaItem() }
+            case .search(let query):
+                await vaultStore.loadSnapshot()
+                items = vaultStore.searchPhotos(query: query).map { $0.toMediaItem() }
+            case .recent, .trash:
+                await vaultStore.loadSnapshot()
+                items = vaultStore.snapshot?.recentPhotos.map { $0.toMediaItem() } ?? []
+            }
+        }
+        let currentItem = items.first { $0.path == path } ?? Self.fallbackItem(path: path, isVideo: true)
+        orderedItems = items.contains(where: { $0.path == path }) ? items : [currentItem] + items
+    }
+
+    private func switchToAdjacentMedia(offset: Int) {
+        guard let currentIndex else { return }
+        let targetIndex = currentIndex + offset
+        guard orderedItems.indices.contains(targetIndex) else { return }
+
+        let target = orderedItems[targetIndex]
+        player?.pause()
+        isPlaying = false
+
+        if target.isVideo {
+            router.replaceCurrentTab(with: .videoPlayer(path: target.path, isTrash: isTrash, source: source))
+        } else {
+            router.replaceCurrentTab(with: .photoViewer(path: target.path, isTrash: isTrash, source: source))
+        }
+    }
+
     private func infoItems() -> [(String, String)] {
         let url = URL(fileURLWithPath: path)
         let record = VaultMetadataStore.shared.mediaRecord(forPath: path)
@@ -405,6 +464,18 @@ struct VideoPlayerView: View {
             fallbackPath: path,
             record: record,
             fallbackKind: .video
+        )
+    }
+
+    private static func fallbackItem(path: String, isVideo: Bool) -> LNMediaItem {
+        let url = URL(fileURLWithPath: path)
+        return LNMediaItem(
+            id: path,
+            path: path,
+            fileName: url.lastPathComponent,
+            isVideo: isVideo,
+            sizeLabel: "",
+            createdAt: ""
         )
     }
 }

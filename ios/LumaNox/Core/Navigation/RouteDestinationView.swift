@@ -21,10 +21,11 @@ struct RouteDestinationView: View {
                         router.pushVault(.album(name: album))
                     } : nil
                 )
-            case .videoPlayer(let path, let isTrash):
+            case .videoPlayer(let path, let isTrash, let source):
                 VideoPlayerView(
                     path: path,
                     isTrash: isTrash,
+                    source: source,
                     onOpenAlbum: isTrash ? { album in
                         router.selectedTab = .vault
                         router.pushVault(.album(name: album))

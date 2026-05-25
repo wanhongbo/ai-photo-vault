@@ -113,7 +113,7 @@ struct RecentPhotosView: View {
 
     private func open(_ item: LNMediaItem) {
         if item.isVideo {
-            router.pushVault(.videoPlayer(path: item.path))
+            router.pushVault(.videoPlayer(path: item.path, source: .recent))
         } else {
             router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .recent))
         }
@@ -439,7 +439,7 @@ struct AlbumView: View {
 
     private func open(_ item: LNMediaItem) {
         if item.isVideo {
-            router.pushVault(.videoPlayer(path: item.path))
+            router.pushVault(.videoPlayer(path: item.path, source: .album(name: safeAlbumName)))
         } else {
             router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .album(name: safeAlbumName)))
         }
@@ -490,7 +490,7 @@ struct VaultSearchView: View {
                 if !results.isEmpty {
                     VaultMediaGridCard(items: results, width: cardWidth) { item in
                         if item.isVideo {
-                            router.pushVault(.videoPlayer(path: item.path))
+                            router.pushVault(.videoPlayer(path: item.path, source: .search(query: query)))
                         } else {
                             router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .search(query: query)))
                         }
@@ -518,7 +518,7 @@ struct PhotoViewerView: View {
     @State private var showDelete = false
     @State private var showPurge = false
     @State private var currentPath: String
-    @State private var orderedPaths: [String]
+    @State private var orderedItems: [LNMediaItem]
     @State private var isPreparingShare = false
     @State private var isExportingSystem = false
     @State private var shareURL: URL?
@@ -538,7 +538,7 @@ struct PhotoViewerView: View {
         self.source = source
         self.onOpenAlbum = onOpenAlbum
         _currentPath = State(initialValue: path)
-        _orderedPaths = State(initialValue: [path])
+        _orderedItems = State(initialValue: [Self.fallbackItem(path: path, isVideo: false)])
     }
 
     var body: some View {
@@ -546,11 +546,9 @@ struct PhotoViewerView: View {
             ZStack {
                 LNColor.bgBottom.ignoresSafeArea()
                 TabView(selection: $currentPath) {
-                    ForEach(displayPaths, id: \.self) { itemPath in
-                        VaultThumbnailView(encryptedPath: itemPath)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(LNColor.bgBottom)
-                            .tag(itemPath)
+                    ForEach(displayItems) { item in
+                        PhotoViewerPage(item: item)
+                            .tag(item.path)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
@@ -558,7 +556,7 @@ struct PhotoViewerView: View {
 
                 PhotoViewerTopChrome(
                     current: currentIndex + 1,
-                    total: displayPaths.count,
+                    total: displayItems.count,
                     topInset: proxy.safeAreaInsets.top,
                     onBack: { dismiss() }
                 )
@@ -583,6 +581,10 @@ struct PhotoViewerView: View {
             }
         }
         .task { await reloadOrderedPaths() }
+        .onChange(of: currentPath) { newPath in
+            guard let item = displayItems.first(where: { $0.path == newPath }), item.isVideo else { return }
+            router.replaceCurrentTab(with: .videoPlayer(path: item.path, isTrash: isTrash, source: source))
+        }
         .overlay { dialogOverlays }
         .sheet(isPresented: $showShareSheet) {
             if let shareURL {
@@ -615,53 +617,48 @@ struct PhotoViewerView: View {
         }
     }
 
-    private var displayPaths: [String] {
-        orderedPaths.isEmpty ? [currentPath] : orderedPaths
+    private var displayItems: [LNMediaItem] {
+        orderedItems.isEmpty ? [Self.fallbackItem(path: currentPath, isVideo: false)] : orderedItems
     }
 
     private var currentIndex: Int {
-        displayPaths.firstIndex(of: currentPath) ?? 0
+        displayItems.firstIndex { $0.path == currentPath } ?? 0
     }
 
     @MainActor
     private func reloadOrderedPaths() async {
         currentPath = path
-        let paths: [String]
+        let items: [LNMediaItem]
         if isTrash || source == .trash {
-            let items = await vaultStore.listTrashItems()
-            paths = items.filter { !$0.isVideo }.map(\.path)
+            let trashItems = await vaultStore.listTrashItems()
+            items = trashItems.map { $0.toMediaItem() }
         } else {
             switch source {
             case .album(let name):
                 await vaultStore.loadSnapshot()
                 let safeName = vaultStore.sanitizeAlbumName(name)
-                paths = vaultStore.photos(in: safeName)
-                    .filter { !$0.isVideo }
-                    .map(\.path)
+                items = vaultStore.photos(in: safeName).map { $0.toMediaItem() }
             case .search(let query):
                 await vaultStore.loadSnapshot()
-                paths = vaultStore.searchPhotos(query: query)
-                    .filter { !$0.isVideo }
-                    .map(\.path)
+                items = vaultStore.searchPhotos(query: query).map { $0.toMediaItem() }
             case .recent, .trash:
                 await vaultStore.loadSnapshot()
-                paths = vaultStore.snapshot?.recentPhotos
-                    .filter { !$0.isVideo }
-                    .map(\.path) ?? []
+                items = vaultStore.snapshot?.recentPhotos.map { $0.toMediaItem() } ?? []
             }
         }
-        orderedPaths = paths.contains(path) ? paths : [path] + paths
+        let currentItem = items.first { $0.path == path } ?? Self.fallbackItem(path: path, isVideo: false)
+        orderedItems = items.contains(where: { $0.path == path }) ? items : [currentItem] + items
     }
 
     private func removeCurrentFromList() {
         let oldIndex = currentIndex
-        let remaining = displayPaths.filter { $0 != currentPath }
+        let remaining = displayItems.filter { $0.path != currentPath }
         guard !remaining.isEmpty else {
             dismiss()
             return
         }
-        orderedPaths = remaining
-        currentPath = remaining[min(oldIndex, remaining.count - 1)]
+        orderedItems = remaining
+        currentPath = remaining[min(oldIndex, remaining.count - 1)].path
     }
 
     private func prepareShare() {
@@ -738,6 +735,18 @@ struct PhotoViewerView: View {
         }.value
     }
 
+    private static func fallbackItem(path: String, isVideo: Bool) -> LNMediaItem {
+        let url = URL(fileURLWithPath: path)
+        return LNMediaItem(
+            id: path,
+            path: path,
+            fileName: url.lastPathComponent,
+            isVideo: isVideo,
+            sizeLabel: "",
+            createdAt: ""
+        )
+    }
+
     @ViewBuilder
     private var dialogOverlays: some View {
         if showDelete {
@@ -775,6 +784,37 @@ struct PhotoViewerView: View {
                 onDismiss: { showPurge = false }
             )
         }
+    }
+}
+
+private struct PhotoViewerPage: View {
+    let item: LNMediaItem
+
+    var body: some View {
+        ZStack {
+            if item.isVideo {
+                VaultMediaThumbnailView(
+                    encryptedPath: item.path,
+                    isVideo: true,
+                    contentMode: .fit,
+                    targetPixelSize: 960
+                )
+            } else {
+                VaultThumbnailView(encryptedPath: item.path)
+            }
+
+            if item.isVideo {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundStyle(LNColor.title)
+                    .frame(width: 74, height: 74)
+                    .background(LNColor.navBarBg.opacity(0.66))
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(LNColor.strokeStrong, lineWidth: 1))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(LNColor.bgBottom)
     }
 }
 
@@ -981,7 +1021,7 @@ struct TrashBinView: View {
 
                     VaultMediaGridCard(items: trashItems, width: cardWidth) { item in
                         if item.isVideo {
-                            router.pushSettings(.videoPlayer(path: item.path, isTrash: true))
+                            router.pushSettings(.videoPlayer(path: item.path, isTrash: true, source: .trash))
                         } else {
                             router.pushSettings(.photoViewer(path: item.path, isTrash: true, source: .trash))
                         }

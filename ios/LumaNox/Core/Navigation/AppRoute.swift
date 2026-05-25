@@ -23,7 +23,7 @@ enum AppRoute: Hashable {
     case recentList
     case album(name: String)
     case photoViewer(path: String, isTrash: Bool, source: PhotoViewerSource)
-    case videoPlayer(path: String, isTrash: Bool = false)
+    case videoPlayer(path: String, isTrash: Bool = false, source: PhotoViewerSource = .recent)
 
     // Camera
     case privateCamera
