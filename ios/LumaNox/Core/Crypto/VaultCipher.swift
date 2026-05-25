@@ -63,6 +63,23 @@ final class VaultCipher {
     }
     #endif
 
+    func clearPersistentKey() {
+        keyLock.lock()
+        defer { keyLock.unlock() }
+
+        #if DEBUG
+        testingKeyOverride = nil
+        try? FileManager.default.removeItem(at: debugFallbackKeyURL())
+        #endif
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keyService,
+            kSecAttrAccount as String: keyAccount,
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
     func encryptFile(
         at sourceURL: URL,
         to destURL: URL,

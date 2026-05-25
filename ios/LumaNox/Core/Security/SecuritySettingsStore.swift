@@ -18,6 +18,13 @@ final class SecuritySettingsStore: ObservableObject {
     private let account = "singleton"
 
     private init() {
+        settings = nil
+        if AppInstallState.isFreshContainerInstall {
+            deleteKeychainItem()
+            VaultCipher.shared.clearPersistentKey()
+            BackupSecretsStore.clearPersistentSecrets()
+            AppInstallState.markInstalled()
+        }
         settings = load()
     }
 

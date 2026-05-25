@@ -36,6 +36,16 @@ enum BackupSecretsStore {
         }
     }
 
+    static func clearPersistentSecrets() {
+        clear()
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: wrapService,
+            kSecAttrAccount as String: wrapAccount,
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
     private static func loadCached(from url: URL) throws -> Data {
         let combined = try Data(contentsOf: url)
         let wrapKey = try getOrCreateWrapKey()

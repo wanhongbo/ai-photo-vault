@@ -38,6 +38,7 @@
 		2E34541BB9BA6B36520524B1 /* PlaintextTempFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B224DC7450B7689747A1F9E /* PlaintextTempFileManager.swift */; };
 		2FBFB90C6D4866359C5BD5A7 /* SettingsDataStorageView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 371D91BB63D60ABCD7FAA36F /* SettingsDataStorageView.pen */; };
 		2FE45563535591870091EC65 /* BackupMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086918DA1D5BF1214B8545AA /* BackupMeta.swift */; };
+		30BBFC5EBA2EA20876555D1B /* AppInstallState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58424E9F8F2B87C526A3CA80 /* AppInstallState.swift */; };
 		317A88EFF6E5BCFED0C02B4C /* VaultStore+Trash.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6E2AFFDBDDAD6738326B2F /* VaultStore+Trash.swift */; };
 		3268354FBDCA1CF4F082F119 /* AppRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CCF694E9032616FD67D5E6 /* AppRouter.swift */; };
 		34069B28B2C4DAED63FAAA47 /* SecuritySettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04602047CD1F734811BE882A /* SecuritySettingsStore.swift */; };
@@ -227,6 +228,7 @@
 		5658AA8CC3EAA2DF80478F21 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		5667342175EF5C9780F9C450 /* LumaNoxStyleGuide.pen */ = {isa = PBXFileReference; path = LumaNoxStyleGuide.pen; sourceTree = "<group>"; };
 		56815CA88C4EA9F91ABED32F /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
+		58424E9F8F2B87C526A3CA80 /* AppInstallState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppInstallState.swift; sourceTree = "<group>"; };
 		589572D36C5A8EA336480EC4 /* runtime_album_import_tile_compact_logic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = runtime_album_import_tile_compact_logic.png; sourceTree = "<group>"; };
 		5BBF611ED1E9348B1DE66B03 /* OnboardingPaywallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPaywallManager.swift; sourceTree = "<group>"; };
 		5BE981D8224A4925C036A472 /* LNSettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNSettingsComponents.swift; sourceTree = "<group>"; };
@@ -684,6 +686,7 @@
 			isa = PBXGroup;
 			children = (
 				E088F83476527ADA5F945E5E /* AppDebugPolicy.swift */,
+				58424E9F8F2B87C526A3CA80 /* AppInstallState.swift */,
 				DA23EEFE7CB8F5D3B0A673D7 /* FirstLaunchRouter.swift */,
 			);
 			path = Setup;
@@ -960,6 +963,7 @@
 				51BB7EB4601FC3984CF5B6CC /* AESCBC.swift in Sources */,
 				DB8AC892BAA7C6A6E7CF08A7 /* AIViews.swift in Sources */,
 				367BCAB5A90F626E7C2DCBFE /* AppDebugPolicy.swift in Sources */,
+				30BBFC5EBA2EA20876555D1B /* AppInstallState.swift in Sources */,
 				C0F71E4C886E99A6E043BE85 /* AppLockManager.swift in Sources */,
 				633386DC1460112546285D53 /* AppRoute.swift in Sources */,
 				3268354FBDCA1CF4F082F119 /* AppRouter.swift in Sources */,
