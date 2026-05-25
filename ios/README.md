@@ -31,7 +31,7 @@ xcodebuild -scheme LumaNox -project LumaNox.xcodeproj -sdk iphonesimulator -dest
 - P0–P3 page shells with navigation parity
 - **Real PIN lock**: Keychain-stored SHA-256 hash, 6-digit setup/unlock, optional Face ID / Touch ID
 - **Real vault import**: `PhotosPicker` → SHA-256 dedupe → AES-256-CBC encrypted files under `Documents/vault_albums/`
-- App background lock (60s timeout) via `AppLockManager`
+- App background lock via `AppLockManager` when returning from background
 - Video playback: decrypt to cache → AVPlayer; temp files pruned after 1h / on exit
 - First launch: Splash always routes to lock setup; main tab blocked until PIN configured
 - Trash: move / list / restore / purge aligned with Android `VaultStore` (30-day retention)

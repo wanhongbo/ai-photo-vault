@@ -450,7 +450,7 @@
 "settings_biometric_title" = "Face ID / Touch ID";
 "settings_biometric_desc" = "使用系统生物识别快速解锁保险箱";
 "settings_auto_lock_title" = "自动锁定";
-"settings_auto_lock_desc" = "应用进入后台超过 60 秒后会要求重新解锁";
+"settings_auto_lock_desc" = "应用进入后台后，回到前台会立即要求重新解锁";
 "storage_usage_title" = "存储占用";
 "storage_usage_placeholder" = "存储统计功能开发中";
 "storage_usage_active_count" = "保险箱项目";

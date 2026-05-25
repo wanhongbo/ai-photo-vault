@@ -450,7 +450,7 @@
 "settings_biometric_title" = "Face ID / Touch ID";
 "settings_biometric_desc" = "Use system biometrics to unlock your vault quickly";
 "settings_auto_lock_title" = "Auto lock";
-"settings_auto_lock_desc" = "The app asks to unlock again after 60 seconds in the background";
+"settings_auto_lock_desc" = "The app asks to unlock again as soon as it returns from the background";
 "storage_usage_title" = "Storage";
 "storage_usage_placeholder" = "Storage stats coming soon";
 "storage_usage_active_count" = "Vault items";

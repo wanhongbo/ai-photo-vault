@@ -10,7 +10,7 @@ LumaNox 是一个隐私优先、完全离线的照片与视频保险箱。核心
 
 | 业务域 | 产品能力 | Android 参考 | iOS 当前状态 | iOS 目标 |
 |---|---|---|---|---|
-| 启动与锁 | Splash、首次 PIN 设置、PIN 解锁、生物识别、后台超时锁 | `SplashScreen` / `LockScreen` | 已有真实 PIN、Keychain、Face ID/Touch ID、60s 后台锁 | 补齐首启恢复分支自测与异常恢复文案 |
+| 启动与锁 | Splash、首次 PIN 设置、PIN 解锁、生物识别、后台回前台立即锁 | `SplashScreen` / `LockScreen` | 已有真实 PIN、Keychain、Face ID/Touch ID、后台回前台立即锁 | 补齐首启恢复分支自测与异常恢复文案 |
 | 保险箱 | 相册、最近、导入、多选、搜索、真实缩略图 | `HomeScreen` / `AlbumScreen` / `VaultSearchScreen` | 已有真实导入、AES-CBC 密文、metadata、真实缩略图 | 完善相册操作、多选批量行为与权限状态 |
 | 媒体查看 | 图片查看、视频播放、删除、信息、分享/导出、打码入口 | `PhotoViewerScreen` / `VideoPlayerScreen` | 已有图片/视频解密预览、删除/恢复、分享临时文件 | 强化临时明文生命周期、信息字段、打码入口传参 |
 | 回收站 | 30 天保留、恢复、永久删除 | `TrashBinScreen` | 已有移动、列表、恢复、清除 | 增加过期自动清理策略与批量操作 |
@@ -80,7 +80,7 @@ flowchart TD
 2. 未设置 PIN：进入 PIN 设置；若发现 `backup.dat`，进入 RestoreLogin。
 3. 已设置 PIN：进入解锁页，支持 PIN 与 Face ID/Touch ID。
 4. 解锁成功：刷新 `BackupSecretsStore` 中的备份密钥，进入主 Tab。
-5. App 后台超过 60s：`AppLockManager` 重新要求解锁。
+5. App 进入后台后回到前台：`AppLockManager` 重新要求解锁。
 
 技术要点：
 
