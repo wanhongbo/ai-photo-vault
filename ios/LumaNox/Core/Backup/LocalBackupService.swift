@@ -94,19 +94,27 @@ final class LocalBackupService: @unchecked Sendable {
 
         let work: Task<BackupExecutionResult, Never> = Task.detached(priority: .utility) { [self] in
             do {
+                backupDebugLog("auto begin cachedKey=\(BackupSecretsStore.hasCached) folderWritable=\(ExternalBackupLocation.isWritable())")
                 publishProgress(.initial(phase: .preparing), to: progress)
                 try Task.checkCancellation()
                 guard ExternalBackupLocation.isWritable() else {
+                    backupDebugLog("auto missing writable external folder")
                     throw BackupError.io(L10n.tr("backup_error_no_saf_dir"))
                 }
                 guard let backupKey = BackupSecretsStore.loadCached() else {
+                    backupDebugLog("auto missing cached backup key")
                     throw BackupError.noBackupKey
                 }
                 let params = keyManager.getOrCreateKdfParams()
                 let fingerprint = keyManager.fingerprint(key: backupKey)
                 let vaultRoot = try vaultRootURL()
+                backupDebugLog("auto vaultRoot=\(vaultRoot.path)")
                 publishProgress(.initial(phase: .scanning), to: progress)
                 let assets = try scanVaultAssets(vaultRoot: vaultRoot)
+                backupDebugLog("auto scanComplete assetCount=\(assets.count)")
+                if assets.isEmpty {
+                    debugDumpVaultTree(vaultRoot)
+                }
                 guard !assets.isEmpty else { throw BackupError.vaultEmpty }
 
                 let estimated = assets.reduce(Int64(0)) { $0 + $1.sizeBytes }
@@ -190,11 +198,14 @@ final class LocalBackupService: @unchecked Sendable {
                 ), to: progress)
                 return .success(backupId: backupId, assetCount: writeResult.writtenAssets.count, bytes: writeResult.outputSizeBytes)
             } catch is CancellationError {
+                backupDebugLog("auto cancelled")
                 publishProgress(.initial(phase: .cancelled, cancellable: false), to: progress)
                 return .cancelled()
             } catch let e as BackupError {
+                backupDebugLog("auto failed backupError=\(e.localizedDescription ?? String(describing: e))")
                 return .failure(e.localizedDescription ?? L10n.tr("backup_error_failed_fmt", ""))
             } catch {
+                backupDebugLog("auto failed error=\(error.localizedDescription)")
                 return .failure(L10n.tr("backup_error_failed_fmt", error.localizedDescription))
             }
         }
@@ -224,15 +235,24 @@ final class LocalBackupService: @unchecked Sendable {
 
         let work: Task<BackupExecutionResult, Never> = Task.detached(priority: .userInitiated) { [self] in
             do {
+                backupDebugLog("manual begin output=\(outputURL.path) cachedKey=\(BackupSecretsStore.hasCached)")
                 publishProgress(.initial(phase: .preparing), to: progress)
                 try Task.checkCancellation()
-                guard let backupKey = BackupSecretsStore.loadCached() else { throw BackupError.noBackupKey }
+                guard let backupKey = BackupSecretsStore.loadCached() else {
+                    backupDebugLog("manual missing cached backup key")
+                    throw BackupError.noBackupKey
+                }
                 let params = keyManager.getOrCreateKdfParams()
                 let fingerprint = keyManager.fingerprint(key: backupKey)
 
                 let vaultRoot = try vaultRootURL()
+                backupDebugLog("manual vaultRoot=\(vaultRoot.path)")
                 publishProgress(.initial(phase: .scanning), to: progress)
                 let assets = try scanVaultAssets(vaultRoot: vaultRoot)
+                backupDebugLog("manual scanComplete assetCount=\(assets.count)")
+                if assets.isEmpty {
+                    debugDumpVaultTree(vaultRoot)
+                }
                 guard !assets.isEmpty else { throw BackupError.vaultEmpty }
 
                 let backupId = newBackupId()
@@ -298,12 +318,15 @@ final class LocalBackupService: @unchecked Sendable {
                 ), to: progress)
                 return .success(backupId: backupId, assetCount: writeResult.writtenAssets.count, bytes: writeResult.outputSizeBytes)
             } catch is CancellationError {
+                backupDebugLog("manual cancelled")
                 publishProgress(.initial(phase: .cancelled, cancellable: false), to: progress)
                 try? FileManager.default.removeItem(at: outputURL)
                 return .cancelled()
             } catch let e as BackupError {
+                backupDebugLog("manual failed backupError=\(e.localizedDescription ?? String(describing: e))")
                 return .failure(e.localizedDescription ?? L10n.tr("backup_error_failed_fmt", ""))
             } catch {
+                backupDebugLog("manual failed error=\(error.localizedDescription)")
                 return .failure(L10n.tr("backup_error_failed_fmt", error.localizedDescription))
             }
         }
@@ -600,30 +623,46 @@ final class LocalBackupService: @unchecked Sendable {
     }
 
     private func scanVaultAssets(vaultRoot: URL) throws -> [VaultAsset] {
+        backupDebugLog("scan begin root=\(vaultRoot.path) exists=\(FileManager.default.fileExists(atPath: vaultRoot.path))")
         guard let enumerator = FileManager.default.enumerator(
             at: vaultRoot,
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles]
-        ) else { return [] }
+        ) else {
+            backupDebugLog("scan enumerator nil root=\(vaultRoot.path)")
+            return []
+        }
 
         var assets: [VaultAsset] = []
+        var visited = 0
         for case let file as URL in enumerator {
             try Task.checkCancellation()
+            visited += 1
             let name = file.lastPathComponent
-            if name == ".vault_encrypted_v1" || name.contains(".enc_tmp_") { continue }
+            if name == ".vault_encrypted_v1" || name.contains(".enc_tmp_") {
+                backupDebugLog("scan skip markerOrTemp path=\(file.path)")
+                continue
+            }
             do {
                 let values = try file.resourceValues(forKeys: [.isRegularFileKey])
-                guard values.isRegularFile == true else { continue }
+                guard values.isRegularFile == true else {
+                    backupDebugLog("scan skip nonRegular path=\(file.path)")
+                    continue
+                }
                 let asset = try buildAsset(vaultRoot: vaultRoot, file: file)
+                backupDebugLog("scan asset relativePath=\(asset.relativePath) plainSize=\(asset.sizeBytes) encryptedSize=\(debugFileSize(file)) cipherVersion=\(cipher.cipherVersion(of: file).map(String.init) ?? "nil")")
                 assets.append(asset)
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
                 if FileManager.default.fileExists(atPath: file.path) {
+                    backupDebugLog("scan failed existing path=\(file.path) size=\(debugFileSize(file)) cipherVersion=\(cipher.cipherVersion(of: file).map(String.init) ?? "nil") error=\(error.localizedDescription)")
                     throw error
                 }
+                backupDebugLog("scan skipped vanished path=\(file.path) error=\(error.localizedDescription)")
             }
         }
+        backupDebugLog("scan end visited=\(visited) assetCount=\(assets.count)")
         return assets
     }
 
@@ -635,7 +674,7 @@ final class LocalBackupService: @unchecked Sendable {
             digest.update(data: chunk)
             plainSize += Int64(chunk.count)
         }
-        let rel = file.path.replacingOccurrences(of: vaultRoot.path + "/", with: "")
+        let rel = try backupRelativePath(of: file, from: vaultRoot)
         return VaultAsset(
             relativePath: rel,
             sizeBytes: plainSize,
@@ -758,6 +797,65 @@ final class LocalBackupService: @unchecked Sendable {
         let headerBytes = try stream.readFully(count: headerLen)
         return try BackupPackageV1.parseHeaderJson(String(decoding: headerBytes, as: UTF8.self))
     }
+
+    private func debugFileSize(_ url: URL) -> Int64 {
+        (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? -1
+    }
+
+    private func debugDumpVaultTree(_ root: URL) {
+        #if DEBUG
+        let fm = FileManager.default
+        backupDebugLog("tree root=\(root.path) exists=\(fm.fileExists(atPath: root.path))")
+        guard let entries = try? fm.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
+            options: []
+        ) else {
+            backupDebugLog("tree cannot list root=\(root.path)")
+            return
+        }
+        backupDebugLog("tree rootEntryCount=\(entries.count)")
+        for entry in entries {
+            let isDirectory = (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+            backupDebugLog("tree entry path=\(entry.path) isDirectory=\(isDirectory) size=\(debugFileSize(entry))")
+            guard isDirectory,
+                  let files = try? fm.contentsOfDirectory(
+                    at: entry,
+                    includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
+                    options: []
+                  ) else { continue }
+            backupDebugLog("tree album=\(entry.lastPathComponent) fileCount=\(files.count)")
+            for file in files {
+                let isRegular = (try? file.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) ?? false
+                backupDebugLog("tree file path=\(file.path) isRegular=\(isRegular) size=\(debugFileSize(file)) cipherVersion=\(cipher.cipherVersion(of: file).map(String.init) ?? "nil")")
+            }
+        }
+        #endif
+    }
+}
+
+#if DEBUG
+private func backupDebugLog(_ message: @autoclosure () -> String) {
+    print("[LumaNox][Backup] \(message())")
+}
+#else
+private func backupDebugLog(_ message: @autoclosure () -> String) {}
+#endif
+
+func backupRelativePath(of file: URL, from root: URL) throws -> String {
+    let resolvedRootPath = root.resolvingSymlinksInPath().standardizedFileURL.path
+    let resolvedFilePath = file.resolvingSymlinksInPath().standardizedFileURL.path
+    if resolvedFilePath.hasPrefix(resolvedRootPath + "/") {
+        return String(resolvedFilePath.dropFirst(resolvedRootPath.count + 1))
+    }
+
+    let rootPath = root.standardizedFileURL.path
+    let filePath = file.standardizedFileURL.path
+    if filePath.hasPrefix(rootPath + "/") {
+        return String(filePath.dropFirst(rootPath.count + 1))
+    }
+
+    throw BackupError.io("invalid vault asset path")
 }
 
 private extension SHA256.Digest {

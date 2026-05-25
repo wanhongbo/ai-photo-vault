@@ -26,12 +26,15 @@ final class VaultStore: ObservableObject {
     func rootDirectory() throws -> URL {
         let docs = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let root = docs.appendingPathComponent("vault_albums", isDirectory: true)
+        vaultDebugLog("rootDirectory docs=\(docs.path) root=\(root.path) rootExists=\(fileManager.fileExists(atPath: root.path))")
         if !fileManager.fileExists(atPath: root.path) {
             try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
+            vaultDebugLog("rootDirectory created root=\(root.path)")
         }
         let defaultAlbum = root.appendingPathComponent(vaultDefaultAlbumName, isDirectory: true)
         if !fileManager.fileExists(atPath: defaultAlbum.path) {
             try fileManager.createDirectory(at: defaultAlbum, withIntermediateDirectories: true)
+            vaultDebugLog("rootDirectory created defaultAlbum=\(defaultAlbum.path)")
         }
         return root
     }
@@ -40,12 +43,14 @@ final class VaultStore: ObservableObject {
         do {
             let root = try rootDirectory()
             let trash = try trashDirectory()
+            vaultDebugLog("loadSnapshot begin root=\(root.path) trash=\(trash.path)")
             let metadata = try metadataStore.reconcile(vaultRoot: root, trashRoot: trash)
             let albums = metadata.albums.map {
                 VaultAlbum(id: $0.id, name: $0.name, photoCount: $0.mediaCount)
             }
             let recent = metadata.recentActive(limit: recentLimit).map { mediaRecordToVaultPhoto($0) }
             let total = metadata.totalActiveCount
+            vaultDebugLog("loadSnapshot success total=\(total) albums=\(albums.map { "\($0.name):\($0.photoCount)" }.joined(separator: ",")) recent=\(recent.count)")
             snapshot = VaultSnapshot(
                 albums: albums,
                 recentPhotos: recent,
@@ -53,6 +58,7 @@ final class VaultStore: ObservableObject {
             )
             QuotaManager.shared.updateVaultCount(total)
         } catch {
+            vaultDebugLog("loadSnapshot failed error=\(error.localizedDescription)")
             lastImportMessage = error.localizedDescription
             lastImportIsError = true
         }
@@ -88,6 +94,7 @@ final class VaultStore: ObservableObject {
         albumName: String = vaultDefaultAlbumName,
         originalFileName: String? = nil
     ) async -> VaultImportResult {
+        vaultDebugLog("importPlainData begin bytes=\(data.count) ext=\(fileExtension) album=\(albumName) original=\(originalFileName ?? "nil")")
         if data.count >= importDataStreamThresholdBytes {
             let ext = fileExtension.lowercased()
             let tempURL: URL
@@ -98,7 +105,9 @@ final class VaultStore: ObservableObject {
                     fileExtension: ext
                 )
                 try data.write(to: tempURL, options: .atomic)
+                vaultDebugLog("importPlainData stagedLarge temp=\(tempURL.path) size=\(debugFileSize(tempURL))")
             } catch {
+                vaultDebugLog("importPlainData stageLarge failed error=\(error.localizedDescription)")
                 return .failed
             }
             defer { PlaintextTempFileManager.shared.removeItem(tempURL) }
@@ -117,7 +126,9 @@ final class VaultStore: ObservableObject {
             let ext = fileExtension.lowercased()
             let hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
             let dest = albumDir.appendingPathComponent("asset_\(hash).\(ext)")
+            vaultDebugLog("importPlainData target albumDir=\(albumDir.path) dest=\(dest.path) destExists=\(fileManager.fileExists(atPath: dest.path))")
             if fileManager.fileExists(atPath: dest.path), canReadExistingVaultMedia(at: dest) {
+                vaultDebugLog("importPlainData duplicate dest=\(dest.path) size=\(debugFileSize(dest)) cipherVersion=\(cipher.cipherVersion(of: dest).map(String.init) ?? "nil")")
                 return .duplicate
             }
 
@@ -127,8 +138,10 @@ final class VaultStore: ObservableObject {
                 fileExtension: ext
             )
             try data.write(to: temp, options: .atomic)
+            vaultDebugLog("importPlainData stagedSmall temp=\(temp.path) size=\(debugFileSize(temp))")
             defer { PlaintextTempFileManager.shared.removeItem(temp) }
             try cipher.encryptFile(at: temp, to: dest)
+            vaultDebugLog("importPlainData encrypted dest=\(dest.path) size=\(debugFileSize(dest)) cipherVersion=\(cipher.cipherVersion(of: dest).map(String.init) ?? "nil")")
             try metadataStore.recordImportedMedia(
                 encryptedURL: dest,
                 albumName: safeAlbum,
@@ -137,8 +150,10 @@ final class VaultStore: ObservableObject {
                 source: .picker,
                 originalFileName: originalFileName
             )
+            vaultDebugLog("importPlainData metadataRecorded dest=\(dest.lastPathComponent)")
             return .added
         } catch {
+            vaultDebugLog("importPlainData failed error=\(error.localizedDescription)")
             return .failed
         }
     }
@@ -150,13 +165,16 @@ final class VaultStore: ObservableObject {
         originalFileName: String? = nil,
         source: VaultMediaSource = .picker
     ) async -> VaultImportResult {
+        vaultDebugLog("importPlainFile begin source=\(sourceURL.path) exists=\(fileManager.fileExists(atPath: sourceURL.path)) size=\(debugFileSize(sourceURL)) ext=\(fileExtension) album=\(albumName) original=\(originalFileName ?? "nil")")
         do {
             let safeAlbum = (try? createAlbum(named: albumName)) ?? vaultDefaultAlbumName
             let albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
             let ext = fileExtension.lowercased()
             let hash = try sha256Hex(of: sourceURL)
             let dest = albumDir.appendingPathComponent("asset_\(hash).\(ext)")
+            vaultDebugLog("importPlainFile target albumDir=\(albumDir.path) dest=\(dest.path) destExists=\(fileManager.fileExists(atPath: dest.path))")
             if fileManager.fileExists(atPath: dest.path), canReadExistingVaultMedia(at: dest) {
+                vaultDebugLog("importPlainFile duplicate dest=\(dest.path) size=\(debugFileSize(dest)) cipherVersion=\(cipher.cipherVersion(of: dest).map(String.init) ?? "nil")")
                 return .duplicate
             }
 
@@ -167,6 +185,7 @@ final class VaultStore: ObservableObject {
                     try sink(chunk)
                 }
             }
+            vaultDebugLog("importPlainFile encrypted dest=\(dest.path) size=\(debugFileSize(dest)) cipherVersion=\(cipher.cipherVersion(of: dest).map(String.init) ?? "nil")")
             try metadataStore.recordImportedMedia(
                 encryptedURL: dest,
                 albumName: safeAlbum,
@@ -175,15 +194,19 @@ final class VaultStore: ObservableObject {
                 source: source,
                 originalFileName: originalFileName ?? sourceURL.lastPathComponent
             )
+            vaultDebugLog("importPlainFile metadataRecorded dest=\(dest.lastPathComponent)")
             invalidateCache()
             return .added
         } catch {
+            vaultDebugLog("importPlainFile failed source=\(sourceURL.path) error=\(error.localizedDescription)")
             return .failed
         }
     }
 
     func finalizeImportBatch(_ summary: VaultImportSummary) async {
+        vaultDebugLog("finalizeImportBatch begin added=\(summary.added) duplicate=\(summary.duplicate) failed=\(summary.failed)")
         await loadSnapshot()
+        vaultDebugLog("finalizeImportBatch snapshotTotal=\(snapshot?.totalCount ?? -1)")
         lastImportMessage = formatImportMessage(summary)
         lastImportIsError = summary.added == 0 && summary.failed > 0
     }
@@ -275,4 +298,16 @@ final class VaultStore: ObservableObject {
         }
         return false
     }
+
+    private func debugFileSize(_ url: URL) -> Int64 {
+        (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? -1
+    }
 }
+
+#if DEBUG
+private func vaultDebugLog(_ message: @autoclosure () -> String) {
+    print("[LumaNox][VaultStore] \(message())")
+}
+#else
+private func vaultDebugLog(_ message: @autoclosure () -> String) {}
+#endif

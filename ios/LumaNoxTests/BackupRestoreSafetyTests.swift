@@ -141,6 +141,25 @@ final class BackupRestoreSafetyTests: XCTestCase {
         XCTAssertNotEqual(result.message, BackupError.vaultEmpty.localizedDescription)
     }
 
+    func testBackupRelativePathHandlesResolvedSymlinkPrefixes() throws {
+        let root = tempDirectory.appendingPathComponent("vault_albums", isDirectory: true)
+        let asset = root
+            .appendingPathComponent(vaultDefaultAlbumName, isDirectory: true)
+            .appendingPathComponent("asset_symlink_path.png")
+        try FileManager.default.createDirectory(
+            at: asset.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data([1, 2, 3]).write(to: asset)
+
+        let resolvedAsset = asset.resolvingSymlinksInPath()
+
+        XCTAssertEqual(
+            try backupRelativePath(of: resolvedAsset, from: root),
+            "\(vaultDefaultAlbumName)/asset_symlink_path.png"
+        )
+    }
+
     private func makeBackupPackage(
         relativePath: String,
         plain: Data,
