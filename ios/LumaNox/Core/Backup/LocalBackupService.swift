@@ -117,7 +117,7 @@ final class LocalBackupService: @unchecked Sendable {
                 }
                 guard !assets.isEmpty else { throw BackupError.vaultEmpty }
 
-                let estimated = assets.reduce(Int64(0)) { $0 + $1.sizeBytes }
+                let estimated = assets.reduce(Int64(0)) { $0 + $1.encryptedSizeBytes }
                 guard hasEnoughSpace(needBytes: estimated * 2) else {
                     throw BackupError.io(L10n.tr("backup_error_no_space"))
                 }
@@ -552,6 +552,11 @@ final class LocalBackupService: @unchecked Sendable {
         let sha256Hex: String
     }
 
+    private struct VaultAssetCandidate {
+        let relativePath: String
+        let encryptedSizeBytes: Int64
+    }
+
     private struct BackupWriteResult {
         let outputSizeBytes: Int64
         let writtenAssets: [VaultAsset]
@@ -622,18 +627,18 @@ final class LocalBackupService: @unchecked Sendable {
         return bytes
     }
 
-    private func scanVaultAssets(vaultRoot: URL) throws -> [VaultAsset] {
+    private func scanVaultAssets(vaultRoot: URL) throws -> [VaultAssetCandidate] {
         backupDebugLog("scan begin root=\(vaultRoot.path) exists=\(FileManager.default.fileExists(atPath: vaultRoot.path))")
         guard let enumerator = FileManager.default.enumerator(
             at: vaultRoot,
-            includingPropertiesForKeys: [.isRegularFileKey],
+            includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
             options: [.skipsHiddenFiles]
         ) else {
             backupDebugLog("scan enumerator nil root=\(vaultRoot.path)")
             return []
         }
 
-        var assets: [VaultAsset] = []
+        var assets: [VaultAssetCandidate] = []
         var visited = 0
         for case let file as URL in enumerator {
             try Task.checkCancellation()
@@ -644,13 +649,16 @@ final class LocalBackupService: @unchecked Sendable {
                 continue
             }
             do {
-                let values = try file.resourceValues(forKeys: [.isRegularFileKey])
+                let values = try file.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
                 guard values.isRegularFile == true else {
                     backupDebugLog("scan skip nonRegular path=\(file.path)")
                     continue
                 }
-                let asset = try buildAsset(vaultRoot: vaultRoot, file: file)
-                backupDebugLog("scan asset relativePath=\(asset.relativePath) plainSize=\(asset.sizeBytes) encryptedSize=\(debugFileSize(file)) cipherVersion=\(cipher.cipherVersion(of: file).map(String.init) ?? "nil")")
+                let asset = VaultAssetCandidate(
+                    relativePath: try backupRelativePath(of: file, from: vaultRoot),
+                    encryptedSizeBytes: Int64(values.fileSize ?? 0)
+                )
+                backupDebugLog("scan asset relativePath=\(asset.relativePath) encryptedSize=\(asset.encryptedSizeBytes) cipherVersion=\(cipher.cipherVersion(of: file).map(String.init) ?? "nil")")
                 assets.append(asset)
             } catch is CancellationError {
                 throw CancellationError()
@@ -666,29 +674,13 @@ final class LocalBackupService: @unchecked Sendable {
         return assets
     }
 
-    private func buildAsset(vaultRoot: URL, file: URL) throws -> VaultAsset {
-        var digest = SHA256()
-        var plainSize: Int64 = 0
-        try cipher.decryptStream(at: file) { chunk in
-            try Task.checkCancellation()
-            digest.update(data: chunk)
-            plainSize += Int64(chunk.count)
-        }
-        let rel = try backupRelativePath(of: file, from: vaultRoot)
-        return VaultAsset(
-            relativePath: rel,
-            sizeBytes: plainSize,
-            sha256Hex: digest.finalize().hexString
-        )
-    }
-
     private func writeBodyAndAssemble(
         vaultRoot: URL,
         bodyFile: URL,
         writingFile: URL,
         backupKey: Data,
         headerBase: BackupPackageV1.HeaderBase,
-        assets: [VaultAsset],
+        assets: [VaultAssetCandidate],
         progress: LongRunningTaskProgressHandler?
     ) throws -> BackupWriteResult {
         FileManager.default.createFile(atPath: bodyFile.path, contents: nil)
@@ -698,7 +690,7 @@ final class LocalBackupService: @unchecked Sendable {
 
         let bodyWriter = BackupPackageV1.newBodyWriter(output: bodyStream, backupKey: backupKey)
         var chunkBuf = [UInt8](repeating: 0, count: BackupPackageV1.chunkMaxPlainBytes)
-        let totalBytes = assets.reduce(Int64(0)) { $0 + $1.sizeBytes }
+        let totalBytes = assets.reduce(Int64(0)) { $0 + $1.encryptedSizeBytes }
         var processedBytes: Int64 = 0
         var writtenAssets: [VaultAsset] = []
 
@@ -717,15 +709,15 @@ final class LocalBackupService: @unchecked Sendable {
                 totalBytes: totalBytes,
                 cancellable: true
             ), to: progress)
-            bodyWriter.beginAsset(
-                relativePath: asset.relativePath,
-                sha256Hex: asset.sha256Hex,
-                sizeBytes: asset.sizeBytes
-            )
+            bodyWriter.beginAsset(relativePath: asset.relativePath)
             var chunkFill = 0
+            var digest = SHA256()
+            var plainSize: Int64 = 0
             do {
                 try cipher.decryptStream(at: source) { data in
                     try Task.checkCancellation()
+                    digest.update(data: data)
+                    plainSize += Int64(data.count)
                     var offset = 0
                     while offset < data.count {
                         let take = min(BackupPackageV1.chunkMaxPlainBytes - chunkFill, data.count - offset)
@@ -753,8 +745,16 @@ final class LocalBackupService: @unchecked Sendable {
                 if chunkFill > 0 {
                     try bodyWriter.writeChunk(Data(chunkBuf[0 ..< chunkFill]))
                 }
-                _ = try bodyWriter.endAsset()
-                writtenAssets.append(asset)
+                let writtenAsset = VaultAsset(
+                    relativePath: asset.relativePath,
+                    sizeBytes: plainSize,
+                    sha256Hex: digest.finalize().hexString
+                )
+                _ = try bodyWriter.endAsset(
+                    sha256Hex: writtenAsset.sha256Hex,
+                    sizeBytes: writtenAsset.sizeBytes
+                )
+                writtenAssets.append(writtenAsset)
             } catch is CancellationError {
                 throw CancellationError()
             } catch {

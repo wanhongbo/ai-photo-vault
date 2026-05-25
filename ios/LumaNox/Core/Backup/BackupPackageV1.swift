@@ -62,8 +62,6 @@ enum BackupPackageV1 {
 
         private struct AssetBuilder {
             let relativePath: String
-            let sha256Hex: String
-            let sizeBytes: Int64
             let fromFrame: Int
         }
 
@@ -72,12 +70,10 @@ enum BackupPackageV1 {
             self.backupKey = SymmetricKey(data: backupKey)
         }
 
-        func beginAsset(relativePath: String, sha256Hex: String, sizeBytes: Int64) {
+        func beginAsset(relativePath: String) {
             precondition(currentAsset == nil)
             currentAsset = AssetBuilder(
                 relativePath: relativePath,
-                sha256Hex: sha256Hex,
-                sizeBytes: sizeBytes,
                 fromFrame: frameIndex
             )
         }
@@ -99,13 +95,13 @@ enum BackupPackageV1 {
             frameIndex += 1
         }
 
-        func endAsset() throws -> AssetHeader {
+        func endAsset(sha256Hex: String, sizeBytes: Int64) throws -> AssetHeader {
             guard let b = currentAsset else { throw BackupError.noAssetInProgress }
             let count = frameIndex - b.fromFrame
             let header = AssetHeader(
                 relativePath: b.relativePath,
-                sha256Hex: b.sha256Hex,
-                sizeBytes: b.sizeBytes,
+                sha256Hex: sha256Hex,
+                sizeBytes: sizeBytes,
                 fromFrame: b.fromFrame,
                 frameCount: count
             )
