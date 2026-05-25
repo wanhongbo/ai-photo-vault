@@ -229,6 +229,18 @@ final class CameraSessionController: NSObject, ObservableObject {
         if photoOutput.supportedFlashModes.contains(avFlashMode) {
             settings.flashMode = avFlashMode
         }
+        guard let connection = photoOutput.connection(with: .video),
+              connection.isEnabled,
+              connection.isActive
+        else {
+            if let pendingPhotoURL {
+                PlaintextTempFileManager.shared.removeItem(pendingPhotoURL)
+                self.pendingPhotoURL = nil
+            }
+            captureCompletion = nil
+            completion(.failure(CameraError.noData))
+            return
+        }
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
 

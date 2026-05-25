@@ -701,7 +701,7 @@ private struct LastCaptureThumbnail: View {
         .frame(width: 48, height: 48)
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(lastCapture == nil ? .white.opacity(0.20) : LNColor.brandBlue, lineWidth: lastCapture == nil ? 1 : 2)
+                .stroke(.white.opacity(0.20), lineWidth: 1)
         )
     }
 }

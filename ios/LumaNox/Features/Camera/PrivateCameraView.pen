@@ -585,7 +585,7 @@
                   { "color": "#101827", "position": 1 }
                 ]
               },
-              "stroke": { "fill": "#4A9EFF", "thickness": 2 },
+              "stroke": { "fill": "#FFFFFF33", "thickness": 1 },
               "children": [
                 {
                   "type": "icon_font",
