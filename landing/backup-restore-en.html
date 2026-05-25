@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LumaNox Backup and Restore Guide</title>
+    <meta
+      name="description"
+      content="Learn which PIN to enter when restoring LumaNox automatic backups, manual .aivb exports, and backups created before or after changing your PIN."
+    />
+    <meta property="og:title" content="LumaNox Backup and Restore Guide" />
+    <meta
+      property="og:description"
+      content="Backups created before a PIN change restore with the old PIN. Backups created after a PIN change restore with the new PIN."
+    />
+    <meta property="og:type" content="article" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .doc-hero {
+        padding: 48px 0 20px;
+      }
+
+      .doc-shell {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 0 22px;
+      }
+
+      .doc-title {
+        margin: 16px 0 12px;
+        font-size: clamp(32px, 5vw, 48px);
+        line-height: 1.08;
+      }
+
+      .doc-lead {
+        max-width: 66ch;
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .doc-section {
+        padding: 24px 0;
+      }
+
+      .rule-list,
+      .faq-list {
+        display: grid;
+        gap: 12px;
+        margin: 18px 0 0;
+      }
+
+      .rule-item,
+      .notice,
+      .faq-item {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+
+      .rule-item strong,
+      .faq-item strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text);
+      }
+
+      .rule-item p,
+      .faq-item p,
+      .notice p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+      }
+
+      th,
+      td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+        font-weight: 650;
+      }
+
+      td {
+        color: var(--muted);
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      code {
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 0.94em;
+      }
+
+      .steps-list {
+        margin: 16px 0 0;
+        padding-left: 22px;
+        color: var(--muted);
+      }
+
+      .steps-list li {
+        margin: 8px 0;
+      }
+
+      @media (max-width: 720px) {
+        .nav-actions {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="site">
+      <div class="inner">
+        <a class="brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          LumaNox
+        </a>
+        <div class="nav-actions">
+          <a class="btn" href="index.html">Home</a>
+          <a class="btn" href="#faq">FAQ</a>
+          <a class="btn" href="backup-restore.html" hreflang="zh-Hans">中文</a>
+          <a class="btn btn-primary" href="mailto:service@xipengxin.com">Contact support</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="doc-hero">
+        <div class="doc-shell">
+          <div class="kicker"><span class="dot" aria-hidden="true"></span> Backup and restore</div>
+          <h1 class="doc-title">After changing your PIN, which PIN restores a backup?</h1>
+          <p class="doc-lead">
+            LumaNox backups are locally encrypted files. When restoring, enter the 6-digit PIN that was in use when that
+            specific backup file was created, not simply the PIN currently used by the app.
+          </p>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <div class="doc-shell">
+          <h2>Core rules</h2>
+          <div class="rule-list">
+            <div class="rule-item">
+              <strong>Backups created before a PIN change</strong>
+              <p>Restore them with the old PIN.</p>
+            </div>
+            <div class="rule-item">
+              <strong>Backups created after a PIN change</strong>
+              <p>Restore them with the new PIN.</p>
+            </div>
+            <div class="rule-item">
+              <strong>Automatic backup overwrote <code>backup.dat</code></strong>
+              <p>If the overwrite happened after the PIN change, the new <code>backup.dat</code> restores with the new PIN.</p>
+            </div>
+            <div class="rule-item">
+              <strong>Older manually exported <code>.aivb</code> files</strong>
+              <p>They are not changed automatically. Restore each file with the PIN used when that file was exported.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <div class="doc-shell">
+          <h2>Two backup file types</h2>
+          <div class="table-wrap" role="region" aria-label="Backup file types" tabindex="0">
+            <table>
+              <thead>
+                <tr>
+                  <th>File type</th>
+                  <th>Source</th>
+                  <th>Can it be overwritten automatically?</th>
+                  <th>PIN to enter when restoring</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>backup.dat</code></td>
+                  <td>Automatic backup</td>
+                  <td>Yes. A later automatic backup may replace it.</td>
+                  <td>The PIN used when the current <code>backup.dat</code> was created.</td>
+                </tr>
+                <tr>
+                  <td><code>.aivb</code></td>
+                  <td>Manual export</td>
+                  <td>No. It is an independent file unless you delete or replace it yourself.</td>
+                  <td>The PIN used when that <code>.aivb</code> file was exported.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="notice" style="margin-top: 16px;">
+            <p>
+              Think of each backup file as an independent encrypted snapshot. Changing your PIN affects backups created
+              after the change. It does not re-encrypt backup files that already exist.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <div class="doc-shell">
+          <h2>Scenario guide</h2>
+          <div class="table-wrap" role="region" aria-label="PIN scenario guide" tabindex="0">
+            <table>
+              <thead>
+                <tr>
+                  <th>Scenario</th>
+                  <th>Enter this PIN when restoring</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>A <code>.aivb</code> file manually exported before the PIN change</td>
+                  <td>Old PIN</td>
+                </tr>
+                <tr>
+                  <td>A <code>.aivb</code> file manually exported after the PIN change</td>
+                  <td>New PIN</td>
+                </tr>
+                <tr>
+                  <td>A <code>backup.dat</code> created before the PIN change and not yet overwritten by a newer automatic backup</td>
+                  <td>Old PIN</td>
+                </tr>
+                <tr>
+                  <td>A <code>backup.dat</code> successfully overwritten by automatic backup after the PIN change</td>
+                  <td>New PIN</td>
+                </tr>
+                <tr>
+                  <td>You forgot the old PIN and only have backups created before the PIN change</td>
+                  <td>That old backup cannot be restored.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <div class="doc-shell">
+          <h2>Recommended steps</h2>
+          <ol class="steps-list">
+            <li>After changing your PIN, export a new <code>.aivb</code> file manually.</li>
+            <li>Confirm the automatic backup location has received a fresh <code>backup.dat</code>.</li>
+            <li>Before keeping older backups, make sure you still remember the old PIN for those files.</li>
+            <li>Name backup files by date, such as <code>LumaNox-2026-05-25.aivb</code>. Do not put your real PIN in filenames, notes, or chat messages.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="doc-section" id="faq">
+        <div class="doc-shell">
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <div class="faq-item">
+              <strong>Does changing my PIN invalidate older backups?</strong>
+              <p>No. Older backup files can still be restored, but they require the old PIN used when they were created.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Can I restore an old backup with my new PIN?</strong>
+              <p>No. Existing backups are not automatically changed to use the new PIN.</p>
+            </div>
+            <div class="faq-item">
+              <strong>If automatic backup overwrote <code>backup.dat</code> after I changed my PIN, can I still use the old PIN?</strong>
+              <p>No. The overwritten <code>backup.dat</code> is a new backup file and should be restored with the new PIN.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Can automatic backup overwrite my manually exported <code>.aivb</code> files?</strong>
+              <p>No. A <code>.aivb</code> file is an independent manual export. Its restore PIN stays tied to the moment it was exported.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Can LumaNox recover an old backup if I forget the old PIN?</strong>
+              <p>No. LumaNox does not upload or store your PIN and cannot decrypt historical backups for you.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-band">
+        <div class="wrap">
+          <div class="cta-inner">
+            <div>
+              <h2>Privacy reminder</h2>
+              <p>
+                LumaNox backup and restore are handled locally. Backup files and PINs are not uploaded to LumaNox servers.
+                Store backup files somewhere you trust, and avoid keeping the PIN and backup file together in an unsafe place.
+              </p>
+            </div>
+            <div class="nav-actions">
+              <a class="btn btn-primary" href="mailto:service@xipengxin.com">Contact support</a>
+              <a class="btn" href="#main">Back to top</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site">
+      <div class="wrap cols">
+        <div>
+          <strong>LumaNox</strong>
+          Offline encrypted photo and video vault.
+        </div>
+        <div>
+          <strong>Contact</strong>
+          <a href="mailto:service@xipengxin.com">service@xipengxin.com</a>
+          · <a href="index.html">Home</a>
+          · <a href="backup-restore.html" hreflang="zh-Hans">中文</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
