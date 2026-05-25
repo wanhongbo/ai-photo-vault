@@ -3,8 +3,10 @@ import UniformTypeIdentifiers
 
 struct LockView: View {
     @EnvironmentObject private var router: AppRouter
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel = LockViewModel()
     @State private var biometricDismissedAt: Date?
+    @State private var biometricAttemptInFlight = false
     @State private var showAbandonDialog = false
     @State private var showRestoreFolderPicker = false
 
@@ -67,6 +69,13 @@ struct LockView: View {
         .onChange(of: viewModel.state.stage) { stage in
             if stage == .unlock, viewModel.state.biometricEnabled {
                 tryAutoBiometric()
+            }
+        }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active {
+                tryAutoBiometric()
+            } else if phase == .inactive || phase == .background {
+                biometricDismissedAt = nil
             }
         }
         .accessibilityIdentifier("lock_view")
@@ -252,12 +261,19 @@ struct LockView: View {
     }
 
     private func tryAutoBiometric() {
-        guard viewModel.state.stage == .unlock else { return }
+        guard scenePhase == .active else { return }
+        guard viewModel.state.stage == .unlock, viewModel.state.biometricEnabled else { return }
+        guard !viewModel.state.isLoading, !viewModel.state.success else { return }
         if let dismissed = biometricDismissedAt, Date().timeIntervalSince(dismissed) < 4 { return }
         Task { await runBiometric(userInitiated: false) }
     }
 
+    @MainActor
     private func runBiometric(userInitiated: Bool) async {
+        guard !biometricAttemptInFlight else { return }
+        biometricAttemptInFlight = true
+        defer { biometricAttemptInFlight = false }
+
         let availability = BiometricAuthService.shared.availability()
         guard availability.canEvaluate else {
             if userInitiated {
