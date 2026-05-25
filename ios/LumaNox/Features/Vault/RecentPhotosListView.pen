@@ -356,7 +356,7 @@
             {
               "type": "frame",
               "id": "frm_042",
-              "name": "Photo tile 2",
+              "name": "Video tile first frame",
               "layout": "none",
               "fill": "#8D8D87",
               "x": 128.5,
@@ -499,6 +499,27 @@
                   "width": 43,
                   "height": 28,
                   "cornerRadius": 10
+                },
+                {
+                  "type": "ellipse",
+                  "id": "play_badge_recent_2_bg",
+                  "name": "Video play badge",
+                  "fill": "#00000099",
+                  "x": 72,
+                  "y": 76,
+                  "width": 24,
+                  "height": 24
+                },
+                {
+                  "type": "icon_font",
+                  "id": "play_badge_recent_2_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "play",
+                  "x": 79,
+                  "y": 82,
+                  "width": 12,
+                  "height": 12,
+                  "fill": "#EAF1FF"
                 }
               ],
               "clip": true

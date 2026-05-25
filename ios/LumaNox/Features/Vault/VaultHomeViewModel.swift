@@ -135,16 +135,30 @@ private struct VaultPickedMediaFile: Transferable {
     let originalFileName: String
 
     static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(contentType: .movie) { file in
+            SentTransferredFile(file.url)
+        } importing: { received in
+            try Self.importReceivedFile(received.file)
+        }
+        FileRepresentation(contentType: .image) { file in
+            SentTransferredFile(file.url)
+        } importing: { received in
+            try Self.importReceivedFile(received.file)
+        }
         FileRepresentation(contentType: .item) { file in
             SentTransferredFile(file.url)
         } importing: { received in
-            let copy = try PlaintextTempFileManager.shared.copyFileToTemporary(
-                sourceURL: received.file,
-                scene: .importStaging,
-                preferredName: received.file.lastPathComponent
-            )
-            return VaultPickedMediaFile(url: copy, originalFileName: received.file.lastPathComponent)
+            try Self.importReceivedFile(received.file)
         }
+    }
+
+    private static func importReceivedFile(_ sourceURL: URL) throws -> VaultPickedMediaFile {
+        let copy = try PlaintextTempFileManager.shared.copyFileToTemporary(
+            sourceURL: sourceURL,
+            scene: .importStaging,
+            preferredName: sourceURL.lastPathComponent
+        )
+        return VaultPickedMediaFile(url: copy, originalFileName: sourceURL.lastPathComponent)
     }
 }
 

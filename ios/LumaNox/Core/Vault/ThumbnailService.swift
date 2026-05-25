@@ -219,8 +219,19 @@ final class ThumbnailService: @unchecked Sendable {
             let generator = AVAssetImageGenerator(asset: asset)
             generator.appliesPreferredTrackTransform = true
             generator.maximumSize = CGSize(width: descriptor.targetPixelSize, height: descriptor.targetPixelSize)
-            let cgImage = try generator.copyCGImage(at: CMTime(seconds: 0.15, preferredTimescale: 600), actualTime: nil)
-            return UIImage(cgImage: cgImage)
+            let candidateTimes = [
+                CMTime.zero,
+                CMTime(seconds: 0.15, preferredTimescale: 600),
+                CMTime(seconds: 0.5, preferredTimescale: 600),
+            ]
+            for (index, time) in candidateTimes.enumerated() {
+                generator.requestedTimeToleranceBefore = index == 0 ? .zero : .positiveInfinity
+                generator.requestedTimeToleranceAfter = index == 0 ? .zero : .positiveInfinity
+                if let cgImage = try? generator.copyCGImage(at: time, actualTime: nil) {
+                    return UIImage(cgImage: cgImage)
+                }
+            }
+            return nil
         } catch {
             PlaintextTempFileManager.shared.removeItem(tempURL)
             return nil

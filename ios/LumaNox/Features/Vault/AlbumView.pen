@@ -196,7 +196,7 @@
             {
               "type": "frame",
               "id": "thumb_album_2",
-              "name": "Media thumbnail",
+              "name": "Video thumbnail first frame",
               "layout": "none",
               "fill": {
                 "type": "gradient",
@@ -217,7 +217,30 @@
               "y": 16,
               "width": 103,
               "height": 103,
-              "cornerRadius": 10
+              "cornerRadius": 10,
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "play_badge_album_2_bg",
+                  "name": "Video play badge",
+                  "fill": "#00000099",
+                  "x": 70,
+                  "y": 70,
+                  "width": 24,
+                  "height": 24
+                },
+                {
+                  "type": "icon_font",
+                  "id": "play_badge_album_2_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "play",
+                  "x": 77,
+                  "y": 76,
+                  "width": 12,
+                  "height": 12,
+                  "fill": "#EAF1FF"
+                }
+              ]
             },
             {
               "type": "frame",
@@ -248,7 +271,7 @@
             {
               "type": "frame",
               "id": "thumb_album_4",
-              "name": "Media thumbnail",
+              "name": "Video thumbnail first frame",
               "layout": "none",
               "fill": {
                 "type": "gradient",
@@ -269,7 +292,30 @@
               "y": 129,
               "width": 103,
               "height": 103,
-              "cornerRadius": 10
+              "cornerRadius": 10,
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "play_badge_album_4_bg",
+                  "name": "Video play badge",
+                  "fill": "#00000099",
+                  "x": 70,
+                  "y": 70,
+                  "width": 24,
+                  "height": 24
+                },
+                {
+                  "type": "icon_font",
+                  "id": "play_badge_album_4_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "play",
+                  "x": 77,
+                  "y": 76,
+                  "width": 12,
+                  "height": 12,
+                  "fill": "#EAF1FF"
+                }
+              ]
             },
             {
               "type": "frame",
