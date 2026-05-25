@@ -26,6 +26,7 @@ struct VaultMediaThumbnailView: View {
     let isVideo: Bool
     var contentMode: ContentMode = .fill
     var targetPixelSize: CGFloat = 360
+    var showVideoIndicator = true
 
     @State private var state: VaultThumbnailLoadState = .loading
 
@@ -48,15 +49,13 @@ struct VaultMediaThumbnailView: View {
                     .foregroundStyle(LNColor.subtitle)
             }
 
-            if isVideo {
+            if isVideo && showVideoIndicator {
                 Image(systemName: "play.fill")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(LNColor.title)
-                    .padding(7)
-                    .background(.black.opacity(0.42))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.white.opacity(0.94))
+                    .frame(width: 30, height: 30)
+                    .background(Color.black.opacity(0.34))
                     .clipShape(Circle())
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .padding(7)
             }
         }
         .task(id: cacheKey) {

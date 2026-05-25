@@ -797,7 +797,8 @@ private struct PhotoViewerPage: View {
                     encryptedPath: item.path,
                     isVideo: true,
                     contentMode: .fit,
-                    targetPixelSize: 960
+                    targetPixelSize: 960,
+                    showVideoIndicator: false
                 )
             } else {
                 VaultThumbnailView(encryptedPath: item.path)
