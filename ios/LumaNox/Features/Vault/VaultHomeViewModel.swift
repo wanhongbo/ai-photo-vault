@@ -1,3 +1,4 @@
+import Combine
 import CoreTransferable
 import Foundation
 import Photos
@@ -17,10 +18,27 @@ final class VaultHomeViewModel: ObservableObject {
     @Published private(set) var hasPinConfigured = AppDebugPolicy.skipsPinGate || SecuritySettingsStore.shared.hasPinConfigured
 
     private let vaultStore = VaultStore.shared
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         self.snapshot = vaultStore.snapshot
         self.isLoadingSnapshot = vaultStore.snapshot == nil
+
+        vaultStore.$snapshot
+            .sink { [weak self] snapshot in
+                guard let self else { return }
+                self.snapshot = snapshot
+                if snapshot != nil {
+                    self.isLoadingSnapshot = false
+                }
+            }
+            .store(in: &cancellables)
+
+        vaultStore.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
 
     var isImporting: Bool { vaultStore.isImporting }
