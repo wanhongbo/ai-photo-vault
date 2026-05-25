@@ -78,6 +78,11 @@ object VaultStore {
     fun peekCachedSnapshot(): VaultSnapshot? = cachedSnapshot
     fun peekCachedAlbumPhotos(albumName: String): List<VaultPhoto>? = cachedAlbumPhotos[albumName]
 
+    private fun invalidateCaches() {
+        cachedSnapshot = null
+        cachedAlbumPhotos.clear()
+    }
+
     suspend fun loadSnapshot(context: Context, recentLimit: Int = 60): VaultSnapshot = withContext(Dispatchers.IO) {
         ensureInit(context)
         val albums = listAlbumsInternal(context)
@@ -109,6 +114,7 @@ object VaultStore {
         val safe = sanitizeAlbumName(albumName)
         val dir = File(rootDir(context), safe)
         if (!dir.exists()) dir.mkdirs()
+        invalidateCaches()
         safe
     }
 
@@ -186,6 +192,7 @@ object VaultStore {
             java.io.ByteArrayInputStream(bytes).use { plain ->
                 VaultCipher.get(context).encryptFile(plain, finalFile)
             }
+            invalidateCaches()
             finalFile.absolutePath
         }.getOrElse {
             if (finalFile.exists()) finalFile.delete()
@@ -234,6 +241,7 @@ object VaultStore {
             return@withContext VaultImportResult.FAILED
         }
         tempPlain.delete()
+        invalidateCaches()
         VaultImportResult.ADDED
     }
 
@@ -283,7 +291,12 @@ object VaultStore {
             true
         }.getOrElse { false }
         tempFile.delete()
-        if (ok) finalFile.absolutePath else null
+        if (ok) {
+            invalidateCaches()
+            finalFile.absolutePath
+        } else {
+            null
+        }
     }
 
     /**
@@ -328,6 +341,7 @@ object VaultStore {
                     repo.purgePhoto(photoId)
                 }
             }.onFailure { AppLogger.w("VaultStore", "purgePhoto on delete failed: ${it.message}") }
+            invalidateCaches()
         }
         ok
     }
@@ -402,6 +416,7 @@ object VaultStore {
             if (parent != null && parent.absolutePath != trashRoot.absolutePath) {
                 if (parent.listFiles()?.isEmpty() == true) parent.delete()
             }
+            invalidateCaches()
         }
         if (ok) safeAlbum else null
     }
@@ -505,4 +520,3 @@ object VaultStore {
         legacy.delete()
     }
 }
-

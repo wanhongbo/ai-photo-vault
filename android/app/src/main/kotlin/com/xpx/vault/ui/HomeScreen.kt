@@ -138,6 +138,8 @@ fun HomeScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
+                hasAlbumPermission = checkAlbumReadPermission(context)
+                permanentlyDenied = !hasAlbumPermission && isPermanentlyDenied(hostActivity)
                 scope.launch { refreshVault() }
             }
         }
@@ -196,7 +198,11 @@ fun HomeScreen(
         if (gate is com.xpx.vault.billing.GateResult.HardWall) {
             onPaywallRequired()
         } else if (!hasAlbumPermission) {
-            permissionLauncher.launch(requiredAlbumPermissions())
+            if (permanentlyDenied) {
+                openAppSettings(context)
+            } else {
+                permissionLauncher.launch(requiredAlbumPermissions())
+            }
         } else if (!importing) {
             importTip = null
             pickerLauncher.launch(
@@ -238,25 +244,7 @@ fun HomeScreen(
             )
         }
 
-        if (!hasAlbumPermission) {
-            val vaultBodyTapSink = remember { MutableInteractionSource() }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = vaultBodyTapSink,
-                        indication = null,
-                    ) { },
-                contentAlignment = Alignment.Center,
-            ) {
-                HomeAlbumPermissionState(
-                    onGrant = { permissionLauncher.launch(requiredAlbumPermissions()) },
-                    onOpenSettings = { openAppSettings(context) },
-                    permanentlyDenied = permanentlyDenied,
-                )
-            }
-        } else if (!vaultLoaded) {
+        if (!vaultLoaded) {
             val vaultBodyTapSink = remember { MutableInteractionSource() }
             Box(
                 modifier = Modifier
