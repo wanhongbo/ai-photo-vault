@@ -1,4 +1,5 @@
 import Foundation
+import UniformTypeIdentifiers
 
 let vaultMetadataSchemaVersion = 1
 let vaultCipherVersionCBCv1 = VaultFileCipherVersion.cbcV1
@@ -9,8 +10,24 @@ enum VaultMediaKind: String, Codable, Hashable {
     case video
     case other
 
-    static func infer(from fileExtension: String) -> VaultMediaKind {
+    static func infer(from fileExtension: String, mimeType: String? = nil, uti: String? = nil) -> VaultMediaKind {
+        if let uti,
+           let type = UTType(uti) {
+            if type.conforms(to: .movie) { return .video }
+            if type.conforms(to: .image) { return .image }
+        }
+
+        if let mimeType {
+            let normalized = mimeType.lowercased()
+            if normalized.hasPrefix("video/") { return .video }
+            if normalized.hasPrefix("image/") { return .image }
+        }
+
         let ext = fileExtension.lowercased()
+        if let type = UTType(filenameExtension: ext) {
+            if type.conforms(to: .movie) { return .video }
+            if type.conforms(to: .image) { return .image }
+        }
         if ["mp4", "mov", "m4v", "mkv", "webm", "avi", "3gp", "flv"].contains(ext) {
             return .video
         }

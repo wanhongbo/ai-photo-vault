@@ -121,7 +121,11 @@ final class VaultMetadataStore {
             storagePath: storagePath,
             albumName: albumName,
             fileName: encryptedURL.lastPathComponent,
-            mediaKind: VaultMediaKind.infer(from: encryptedURL.pathExtension),
+            mediaKind: VaultMediaKind.infer(
+                from: encryptedURL.pathExtension,
+                mimeType: details.mimeType,
+                uti: details.uti
+            ),
             state: .active,
             encryptedSizeBytes: Int64(values.fileSize ?? 0),
             originalSha256Hex: plainSha256Hex,
@@ -255,7 +259,11 @@ final class VaultMetadataStore {
             storagePath: storagePath,
             albumName: albumName,
             fileName: file.lastPathComponent,
-            mediaKind: VaultMediaKind.infer(from: file.pathExtension),
+            mediaKind: VaultMediaKind.infer(
+                from: file.pathExtension,
+                mimeType: previous?.mimeType,
+                uti: previous?.uti
+            ),
             state: state,
             encryptedSizeBytes: Int64(values.fileSize ?? 0),
             originalSha256Hex: previous?.originalSha256Hex,

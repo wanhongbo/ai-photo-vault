@@ -57,8 +57,8 @@ final class VaultHomeViewModel: ObservableObject {
     var shouldShowInitialLoading: Bool { snapshot == nil && isLoadingSnapshot }
     var shouldShowEmptyState: Bool { snapshot != nil && isEmpty && !isImporting }
     var totalCount: Int { snapshot?.totalCount ?? 0 }
-    var imageCount: Int { snapshot?.recentPhotos.filter { !$0.isVideo }.count ?? 0 }
-    var videoCount: Int { snapshot?.recentPhotos.filter(\.isVideo).count ?? 0 }
+    var imageCount: Int { snapshot?.imageCount ?? 0 }
+    var videoCount: Int { snapshot?.videoCount ?? 0 }
 
     func onAppear() {
         refreshAuthorization()
@@ -153,7 +153,7 @@ enum PhotosPickerVaultImporter {
     static func importItems(
         _ items: [PhotosPickerItem],
         into albumName: String,
-        vaultStore: VaultStore = .shared
+        vaultStore: VaultStore
     ) async -> VaultImportSummary {
         var summary = VaultImportSummary()
         for item in items {
@@ -194,12 +194,27 @@ enum PhotosPickerVaultImporter {
     }
 
     private static func extensionForPickerItem(_ item: PhotosPickerItem, fallback: String = "jpg") -> String {
-        if let type = item.supportedContentTypes.first {
-            if type.conforms(to: .movie) { return type.preferredFilenameExtension ?? "mp4" }
+        if let type = item.supportedContentTypes.first(where: { $0.conforms(to: .movie) }) {
+            return normalizedExtension(type.preferredFilenameExtension, fallback: "mp4")
+        }
+        if let type = item.supportedContentTypes.first(where: { $0.conforms(to: .image) }) {
             if type.conforms(to: .png) { return "png" }
             if type.conforms(to: .heic) { return "heic" }
-            return type.preferredFilenameExtension ?? fallback
+            return normalizedExtension(type.preferredFilenameExtension, fallback: fallback)
         }
-        return fallback.isEmpty ? "jpg" : fallback
+        if let type = item.supportedContentTypes.first {
+            return normalizedExtension(type.preferredFilenameExtension, fallback: fallback)
+        }
+        return normalizedExtension(nil, fallback: fallback)
+    }
+
+    private static func normalizedExtension(_ value: String?, fallback: String) -> String {
+        let rawValue = (value?.isEmpty == false ? value : nil) ?? fallback
+        let ext = rawValue
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: ".", with: "")
+            .lowercased()
+        if ext == "qt" { return "mov" }
+        return ext.isEmpty ? "jpg" : ext
     }
 }

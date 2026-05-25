@@ -50,11 +50,14 @@ final class VaultStore: ObservableObject {
             }
             let recent = metadata.recentActive(limit: recentLimit).map { mediaRecordToVaultPhoto($0) }
             let total = metadata.totalActiveCount
+            let activeMedia = metadata.activeMedia
             vaultDebugLog("loadSnapshot success total=\(total) albums=\(albums.map { "\($0.name):\($0.photoCount)" }.joined(separator: ",")) recent=\(recent.count)")
             snapshot = VaultSnapshot(
                 albums: albums,
                 recentPhotos: recent,
-                totalCount: total
+                totalCount: total,
+                imageCount: activeMedia.filter { $0.mediaKind == .image }.count,
+                videoCount: activeMedia.filter { $0.mediaKind == .video }.count
             )
             QuotaManager.shared.updateVaultCount(total)
         } catch {

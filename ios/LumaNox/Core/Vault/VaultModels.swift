@@ -44,6 +44,8 @@ struct VaultSnapshot {
     let albums: [VaultAlbum]
     let recentPhotos: [VaultPhoto]
     let totalCount: Int
+    let imageCount: Int
+    let videoCount: Int
 }
 
 enum VaultImportResult {
