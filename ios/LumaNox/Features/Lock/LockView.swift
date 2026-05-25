@@ -1,4 +1,5 @@
 import SwiftUI
+import LocalAuthentication
 import UniformTypeIdentifiers
 
 struct LockView: View {
@@ -7,6 +8,7 @@ struct LockView: View {
     @StateObject private var viewModel = LockViewModel()
     @State private var biometricDismissedAt: Date?
     @State private var biometricAttemptInFlight = false
+    @State private var pendingAutoBiometricTask: Task<Void, Never>?
     @State private var showAbandonDialog = false
     @State private var showRestoreFolderPicker = false
 
@@ -68,15 +70,21 @@ struct LockView: View {
         }
         .onChange(of: viewModel.state.stage) { stage in
             if stage == .unlock, viewModel.state.biometricEnabled {
-                tryAutoBiometric()
+                scheduleAutoBiometric()
             }
         }
         .onChange(of: scenePhase) { phase in
             if phase == .active {
-                tryAutoBiometric()
+                scheduleAutoBiometric()
             } else if phase == .inactive || phase == .background {
+                pendingAutoBiometricTask?.cancel()
+                pendingAutoBiometricTask = nil
                 biometricDismissedAt = nil
             }
+        }
+        .onDisappear {
+            pendingAutoBiometricTask?.cancel()
+            pendingAutoBiometricTask = nil
         }
         .accessibilityIdentifier("lock_view")
     }
@@ -260,17 +268,26 @@ struct LockView: View {
         viewModel.state.success ? LNColor.success : LNColor.brandBlue
     }
 
-    private func tryAutoBiometric() {
+    private func scheduleAutoBiometric() {
         guard scenePhase == .active else { return }
         guard viewModel.state.stage == .unlock, viewModel.state.biometricEnabled else { return }
         guard !viewModel.state.isLoading, !viewModel.state.success else { return }
         if let dismissed = biometricDismissedAt, Date().timeIntervalSince(dismissed) < 4 { return }
-        Task { await runBiometric(userInitiated: false) }
+
+        pendingAutoBiometricTask?.cancel()
+        pendingAutoBiometricTask = Task {
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            guard !Task.isCancelled else { return }
+            await runBiometric(userInitiated: false)
+        }
     }
 
     @MainActor
     private func runBiometric(userInitiated: Bool) async {
         guard !biometricAttemptInFlight else { return }
+        guard userInitiated || scenePhase == .active else { return }
+        pendingAutoBiometricTask?.cancel()
+        pendingAutoBiometricTask = nil
         biometricAttemptInFlight = true
         defer { biometricAttemptInFlight = false }
 
@@ -288,10 +305,22 @@ struct LockView: View {
         case .success:
             viewModel.onBiometricUnlockSuccess()
         case .failure(let error):
-            biometricDismissedAt = Date()
+            if userInitiated || shouldThrottleAutoBiometric(after: error) {
+                biometricDismissedAt = Date()
+            }
             if userInitiated {
                 viewModel.onBiometricUnlockFailed(error.localizedDescription)
             }
+        }
+    }
+
+    private func shouldThrottleAutoBiometric(after error: Error) -> Bool {
+        guard let laError = error as? LAError else { return true }
+        switch laError.code {
+        case .appCancel, .systemCancel, .notInteractive:
+            return false
+        default:
+            return true
         }
     }
 }
