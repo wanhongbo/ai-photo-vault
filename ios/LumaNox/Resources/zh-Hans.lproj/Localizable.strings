@@ -369,6 +369,11 @@
 "export_progress_current" = "正在处理 %@";
 "export_result_success_count" = "%d 个文件已准备好";
 "export_result_failed_count" = "%d 个失败";
+"export_result_location_title" = "导出位置";
+"export_result_location_value" = "系统相册";
+"export_result_location_hint" = "已导出到系统相册，请打开“照片”App 查看。";
+"export_result_album_unavailable" = "无法创建或打开系统相册 LumaNox。";
+"export_result_unsupported_media" = "该媒体类型无法导出到系统相册。";
 "export_result_share" = "分享文件";
 "export_result_done" = "完成";
 

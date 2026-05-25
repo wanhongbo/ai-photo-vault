@@ -93,12 +93,47 @@
         },
         {
           "type": "frame",
-          "id": "export_result_share",
-          "name": "Share files button",
+          "id": "export_result_location_card",
+          "name": "Export location card",
+          "layout": "vertical",
+          "fill": "#0C1523",
           "width": 361,
-          "height": 54,
-          "cornerRadius": 16,
-          "fill": "#4A9EFF"
+          "padding": 16,
+          "gap": 8,
+          "cornerRadius": 18,
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            {
+              "type": "text",
+              "id": "export_result_location_title",
+              "content": "导出位置",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600",
+              "fill": "#EAF1FF",
+              "width": 329
+            },
+            {
+              "type": "text",
+              "id": "export_result_location_value",
+              "content": "系统相册",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "400",
+              "fill": "#8EA2C0",
+              "width": 329
+            },
+            {
+              "type": "text",
+              "id": "export_result_location_hint",
+              "content": "已导出到系统相册，请打开“照片”App 查看。",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "400",
+              "fill": "#8EA2C0",
+              "width": 329
+            }
+          ]
         },
         {
           "type": "frame",

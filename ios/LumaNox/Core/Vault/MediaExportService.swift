@@ -101,6 +101,8 @@ final class MediaExportService: @unchecked Sendable {
                 let sourceURL = record.absoluteURL(documentsDirectory: documentsDirectory)
                 let outputURL = try uniqueOutputURL(directory: outputDirectory, fileName: displayName)
                 try decrypt(recordAt: sourceURL, to: outputURL)
+                try Task.checkCancellation()
+                try await SystemPhotoLibraryExportService.shared.export(fileURL: outputURL)
                 exported.append(outputURL)
             } catch {
                 failures.append(failure(for: record, error: error))
@@ -118,12 +120,10 @@ final class MediaExportService: @unchecked Sendable {
             ))
         }
 
-        if exported.isEmpty {
-            cleanup(outputDirectory)
-        }
+        cleanup(outputDirectory)
 
         return MediaExportBatchResult(
-            outputDirectory: exported.isEmpty ? nil : outputDirectory,
+            outputDirectory: nil,
             exportedFiles: exported,
             failures: failures,
             total: records.count,

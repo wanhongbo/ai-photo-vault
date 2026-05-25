@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 @MainActor
 enum ExportRuntimeState {
@@ -301,7 +300,6 @@ struct ExportProgressView: View {
 struct ExportResultView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
-    @State private var sharePayload: ExportSharePayload?
 
     private var result: MediaExportBatchResult {
         ExportRuntimeState.lastResult ?? .empty
@@ -311,20 +309,12 @@ struct ExportResultView: View {
         LNScreenScaffold(title: L10n.tr("export_result_title"), onBack: close) {
             VStack(spacing: 16) {
                 resultCard
-
-                if !result.exportedFiles.isEmpty {
-                    LNButton(title: L10n.tr("export_result_share"), variant: .primary) {
-                        sharePayload = ExportSharePayload(urls: result.exportedFiles)
-                    }
-                }
+                locationCard
 
                 LNButton(title: L10n.tr("export_result_done"), variant: .secondary) {
                     close()
                 }
             }
-        }
-        .sheet(item: $sharePayload) { payload in
-            ExportShareSheet(urls: payload.urls)
         }
     }
 
@@ -357,6 +347,35 @@ struct ExportResultView: View {
         .lnCard()
     }
 
+    private var locationCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label {
+                Text(L10n.tr("export_result_location_title"))
+                    .font(LNTypography.titleMedium())
+                    .foregroundStyle(LNColor.title)
+            } icon: {
+                Image(systemName: "folder")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(LNColor.brandBlue)
+            }
+
+            Text(L10n.tr("export_result_location_value"))
+                .font(LNTypography.bodyMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text(L10n.tr("export_result_location_hint"))
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("export_result_location")
+        .lnCard()
+    }
+
     private func close() {
         ExportRuntimeState.reset()
         if router.selectedTab == .vault || router.selectedTab == .settings || router.selectedTab == .ai {
@@ -365,19 +384,4 @@ struct ExportResultView: View {
             dismiss()
         }
     }
-}
-
-private struct ExportSharePayload: Identifiable {
-    let id = UUID()
-    let urls: [URL]
-}
-
-private struct ExportShareSheet: UIViewControllerRepresentable {
-    let urls: [URL]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: urls, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

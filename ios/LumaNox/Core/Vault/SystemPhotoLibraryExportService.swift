@@ -1,11 +1,21 @@
 import Foundation
 import Photos
 
-@MainActor
-enum SystemPhotoLibraryExportError: Error {
+enum SystemPhotoLibraryExportError: LocalizedError {
     case authorizationDenied
     case albumUnavailable
     case unsupportedMedia
+
+    var errorDescription: String? {
+        switch self {
+        case .authorizationDenied:
+            return L10n.tr("photo_viewer_export_denied")
+        case .albumUnavailable:
+            return L10n.tr("export_result_album_unavailable")
+        case .unsupportedMedia:
+            return L10n.tr("export_result_unsupported_media")
+        }
+    }
 }
 
 @MainActor
@@ -16,22 +26,30 @@ final class SystemPhotoLibraryExportService {
     private init() {}
 
     func export(fileURL: URL) async throws {
-        let status = await requestPhotoAddAuthorization()
-        guard status == .authorized || status == .limited else {
+        let readWriteStatus = await requestPhotoReadWriteAuthorization()
+        let addOnlyStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        guard readWriteStatus == .authorized ||
+                readWriteStatus == .limited ||
+                addOnlyStatus == .authorized ||
+                addOnlyStatus == .limited else {
             throw SystemPhotoLibraryExportError.authorizationDenied
         }
 
+        do {
+            try await exportToAlbum(fileURL: fileURL)
+        } catch SystemPhotoLibraryExportError.unsupportedMedia {
+            throw SystemPhotoLibraryExportError.unsupportedMedia
+        } catch {
+            try await exportToPhotoLibrary(fileURL: fileURL)
+        }
+    }
+
+    private func exportToAlbum(fileURL: URL) async throws {
         let album = try await album()
-        let isVideo = isVideoURL(fileURL)
         var didCreateAsset = false
 
         try await PHPhotoLibrary.shared().performChanges {
-            let assetRequest: PHAssetChangeRequest?
-            if isVideo {
-                assetRequest = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: fileURL)
-            } else {
-                assetRequest = PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: fileURL)
-            }
+            let assetRequest = self.makeAssetChangeRequest(fileURL: fileURL)
 
             guard let placeholder = assetRequest?.placeholderForCreatedAsset,
                   let albumRequest = PHAssetCollectionChangeRequest(for: album) else {
@@ -46,11 +64,23 @@ final class SystemPhotoLibraryExportService {
         }
     }
 
-    private func requestPhotoAddAuthorization() async -> PHAuthorizationStatus {
-        let current = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+    private func exportToPhotoLibrary(fileURL: URL) async throws {
+        var didCreateAsset = false
+        try await PHPhotoLibrary.shared().performChanges {
+            guard self.makeAssetChangeRequest(fileURL: fileURL) != nil else { return }
+            didCreateAsset = true
+        }
+
+        guard didCreateAsset else {
+            throw SystemPhotoLibraryExportError.unsupportedMedia
+        }
+    }
+
+    private func requestPhotoReadWriteAuthorization() async -> PHAuthorizationStatus {
+        let current = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         guard current == .notDetermined else { return current }
         return await withCheckedContinuation { continuation in
-            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
                 continuation.resume(returning: status)
             }
         }
@@ -87,6 +117,13 @@ final class SystemPhotoLibraryExportService {
             subtype: .albumRegular,
             options: options
         ).firstObject
+    }
+
+    private func makeAssetChangeRequest(fileURL: URL) -> PHAssetChangeRequest? {
+        if isVideoURL(fileURL) {
+            return PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: fileURL)
+        }
+        return PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: fileURL)
     }
 
     private func isVideoURL(_ url: URL) -> Bool {

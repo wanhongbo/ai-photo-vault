@@ -369,6 +369,11 @@
 "export_progress_current" = "Processing %@";
 "export_result_success_count" = "%d files ready";
 "export_result_failed_count" = "%d failed";
+"export_result_location_title" = "Export location";
+"export_result_location_value" = "Photos";
+"export_result_location_hint" = "Exported to the system photo album. Open Photos to view it.";
+"export_result_album_unavailable" = "Could not create or open the LumaNox album in Photos.";
+"export_result_unsupported_media" = "This media type cannot be exported to Photos.";
 "export_result_share" = "Share files";
 "export_result_done" = "Done";
 
