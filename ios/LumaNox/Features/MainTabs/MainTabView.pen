@@ -1,0 +1,211 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "main_tab_view",
+      "name": "MainTabView - Bottom tabs aligned",
+      "layout": "none",
+      "fill": "#05080D",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "children": [
+        {
+          "type": "frame",
+          "id": "bottom_tab_bar",
+          "name": "Floating bottom tab bar",
+          "layout": "horizontal",
+          "fill": "#0E1726CC",
+          "x": 16,
+          "y": 748,
+          "width": 361,
+          "height": 88,
+          "padding": 8,
+          "gap": 6,
+          "cornerRadius": 24,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#223247"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "tab_vault_selected",
+              "name": "Selected tab item",
+              "layout": "vertical",
+              "fill": "#4A9EFF1F",
+              "width": 82,
+              "height": 72,
+              "padding": [
+                8,
+                8,
+                7,
+                8
+              ],
+              "gap": 5,
+              "alignItems": "center",
+              "justifyContent": "center",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#4A9EFF"
+              },
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "tab_vault_icon",
+                  "name": "30x28 icon box",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "shield",
+                  "width": 30,
+                  "height": 28,
+                  "fill": "#B7D7FF"
+                },
+                {
+                  "type": "text",
+                  "id": "tab_vault_label",
+                  "content": "保险箱",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "650",
+                  "letterSpacing": 0,
+                  "fill": "#B7D7FF",
+                  "height": 17
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tab_camera",
+              "name": "Idle tab item",
+              "layout": "vertical",
+              "fill": "transparent",
+              "width": 82,
+              "height": 72,
+              "padding": [
+                8,
+                8,
+                7,
+                8
+              ],
+              "gap": 5,
+              "alignItems": "center",
+              "justifyContent": "center",
+              "cornerRadius": 16,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "tab_camera_icon",
+                  "name": "30x28 icon box",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "camera",
+                  "width": 30,
+                  "height": 28,
+                  "fill": "#7E90AB"
+                },
+                {
+                  "type": "text",
+                  "id": "tab_camera_label",
+                  "content": "相机",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500",
+                  "letterSpacing": 0,
+                  "fill": "#7E90AB",
+                  "height": 17
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tab_ai",
+              "name": "Idle tab item",
+              "layout": "vertical",
+              "fill": "transparent",
+              "width": 82,
+              "height": 72,
+              "padding": [
+                8,
+                8,
+                7,
+                8
+              ],
+              "gap": 5,
+              "alignItems": "center",
+              "justifyContent": "center",
+              "cornerRadius": 16,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "tab_ai_icon",
+                  "name": "30x28 icon box",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "sparkles",
+                  "width": 30,
+                  "height": 28,
+                  "fill": "#7E90AB"
+                },
+                {
+                  "type": "text",
+                  "id": "tab_ai_label",
+                  "content": "AI",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500",
+                  "letterSpacing": 0,
+                  "fill": "#7E90AB",
+                  "height": 17
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tab_settings",
+              "name": "Idle tab item",
+              "layout": "vertical",
+              "fill": "transparent",
+              "width": 82,
+              "height": 72,
+              "padding": [
+                8,
+                8,
+                7,
+                8
+              ],
+              "gap": 5,
+              "alignItems": "center",
+              "justifyContent": "center",
+              "cornerRadius": 16,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "tab_settings_icon",
+                  "name": "30x28 icon box",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "settings",
+                  "width": 30,
+                  "height": 28,
+                  "fill": "#7E90AB"
+                },
+                {
+                  "type": "text",
+                  "id": "tab_settings_label",
+                  "content": "设置",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500",
+                  "letterSpacing": 0,
+                  "fill": "#7E90AB",
+                  "height": 17
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

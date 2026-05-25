@@ -158,6 +158,7 @@
 		E46605FC4D554B7EEFA28064 /* AlbumView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 98B565F3A27E7022FDFF239A /* AlbumView.pen */; };
 		E5EF0BA8506C919D2DE953D7 /* LanguageSettingsView.pen in Resources */ = {isa = PBXBuildFile; fileRef = DEDD1F18244EC60A00AF3AB8 /* LanguageSettingsView.pen */; };
 		E6668EFF41673FC41F08B8C0 /* ExportResultView.pen in Resources */ = {isa = PBXBuildFile; fileRef = D83880285DCAAD76A4957F4C /* ExportResultView.pen */; };
+		E8658E1F4A813F2983F533D8 /* MainTabView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 9DB7BC63D175F4B32C758E0F /* MainTabView.pen */; };
 		E874808AFB3CA044334C7ADC /* runtime_lock_after_pen_keypad_fix.png in Resources */ = {isa = PBXBuildFile; fileRef = D861F43FF787971C45ED3977 /* runtime_lock_after_pen_keypad_fix.png */; };
 		EDB3BCB1A85082115078A672 /* BiometricAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 659E2F4A518B734BBFFE4354 /* BiometricAuthService.swift */; };
 		F08C2E275153E01C1EE8777C /* RecentPhotosListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */; };
@@ -280,6 +281,7 @@
 		98B565F3A27E7022FDFF239A /* AlbumView.pen */ = {isa = PBXFileReference; path = AlbumView.pen; sourceTree = "<group>"; };
 		999CB8934D7BF2A07270D1A9 /* AppLockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockManager.swift; sourceTree = "<group>"; };
 		9A8C14963566802D704E3C1C /* Argon2idKdf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Argon2idKdf.swift; sourceTree = "<group>"; };
+		9DB7BC63D175F4B32C758E0F /* MainTabView.pen */ = {isa = PBXFileReference; path = MainTabView.pen; sourceTree = "<group>"; };
 		9E7C33D88658D984E52C5BBE /* ExternalBackupLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalBackupLocation.swift; sourceTree = "<group>"; };
 		9F170F7D5870A110226CEC61 /* PhotoViewerView.pen */ = {isa = PBXFileReference; path = PhotoViewerView.pen; sourceTree = "<group>"; };
 		A237B652FBD8B3CF7F75AE16 /* BulkExportView.pen */ = {isa = PBXFileReference; path = BulkExportView.pen; sourceTree = "<group>"; };
@@ -694,6 +696,7 @@
 		9C4749A71A3267F01C7D5121 /* MainTabs */ = {
 			isa = PBXGroup;
 			children = (
+				9DB7BC63D175F4B32C758E0F /* MainTabView.pen */,
 				9440102C3F3E10E631E0A72B /* MainTabView.swift */,
 			);
 			path = MainTabs;
@@ -923,6 +926,7 @@
 				27767A3D776081E6E7D9173F /* LockView.pen in Resources */,
 				AF0575152ACF854909FEB280 /* LumaNoxStyleGuide.md in Resources */,
 				BE094B5F4A4227D4324EAA22 /* LumaNoxStyleGuide.pen in Resources */,
+				E8658E1F4A813F2983F533D8 /* MainTabView.pen in Resources */,
 				27A063DD7AD399ABA10FDE6E /* PhotoViewerView.pen in Resources */,
 				486B75BFD5833E43971EAA68 /* PrivacyRedactView.pen in Resources */,
 				F548A4960AE663233E2D61C4 /* PrivateCameraView.pen in Resources */,

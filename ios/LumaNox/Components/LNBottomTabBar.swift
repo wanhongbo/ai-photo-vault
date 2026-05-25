@@ -4,8 +4,13 @@ struct LNBottomTabBar: View {
     @Binding var selected: MainTab
     let onCameraTap: () -> Void
 
+    private let itemSpacing: CGFloat = 6
+    private let itemHeight: CGFloat = 72
+    private let iconBoxSize = CGSize(width: 30, height: 28)
+    private let labelHeight: CGFloat = 17
+
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: itemSpacing) {
             ForEach(MainTab.allCases) { tab in
                 tabButton(tab)
             }
@@ -33,16 +38,20 @@ struct LNBottomTabBar: View {
                 selected = tab
             }
         } label: {
-            VStack(spacing: 4) {
+            VStack(spacing: 5) {
                 Image(systemName: icon(for: tab))
-                    .font(.system(size: 21, weight: isSelected ? .semibold : .medium))
+                    .symbolRenderingMode(.monochrome)
+                    .font(.system(size: iconSize(for: tab), weight: isSelected ? .semibold : .medium))
+                    .frame(width: iconBoxSize.width, height: iconBoxSize.height, alignment: .center)
                 Text(label(for: tab))
-                    .font(LNTypography.labelMedium())
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(height: labelHeight, alignment: .center)
             }
             .foregroundStyle(isSelected ? LNColor.navItemActive : LNColor.navItemIdle)
             .frame(maxWidth: .infinity)
-            .frame(maxHeight: .infinity)
-            .padding(.vertical, 8)
+            .frame(height: itemHeight)
             .background(
                 RoundedRectangle(cornerRadius: LNRadius.homeNavItem)
                     .fill(isSelected ? LNColor.brandBlue.opacity(0.12) : Color.clear)
@@ -56,10 +65,19 @@ struct LNBottomTabBar: View {
         .accessibilityIdentifier("ln_tab_\(tab.rawValue)")
     }
 
+    private func iconSize(for tab: MainTab) -> CGFloat {
+        switch tab {
+        case .vault: return 22
+        case .camera: return 22
+        case .ai: return 22
+        case .settings: return 21
+        }
+    }
+
     private func icon(for tab: MainTab) -> String {
         switch tab {
         case .vault: return "lock.shield"
-        case .camera: return "camera.fill"
+        case .camera: return "camera"
         case .ai: return "sparkles"
         case .settings: return "gearshape"
         }
