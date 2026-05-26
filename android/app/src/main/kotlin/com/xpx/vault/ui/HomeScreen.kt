@@ -141,10 +141,15 @@ fun HomeScreen(
                 var added = 0
                 var duplicate = 0
                 var failed = 0
-                uris.forEach { uri ->
+                var quotaExceeded = false
+                for (uri in uris) {
                     when (VaultStore.importFromPicker(context, uri, DEFAULT_ALBUM_NAME)) {
                         VaultImportResult.ADDED -> added += 1
                         VaultImportResult.DUPLICATE -> duplicate += 1
+                        VaultImportResult.QUOTA_EXCEEDED -> {
+                            quotaExceeded = true
+                            break
+                        }
                         VaultImportResult.FAILED -> failed += 1
                     }
                 }
@@ -166,22 +171,30 @@ fun HomeScreen(
                     )
                 }
                 importing = false
+                if (quotaExceeded) {
+                    onPaywallRequired()
+                }
             }
         }
     }
 
-    val triggerImportFromLibrary = {
-        val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
-        val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
-        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
-            onPaywallRequired()
-        } else if (!importing) {
+    val triggerImportFromLibrary: () -> Unit = {
+        if (!importing) {
             importTip = null
-            pickerLauncher.launch(
-                PickVisualMediaRequest.Builder()
-                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                    .build(),
-            )
+            scope.launch {
+                VaultStore.canAddNewItem(context)
+                val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+                val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
+                if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+                    onPaywallRequired()
+                } else {
+                    pickerLauncher.launch(
+                        PickVisualMediaRequest.Builder()
+                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                            .build(),
+                    )
+                }
+            }
         }
     }
 

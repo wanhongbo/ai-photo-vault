@@ -6,8 +6,11 @@ import android.net.Uri
 import android.webkit.MimeTypeMap
 import com.xpx.vault.ai.util.PhotoIdentity
 import com.xpx.vault.billing.AiAnalysisRepoProvider
+import com.xpx.vault.billing.QuotaManagerProvider
+import com.xpx.vault.billing.SubscriptionRepoProvider
 import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.AppLogger
+import com.xpx.vault.domain.quota.FreeQuota
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
@@ -67,6 +70,7 @@ fun isVaultImage(path: String): Boolean {
 enum class VaultImportResult {
     ADDED,
     DUPLICATE,
+    QUOTA_EXCEEDED,
     FAILED,
 }
 
@@ -98,6 +102,7 @@ object VaultStore {
             videoCount = videoCount,
         )
         cachedSnapshot = snapshot
+        syncQuotaUsage(context, snapshot.totalCount)
         snapshot
     }
 
@@ -179,6 +184,7 @@ object VaultStore {
         quality: Int = 95,
     ): String? = withContext(Dispatchers.IO) {
         ensureInit(context)
+        if (!canAddNewItemInternal(context)) return@withContext null
         val album = File(rootDir(context), sanitizeAlbumName(albumName)).apply { mkdirs() }
         val safeBase = baseName.filter { it.isLetterOrDigit() || it == '_' || it == '-' }
             .ifBlank { "redacted" }
@@ -193,6 +199,7 @@ object VaultStore {
                 VaultCipher.get(context).encryptFile(plain, finalFile)
             }
             invalidateCaches()
+            syncQuotaUsage(context)
             finalFile.absolutePath
         }.getOrElse {
             if (finalFile.exists()) finalFile.delete()
@@ -206,6 +213,7 @@ object VaultStore {
         albumName: String = DEFAULT_ALBUM_NAME,
     ): VaultImportResult = withContext(Dispatchers.IO) {
         ensureInit(context)
+        if (!canAddNewItemInternal(context)) return@withContext VaultImportResult.QUOTA_EXCEEDED
         val album = File(rootDir(context), sanitizeAlbumName(albumName))
         if (!album.exists()) album.mkdirs()
         val extension = resolveExtension(context, uri)
@@ -242,6 +250,7 @@ object VaultStore {
         }
         tempPlain.delete()
         invalidateCaches()
+        syncQuotaUsage(context)
         VaultImportResult.ADDED
     }
 
@@ -280,6 +289,10 @@ object VaultStore {
             tempFile.delete()
             return@withContext null
         }
+        if (!canAddNewItemInternal(context)) {
+            tempFile.delete()
+            return@withContext null
+        }
         val album = parseAlbumFromCameraTempName(tempFile.name) ?: DEFAULT_ALBUM_NAME
         val albumDir = File(rootDir(context), sanitizeAlbumName(album)).apply { mkdirs() }
         val ext = tempFile.extension.ifBlank { "bin" }
@@ -293,6 +306,7 @@ object VaultStore {
         tempFile.delete()
         if (ok) {
             invalidateCaches()
+            syncQuotaUsage(context)
             finalFile.absolutePath
         } else {
             null
@@ -312,6 +326,7 @@ object VaultStore {
         }
         cachedSnapshot = null
         cachedAlbumPhotos.clear()
+        syncQuotaUsage(context)
         moved
     }
 
@@ -342,6 +357,7 @@ object VaultStore {
                 }
             }.onFailure { AppLogger.w("VaultStore", "purgePhoto on delete failed: ${it.message}") }
             invalidateCaches()
+            syncQuotaUsage(context)
         }
         ok
     }
@@ -417,8 +433,14 @@ object VaultStore {
                 if (parent.listFiles()?.isEmpty() == true) parent.delete()
             }
             invalidateCaches()
+            syncQuotaUsage(context)
         }
         if (ok) safeAlbum else null
+    }
+
+    suspend fun canAddNewItem(context: Context): Boolean = withContext(Dispatchers.IO) {
+        ensureInit(context)
+        canAddNewItemInternal(context)
     }
 
     suspend fun purgeFromTrash(path: String): Boolean = withContext(Dispatchers.IO) {
@@ -474,6 +496,18 @@ object VaultStore {
     }
 
     private fun rootDir(context: Context): File = File(context.filesDir, ROOT_DIR)
+
+    private fun canAddNewItemInternal(context: Context): Boolean {
+        val isPremium = SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
+        if (isPremium) return true
+        val count = listAllPhotos(context).size
+        syncQuotaUsage(context, count)
+        return count < FreeQuota.MAX_VAULT_ITEMS
+    }
+
+    private fun syncQuotaUsage(context: Context, count: Int = listAllPhotos(context).size) {
+        QuotaManagerProvider.get(context)?.updateVaultCount(count)
+    }
 
     /** 从 `cam_<album>_<ts>.<ext>` 格式文件名中恢复 album 名称。 */
     private fun parseAlbumFromCameraTempName(name: String): String? {

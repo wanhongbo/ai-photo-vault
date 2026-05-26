@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +60,8 @@ import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
 import com.xpx.vault.ui.theme.UiColors
+import com.xpx.vault.ui.vault.VaultStore
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -79,6 +82,7 @@ fun PrivacyRedactScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(path) {
         val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
@@ -169,15 +173,18 @@ fun PrivacyRedactScreen(
             enabled = state.ready && state.preview != null && !state.saving && !state.exporting && !state.sharing,
             onClick = {
                 // 入库前做配额硬墙检查，vault 已满时跳转支付墙。
-                val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
-                val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
-                if (gate is com.xpx.vault.billing.GateResult.HardWall) {
-                    onPaywallRequired()
-                    return@PrimaryActionButton
-                }
-                viewModel.saveToVault { success, msg ->
-                    val text = if (success) context.getString(R.string.privacy_redact_saved) else context.getString(R.string.privacy_redact_save_failed, msg)
-                    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+                scope.launch {
+                    VaultStore.canAddNewItem(context)
+                    val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+                    val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
+                    if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+                        onPaywallRequired()
+                        return@launch
+                    }
+                    viewModel.saveToVault { success, msg ->
+                        val text = if (success) context.getString(R.string.privacy_redact_saved) else context.getString(R.string.privacy_redact_save_failed, msg)
+                        Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
         )

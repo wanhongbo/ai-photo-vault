@@ -99,6 +99,7 @@ fun AlbumScreen(
 
     suspend fun reload() {
         val latest = VaultStore.listPhotosInAlbum(context, albumName)
+        VaultStore.loadSnapshot(context, recentLimit = 0)
         if (photos != latest) photos = latest
         loaded = true
         // Keep only still-existing selections.
@@ -126,28 +127,39 @@ fun AlbumScreen(
     ) { uris ->
         if (uris.isNotEmpty()) {
             scope.launch {
-                uris.forEach { uri ->
-                    VaultStore.importFromPicker(context, uri, albumName)
+                var quotaExceeded = false
+                for (uri in uris) {
+                    val result = VaultStore.importFromPicker(context, uri, albumName)
+                    if (result == com.xpx.vault.ui.vault.VaultImportResult.QUOTA_EXCEEDED) {
+                        quotaExceeded = true
+                        break
+                    }
                 }
                 reload()
                 // 导入完成后触发一次增量 AI 扫描。
                 com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
+                if (quotaExceeded) {
+                    onPaywallRequired()
+                }
             }
         }
     }
 
     // 导入入口统一走配额硬墙检查；vault 已满时跳支付墙。
-    val triggerImport = {
-        val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
-        val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
-        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
-            onPaywallRequired()
-        } else {
-            pickerLauncher.launch(
-                PickVisualMediaRequest.Builder()
-                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                    .build(),
-            )
+    val triggerImport: () -> Unit = {
+        scope.launch {
+            VaultStore.canAddNewItem(context)
+            val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+            val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
+            if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+                onPaywallRequired()
+            } else {
+                pickerLauncher.launch(
+                    PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                        .build(),
+                )
+            }
         }
     }
 

@@ -534,6 +534,8 @@ fun PrivateCameraScreen(
                                                         Log.i(CAMERA_DIAG_TAG, "event=video_record_success duration_ms=$recordingDurationMs")
                                                         // 录像入库后触发一次增量 AI 扫描（视频当前仅用于 Cleanup/停止笖选，对分类影响小）。
                                                         com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
+                                                    } else if (!VaultStore.canAddNewItem(context)) {
+                                                        onPaywallRequired()
                                                     } else {
                                                         message = context.getString(R.string.camera_video_import_failed)
                                                         Log.e(CAMERA_DIAG_TAG, "event=video_finalize_failed")
@@ -580,6 +582,8 @@ fun PrivateCameraScreen(
                                     message = context.getString(R.string.camera_photo_saved)
                                     // 拍照入库后触发一次增量 AI 扫描。
                                     com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
+                                } else if (!VaultStore.canAddNewItem(context)) {
+                                    onPaywallRequired()
                                 } else {
                                     message = context.getString(R.string.camera_save_failed_storage)
                                 }
