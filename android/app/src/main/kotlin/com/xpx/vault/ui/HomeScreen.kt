@@ -1,14 +1,5 @@
 package com.xpx.vault.ui
 
-import android.Manifest
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -60,7 +51,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -102,10 +92,7 @@ fun HomeScreen(
     val hasPin by pinStatusVm.hasPin.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val hostActivity = remember(context) { context.findActivity() }
     val scope = rememberCoroutineScope()
-    var hasAlbumPermission by remember { mutableStateOf(checkAlbumReadPermission(context)) }
-    var permanentlyDenied by remember { mutableStateOf(false) }
     var creatingAlbum by remember { mutableStateOf(false) }
     var newAlbumName by remember { mutableStateOf("") }
     val cachedSnapshot = remember { VaultStore.peekCachedSnapshot() }
@@ -138,8 +125,6 @@ fun HomeScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                hasAlbumPermission = checkAlbumReadPermission(context)
-                permanentlyDenied = !hasAlbumPermission && isPermanentlyDenied(hostActivity)
                 scope.launch { refreshVault() }
             }
         }
@@ -185,24 +170,11 @@ fun HomeScreen(
         }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-    ) {
-        hasAlbumPermission = checkAlbumReadPermission(context)
-        permanentlyDenied = !hasAlbumPermission && isPermanentlyDenied(hostActivity)
-    }
-
     val triggerImportFromLibrary = {
         val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
         val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.VAULT_IMPORT)
         if (gate is com.xpx.vault.billing.GateResult.HardWall) {
             onPaywallRequired()
-        } else if (!hasAlbumPermission) {
-            if (permanentlyDenied) {
-                openAppSettings(context)
-            } else {
-                permissionLauncher.launch(requiredAlbumPermissions())
-            }
         } else if (!importing) {
             importTip = null
             pickerLauncher.launch(
@@ -647,79 +619,6 @@ private fun HeaderActionButton(
 }
 
 @Composable
-private fun HomeAlbumPermissionState(
-    onGrant: () -> Unit,
-    onOpenSettings: () -> Unit,
-    permanentlyDenied: Boolean,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.sectionBg)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
-            .padding(
-                start = 20.dp,
-                end = 20.dp,
-                top = UiSize.permissionCardTopPad,
-                bottom = UiSize.permissionCardBottomPad,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(UiSize.permissionIconWrap)
-                .background(UiColors.Home.emptyIconBg, CircleShape)
-                .border(1.dp, UiColors.Home.navItemActiveStroke, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_home_album_permission),
-                contentDescription = null,
-                tint = UiColors.Home.navItemActive,
-                modifier = Modifier.size(UiSize.permissionIcon),
-            )
-        }
-        Text(
-            text = stringResource(R.string.home_permission_title),
-            color = UiColors.Home.emptyTitle,
-            fontSize = UiTextSize.permissionTitle,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = UiSize.permissionTitleTopGap),
-        )
-        Text(
-            text = if (permanentlyDenied) stringResource(R.string.home_permission_denied_desc) else stringResource(R.string.home_permission_desc),
-            color = UiColors.Home.emptyBody,
-            fontSize = UiTextSize.permissionBody,
-            lineHeight = UiTextSize.permissionBodyLineHeight,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = UiSize.permissionBodyTopGap),
-        )
-        VaultEmptyActionButton(
-            text = if (permanentlyDenied) stringResource(R.string.home_permission_settings) else stringResource(R.string.home_permission_grant),
-            onClick = if (permanentlyDenied) onOpenSettings else onGrant,
-            isPrimary = true,
-            showIcon = false,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = UiSize.permissionPrimaryTopGap),
-        )
-        if (permanentlyDenied) {
-            VaultEmptyActionButton(
-                text = stringResource(R.string.home_permission_later),
-                onClick = {},
-                isPrimary = false,
-                showIcon = false,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = UiSize.permissionSecondaryTopGap),
-            )
-        }
-    }
-}
-
-@Composable
 private fun VaultEmptyState(
     isLoading: Boolean,
     onImport: () -> Unit,
@@ -918,36 +817,3 @@ fun homeTabs(): List<HomeNavTab> = listOf(
 )
 
 private data class ImportTip(val message: String, val isError: Boolean)
-
-private fun requiredAlbumPermissions(): Array<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-    arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
-} else {
-    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-}
-
-private fun checkAlbumReadPermission(context: Context): Boolean =
-    requiredAlbumPermissions().all { permission ->
-        ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-    }
-
-private fun isPermanentlyDenied(activity: Activity?): Boolean {
-    if (activity == null) return false
-    return requiredAlbumPermissions().any { permission ->
-        ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED &&
-            !activity.shouldShowRequestPermissionRationale(permission)
-    }
-}
-
-private fun openAppSettings(context: Context) {
-    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-        data = Uri.parse("package:${context.packageName}")
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    context.startActivity(intent)
-}
-
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
-}
