@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,10 +59,21 @@ import com.xpx.vault.ui.theme.UiSize
 fun AiClassifyScreen(
     onBack: () -> Unit,
     onOpenPhoto: (String) -> Unit = {},
+    onPaywallRequired: () -> Unit = {},
     viewModel: AiClassifyViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val selected = state.selected
+    val context = LocalContext.current
+    val requireAiAccess: (() -> Unit) -> Unit = { action ->
+        val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+        val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.AI_CLASSIFY)
+        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+            onPaywallRequired()
+        } else {
+            action()
+        }
+    }
 
     if (selected != null) {
         BackHandler(onBack = viewModel::closeDetail)
@@ -80,7 +92,7 @@ fun AiClassifyScreen(
                 .safeDrawingPadding(),
         ) {
             AppTopBar(title = stringResource(R.string.ai_classify_title), onBack = onBack)
-            ClassifySummary(scanning = state.scanning, onScan = viewModel::startScan)
+            ClassifySummary(scanning = state.scanning, onScan = { requireAiAccess { viewModel.startScan() } })
 
             if (state.categoryCounts.isEmpty() && !state.scanning) {
                 ClassifyEmptyState(scanning = state.scanning)

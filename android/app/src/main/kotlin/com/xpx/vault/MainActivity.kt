@@ -490,6 +490,11 @@ class MainActivity : FragmentActivity() {
                                         launchSingleTop = true
                                     }
                                 },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
+                                    ) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_AI_SENSITIVE) {
@@ -500,6 +505,11 @@ class MainActivity : FragmentActivity() {
                                         launchSingleTop = true
                                     }
                                 },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
+                                    ) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_AI_CLASSIFY) {
@@ -509,6 +519,11 @@ class MainActivity : FragmentActivity() {
                                     navController.navigate(viewerRouteForPath(path)) {
                                         launchSingleTop = true
                                     }
+                                },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
+                                    ) { launchSingleTop = true }
                                 },
                             )
                         }
@@ -633,6 +648,11 @@ class MainActivity : FragmentActivity() {
                                 onPaywallRequired = {
                                     navController.navigate(
                                         "$ROUTE_PAYWALL?dismissable=false&source=quota_vault",
+                                    ) { launchSingleTop = true }
+                                },
+                                onAiPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
                                     ) { launchSingleTop = true }
                                 },
                             )

@@ -7,7 +7,7 @@ import com.xpx.vault.AppLogger
  * 双密钥重构上线后的一次性迁移清理：
  *
  * - 删除旧版零散落在私有目录下的备份中间产物（vault_backup_*.zip / backup_index.json / 临时 aiv 包等）。
- * - 读取数据库中遗留的 `backup_records` 表并清空（新版改用 `backup_meta.json` 记录元信息）。
+ * - 保留数据库中的 `backup_records` 表；新版仍用它作为免费备份次数配额记录。
  *
  * 通过 SharedPreferences 的标记位确保整轮清理只会执行一次，避免每次启动重复扫描。
  */
@@ -40,8 +40,7 @@ object LegacyBackupCleanup {
             }.onFailure { AppLogger.w(TAG, "filesDir scan failed: ${it.message}") }
         }
 
-        // 旧的 backup_records 表：新版不再写入；这里借 Room 侧清表需要 PhotoVaultDatabase 单例，
-        // 考虑到数据库初始化链路复杂，保留表结构不动，仅标记 cleanup 已完成即可。
+        // backup_records 仍作为配额计数来源，不能在启动清理中删除。
         prefs.edit().putInt(KEY_DONE_VERSION, CURRENT_VERSION).apply()
         AppLogger.d(TAG, "cleanup version=$CURRENT_VERSION completed")
     }

@@ -13,6 +13,7 @@ import com.xpx.vault.ai.privacy.RedactionKind
 import com.xpx.vault.ai.privacy.RedactionRegion
 import com.xpx.vault.ai.privacy.RedactionStyle
 import com.xpx.vault.data.crypto.VaultCipher
+import com.xpx.vault.domain.quota.QuotaManager
 import com.xpx.vault.ui.export.MediaExporter
 import com.xpx.vault.ui.export.MediaShareHelper
 import com.xpx.vault.ui.vault.VaultStore
@@ -39,6 +40,7 @@ import kotlin.math.min
 class PrivacyRedactViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val detector: MlKitRedactionDetector,
+    private val quotaManager: QuotaManager,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PrivacyRedactUiState())
@@ -57,6 +59,7 @@ class PrivacyRedactViewModel @Inject constructor(
                 return@launch
             }
             originalBitmap = bmp
+            quotaManager.incrementAiUsage()
             val ready = runCatching { detector.isReady() }.getOrDefault(false)
             val detected = if (ready) {
                 runCatching { detector.detect(bmp) }.getOrDefault(emptyList())
@@ -202,9 +205,10 @@ class PrivacyRedactViewModel @Inject constructor(
         }
         if (_state.value.sharing) return
         _state.value = _state.value.copy(sharing = true)
+        val skipWatermark = com.xpx.vault.billing.SubscriptionRepoProvider.get(appContext)?.isPremium?.value ?: false
         viewModelScope.launch {
             val baseName = "redacted_" + File(path).nameWithoutExtension.takeLast(8)
-            val outcome = MediaShareHelper.shareBitmap(appContext, preview, baseName, chooserTitle)
+            val outcome = MediaShareHelper.shareBitmap(appContext, preview, baseName, chooserTitle, skipWatermark = skipWatermark)
             _state.value = _state.value.copy(sharing = false)
             when (outcome) {
                 is MediaShareHelper.ShareOutcome.Success -> onResult(true, outcome.mimeType)

@@ -31,6 +31,17 @@ interface QuotaManager {
     /** 递增当月 AI 使用计数（执行一次 AI 操作后调用）。 */
     suspend fun incrementAiUsage()
 
+    /** 记录一次成功创建的备份，用于免费备份次数配额。 */
+    suspend fun recordBackupCreated(
+        outputPath: String,
+        createdAtMs: Long,
+        version: Int,
+        checksumHex: String?,
+    )
+
+    /** 从持久化记录刷新备份次数。 */
+    suspend fun refreshBackupUsage()
+
     /** 更新 vault 条目总数（VaultStore 是文件系统级的，由调用方主动推送）。 */
     fun updateVaultCount(count: Int)
 }

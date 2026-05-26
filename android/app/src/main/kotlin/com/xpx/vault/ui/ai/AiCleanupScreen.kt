@@ -67,12 +67,22 @@ import com.xpx.vault.ui.theme.UiColors
 fun AiCleanupScreen(
     onBack: () -> Unit,
     onOpenPhoto: (String) -> Unit = {},
+    onPaywallRequired: () -> Unit = {},
     viewModel: AiCleanupViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by rememberSaveable { mutableStateOf(CleanupTab.ALL) }
     var showConfirmDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val requireAiAccess: (() -> Unit) -> Unit = { action ->
+        val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+        val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.AI_CLEANUP)
+        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+            onPaywallRequired()
+        } else {
+            action()
+        }
+    }
 
     // 清理完成后弹 Toast
     LaunchedEffect(state.lastCleanedCount) {
@@ -92,7 +102,7 @@ fun AiCleanupScreen(
 
         CleanupSummary(
             state = state,
-            onScan = { viewModel.startScan() },
+            onScan = { requireAiAccess { viewModel.startScan() } },
             onCleanup = { showConfirmDialog = true },
         )
 
@@ -125,7 +135,7 @@ fun AiCleanupScreen(
         dismissText = stringResource(R.string.common_cancel),
         onConfirm = {
             showConfirmDialog = false
-            viewModel.cleanupRedundant()
+            requireAiAccess { viewModel.cleanupRedundant() }
         },
         onDismiss = { showConfirmDialog = false },
         confirmVariant = AppButtonVariant.PRIMARY,

@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.StatFs
 import com.xpx.vault.AppLogger
 import com.xpx.vault.R
+import com.xpx.vault.billing.QuotaManagerProvider
 import com.xpx.vault.data.crypto.BackupKeyManager
 import com.xpx.vault.data.crypto.VaultCipher
 import java.io.File
@@ -144,6 +145,12 @@ object LocalBackupMvpService {
                     },
                 ),
             )
+            recordBackupUsage(
+                context = context,
+                outputPath = "auto:backup.dat",
+                createdAtMs = now,
+                checksumHex = null,
+            )
 
             val result = BackupExecutionResult.success(
                 context,
@@ -249,6 +256,12 @@ object LocalBackupMvpService {
                     sizeBytes = writeResult.totalBytes,
                     note = null,
                 ),
+            )
+            recordBackupUsage(
+                context = context,
+                outputPath = targetUri.toString(),
+                createdAtMs = now,
+                checksumHex = localMd5,
             )
 
             val result = BackupExecutionResult.success(
@@ -619,6 +632,24 @@ object LocalBackupMvpService {
         "bkp_${now}_${UUID.randomUUID().toString().take(8)}"
 
     private fun shortId(backupId: String): String = backupId.takeLast(8)
+
+    private suspend fun recordBackupUsage(
+        context: Context,
+        outputPath: String,
+        createdAtMs: Long,
+        checksumHex: String?,
+    ) {
+        runCatching {
+            QuotaManagerProvider.get(context)?.recordBackupCreated(
+                outputPath = outputPath,
+                createdAtMs = createdAtMs,
+                version = BackupPackageV1.VERSION,
+                checksumHex = checksumHex,
+            )
+        }.onFailure {
+            AppLogger.w(TAG, "backup quota record failed: ${it.message}")
+        }
+    }
 
     // ---------- 启动清理：旧 v0 结构 + 外部 .writing/.bak 自检 ----------
 

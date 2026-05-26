@@ -74,12 +74,21 @@ fun PrivacyRedactScreen(
     path: String,
     onBack: () -> Unit,
     onPaywallRequired: () -> Unit = {},
+    onAiPaywallRequired: () -> Unit = onPaywallRequired,
     viewModel: PrivacyRedactViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(path) { viewModel.load(path) }
+    LaunchedEffect(path) {
+        val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+        val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.AI_PRIVACY)
+        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+            onAiPaywallRequired()
+        } else {
+            viewModel.load(path)
+        }
+    }
 
     Column(
         modifier = Modifier

@@ -3,6 +3,7 @@ package com.xpx.vault.data.quota
 import android.content.Context
 import com.xpx.vault.data.db.dao.BackupRecordDao
 import com.xpx.vault.data.db.dao.QuotaUsageDao
+import com.xpx.vault.data.db.entity.BackupRecordEntity
 import com.xpx.vault.data.db.entity.QuotaUsageEntity
 import com.xpx.vault.domain.quota.FreeQuota
 import com.xpx.vault.domain.quota.QuotaManager
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -83,6 +85,31 @@ class QuotaManagerImpl @Inject constructor(
         quotaUsageDao.insertIfAbsent(QuotaUsageEntity(yearMonth = ym))
         quotaUsageDao.incrementAiCount(ym)
         refreshAiCount()
+    }
+
+    override suspend fun recordBackupCreated(
+        outputPath: String,
+        createdAtMs: Long,
+        version: Int,
+        checksumHex: String?,
+    ) {
+        withContext(Dispatchers.IO) {
+            backupRecordDao.insert(
+                BackupRecordEntity(
+                    filePath = outputPath,
+                    createdAtEpochMs = createdAtMs,
+                    version = version,
+                    checksumHex = checksumHex,
+                ),
+            )
+            refreshBackupCount()
+        }
+    }
+
+    override suspend fun refreshBackupUsage() {
+        withContext(Dispatchers.IO) {
+            refreshBackupCount()
+        }
     }
 
     // ---- 由外部调用刷新 vault count ----

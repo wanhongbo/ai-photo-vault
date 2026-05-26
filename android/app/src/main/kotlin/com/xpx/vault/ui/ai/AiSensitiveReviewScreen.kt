@@ -59,9 +59,20 @@ import com.xpx.vault.ui.theme.UiColors
 fun AiSensitiveReviewScreen(
     onBack: () -> Unit,
     onOpenPhoto: (String) -> Unit = {},
+    onPaywallRequired: () -> Unit = {},
     viewModel: AiSensitiveReviewViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val requireAiAccess: (() -> Unit) -> Unit = { action ->
+        val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
+        val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.AI_SENSITIVE)
+        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+            onPaywallRequired()
+        } else {
+            action()
+        }
+    }
 
     // 按 photoId 聚合：同一 photoId 的多条 record 合并展示为一个单元格，kind 去重后汇总。
     val cells: List<SensitiveGridItem> = remember(state.pending, state.pathByPhotoId) {
@@ -86,7 +97,7 @@ fun AiSensitiveReviewScreen(
         SensitiveSummary(
             photoCount = cells.size,
             scanning = state.scanning,
-            onScan = viewModel::startScan,
+            onScan = { requireAiAccess { viewModel.startScan() } },
         )
         if (cells.isEmpty()) {
             SensitiveEmptyState(scanning = state.scanning)

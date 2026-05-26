@@ -232,7 +232,12 @@ fun BackupRestoreScreen(
                     lastBackupAtMs = state.autoLastBackupAtMs,
                     fingerprintHex = state.autoFingerprintHex,
                     externalPathHint = state.autoExternalPathHint,
-                    onTriggerNow = { viewModel.triggerAutoBackupNow() },
+                    onTriggerNow = {
+                        viewModel.requestBackupAccess(
+                            onAllowed = { viewModel.triggerAutoBackupNow() },
+                            onBlocked = onPaywallRequired,
+                        )
+                    },
                 )
             }
             // 手动备份
@@ -242,8 +247,13 @@ fun BackupRestoreScreen(
                     desc = stringResource(R.string.backup_card_desc),
                     action = stringResource(R.string.backup_card_action),
                     onAction = {
-                        val name = "AIVault_Backup_${formatStamp(System.currentTimeMillis())}.aivb"
-                        manualBackupLauncher.launch(name)
+                        viewModel.requestBackupAccess(
+                            onAllowed = {
+                                val name = "AIVault_Backup_${formatStamp(System.currentTimeMillis())}.aivb"
+                                manualBackupLauncher.launch(name)
+                            },
+                            onBlocked = onPaywallRequired,
+                        )
                     },
                     badgeRes = R.drawable.ic_backup_table,
                     loading = state.backingUp,
@@ -550,6 +560,7 @@ private fun formatSize(bytes: Long): String {
 class BackupRestoreViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val paywallGatekeeper: com.xpx.vault.billing.PaywallGatekeeper,
+    private val quotaManager: com.xpx.vault.domain.quota.QuotaManager,
 ) : ViewModel() {
     private val _state = MutableStateFlow(BackupRestoreUiState())
     val state: StateFlow<BackupRestoreUiState> = _state.asStateFlow()
@@ -561,8 +572,24 @@ class BackupRestoreViewModel @Inject constructor(
             return gate is com.xpx.vault.billing.GateResult.HardWall
         }
 
+    fun requestBackupAccess(
+        onAllowed: () -> Unit,
+        onBlocked: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            quotaManager.refreshBackupUsage()
+            val gate = paywallGatekeeper.checkAccess(com.xpx.vault.domain.quota.ProFeature.BACKUP_CREATE)
+            if (gate is com.xpx.vault.billing.GateResult.HardWall) {
+                onBlocked()
+            } else {
+                onAllowed()
+            }
+        }
+    }
+
     fun refresh() {
         viewModelScope.launch {
+            quotaManager.refreshBackupUsage()
             val snapshot = withContext(Dispatchers.IO) {
                 val snap = BackupMeta.load(context)
                 val treeUri = ExternalBackupLocation.getTreeUri(context)

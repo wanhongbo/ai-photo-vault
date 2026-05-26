@@ -96,6 +96,7 @@ class AiCleanupViewModel @Inject constructor(
 
     fun startScan() {
         viewModelScope.launch {
+            quotaManager.incrementAiUsage()
             scanUseCase.run()
             refreshPathMap()
         }

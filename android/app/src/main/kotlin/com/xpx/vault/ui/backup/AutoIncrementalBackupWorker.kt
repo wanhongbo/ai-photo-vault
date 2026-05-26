@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.xpx.vault.AppLogger
+import com.xpx.vault.billing.GateResult
+import com.xpx.vault.billing.PaywallGatekeeperProvider
+import com.xpx.vault.billing.QuotaManagerProvider
+import com.xpx.vault.domain.quota.ProFeature
 
 /**
  * 自动备份 Worker。
@@ -31,6 +35,12 @@ class AutoIncrementalBackupWorker(
         if (!ExternalBackupLocation.isWritable(ctx)) {
             AppLogger.w(TAG, "retry: external backup location not writable")
             return Result.retry()
+        }
+        QuotaManagerProvider.get(ctx)?.refreshBackupUsage()
+        val gate = PaywallGatekeeperProvider.get(ctx)?.checkAccess(ProFeature.BACKUP_CREATE)
+        if (gate is GateResult.HardWall) {
+            AppLogger.d(TAG, "skip: backup quota exhausted")
+            return Result.success()
         }
         val result = LocalBackupMvpService.createBackup(ctx, BackupTrigger.AUTO)
         return when {
