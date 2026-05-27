@@ -426,9 +426,9 @@ struct AICleanupView: View {
 
     private func open(_ item: LNMediaItem) {
         if item.isVideo {
-            router.pushAI(.videoPlayer(path: item.path, isTrash: false))
+            router.pushAI(.videoPlayer(path: item.path, isTrash: false, source: .aiCleanup))
         } else {
-            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .recent))
+            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .aiCleanup))
         }
     }
 
@@ -493,9 +493,9 @@ struct AISensitiveReviewView: View {
 
     private func open(_ item: LNMediaItem) {
         if item.isVideo {
-            router.pushAI(.videoPlayer(path: item.path, isTrash: false))
+            router.pushAI(.videoPlayer(path: item.path, isTrash: false, source: .aiSensitive))
         } else {
-            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .recent))
+            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .aiSensitive))
         }
     }
 }
@@ -674,10 +674,14 @@ struct AIClassifyDetailView: View {
     }
 
     private func open(_ item: LNMediaItem) {
+        let source = PhotoViewerSource.aiClassify(
+            category: category,
+            tag: selectedTag == AIClassifyTagFilter.all ? nil : selectedTag
+        )
         if item.isVideo {
-            router.pushAI(.videoPlayer(path: item.path, isTrash: false))
+            router.pushAI(.videoPlayer(path: item.path, isTrash: false, source: source))
         } else {
-            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .recent))
+            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: source))
         }
     }
 }

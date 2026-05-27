@@ -52,6 +52,7 @@
 		3F49C11F90E4FA39CC9F0D06 /* screen_1e.png in Resources */ = {isa = PBXBuildFile; fileRef = A66734A0A71CAD22404565E2 /* screen_1e.png */; };
 		40C0831D365CC02335A2EBAA /* LockViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21FD7DB812096513A52C8BC2 /* LockViewModel.swift */; };
 		43E5E062B31524F9DE0975FD /* LumaNoxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 715A04D35E83686FA04D1FAC /* LumaNoxApp.swift */; };
+		447BF86A6A0DF857B1F1B8CC /* PhotoViewerSource+MediaItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = CADC1AC15B57B9A56B8BB8D2 /* PhotoViewerSource+MediaItems.swift */; };
 		45CFD584AD99A36121C859D9 /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD2828BB1A11E50AB9D5DCD1 /* LocalAuthentication.framework */; };
 		486B75BFD5833E43971EAA68 /* PrivacyRedactView.pen in Resources */ = {isa = PBXBuildFile; fileRef = B54F71A283BE867B7C0AC126 /* PrivacyRedactView.pen */; };
 		49891495A9906516FA27049C /* Argon2idKdf.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8C14963566802D704E3C1C /* Argon2idKdf.swift */; };
@@ -308,6 +309,7 @@
 		C18EF7279A90DDB314CF977D /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
 		C3AC7B62556E04140F3A58B6 /* screen_2a.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_2a.png; sourceTree = "<group>"; };
 		C4C2C718E6E4D2196F57CEAB /* SettingsBackupSyncViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackupSyncViewModel.swift; sourceTree = "<group>"; };
+		CADC1AC15B57B9A56B8BB8D2 /* PhotoViewerSource+MediaItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PhotoViewerSource+MediaItems.swift"; sourceTree = "<group>"; };
 		CC2B240AAE981FCB70074771 /* LNSharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNSharedViews.swift; sourceTree = "<group>"; };
 		CD2828BB1A11E50AB9D5DCD1 /* LocalAuthentication.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LocalAuthentication.framework; path = System/Library/Frameworks/LocalAuthentication.framework; sourceTree = SDKROOT; };
 		CD67FBEAD888F38170B71901 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -378,6 +380,7 @@
 			children = (
 				C18EF7279A90DDB314CF977D /* AppRoute.swift */,
 				34CCF694E9032616FD67D5E6 /* AppRouter.swift */,
+				CADC1AC15B57B9A56B8BB8D2 /* PhotoViewerSource+MediaItems.swift */,
 				826020A1A0EC371A3DA0B66F /* RouteDestinationView.swift */,
 				BF1674AF1625ADE4939F2370 /* SwipeBackNavigationModifier.swift */,
 			);
@@ -1046,6 +1049,7 @@
 				F531804D21BDA4B00CFEC9F0 /* PaywallNavigation.swift in Sources */,
 				2B7D644A9AB8494B306E77C6 /* PaywallView.swift in Sources */,
 				4D53235C038A42DA3DCF7570 /* PaywallViewModel.swift in Sources */,
+				447BF86A6A0DF857B1F1B8CC /* PhotoViewerSource+MediaItems.swift in Sources */,
 				2E34541BB9BA6B36520524B1 /* PlaintextTempFileManager.swift in Sources */,
 				3A75B14358F2B402AE3BCADD /* PrivacyRedactionService.swift in Sources */,
 				266AE2E51755A32226FD9004 /* PrivateCameraViewModel.swift in Sources */,

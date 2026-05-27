@@ -418,24 +418,7 @@ struct VideoPlayerView: View {
 
     @MainActor
     private func reloadOrderedItems() async {
-        let items: [LNMediaItem]
-        if isTrash || source == .trash {
-            let trashItems = await vaultStore.listTrashItems()
-            items = trashItems.map { $0.toMediaItem() }
-        } else {
-            switch source {
-            case .album(let name):
-                await vaultStore.loadSnapshot()
-                let safeName = vaultStore.sanitizeAlbumName(name)
-                items = vaultStore.photos(in: safeName).map { $0.toMediaItem() }
-            case .search(let query):
-                await vaultStore.loadSnapshot()
-                items = vaultStore.searchPhotos(query: query).map { $0.toMediaItem() }
-            case .recent, .trash:
-                await vaultStore.loadSnapshot()
-                items = vaultStore.snapshot?.recentPhotos.map { $0.toMediaItem() } ?? []
-            }
-        }
+        let items = await source.loadMediaItems(isTrash: isTrash, vaultStore: vaultStore)
         let currentItem = items.first { $0.path == path } ?? Self.fallbackItem(path: path, isVideo: true)
         orderedItems = items.contains(where: { $0.path == path }) ? items : [currentItem] + items
     }

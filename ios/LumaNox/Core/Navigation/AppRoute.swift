@@ -14,6 +14,9 @@ enum PhotoViewerSource: Hashable {
     case album(name: String)
     case search(query: String)
     case trash
+    case aiCleanup
+    case aiSensitive
+    case aiClassify(category: String, tag: String?)
 }
 
 enum AppRoute: Hashable {
