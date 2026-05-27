@@ -5,31 +5,204 @@
       "type": "frame",
       "id": "screen_change_pin",
       "name": "ChangePinView",
-      "layout": "vertical",
+      "layout": "none",
       "width": 393,
       "height": 852,
       "clip": true,
-      "fill": "#05080D",
-      "padding": [54, 16, 24, 16],
-      "gap": 20,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "rotation": 180,
+        "colors": [
+          { "color": "#0B1324", "position": 0 },
+          { "color": "#05080D", "position": 1 }
+        ]
+      },
       "children": [
-        { "type": "text", "id": "change_pin_title", "content": "修改 PIN", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
         {
           "type": "frame",
-          "id": "change_pin_steps",
-          "layout": "vertical",
-          "width": "fill_container",
-          "height": "fit_content",
-          "fill": "#0C1523",
-          "stroke": { "fill": "#223247", "thickness": 1 },
-          "cornerRadius": 20,
-          "padding": 18,
-          "gap": 12,
+          "id": "change_pin_nav",
+          "name": "Navigation",
+          "layout": "horizontal",
+          "x": 16,
+          "y": 54,
+          "width": 361,
+          "height": 44,
+          "alignItems": "center",
           "children": [
-            { "type": "text", "id": "step_verify", "content": "1. 验证当前 PIN", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
-            { "type": "text", "id": "step_new", "content": "2. 输入新 PIN", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
-            { "type": "text", "id": "step_confirm", "content": "3. 再次确认新 PIN", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" }
+            {
+              "type": "frame",
+              "id": "change_pin_back",
+              "layout": "none",
+              "width": 44,
+              "height": 44,
+              "fill": "#0E1726CC",
+              "cornerRadius": 14,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "change_pin_back_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "chevron-left",
+                  "x": 12,
+                  "y": 12,
+                  "width": 20,
+                  "height": 20,
+                  "fill": "#EAF1FF"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "change_pin_title",
+              "content": "修改 PIN",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600",
+              "fill": "#EAF1FF",
+              "textAlign": "center",
+              "textGrowth": "fixed-width",
+              "width": 273
+            },
+            {
+              "type": "rectangle",
+              "id": "change_pin_nav_spacer",
+              "width": 44,
+              "height": 44,
+              "fill": "transparent"
+            }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "change_pin_copy",
+          "name": "Step copy",
+          "layout": "vertical",
+          "x": 16,
+          "y": 122,
+          "width": 361,
+          "height": "fit_content",
+          "fill": "transparent",
+          "gap": 8,
+          "children": [
+            {
+              "type": "text",
+              "id": "change_pin_subtitle",
+              "content": "请输入当前 6 位 PIN，验证通过后才能设置新 PIN。",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "400",
+              "fill": "#8EA2C0",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            },
+            {
+              "type": "text",
+              "id": "change_pin_step",
+              "content": "验证当前 PIN",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "fill": "#8EA2C0D9",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "change_pin_dots",
+          "layout": "horizontal",
+          "x": 136,
+          "y": 208,
+          "width": 121,
+          "height": 14,
+          "fill": "transparent",
+          "gap": 12,
+          "alignItems": "center",
+          "justifyContent": "center",
+          "children": [
+            { "type": "ellipse", "id": "pin_dot_1", "width": 12, "height": 12, "fill": "#4A9EFF", "stroke": { "fill": "#4A9EFF", "thickness": 1.5 } },
+            { "type": "ellipse", "id": "pin_dot_2", "width": 12, "height": 12, "fill": "#4A9EFF", "stroke": { "fill": "#4A9EFF", "thickness": 1.5 } },
+            { "type": "ellipse", "id": "pin_dot_3", "width": 12, "height": 12, "fill": "transparent", "stroke": { "fill": "#4A9EFF", "thickness": 1.5 } },
+            { "type": "ellipse", "id": "pin_dot_4", "width": 12, "height": 12, "fill": "transparent", "stroke": { "fill": "#4A9EFF", "thickness": 1.5 } },
+            { "type": "ellipse", "id": "pin_dot_5", "width": 12, "height": 12, "fill": "transparent", "stroke": { "fill": "#4A9EFF", "thickness": 1.5 } },
+            { "type": "ellipse", "id": "pin_dot_6", "width": 12, "height": 12, "fill": "transparent", "stroke": { "fill": "#4A9EFF", "thickness": 1.5 } }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "change_pin_keypad",
+          "name": "Centered numeric keypad",
+          "layout": "vertical",
+          "x": 44,
+          "y": 244,
+          "width": 305,
+          "height": 348,
+          "fill": "transparent",
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "keypad_row_1",
+              "layout": "horizontal",
+              "fill": "transparent",
+              "gap": 16,
+              "children": [
+                { "type": "frame", "id": "key_1", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_1_label", "content": "1", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] },
+                { "type": "frame", "id": "key_2", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_2_label", "content": "2", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] },
+                { "type": "frame", "id": "key_3", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_3_label", "content": "3", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "keypad_row_2",
+              "layout": "horizontal",
+              "fill": "transparent",
+              "gap": 16,
+              "children": [
+                { "type": "frame", "id": "key_4", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_4_label", "content": "4", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] },
+                { "type": "frame", "id": "key_5", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_5_label", "content": "5", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] },
+                { "type": "frame", "id": "key_6", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_6_label", "content": "6", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "keypad_row_3",
+              "layout": "horizontal",
+              "fill": "transparent",
+              "gap": 16,
+              "children": [
+                { "type": "frame", "id": "key_7", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_7_label", "content": "7", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] },
+                { "type": "frame", "id": "key_8", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_8_label", "content": "8", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] },
+                { "type": "frame", "id": "key_9", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_9_label", "content": "9", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "keypad_row_4",
+              "layout": "horizontal",
+              "fill": "transparent",
+              "gap": 16,
+              "children": [
+                { "type": "rectangle", "id": "keypad_blank", "width": 78, "height": 78, "fill": "transparent" },
+                { "type": "frame", "id": "key_0", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "text", "id": "key_0_label", "content": "0", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "400", "fill": "#EAF1FF", "x": 0, "y": 26, "width": 78, "textAlign": "center", "textGrowth": "fixed-width" }] },
+                { "type": "frame", "id": "key_delete", "layout": "none", "width": 78, "height": 78, "fill": "#131C29", "cornerRadius": 39, "stroke": { "fill": "#4A9EFF", "thickness": 1.5 }, "children": [{ "type": "icon_font", "id": "key_delete_icon", "iconFontFamily": "lucide", "iconFontName": "delete", "x": 25, "y": 25, "width": 28, "height": 28, "fill": "#EAF1FF" }] }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "home_indicator",
+          "name": "Home indicator",
+          "x": 129,
+          "y": 831,
+          "width": 135,
+          "height": 5,
+          "fill": "#FFFFFFCC",
+          "cornerRadius": 3
         }
       ]
     }

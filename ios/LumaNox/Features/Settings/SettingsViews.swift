@@ -667,26 +667,37 @@ struct ChangePinView: View {
 
     private let pinLength = 6
     private let securityStore = SecuritySettingsStore.shared
+    private let keypadButtonSize: CGFloat = 78
+    private let keypadColumnGap: CGFloat = 16
+    private let keypadRowGap: CGFloat = 12
+    private let keypadWidth: CGFloat = 305
 
     var body: some View {
         LNScreenScaffold(title: L10n.changePinTitle, onBack: { dismiss() }) {
-            Text(step.subtitle)
-                .font(LNTypography.bodyMedium())
-                .foregroundStyle(LNColor.subtitle)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Text(step.progressText)
-                .font(LNTypography.labelMedium())
-                .foregroundStyle(LNColor.subtitle.opacity(0.85))
-                .frame(maxWidth: .infinity, alignment: .leading)
-            HStack(spacing: 8) {
-                ForEach(0..<pinLength, id: \.self) { i in
-                    Circle()
-                        .fill(i < activeInput.count ? LNColor.brandBlue : LNColor.stroke)
-                        .frame(width: 10, height: 10)
+            VStack(spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(step.subtitle)
+                        .font(LNTypography.bodyMedium())
+                        .foregroundStyle(LNColor.subtitle)
+                    Text(step.progressText)
+                        .font(LNTypography.labelMedium())
+                        .foregroundStyle(LNColor.subtitle.opacity(0.85))
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                HStack(spacing: 12) {
+                    ForEach(0..<pinLength, id: \.self) { i in
+                        Circle()
+                            .fill(i < activeInput.count ? LNColor.brandBlue : Color.clear)
+                            .frame(width: 12, height: 12)
+                            .overlay(Circle().stroke(LNColor.brandBlue, lineWidth: 1.5))
+                    }
+                }
+
+                keypad
+                    .disabled(isSaving)
+                    .padding(.top, 4)
             }
-            keypad
-                .disabled(isSaving)
         }
         .overlay { pinDialogs }
     }
@@ -700,24 +711,49 @@ struct ChangePinView: View {
     }
 
     private var keypad: some View {
-        let keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"]
-        return LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
-            ForEach(keys, id: \.self) { key in
-                Button {
-                    if key == "⌫" { deleteLast() }
-                    else if !key.isEmpty { appendDigit(key) }
-                } label: {
-                    Text(key)
-                        .font(LNTypography.titleMedium())
-                        .frame(width: 64, height: 64)
-                        .background(LNColor.sectionBg)
-                        .clipShape(Circle())
+        VStack(spacing: keypadRowGap) {
+            ForEach([["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], id: \.self) { row in
+                HStack(spacing: keypadColumnGap) {
+                    ForEach(row, id: \.self) { key in
+                        keypadButton(key)
+                    }
                 }
-                .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
-                .disabled(key.isEmpty)
-                .opacity(key.isEmpty ? 0 : 1)
+            }
+            HStack(spacing: keypadColumnGap) {
+                Color.clear.frame(width: keypadButtonSize, height: keypadButtonSize)
+                keypadButton("0")
+                keypadButton("delete")
             }
         }
+        .frame(width: keypadWidth)
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    private func keypadButton(_ key: String) -> some View {
+        Button {
+            if key == "delete" {
+                deleteLast()
+            } else {
+                appendDigit(key)
+            }
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: 0x131C29))
+                    .overlay(Circle().stroke(LNColor.brandBlue, lineWidth: 1.5))
+                if key == "delete" {
+                    Image(systemName: "delete.left")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(LNColor.title)
+                } else {
+                    Text(key)
+                        .font(LNTypography.pinDigit())
+                        .foregroundStyle(LNColor.title)
+                }
+            }
+            .frame(width: keypadButtonSize, height: keypadButtonSize)
+        }
+        .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
     }
 
     private func appendDigit(_ d: String) {
