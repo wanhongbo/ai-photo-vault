@@ -1334,7 +1334,9 @@
                     "thickness": 1
                   },
                   "layout": "vertical",
-                  "gap": 7,
+                  "gap": 0,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
                   "padding": 9,
                   "children": [
                     {
@@ -1447,6 +1449,7 @@
                       "fill": "#F6F9FF",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
+                      "textAlign": "center",
                       "content": "Default",
                       "fontFamily": "Inter",
                       "fontSize": 12,
@@ -1488,7 +1491,9 @@
                     "thickness": 1
                   },
                   "layout": "vertical",
-                  "gap": 7,
+                  "gap": 0,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
                   "padding": 9,
                   "children": [
                     {
@@ -1601,6 +1606,7 @@
                       "fill": "#F6F9FF",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
+                      "textAlign": "center",
                       "content": "Camera",
                       "fontFamily": "Inter",
                       "fontSize": 12,
@@ -1642,7 +1648,9 @@
                     "thickness": 1
                   },
                   "layout": "vertical",
-                  "gap": 7,
+                  "gap": 0,
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
                   "padding": 9,
                   "children": [
                     {
@@ -1731,6 +1739,7 @@
                       "fill": "#F6F9FF",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
+                      "textAlign": "center",
                       "content": "New Album",
                       "fontFamily": "Inter",
                       "fontSize": 12,

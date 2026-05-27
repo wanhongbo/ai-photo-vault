@@ -476,18 +476,23 @@ private struct AlbumHomeCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .center, spacing: 0) {
                 AlbumPreviewGrid(mediaItems: mediaItems)
+                    .frame(maxWidth: .infinity)
                     .frame(height: 82)
+
+                Spacer(minLength: 0)
 
                 Text(album.name)
                     .font(.system(size: 12, weight: .heavy))
                     .foregroundStyle(Color(hex: 0xF6F9FF))
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .multilineTextAlignment(.center)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
             .padding(9)
-            .frame(width: width, height: 122, alignment: .topLeading)
+            .frame(width: width, height: 122, alignment: .top)
             .homeItemCard(cornerRadius: 18)
         }
         .buttonStyle(.lnPressable())
@@ -500,7 +505,7 @@ private struct CreateAlbumHomeCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .center, spacing: 0) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14)
                         .fill(
@@ -514,20 +519,25 @@ private struct CreateAlbumHomeCard: View {
                         .font(.system(size: 26, weight: .semibold))
                         .foregroundStyle(LNColor.navItemActive)
                 }
+                .frame(maxWidth: .infinity)
                 .frame(height: 82)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(Color(hex: 0x315D84), lineWidth: 1)
                 )
 
+                Spacer(minLength: 0)
+
                 Text(L10n.homeAlbumCreateTitle)
                     .font(.system(size: 12, weight: .heavy))
                     .foregroundStyle(Color(hex: 0xF6F9FF))
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .multilineTextAlignment(.center)
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
             }
             .padding(9)
-            .frame(width: width, height: 122, alignment: .topLeading)
+            .frame(width: width, height: 122, alignment: .top)
             .homeItemCard(cornerRadius: 18)
         }
         .buttonStyle(.lnPressable())
