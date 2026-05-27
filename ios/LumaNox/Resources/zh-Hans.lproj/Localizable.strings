@@ -348,8 +348,8 @@
 "camera_capturing_photo" = "正在拍照...";
 "camera_saving_to_vault" = "正在加密保存...";
 "camera_preparing_video" = "正在准备录像...";
-"camera_photo_mode_hint" = "拍照模式";
-"camera_video_mode_hint" = "视频模式：点击快门开始录制";
+"camera_photo_mode_hint" = "点击快门拍照";
+"camera_video_mode_hint" = "点击快门开始拍摄视频";
 "camera_zoom_status" = "变焦 %@";
 "export_progress_title" = "正在导出";
 "export_result_title" = "导出完成";

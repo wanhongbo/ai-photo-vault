@@ -335,7 +335,7 @@ struct PrivateCameraView: View {
 
     private func selectedModeFill(for mode: CameraCaptureMode) -> Color {
         guard viewModel.captureMode == mode else { return .clear }
-        return mode == .video ? LNColor.amberWarning : LNColor.brandBlue
+        return LNColor.brandBlue
     }
 
     private func openLastCapture() {
@@ -592,7 +592,7 @@ private struct CameraStatusPill: View {
                     .tint(LNColor.title)
             } else {
                 Circle()
-                    .fill(isVideoMode ? LNColor.amberWarning : LNColor.brandBlue)
+                    .fill(LNColor.brandBlue)
                     .frame(width: 8, height: 8)
             }
             Text(text)
@@ -608,11 +608,11 @@ private struct CameraStatusPill: View {
     }
 
     private var statusBackground: Color {
-        isVideoMode ? LNColor.amberWarning.opacity(0.20) : Color.black.opacity(0.52)
+        Color.black.opacity(0.52)
     }
 
     private var statusStroke: Color {
-        isVideoMode ? LNColor.amberWarning.opacity(0.45) : LNColor.brandBlue.opacity(0.38)
+        LNColor.brandBlue.opacity(0.38)
     }
 }
 
@@ -641,7 +641,7 @@ private struct ShutterButtonVisual: View {
             if isBusy {
                 ProgressView()
                     .controlSize(.small)
-                    .tint(mode == .video ? LNColor.amberWarning : LNColor.brandBlue)
+                    .tint(LNColor.brandBlue)
             }
         }
         .frame(width: 88, height: 88)
@@ -651,18 +651,20 @@ private struct ShutterButtonVisual: View {
     }
 
     private var outerStroke: Color {
-        if isRecording || mode == .video { return LNColor.amberWarning }
+        if isRecording { return LNColor.error }
+        if mode == .video { return LNColor.brandBlue }
         return LNColor.navItemActive
     }
 
     private var outerFill: Color {
-        if isRecording { return LNColor.amberWarning.opacity(0.92) }
-        if mode == .video { return LNColor.amberWarning.opacity(0.20) }
+        if isRecording { return LNColor.error.opacity(0.92) }
+        if mode == .video { return LNColor.brandBlue.opacity(0.20) }
         return LNColor.title.opacity(0.95)
     }
 
     private var innerFill: Color {
-        isRecording || mode == .video ? LNColor.amberWarning : LNColor.title
+        if isRecording { return LNColor.error }
+        return mode == .video ? LNColor.brandBlue : LNColor.title
     }
 
     private var innerCornerRadius: CGFloat {

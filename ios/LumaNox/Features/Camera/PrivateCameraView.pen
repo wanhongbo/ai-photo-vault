@@ -475,29 +475,29 @@
           "justifyContent": "center",
           "alignItems": "center",
           "gap": 8,
-          "x": 112,
+          "x": 84,
           "y": 652,
-          "width": 168,
+          "width": 226,
           "height": 32,
           "cornerRadius": 16,
-          "fill": "#3A3210CC",
-          "stroke": { "fill": "#E8C54766", "thickness": 1 },
+          "fill": "#111827CC",
+          "stroke": { "fill": "#4A9EFF66", "thickness": 1 },
           "children": [
             {
               "type": "ellipse",
               "id": "video_mode_dot",
               "width": 8,
               "height": 8,
-              "fill": "#E8C547"
+              "fill": "#4A9EFF"
             },
             {
               "type": "text",
               "id": "video_mode_text",
-              "content": "Video ready",
+              "content": "Tap shutter to start recording",
               "fontFamily": "Inter",
               "fontSize": 12,
               "fontWeight": "700",
-              "fill": "#FFFFFF"
+              "fill": "#EAF1FF"
             }
           ]
         },
@@ -542,17 +542,17 @@
               "width": 78,
               "height": 78,
               "cornerRadius": 39,
-              "fill": "#FFFFFFF0",
-              "stroke": { "fill": "#B5C8EE", "thickness": 2 },
+              "fill": "#4A9EFF33",
+              "stroke": { "fill": "#4A9EFF", "thickness": 2 },
               "children": [
                 {
                   "type": "ellipse",
                   "id": "shutter_inner",
-                  "x": 12,
-                  "y": 12,
-                  "width": 54,
-                  "height": 54,
-                  "fill": "#EAF1FF"
+                  "x": 21,
+                  "y": 21,
+                  "width": 36,
+                  "height": 36,
+                  "fill": "#4A9EFF"
                 },
                 {
                   "type": "ellipse",
@@ -647,7 +647,8 @@
               "height": "fill_container",
               "width": "fill_container",
               "cornerRadius": 15,
-              "fill": "#4A9EFF",
+              "fill": "#00000000",
+              "stroke": { "fill": "#00000000", "thickness": 1 },
               "children": [
                 {
                   "type": "text",
@@ -656,7 +657,7 @@
                   "fontFamily": "Inter",
                   "fontSize": 13,
                   "fontWeight": "700",
-                  "fill": "#FFFFFF"
+                  "fill": "#EAF1FF"
                 }
               ]
             },
@@ -669,8 +670,8 @@
               "height": "fill_container",
               "width": "fill_container",
               "cornerRadius": 15,
-              "fill": "#E8C54722",
-              "stroke": { "fill": "#E8C54766", "thickness": 1 },
+              "fill": "#4A9EFF",
+              "stroke": { "fill": "#00000000", "thickness": 1 },
               "children": [
                 {
                   "type": "text",
