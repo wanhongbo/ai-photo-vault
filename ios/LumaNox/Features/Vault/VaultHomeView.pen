@@ -673,11 +673,11 @@
                       "id": "F0US5",
                       "width": 46,
                       "height": 28,
-                      "fill": "#E8C54722",
+                      "fill": "#4A9EFF22",
                       "cornerRadius": 14,
                       "stroke": {
                         "thickness": 1,
-                        "fill": "#E8C54755"
+                        "fill": "#4A9EFF55"
                       },
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -685,7 +685,7 @@
                         {
                           "type": "text",
                           "id": "zRGgX",
-                          "fill": "#F6D86E",
+                          "fill": "#B7D7FF",
                           "content": "Scan",
                           "fontFamily": "Inter",
                           "fontSize": 10,
