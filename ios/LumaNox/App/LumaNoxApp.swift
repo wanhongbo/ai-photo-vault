@@ -27,7 +27,7 @@ struct LumaNoxApp: App {
                 .environment(\.locale, languageManager.effectiveLocale)
                 .preferredColorScheme(.dark)
                 .onChange(of: scenePhase) { phase in
-                    appLock.handleScenePhase(phase)
+                    appLock.handleScenePhase(phase, lockScreenVisible: router.phase == .lock)
                     if appLock.requireUnlock, router.phase == .main {
                         var transaction = Transaction()
                         transaction.disablesAnimations = true

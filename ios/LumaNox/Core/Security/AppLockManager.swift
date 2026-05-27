@@ -35,10 +35,14 @@ final class AppLockManager: ObservableObject {
         }
     }
 
-    func handleScenePhase(_ phase: ScenePhase) {
+    func handleScenePhase(_ phase: ScenePhase, lockScreenVisible: Bool = false) {
         switch phase {
         case .background, .inactive:
             if securityStore.hasPinConfigured {
+                guard !lockScreenVisible else {
+                    protectsAppSwitcherSnapshot = false
+                    return
+                }
                 wasBackgrounded = true
                 requireUnlock = true
                 protectsAppSwitcherSnapshot = true

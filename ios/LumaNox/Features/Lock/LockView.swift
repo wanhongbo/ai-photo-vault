@@ -289,6 +289,7 @@ struct LockView: View {
     private func scheduleAutoBiometric(consumeForegroundRequest: Bool) {
         guard viewModel.state.stage == .unlock, viewModel.state.biometricEnabled else { return }
         guard !viewModel.state.isLoading, !viewModel.state.success else { return }
+        guard !biometricAttemptInFlight else { return }
         if let dismissed = biometricDismissedAt, Date().timeIntervalSince(dismissed) < 4 { return }
         if consumeForegroundRequest {
             appLock.consumeForegroundBiometricRequest()
