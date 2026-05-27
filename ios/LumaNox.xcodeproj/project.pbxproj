@@ -164,6 +164,7 @@
 		F08C2E275153E01C1EE8777C /* RecentPhotosListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 0E5DF487F969513BD245CE4F /* RecentPhotosListView.pen */; };
 		F099E41F5A95C5D217C1FA96 /* SettingsBackupSyncView.pen in Resources */ = {isa = PBXBuildFile; fileRef = FBAAFE4B580334A562758638 /* SettingsBackupSyncView.pen */; };
 		F392FCEE3EB37C002F0AB1F8 /* LNBottomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5324047407C827B2FCD59CC9 /* LNBottomTabBar.swift */; };
+		F42E52940ADA07B7DD78D48B /* SplashView.pen in Resources */ = {isa = PBXBuildFile; fileRef = B5FC3D4D577C154D82AB25E4 /* SplashView.pen */; };
 		F531804D21BDA4B00CFEC9F0 /* PaywallNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201DCA4E25932076994F40AC /* PaywallNavigation.swift */; };
 		F548A4960AE663233E2D61C4 /* PrivateCameraView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 3BAB828DB79FA00FEC28F19C /* PrivateCameraView.pen */; };
 		F67B4AEF6A0FBAA2E269CA44 /* TrashBinView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 62320789F14A1082ED747B00 /* TrashBinView.pen */; };
@@ -299,6 +300,7 @@
 		B401A4DA60A82577398F1C20 /* pencil_preview_contact_sheet.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = pencil_preview_contact_sheet.jpg; sourceTree = "<group>"; };
 		B54F71A283BE867B7C0AC126 /* PrivacyRedactView.pen */ = {isa = PBXFileReference; path = PrivacyRedactView.pen; sourceTree = "<group>"; };
 		B5D6BF66338A668F2039EA68 /* BackupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupViewModel.swift; sourceTree = "<group>"; };
+		B5FC3D4D577C154D82AB25E4 /* SplashView.pen */ = {isa = PBXFileReference; path = SplashView.pen; sourceTree = "<group>"; };
 		B961D164F157FCE70CE5CBC6 /* BackupResultView.pen */ = {isa = PBXFileReference; path = BackupResultView.pen; sourceTree = "<group>"; };
 		BA1258102ECC2A8B19A0B635 /* BackupPackageV1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupPackageV1.swift; sourceTree = "<group>"; };
 		BE6AA7F5102C5480C5BB950C /* AIClassifyDetailView.pen */ = {isa = PBXFileReference; path = AIClassifyDetailView.pen; sourceTree = "<group>"; };
@@ -629,6 +631,7 @@
 		894BB26F41EA2CA5DD06CC3D /* Launch */ = {
 			isa = PBXGroup;
 			children = (
+				B5FC3D4D577C154D82AB25E4 /* SplashView.pen */,
 				5658AA8CC3EAA2DF80478F21 /* SplashView.swift */,
 			);
 			path = Launch;
@@ -941,6 +944,7 @@
 				E2E4068C1A1AD14A40EB983E /* SettingsSecurityView.pen in Resources */,
 				51F43B7003D08271E8326E2A /* SettingsSubscriptionView.pen in Resources */,
 				2070853F7557A89E25EC1510 /* SettingsViews.pen in Resources */,
+				F42E52940ADA07B7DD78D48B /* SplashView.pen in Resources */,
 				4E2785EC89F246CBB88EF5BA /* StorageUsageView.pen in Resources */,
 				F67B4AEF6A0FBAA2E269CA44 /* TrashBinView.pen in Resources */,
 				ADC67DC6E153B321BD0B3137 /* VaultHomeView.pen in Resources */,

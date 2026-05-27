@@ -1,0 +1,110 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "splash_view",
+      "name": "SplashView - App icon logo",
+      "layout": "none",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "rotation": 180,
+        "colors": [
+          { "color": "#0B1324", "position": 0 },
+          { "color": "#05080D", "position": 1 }
+        ]
+      },
+      "children": [
+        {
+          "type": "frame",
+          "id": "splash_content",
+          "name": "Centered launch content",
+          "layout": "vertical",
+          "x": 48,
+          "y": 279,
+          "width": 297,
+          "height": 294,
+          "gap": 16,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "splash_app_logo",
+              "name": "App icon logo",
+              "width": 88,
+              "height": 88,
+              "clip": true,
+              "cornerRadius": 24,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "../../Resources/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+                "mode": "fill"
+              },
+              "stroke": {
+                "thickness": 1,
+                "fill": "#4A9EFF5C"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#4A9EFF52",
+                "offset": { "x": 0, "y": 12 },
+                "blur": 24
+              }
+            },
+            {
+              "type": "text",
+              "id": "splash_app_name",
+              "content": "LumaNox",
+              "fontFamily": "Inter",
+              "fontSize": 32,
+              "fontWeight": "700",
+              "letterSpacing": 0,
+              "fill": "#EAF1FF",
+              "height": 38
+            },
+            {
+              "type": "text",
+              "id": "splash_tagline",
+              "content": "Local encrypted photo vault",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "400",
+              "letterSpacing": 0,
+              "fill": "#8EA2C0",
+              "height": 21
+            },
+            {
+              "type": "frame",
+              "id": "splash_progress_track",
+              "name": "Progress track",
+              "layout": "none",
+              "width": 201,
+              "height": 4,
+              "fill": "#223247",
+              "cornerRadius": 2,
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "splash_progress_fill",
+                  "name": "Progress fill",
+                  "x": 0,
+                  "y": 0,
+                  "width": 201,
+                  "height": 4,
+                  "fill": "#4A9EFF",
+                  "cornerRadius": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
