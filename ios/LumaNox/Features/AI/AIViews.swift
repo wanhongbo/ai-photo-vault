@@ -1988,12 +1988,6 @@ private struct AISensitiveCandidateRow: View {
                     .minimumScaleFactor(0.78)
             }
 
-            Text(mediaItem(record).fileName)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(LNColor.title)
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
-
             Text(L10n.tr("ai_sensitive_preview_hint"))
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(hex: 0x66758A))

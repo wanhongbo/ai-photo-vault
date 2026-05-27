@@ -422,17 +422,6 @@
                     },
                     {
                       "type": "text",
-                      "id": "sensitive_row_high_file",
-                      "content": "IMG_2048.HEIC",
-                      "fontFamily": "Inter",
-                      "fill": "#EAF1FF",
-                      "fontSize": 14,
-                      "fontWeight": "700",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
-                    },
-                    {
-                      "type": "text",
                       "id": "sensitive_row_high_hint",
                       "content": "点击缩略图预览原图",
                       "fontFamily": "Inter",
@@ -671,17 +660,6 @@
                     },
                     {
                       "type": "text",
-                      "id": "sensitive_row_medium_file",
-                      "content": "receipt_private.jpg",
-                      "fontFamily": "Inter",
-                      "fill": "#EAF1FF",
-                      "fontSize": 14,
-                      "fontWeight": "700",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
-                    },
-                    {
-                      "type": "text",
                       "id": "sensitive_row_medium_hint",
                       "content": "点击缩略图预览原图",
                       "fontFamily": "Inter",
@@ -917,17 +895,6 @@
                           "width": "fill_container"
                         }
                       ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "sensitive_row_low_file",
-                      "content": "chat_export.png",
-                      "fontFamily": "Inter",
-                      "fill": "#EAF1FF",
-                      "fontSize": 14,
-                      "fontWeight": "700",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     },
                     {
                       "type": "text",
