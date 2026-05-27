@@ -10,34 +10,30 @@ struct VaultHomeView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: LNSpacing.sectionGap) {
+                heroCard
 
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: LNSpacing.sectionGap) {
-                    mediaTags
-
-                    if !viewModel.hasPinConfigured {
-                        pinSetupBanner
-                    }
-
-                    statusMessage
-
-                    if viewModel.showPermissionDenied {
-                        permissionCard
-                    } else if viewModel.shouldShowInitialLoading {
-                        loadingVaultCard
-                    } else if viewModel.shouldShowEmptyState {
-                        emptyVaultCard
-                    } else {
-                        albumsSection
-                        recentSection
-                    }
+                if !viewModel.hasPinConfigured {
+                    pinSetupBanner
                 }
-                .padding(.horizontal, LNSpacing.screenHorizontal)
-                .padding(.top, 12)
-                .padding(.bottom, LNSpacing.homeNavBarHeight + 28)
+
+                statusMessage
+
+                if viewModel.showPermissionDenied {
+                    permissionCard
+                } else if viewModel.shouldShowInitialLoading {
+                    loadingVaultCard
+                } else if viewModel.shouldShowEmptyState {
+                    emptyVaultCard
+                } else {
+                    recentSection
+                    albumsSection
+                }
             }
+            .padding(.horizontal, LNSpacing.screenHorizontal)
+            .padding(.top, 8)
+            .padding(.bottom, LNSpacing.homeNavBarHeight + 28)
         }
         .onAppear { viewModel.onAppear() }
         .onChange(of: viewModel.pickerItems) { _ in
@@ -67,6 +63,76 @@ struct VaultHomeView: View {
         .accessibilityIdentifier("vault_home_view")
     }
 
+    private var heroCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 14) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L10n.appName)
+                        .font(.system(size: 29, weight: .black))
+                        .foregroundStyle(Color(hex: 0xF6F9FF))
+                    Text(L10n.tr("home_vault_security_info_total", viewModel.totalCount))
+                        .font(LNTypography.labelMedium())
+                        .foregroundStyle(Color(hex: 0xAFC4E2))
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 8)
+                AppIconHeroView()
+            }
+
+            HStack(spacing: 7) {
+                HomeHeroBadge(icon: "wifi.slash", title: L10n.tr("home_hero_badge_offline"))
+                HomeHeroBadge(icon: "lock.shield", title: L10n.tr("home_hero_badge_encrypted"))
+                HomeHeroBadge(icon: "sparkles", title: L10n.tr("home_hero_badge_ai_ready"))
+            }
+
+            HStack(spacing: 10) {
+                PhotosPicker(
+                    selection: $viewModel.pickerItems,
+                    maxSelectionCount: 32,
+                    matching: .any(of: [.images, .videos])
+                ) {
+                    HomeHeroActionTile(
+                        title: L10n.tr("home_hero_import_title"),
+                        subtitle: L10n.tr("home_hero_import_subtitle"),
+                        icon: "plus"
+                    )
+                }
+                .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.86))
+                .disabled(viewModel.isImporting)
+                .accessibilityLabel(L10n.homeEmptyAction)
+                .accessibilityIdentifier("vault_import_button")
+
+                Button {
+                    router.selectedTab = .ai
+                } label: {
+                    HomeHeroActionTile(
+                        title: L10n.tr("home_hero_scan_title"),
+                        subtitle: L10n.tr("home_hero_scan_subtitle"),
+                        icon: "sparkles"
+                    )
+                }
+                .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.86))
+                .accessibilityIdentifier("vault_ai_scan_shortcut")
+            }
+            .frame(height: 68)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: 0x07101E), Color(hex: 0x0B1730), Color(hex: 0x123A60)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 28))
+        .overlay(
+            RoundedRectangle(cornerRadius: 28)
+                .stroke(Color(hex: 0x31506F), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.40), radius: 17, x: 0, y: 16)
+    }
+
     private var loadingVaultCard: some View {
         HStack(spacing: 10) {
             ProgressView()
@@ -78,52 +144,7 @@ struct VaultHomeView: View {
         }
         .padding(.vertical, 18)
         .padding(.horizontal, LNSpacing.cardPadding)
-        .lnOutlinedCard()
-    }
-
-    private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.appName)
-                    .font(LNTypography.displaySmall())
-                    .foregroundStyle(LNColor.title)
-                Text(L10n.tr("home_vault_security_info", viewModel.totalCount))
-                    .font(LNTypography.bodyMedium())
-                    .foregroundStyle(LNColor.subtitle)
-            }
-            Spacer()
-            PhotosPicker(
-                selection: $viewModel.pickerItems,
-                maxSelectionCount: 32,
-                matching: .any(of: [.images, .videos])
-            ) {
-                Image(systemName: "plus")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(LNColor.title)
-                    .frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
-                    .lnOutlinedCard(cornerRadius: LNRadius.topBarButton, fill: LNColor.sectionBg)
-            }
-            .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
-            .disabled(viewModel.isImporting)
-        }
-        .padding(.horizontal, LNSpacing.screenHorizontal)
-        .padding(.top, 8)
-    }
-
-    private var mediaTags: some View {
-        HStack(spacing: 6) {
-            tag(L10n.tr("home_header_stat_photos", viewModel.imageCount))
-            tag(L10n.tr("home_header_stat_videos", viewModel.videoCount))
-        }
-    }
-
-    private func tag(_ label: String) -> some View {
-        Text(label)
-            .font(LNTypography.labelMedium())
-            .foregroundStyle(LNColor.subtitle)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .lnOutlinedCard(cornerRadius: 8, fill: LNColor.sectionBg)
+        .homeGlassCard(cornerRadius: 24)
     }
 
     private var pinSetupBanner: some View {
@@ -139,25 +160,30 @@ struct VaultHomeView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .lnOutlinedCard(cornerRadius: LNRadius.homeCard, fill: LNColor.sectionBg, stroke: LNColor.error.opacity(0.45))
+            .homeGlassCard(cornerRadius: LNRadius.homeCard, stroke: LNColor.error.opacity(0.45))
         }
         .buttonStyle(.lnPressable())
     }
 
     @ViewBuilder
     private var statusMessage: some View {
-        if viewModel.isImporting {
-            HStack(spacing: 8) {
-                ProgressView().tint(LNColor.brandBlue)
-                Text(L10n.commonLoading)
-                    .font(LNTypography.bodyMedium())
-                    .foregroundStyle(LNColor.subtitle)
+        if viewModel.isImporting || viewModel.importTip != nil {
+            VStack(alignment: .leading, spacing: 8) {
+                if viewModel.isImporting {
+                    HStack(spacing: 8) {
+                        ProgressView().tint(LNColor.brandBlue)
+                        Text(L10n.commonLoading)
+                            .font(LNTypography.bodyMedium())
+                            .foregroundStyle(LNColor.subtitle)
+                    }
+                }
+                if let tip = viewModel.importTip {
+                    Text(tip)
+                        .font(LNTypography.bodyMedium())
+                        .foregroundStyle(viewModel.importTipIsError ? LNColor.error : LNColor.success)
+                }
             }
-        }
-        if let tip = viewModel.importTip {
-            Text(tip)
-                .font(LNTypography.bodyMedium())
-                .foregroundStyle(viewModel.importTipIsError ? LNColor.error : LNColor.success)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -184,7 +210,7 @@ struct VaultHomeView: View {
         }
         .padding(.vertical, 28)
         .padding(.horizontal, LNSpacing.cardPadding)
-        .lnOutlinedCard()
+        .homeGlassCard(cornerRadius: 24)
     }
 
     private var emptyVaultCard: some View {
@@ -229,193 +255,415 @@ struct VaultHomeView: View {
         }
         .padding(.vertical, 32)
         .padding(.horizontal, LNSpacing.cardPadding)
-        .lnOutlinedCard()
-    }
-
-    private var albumsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(L10n.albumListTitle)
-                    .font(LNTypography.titleMedium())
-                    .foregroundStyle(LNColor.title)
-                Spacer()
-                sectionHeaderAction(
-                    title: L10n.tr("home_albums_view_all"),
-                    accessibilityIdentifier: "home_albums_view_all"
-                ) {
-                    router.pushVault(.albumList)
-                }
-            }
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(viewModel.albums) { album in
-                        albumCard(album)
-                    }
-                    createAlbumCard
-                }
-            }
-        }
-        .padding(LNSpacing.cardPadding)
-        .lnOutlinedCard()
-    }
-
-    private func albumCard(_ album: VaultAlbum) -> some View {
-        Button { router.pushVault(.album(name: album.name)) } label: {
-            VStack(alignment: .leading, spacing: 7) {
-                DecorativeVaultThumb(seed: abs(album.id.hashValue), height: LNSpacing.albumCoverHeight)
-                Text(album.name)
-                    .font(LNTypography.bodyMedium().weight(.semibold))
-                    .foregroundStyle(LNColor.title)
-                    .lineLimit(1)
-                Text(L10n.tr("home_album_photo_count", album.photoCount))
-                    .font(LNTypography.labelMedium())
-                    .foregroundStyle(LNColor.subtitle)
-            }
-            .padding(10)
-            .frame(width: LNSpacing.albumCardWidth)
-            .lnOutlinedCard(cornerRadius: LNRadius.homeAlbumCard, fill: LNColor.bgBottom)
-        }
-        .buttonStyle(.lnPressable())
-    }
-
-    private var createAlbumCard: some View {
-        Button { viewModel.showCreateAlbum = true } label: {
-            VStack(alignment: .leading, spacing: 7) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: LNRadius.homeThumb)
-                        .fill(LNColor.emptyIconBg)
-                    Image(systemName: "plus")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(LNColor.navItemActive)
-                }
-                .frame(height: LNSpacing.albumCoverHeight)
-                Text(L10n.homeAlbumCreateTitle)
-                    .font(LNTypography.bodyMedium().weight(.semibold))
-                    .foregroundStyle(LNColor.title)
-                Text(" ")
-                    .font(LNTypography.labelMedium())
-            }
-            .padding(10)
-            .frame(width: LNSpacing.albumCardWidth)
-            .lnOutlinedCard(cornerRadius: LNRadius.homeAlbumCard, fill: LNColor.bgBottom)
-        }
-        .buttonStyle(.lnPressable())
+        .homeGlassCard(cornerRadius: 24)
     }
 
     private var recentSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(L10n.recentListTitle)
-                    .font(LNTypography.titleMedium())
-                    .foregroundStyle(LNColor.title)
-                Spacer()
-                sectionHeaderAction(
-                    title: L10n.tr("home_recent_view_more"),
-                    accessibilityIdentifier: "home_recent_view_more"
-                ) {
-                    router.pushVault(.recentList)
-                }
-            }
-
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: LNSpacing.gridGap), count: 3),
-                spacing: LNSpacing.gridGap
-            ) {
-                ForEach(viewModel.recentPhotos.prefix(6)) { item in
-                    Button {
-                        if item.isVideo {
-                            router.pushVault(.videoPlayer(path: item.path))
-                        } else {
-                            router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .recent))
+        HomeSectionCard(
+            title: L10n.recentListTitle,
+            actionTitle: L10n.tr("home_section_all"),
+            actionIdentifier: "home_recent_view_more",
+            action: { router.pushVault(.recentList) }
+        ) {
+            GeometryReader { proxy in
+                let cardWidth = floor((proxy.size.width - 20) / 3)
+                HStack(spacing: 10) {
+                    ForEach(Array(viewModel.recentPhotos.prefix(3))) { item in
+                        RecentMediaCard(item: item, width: cardWidth) {
+                            open(item)
                         }
-                    } label: {
-                        VaultMediaThumbnailView(
-                            encryptedPath: item.path,
-                            isVideo: item.isVideo,
-                            contentMode: .fill,
-                            targetPixelSize: 300
-                        )
-                        .frame(height: 74)
-                        .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeThumb))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: LNRadius.homeThumb)
-                                .stroke(LNColor.stroke, lineWidth: 1)
-                        )
-                        .contentShape(RoundedRectangle(cornerRadius: LNRadius.homeThumb))
                     }
-                    .buttonStyle(.lnPressable())
                 }
             }
+            .frame(height: 122)
+            .accessibilityIdentifier("vault_recent_grid")
         }
-        .padding(LNSpacing.cardPadding)
-        .lnOutlinedCard()
     }
 
-    private func sectionHeaderAction(
-        title: String,
-        accessibilityIdentifier: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(LNTypography.labelMedium())
-                .foregroundStyle(LNColor.navItemActive)
-                .frame(minWidth: 72, minHeight: LNSpacing.minTouchTarget, alignment: .trailing)
-                .contentShape(Rectangle())
+    private var albumsSection: some View {
+        HomeSectionCard(
+            title: L10n.albumListTitle,
+            actionTitle: L10n.tr("home_section_all"),
+            actionIdentifier: "home_albums_view_all",
+            action: { router.pushVault(.albumList) }
+        ) {
+            GeometryReader { proxy in
+                let cardWidth = floor((proxy.size.width - 20) / 3)
+                HStack(spacing: 10) {
+                    ForEach(Array(viewModel.albums.prefix(2))) { album in
+                        AlbumHomeCard(
+                            album: album,
+                            mediaItems: viewModel.recentMediaItems(for: album),
+                            width: cardWidth
+                        ) {
+                            router.pushVault(.album(name: album.name))
+                        }
+                    }
+                    CreateAlbumHomeCard(width: cardWidth) {
+                        viewModel.showCreateAlbum = true
+                    }
+                }
+            }
+            .frame(height: 144)
         }
-        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
-        .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    private func open(_ item: LNMediaItem) {
+        if item.isVideo {
+            router.pushVault(.videoPlayer(path: item.path))
+        } else {
+            router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .recent))
+        }
     }
 }
 
-private struct DecorativeVaultThumb: View {
-    let seed: Int
-    let height: CGFloat
-    var showVideo = false
-
-    private var accent: Color {
-        let palette = [LNColor.brandBlue, LNColor.amberWarning, LNColor.aiDedup, LNColor.allClearTeal, LNColor.navItemActive]
-        return palette[abs(seed) % palette.count]
-    }
+private struct HomeHeroBadge: View {
+    let icon: String
+    let title: String
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: LNRadius.homeThumb)
-                .fill(LNColor.emptyIconBg)
-            RoundedRectangle(cornerRadius: LNRadius.homeThumb)
-                .fill(
-                    LinearGradient(
-                        colors: [accent.opacity(0.22), LNColor.sectionBg],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-            Circle()
-                .fill(accent.opacity(0.7))
-                .frame(width: 18, height: 18)
-                .offset(x: 24, y: -20)
-            Capsule()
-                .fill(accent.opacity(0.45))
-                .frame(width: 46, height: 9)
-                .rotationEffect(.degrees(seed.isMultiple(of: 2) ? -18 : 15))
-                .offset(x: -12, y: 14)
-            if showVideo {
-                Image(systemName: "play.fill")
-                    .font(.system(size: 13, weight: .bold))
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .semibold))
+            Text(title)
+                .font(.system(size: 9, weight: .bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+        }
+        .foregroundStyle(Color(hex: 0xC7DAF7))
+        .frame(maxWidth: .infinity)
+        .frame(height: 30)
+        .background(Color.white.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .overlay(
+            RoundedRectangle(cornerRadius: 15)
+                .stroke(Color.white.opacity(0.09), lineWidth: 1)
+        )
+    }
+}
+
+private struct HomeHeroActionTile: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .heavy))
                     .foregroundStyle(LNColor.title)
-                    .padding(7)
-                    .background(.black.opacity(0.35))
-                    .clipShape(Circle())
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .padding(7)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(subtitle)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(LNColor.subtitle)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(LNColor.navItemActive)
+                .frame(width: 34, height: 34)
+                .background(LNColor.brandBlue.opacity(0.14))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(LNColor.brandBlue.opacity(0.34), lineWidth: 1)
+                )
+        }
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: 0x12365A), Color(hex: 0x08111F), Color(hex: 0x050A13)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(Color(hex: 0x2D4A68), lineWidth: 1)
+        )
+    }
+}
+
+private struct HomeSectionCard<Content: View>: View {
+    let title: String
+    let actionTitle: String
+    let actionIdentifier: String
+    let action: () -> Void
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(title)
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundStyle(Color(hex: 0xF6F9FF))
+                Spacer()
+                Button(action: action) {
+                    HStack(spacing: 2) {
+                        Text(actionTitle)
+                            .font(.system(size: 11, weight: .heavy))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .foregroundStyle(LNColor.navItemActive)
+                    .frame(minWidth: 60, minHeight: 30)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(hex: 0x173B62), Color(hex: 0x0A1525)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color(hex: 0x2F5F8E), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
+                .accessibilityIdentifier(actionIdentifier)
+            }
+            .frame(height: 32)
+
+            content
+        }
+        .padding(16)
+        .homeGlassCard(cornerRadius: 24)
+        .shadow(color: .black.opacity(0.33), radius: 14, x: 0, y: 12)
+    }
+}
+
+private struct RecentMediaCard: View {
+    let item: LNMediaItem
+    let width: CGFloat
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 7) {
+                VaultMediaThumbnailView(
+                    encryptedPath: item.path,
+                    isVideo: item.isVideo,
+                    contentMode: .fill,
+                    targetPixelSize: 300
+                )
+                .frame(height: 78)
+                .clipShape(RoundedRectangle(cornerRadius: 13))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 13)
+                        .stroke(Color(hex: 0x315D84), lineWidth: 1)
+                )
+
+                Text(item.fileName)
+                    .font(.system(size: 12, weight: .heavy))
+                    .foregroundStyle(Color(hex: 0xF6F9FF))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+
+                Text(item.isVideo ? L10n.tr("photo_viewer_info_type_video") : item.createdAt)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0xAFC4E2))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.76)
+            }
+            .padding(8)
+            .frame(width: width, height: 122, alignment: .topLeading)
+            .homeItemCard(cornerRadius: 18)
+        }
+        .buttonStyle(.lnPressable())
+    }
+}
+
+private struct AlbumHomeCard: View {
+    let album: VaultAlbum
+    let mediaItems: [LNMediaItem]
+    let width: CGFloat
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 7) {
+                AlbumPreviewGrid(mediaItems: mediaItems)
+                    .frame(height: 82)
+
+                Text(album.name)
+                    .font(.system(size: 12, weight: .heavy))
+                    .foregroundStyle(Color(hex: 0xF6F9FF))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+
+                Text(L10n.tr("home_album_item_count", album.photoCount))
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0xAFC4E2))
+                    .lineLimit(1)
+            }
+            .padding(9)
+            .frame(width: width, height: 144, alignment: .topLeading)
+            .homeItemCard(cornerRadius: 18)
+        }
+        .buttonStyle(.lnPressable())
+    }
+}
+
+private struct CreateAlbumHomeCard: View {
+    let width: CGFloat
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 7) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: 0x102A46), Color(hex: 0x07101C)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    Image(systemName: "plus")
+                        .font(.system(size: 26, weight: .semibold))
+                        .foregroundStyle(LNColor.navItemActive)
+                }
+                .frame(height: 82)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color(hex: 0x315D84), lineWidth: 1)
+                )
+
+                Text(L10n.homeAlbumCreateTitle)
+                    .font(.system(size: 12, weight: .heavy))
+                    .foregroundStyle(Color(hex: 0xF6F9FF))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+
+                Text(L10n.homeAlbumCreateConfirm)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0xAFC4E2))
+                    .lineLimit(1)
+            }
+            .padding(9)
+            .frame(width: width, height: 144, alignment: .topLeading)
+            .homeItemCard(cornerRadius: 18)
+        }
+        .buttonStyle(.lnPressable())
+        .accessibilityIdentifier("home_create_album_card")
+    }
+}
+
+private struct AlbumPreviewGrid: View {
+    let mediaItems: [LNMediaItem]
+
+    var body: some View {
+        LazyVGrid(
+            columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 2),
+            spacing: 5
+        ) {
+            ForEach(0..<4, id: \.self) { index in
+                if index < mediaItems.count {
+                    VaultMediaThumbnailView(
+                        encryptedPath: mediaItems[index].path,
+                        isVideo: mediaItems[index].isVideo,
+                        contentMode: .fill,
+                        targetPixelSize: 160,
+                        showVideoIndicator: false
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                } else {
+                    RoundedRectangle(cornerRadius: 7)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: 0x1D4773), Color(hex: 0x0B1727)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: height)
+        .padding(7)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: 0x102A46), Color(hex: 0x07101C)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(
-            RoundedRectangle(cornerRadius: LNRadius.homeThumb)
-                .stroke(LNColor.stroke, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color(hex: 0x315D84), lineWidth: 1)
+        )
+    }
+}
+
+private struct AppIconHeroView: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(hex: 0x102A46), Color(hex: 0x07101C)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Circle()
+                .fill(LNColor.brandBlue.opacity(0.18))
+                .frame(width: 50, height: 50)
+            Image(systemName: "lock.shield.fill")
+                .font(.system(size: 32, weight: .semibold))
+                .foregroundStyle(LNColor.navItemActive)
+            Circle()
+                .fill(LNColor.brandBlue.opacity(0.58))
+                .frame(width: 8, height: 8)
+                .offset(x: 22, y: -22)
+            Circle()
+                .fill(LNColor.navItemActive.opacity(0.45))
+                .frame(width: 5, height: 5)
+                .offset(x: -24, y: 20)
+            RoundedRectangle(cornerRadius: 21)
+                .stroke(Color(hex: 0x74B5FF).opacity(0.55), lineWidth: 1)
+        }
+        .frame(width: 76, height: 76)
+        .clipShape(RoundedRectangle(cornerRadius: 21))
+        .shadow(color: LNColor.brandBlue.opacity(0.32), radius: 13, x: 0, y: 10)
+        .accessibilityHidden(true)
+    }
+}
+
+private extension View {
+    func homeGlassCard(cornerRadius: CGFloat, stroke: Color = Color(hex: 0x2D4A68)) -> some View {
+        background(
+            LinearGradient(
+                colors: [Color(hex: 0x07101E), Color(hex: 0x0B172A), Color(hex: 0x102A46)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(stroke, lineWidth: 1)
+        )
+    }
+
+    func homeItemCard(cornerRadius: CGFloat) -> some View {
+        background(
+            LinearGradient(
+                colors: [Color(hex: 0x12365A), Color(hex: 0x08111F), Color(hex: 0x050A13)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(Color(hex: 0x2D4A68), lineWidth: 1)
         )
     }
 }

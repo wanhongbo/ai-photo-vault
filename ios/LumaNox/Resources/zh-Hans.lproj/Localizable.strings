@@ -15,6 +15,15 @@
 "home_vault_empty_desc" = "你收藏到保险箱的内容会显示在这里，并受到锁屏保护。";
 "home_vault_empty_action" = "从相册导入";
 "home_vault_security_info" = "%d 张照片 · AES-256 本地加密";
+"home_vault_security_info_total" = "%d 项内容 · AES-256 本地加密";
+"home_hero_badge_offline" = "离线";
+"home_hero_badge_encrypted" = "已加密";
+"home_hero_badge_ai_ready" = "AI 就绪";
+"home_hero_import_title" = "导入";
+"home_hero_import_subtitle" = "照片 · 视频";
+"home_hero_scan_title" = "扫描";
+"home_hero_scan_subtitle" = "本地 AI 模型";
+"home_section_all" = "全部";
 "home_header_stat_photos" = "照片 %d";
 "home_header_stat_videos" = "视频 %d";
 "home_pin_banner_message" = "尚未设置应用锁。后台锁定和加密备份不可用。";
@@ -22,6 +31,7 @@
 "home_albums_view_all" = "查看全部";
 "home_recent_view_more" = "查看更多";
 "home_album_photo_count" = "%d 张照片";
+"home_album_item_count" = "%d 项";
 "home_album_create_title" = "新建相册";
 "home_album_create_input_hint" = "输入相册名称";
 "home_album_create_confirm" = "创建";

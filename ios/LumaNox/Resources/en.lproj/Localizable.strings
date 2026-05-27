@@ -15,6 +15,15 @@
 "home_vault_empty_desc" = "Imported photos and videos appear here, protected by your lock screen.";
 "home_vault_empty_action" = "Import from Photos";
 "home_vault_security_info" = "%d photos · AES-256 local encryption";
+"home_vault_security_info_total" = "%d items · AES-256 local encryption";
+"home_hero_badge_offline" = "Offline";
+"home_hero_badge_encrypted" = "Encrypted";
+"home_hero_badge_ai_ready" = "AI ready";
+"home_hero_import_title" = "Import";
+"home_hero_import_subtitle" = "Photos · Videos";
+"home_hero_scan_title" = "Scan";
+"home_hero_scan_subtitle" = "Local AI model";
+"home_section_all" = "All";
 "home_header_stat_photos" = "Photos %d";
 "home_header_stat_videos" = "Videos %d";
 "home_pin_banner_message" = "App lock is not set. Background lock and encrypted backup are unavailable.";
@@ -22,6 +31,7 @@
 "home_albums_view_all" = "View all";
 "home_recent_view_more" = "View more";
 "home_album_photo_count" = "%d photos";
+"home_album_item_count" = "%d items";
 "home_album_create_title" = "New Album";
 "home_album_create_input_hint" = "Album name";
 "home_album_create_confirm" = "Create";

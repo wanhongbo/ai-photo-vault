@@ -53,6 +53,13 @@ final class VaultHomeViewModel: ObservableObject {
         snapshot?.recentPhotos.map { $0.toMediaItem() } ?? []
     }
 
+    func recentMediaItems(for album: VaultAlbum, limit: Int = 4) -> [LNMediaItem] {
+        snapshot?.recentPhotos
+            .filter { $0.albumName == album.name }
+            .prefix(limit)
+            .map { $0.toMediaItem() } ?? []
+    }
+
     var isEmpty: Bool { recentPhotos.isEmpty }
     var shouldShowInitialLoading: Bool { snapshot == nil && isLoadingSnapshot }
     var shouldShowEmptyState: Bool { snapshot != nil && isEmpty && !isImporting }
