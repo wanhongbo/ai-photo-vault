@@ -1331,7 +1331,7 @@
                       "type": "frame",
                       "id": "VHIK7",
                       "clip": true,
-                      "width": "fill_container",
+                      "width": 82,
                       "height": 82,
                       "fill": {
                         "type": "gradient",
@@ -1353,10 +1353,6 @@
                         ]
                       },
                       "cornerRadius": 14,
-                      "stroke": {
-                        "fill": "#315D84",
-                        "thickness": 1
-                      },
                       "layout": "vertical",
                       "gap": 5,
                       "padding": 7,
@@ -1375,11 +1371,7 @@
                               "id": "BJkLQ",
                               "fill": "#234A70",
                               "width": "fill_container",
-                              "height": "fill_container",
-                              "stroke": {
-                                "fill": "#386B96",
-                                "thickness": 1
-                              }
+                              "height": "fill_container"
                             },
                             {
                               "type": "rectangle",
@@ -1387,11 +1379,7 @@
                               "id": "YKMgu",
                               "fill": "#6CB6FF33",
                               "width": "fill_container",
-                              "height": "fill_container",
-                              "stroke": {
-                                "fill": "#386B96",
-                                "thickness": 1
-                              }
+                              "height": "fill_container"
                             }
                           ]
                         },
@@ -1409,11 +1397,7 @@
                               "id": "QNNTC",
                               "fill": "#234A70",
                               "width": "fill_container",
-                              "height": "fill_container",
-                              "stroke": {
-                                "fill": "#386B96",
-                                "thickness": 1
-                              }
+                              "height": "fill_container"
                             },
                             {
                               "type": "rectangle",
@@ -1421,11 +1405,7 @@
                               "id": "Jyqaz",
                               "fill": "#6CB6FF33",
                               "width": "fill_container",
-                              "height": "fill_container",
-                              "stroke": {
-                                "fill": "#386B96",
-                                "thickness": 1
-                              }
+                              "height": "fill_container"
                             }
                           ]
                         }
@@ -1488,7 +1468,7 @@
                       "type": "frame",
                       "id": "gDTLr",
                       "clip": true,
-                      "width": "fill_container",
+                      "width": 82,
                       "height": 82,
                       "fill": {
                         "type": "gradient",
@@ -1510,10 +1490,6 @@
                         ]
                       },
                       "cornerRadius": 14,
-                      "stroke": {
-                        "fill": "#315D84",
-                        "thickness": 1
-                      },
                       "layout": "vertical",
                       "gap": 5,
                       "padding": 7,
@@ -1532,11 +1508,7 @@
                               "id": "VDR9b",
                               "fill": "#1E4A55",
                               "width": "fill_container",
-                              "height": "fill_container",
-                              "stroke": {
-                                "fill": "#337985",
-                                "thickness": 1
-                              }
+                              "height": "fill_container"
                             },
                             {
                               "type": "rectangle",
@@ -1544,11 +1516,7 @@
                               "id": "EwAo5",
                               "fill": "#55D7C933",
                               "width": "fill_container",
-                              "height": "fill_container",
-                              "stroke": {
-                                "fill": "#337985",
-                                "thickness": 1
-                              }
+                              "height": "fill_container"
                             }
                           ]
                         },
@@ -1566,11 +1534,7 @@
                               "id": "dn1fd",
                               "fill": "#1E4A55",
                               "width": "fill_container",
-                              "height": "fill_container",
-                              "stroke": {
-                                "fill": "#337985",
-                                "thickness": 1
-                              }
+                              "height": "fill_container"
                             },
                             {
                               "type": "rectangle",
@@ -1578,11 +1542,7 @@
                               "id": "f1uhca",
                               "fill": "#55D7C933",
                               "width": "fill_container",
-                              "height": "fill_container",
-                              "stroke": {
-                                "fill": "#337985",
-                                "thickness": 1
-                              }
+                              "height": "fill_container"
                             }
                           ]
                         }
@@ -1645,7 +1605,7 @@
                       "type": "frame",
                       "id": "Q2Wtai",
                       "clip": true,
-                      "width": "fill_container",
+                      "width": 82,
                       "height": 82,
                       "fill": {
                         "type": "gradient",
@@ -1667,10 +1627,6 @@
                         ]
                       },
                       "cornerRadius": 14,
-                      "stroke": {
-                        "fill": "#315D84",
-                        "thickness": 1
-                      },
                       "layout": "vertical",
                       "gap": 5,
                       "padding": 7,
@@ -1700,10 +1656,6 @@
                             ]
                           },
                           "cornerRadius": 12,
-                          "stroke": {
-                            "fill": "#3A6B9A",
-                            "thickness": 1
-                          },
                           "layout": "none",
                           "children": [
                             {

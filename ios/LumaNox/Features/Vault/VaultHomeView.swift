@@ -474,8 +474,7 @@ private struct AlbumHomeCard: View {
         Button(action: action) {
             VStack(alignment: .center, spacing: 0) {
                 AlbumPreviewGrid(mediaItems: mediaItems)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 82)
+                    .frame(width: 82, height: 82)
 
                 Spacer(minLength: 0)
 
@@ -515,12 +514,7 @@ private struct CreateAlbumHomeCard: View {
                         .font(.system(size: 26, weight: .semibold))
                         .foregroundStyle(LNColor.navItemActive)
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 82)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color(hex: 0x315D84), lineWidth: 1)
-                )
+                .frame(width: 82, height: 82)
 
                 Spacer(minLength: 0)
 
@@ -544,9 +538,11 @@ private struct CreateAlbumHomeCard: View {
 private struct AlbumPreviewGrid: View {
     let mediaItems: [LNMediaItem]
 
+    private let tileSize: CGFloat = 31.5
+
     var body: some View {
         LazyVGrid(
-            columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 2),
+            columns: Array(repeating: GridItem(.fixed(tileSize), spacing: 5), count: 2),
             spacing: 5
         ) {
             ForEach(0..<4, id: \.self) { index in
@@ -558,6 +554,7 @@ private struct AlbumPreviewGrid: View {
                         targetPixelSize: 160,
                         showVideoIndicator: false
                     )
+                    .frame(width: tileSize, height: tileSize)
                     .clipShape(RoundedRectangle(cornerRadius: 7))
                 } else {
                     RoundedRectangle(cornerRadius: 7)
@@ -568,6 +565,7 @@ private struct AlbumPreviewGrid: View {
                                 endPoint: .bottomTrailing
                             )
                         )
+                        .frame(width: tileSize, height: tileSize)
                 }
             }
         }
@@ -580,10 +578,6 @@ private struct AlbumPreviewGrid: View {
             )
         )
         .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color(hex: 0x315D84), lineWidth: 1)
-        )
     }
 }
 
