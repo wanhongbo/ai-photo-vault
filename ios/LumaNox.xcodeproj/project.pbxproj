@@ -78,6 +78,7 @@
 		6899DE3305F6F4EFFBC42C0D /* runtime_lock_after_nav_pin_fix.png in Resources */ = {isa = PBXBuildFile; fileRef = 018D70E35D85115A60687CA8 /* runtime_lock_after_nav_pin_fix.png */; };
 		6A803FD648FAE91CCE86E104 /* Argon2Swift in Frameworks */ = {isa = PBXBuildFile; productRef = 3A503BAE4274FB0FE761E137 /* Argon2Swift */; };
 		6B224CDA3D0D3CC06A69F5B0 /* SettingsHomeView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 28233DBC7BB8D878D19D5660 /* SettingsHomeView.pen */; };
+		6B5F3FE07F760E96172F1E64 /* ImportOriginalsPreferenceView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 8997622FAEDA00ECDB0C7D95 /* ImportOriginalsPreferenceView.pen */; };
 		6C707038AEC4E8D81DC5152C /* LNTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24E567FFD4B2C084123FC7F /* LNTokens.swift */; };
 		6E4CDE16543127CC885AB154 /* LocalBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6F3676571E36687F9C5E02C /* LocalBackupService.swift */; };
 		6E754462B3AC3EC44289DC14 /* VaultMetadataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4774BDE54BCD166B53833A58 /* VaultMetadataModels.swift */; };
@@ -126,6 +127,7 @@
 		ADC67DC6E153B321BD0B3137 /* VaultHomeView.pen in Resources */ = {isa = PBXBuildFile; fileRef = D14852B36C14B00552F54878 /* VaultHomeView.pen */; };
 		AF0575152ACF854909FEB280 /* LumaNoxStyleGuide.md in Resources */ = {isa = PBXBuildFile; fileRef = 09816F34E8E45378A70CB76F /* LumaNoxStyleGuide.md */; };
 		B0F6107ECDD3A21720CE6E68 /* BackupIntegrityVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E610D041074E032FA40C8808 /* BackupIntegrityVerifier.swift */; };
+		B282187EB0CE682B58CF16F1 /* ImportOriginalsDecisionSheet.pen in Resources */ = {isa = PBXBuildFile; fileRef = DC4DB07AF115C84357EA6639 /* ImportOriginalsDecisionSheet.pen */; };
 		B5226950FCBF67B0FF1BDE51 /* BackupSecretsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 337A2AFF7F5CB1682CF8ECE3 /* BackupSecretsStore.swift */; };
 		B5F395DE73A5DD84D7AA2483 /* LegalWebView.pen in Resources */ = {isa = PBXBuildFile; fileRef = E27328F5DEBCC6B1F4274BD9 /* LegalWebView.pen */; };
 		B6AD5599CE78A695888F9EE7 /* MockModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D194FC51681BABEC7A70791F /* MockModels.swift */; };
@@ -173,6 +175,7 @@
 		F67B4AEF6A0FBAA2E269CA44 /* TrashBinView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 62320789F14A1082ED747B00 /* TrashBinView.pen */; };
 		F762EE90D58061C4E37FA9BE /* BackupKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02D8ED422B709C36CEF8A98C /* BackupKeyManager.swift */; };
 		FDD016D221CACA374C567780 /* ThumbnailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657135709B6C821B72DC1DBD /* ThumbnailService.swift */; };
+		FFE86F917CEE8658DCF86C96 /* ImportOriginalsPreferenceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30137DEC96A308DF935ED23 /* ImportOriginalsPreferenceStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -277,6 +280,7 @@
 		87F131249226B498888052AA /* VaultCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultCipher.swift; sourceTree = "<group>"; };
 		884A370DC3AD53F835557043 /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		8932B0647C7C07972387DFF3 /* AutoBackupScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoBackupScheduler.swift; sourceTree = "<group>"; };
+		8997622FAEDA00ECDB0C7D95 /* ImportOriginalsPreferenceView.pen */ = {isa = PBXFileReference; path = ImportOriginalsPreferenceView.pen; sourceTree = "<group>"; };
 		8C4EBFA92B5775EFFACB9756 /* MediaViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaViews.swift; sourceTree = "<group>"; };
 		8DB95DFB7A3146C260246E0F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		8F339847CDEF2EE66F4FCC33 /* LongRunningTaskProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LongRunningTaskProgress.swift; sourceTree = "<group>"; };
@@ -332,6 +336,7 @@
 		DA6D80E8EF90C3A5A0326DF4 /* VaultMetadataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultMetadataStore.swift; sourceTree = "<group>"; };
 		DA8EFDB435B5DE29A788A662 /* PaywallAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallAnalytics.swift; sourceTree = "<group>"; };
 		DC0EF53851E2A97335530387 /* NetworkAIDatasetPhotoLibrarySeedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkAIDatasetPhotoLibrarySeedTests.swift; sourceTree = "<group>"; };
+		DC4DB07AF115C84357EA6639 /* ImportOriginalsDecisionSheet.pen */ = {isa = PBXFileReference; path = ImportOriginalsDecisionSheet.pen; sourceTree = "<group>"; };
 		DD549E477191C93BEDB3AEB8 /* BackupRestoreView.pen */ = {isa = PBXFileReference; path = BackupRestoreView.pen; sourceTree = "<group>"; };
 		DD9644AD884D86508FA10EC6 /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
 		DEDD0ED9EC7F20ACE3E2AF92 /* SettingsSecurityView.pen */ = {isa = PBXFileReference; path = SettingsSecurityView.pen; sourceTree = "<group>"; };
@@ -341,6 +346,7 @@
 		E090E7F707328EB78816CB6F /* PasswordHasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordHasher.swift; sourceTree = "<group>"; };
 		E1EC20C0DDB6D96BED47D1FC /* screen_15.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_15.png; sourceTree = "<group>"; };
 		E27328F5DEBCC6B1F4274BD9 /* LegalWebView.pen */ = {isa = PBXFileReference; path = LegalWebView.pen; sourceTree = "<group>"; };
+		E30137DEC96A308DF935ED23 /* ImportOriginalsPreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportOriginalsPreferenceStore.swift; sourceTree = "<group>"; };
 		E362C2FCBED056B19BB57B24 /* VaultAIIndexStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultAIIndexStore.swift; sourceTree = "<group>"; };
 		E430DC90BBC4CC822BAC44EA /* VaultThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultThumbnailView.swift; sourceTree = "<group>"; };
 		E610D041074E032FA40C8808 /* BackupIntegrityVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupIntegrityVerifier.swift; sourceTree = "<group>"; };
@@ -395,6 +401,7 @@
 			isa = PBXGroup;
 			children = (
 				29D3A9AFCFA82A9C7030B33E /* ChangePinView.pen */,
+				8997622FAEDA00ECDB0C7D95 /* ImportOriginalsPreferenceView.pen */,
 				DEDD1F18244EC60A00AF3AB8 /* LanguageSettingsView.pen */,
 				E27328F5DEBCC6B1F4274BD9 /* LegalWebView.pen */,
 				24988E0D2A96262B88EEA6D1 /* SettingsAboutView.pen */,
@@ -490,6 +497,7 @@
 		39D10916D775EAC3EEF33411 /* Vault */ = {
 			isa = PBXGroup;
 			children = (
+				E30137DEC96A308DF935ED23 /* ImportOriginalsPreferenceStore.swift */,
 				D672F551AEBE8981A9F344D0 /* MediaExportService.swift */,
 				7B224DC7450B7689747A1F9E /* PlaintextTempFileManager.swift */,
 				7FE00040593CA7BF93D29C8F /* SystemPhotoLibraryExportService.swift */,
@@ -781,6 +789,7 @@
 			children = (
 				24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */,
 				98B565F3A27E7022FDFF239A /* AlbumView.pen */,
+				DC4DB07AF115C84357EA6639 /* ImportOriginalsDecisionSheet.pen */,
 				55EDC7C4C9D33D6C3DC074E9 /* MediaInfoItems.swift */,
 				8C4EBFA92B5775EFFACB9756 /* MediaViews.swift */,
 				9F170F7D5870A110226CEC61 /* PhotoViewerView.pen */,
@@ -933,6 +942,8 @@
 				1DA97D86952D6BF276854619 /* ChangePinView.pen in Resources */,
 				9C65DB619883E5806D30DEF0 /* ExportProgressView.pen in Resources */,
 				E6668EFF41673FC41F08B8C0 /* ExportResultView.pen in Resources */,
+				B282187EB0CE682B58CF16F1 /* ImportOriginalsDecisionSheet.pen in Resources */,
+				6B5F3FE07F760E96172F1E64 /* ImportOriginalsPreferenceView.pen in Resources */,
 				E5EF0BA8506C919D2DE953D7 /* LanguageSettingsView.pen in Resources */,
 				B5F395DE73A5DD84D7AA2483 /* LegalWebView.pen in Resources */,
 				C047C48C6D55F8F037D3131D /* Localizable.strings in Resources */,
@@ -1025,6 +1036,7 @@
 				A2F0A6BD255106E0287A405B /* ExportViews.swift in Sources */,
 				98FFF0BE9492604AA3322BE3 /* ExternalBackupLocation.swift in Sources */,
 				51CD6649210725CD16A20DF5 /* FirstLaunchRouter.swift in Sources */,
+				FFE86F917CEE8658DCF86C96 /* ImportOriginalsPreferenceStore.swift in Sources */,
 				5C350BB61329805E55508CF1 /* L10n.swift in Sources */,
 				F392FCEE3EB37C002F0AB1F8 /* LNBottomTabBar.swift in Sources */,
 				D26B1A60C96500B4D6409E94 /* LNButton.swift in Sources */,

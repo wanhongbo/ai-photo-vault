@@ -547,16 +547,111 @@ struct SettingsBackupSyncView: View {
 struct SettingsDataStorageView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var importOriginalsPreference = ImportOriginalsPreferenceStore.shared
 
     var body: some View {
         LNScreenScaffold(title: L10n.settingsData, onBack: { dismiss() }) {
             LNSettingsRow(title: L10n.storageUsageTitle) { router.pushSettings(.storageUsage) }
+            LNSettingsRow(
+                title: L10n.tr("import_originals_settings_title"),
+                subtitle: importOriginalsPreference.action.title
+            ) {
+                router.pushSettings(.importOriginalsPreference)
+            }
             LNSettingsRow(title: L10n.tr("bulk_export_title")) {
                 ExportRuntimeState.prepareSource(albumName: nil)
                 router.pushSettings(.bulkExport)
             }
             LNSettingsRow(title: L10n.trashTitle) { router.pushSettings(.trashBin) }
         }
+    }
+}
+
+struct ImportOriginalsPreferenceView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var preferenceStore = ImportOriginalsPreferenceStore.shared
+
+    var body: some View {
+        LNScreenScaffold(title: L10n.tr("import_originals_settings_title"), onBack: { dismiss() }) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L10n.tr("import_originals_settings_section"))
+                    .font(LNTypography.titleMedium())
+                    .foregroundStyle(LNColor.subtitle)
+                Text(L10n.tr("import_originals_settings_desc"))
+                    .font(LNTypography.bodyMedium())
+                    .foregroundStyle(LNColor.subtitle)
+                    .lineSpacing(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            VStack(spacing: 10) {
+                ForEach(ImportOriginalsAction.allCases) { action in
+                    importOriginalsOption(action)
+                }
+            }
+
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "lock.shield")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(LNColor.brandBlue)
+                Text(L10n.tr("import_originals_settings_safety_note"))
+                    .font(LNTypography.labelMedium())
+                    .foregroundStyle(LNColor.subtitle)
+                    .lineSpacing(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(LNColor.sectionBg.opacity(0.8))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
+        }
+        .accessibilityIdentifier("import_originals_preference_view")
+    }
+
+    private func importOriginalsOption(_ action: ImportOriginalsAction) -> some View {
+        let isSelected = preferenceStore.action == action
+        let isDanger = action == .deleteOriginals
+        return Button {
+            preferenceStore.action = action
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: action.systemImage)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(isDanger ? LNColor.error : (isSelected ? LNColor.brandBlue : LNColor.subtitle))
+                    .frame(width: 38, height: 38)
+                    .background((isDanger ? LNColor.error : LNColor.brandBlue).opacity(isSelected || isDanger ? 0.14 : 0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 13))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(action.title)
+                        .font(LNTypography.titleMedium())
+                        .foregroundStyle(isDanger ? LNColor.error : LNColor.title)
+                    Text(action.subtitle)
+                        .font(LNTypography.labelMedium())
+                        .foregroundStyle(LNColor.subtitle)
+                        .lineSpacing(1.5)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                Spacer(minLength: 0)
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(LNColor.brandBlue)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, minHeight: 86, alignment: .leading)
+            .background(LNColor.sectionBg.opacity(0.72))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(isSelected ? LNColor.brandBlue : LNColor.stroke, lineWidth: isSelected ? 1.5 : 1)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.lnPressable(cornerRadius: 14))
+        .accessibilityIdentifier("import_originals_option_\(action.rawValue)")
     }
 }
 

@@ -13,11 +13,16 @@ final class VaultHomeViewModel: ObservableObject {
     @Published var showCreateAlbum = false
     @Published var newAlbumName = ""
     @Published var duplicateImportDialogMessage: String?
+    @Published var pendingImportOriginalsCount: Int?
+    @Published var rememberImportOriginalsChoice = false
+    @Published var originalsActionDialogMessage: String?
     @Published private(set) var snapshot: VaultSnapshot?
     @Published private(set) var isLoadingSnapshot = false
     @Published private(set) var hasPinConfigured = AppDebugPolicy.skipsPinGate || SecuritySettingsStore.shared.hasPinConfigured
 
     private let vaultStore = VaultStore.shared
+    private let importOriginalsPreference = ImportOriginalsPreferenceStore.shared
+    private var pendingPickerItems: [PhotosPickerItem] = []
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -101,15 +106,47 @@ final class VaultHomeViewModel: ObservableObject {
         }
         let items = pickerItems
         pickerItems = []
+        if importOriginalsPreference.action == .askEachTime {
+            pendingPickerItems = items
+            pendingImportOriginalsCount = items.count
+            rememberImportOriginalsChoice = false
+            return true
+        }
         Task {
-            vaultStore.beginImportBatch()
-            let summary = await PhotosPickerVaultImporter.importItems(items, into: vaultDefaultAlbumName, vaultStore: vaultStore)
-            vaultStore.endImportBatch()
-            await vaultStore.finalizeImportBatch(summary)
-            duplicateImportDialogMessage = VaultImportFeedback.duplicateDialogMessage(for: summary)
-            snapshot = vaultStore.snapshot
+            await importPickedItems(items, originalsAction: importOriginalsPreference.action)
         }
         return true
+    }
+
+    func confirmPendingImportOriginals(action: ImportOriginalsAction) {
+        guard !pendingPickerItems.isEmpty else { return }
+        if rememberImportOriginalsChoice {
+            importOriginalsPreference.action = action
+        }
+        let items = pendingPickerItems
+        pendingPickerItems = []
+        pendingImportOriginalsCount = nil
+        rememberImportOriginalsChoice = false
+        Task {
+            await importPickedItems(items, originalsAction: action)
+        }
+    }
+
+    private func importPickedItems(
+        _ items: [PhotosPickerItem],
+        originalsAction: ImportOriginalsAction
+    ) async {
+        vaultStore.beginImportBatch()
+        let summary = await PhotosPickerVaultImporter.importItems(items, into: vaultDefaultAlbumName, vaultStore: vaultStore)
+        vaultStore.endImportBatch()
+        await vaultStore.finalizeImportBatch(summary)
+        if originalsAction == .deleteOriginals, summary.added > 0 {
+            originalsActionDialogMessage = await PhotosOriginalDeletionService.deleteImportedAssets(
+                localIdentifiers: summary.importedPhotoLibraryAssetIdentifiers
+            )
+        }
+        duplicateImportDialogMessage = VaultImportFeedback.duplicateDialogMessage(for: summary)
+        snapshot = vaultStore.snapshot
     }
 
     func createAlbum(router: AppRouter) {
@@ -195,7 +232,11 @@ enum PhotosPickerVaultImporter {
         var summary = VaultImportSummary()
         for item in items {
             switch await importItem(item, into: albumName, vaultStore: vaultStore) {
-            case .added: summary.added += 1
+            case .added:
+                summary.added += 1
+                if let identifier = item.itemIdentifier {
+                    summary.importedPhotoLibraryAssetIdentifiers.append(identifier)
+                }
             case .duplicate: summary.duplicate += 1
             case .failed: summary.failed += 1
             }
@@ -253,5 +294,56 @@ enum PhotosPickerVaultImporter {
             .lowercased()
         if ext == "qt" { return "mov" }
         return ext.isEmpty ? "jpg" : ext
+    }
+}
+
+@MainActor
+enum PhotosOriginalDeletionService {
+    static func deleteImportedAssets(localIdentifiers: [String]) async -> String? {
+        let uniqueIdentifiers = Array(Set(localIdentifiers))
+        guard !uniqueIdentifiers.isEmpty else {
+            return L10n.tr("import_originals_delete_no_match")
+        }
+
+        let authorizationStatus = await readWriteAuthorizationStatus()
+        guard authorizationStatus == .authorized || authorizationStatus == .limited else {
+            return L10n.tr("import_originals_delete_denied")
+        }
+
+        let assets = PHAsset.fetchAssets(withLocalIdentifiers: uniqueIdentifiers, options: nil)
+        guard assets.count > 0 else {
+            return L10n.tr("import_originals_delete_no_match")
+        }
+
+        do {
+            try await performDelete(assets)
+            return L10n.tr("import_originals_delete_success", assets.count)
+        } catch {
+            return L10n.tr("import_originals_delete_failed")
+        }
+    }
+
+    private static func readWriteAuthorizationStatus() async -> PHAuthorizationStatus {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        guard status == .notDetermined else { return status }
+        return await withCheckedContinuation { continuation in
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { newStatus in
+                continuation.resume(returning: newStatus)
+            }
+        }
+    }
+
+    private static func performDelete(_ assets: PHFetchResult<PHAsset>) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.deleteAssets(assets)
+            } completionHandler: { success, error in
+                if success {
+                    continuation.resume()
+                } else {
+                    continuation.resume(throwing: error ?? NSError(domain: "LumaNox.PhotosDelete", code: 1))
+                }
+            }
+        }
     }
 }

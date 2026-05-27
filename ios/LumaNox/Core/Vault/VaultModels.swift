@@ -58,6 +58,7 @@ struct VaultImportSummary {
     var added = 0
     var duplicate = 0
     var failed = 0
+    var importedPhotoLibraryAssetIdentifiers: [String] = []
 }
 
 struct VaultTrashItem: Identifiable, Hashable {

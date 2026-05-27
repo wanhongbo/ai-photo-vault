@@ -58,6 +58,7 @@ enum AppRoute: Hashable {
     case settingsSecurity
     case settingsBackupSync
     case settingsDataStorage
+    case importOriginalsPreference
     case settingsGeneral
     case settingsAbout
     case privacyPolicy

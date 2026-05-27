@@ -52,6 +52,7 @@ struct RouteDestinationView: View {
             case .settingsSecurity: SettingsSecurityView()
             case .settingsBackupSync: SettingsBackupSyncView()
             case .settingsDataStorage: SettingsDataStorageView()
+            case .importOriginalsPreference: ImportOriginalsPreferenceView()
             case .settingsGeneral: SettingsGeneralView()
             case .settingsAbout: SettingsAboutView()
             case .privacyPolicy: LegalWebView(title: L10n.privacyPolicyTitle, document: .privacyPolicy)

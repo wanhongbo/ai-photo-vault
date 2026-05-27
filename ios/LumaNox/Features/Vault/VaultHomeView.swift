@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import UIKit
 
 struct VaultHomeView: View {
     @EnvironmentObject private var router: AppRouter
@@ -57,6 +58,22 @@ struct VaultHomeView: View {
                     message: duplicateMessage,
                     confirmTitle: L10n.commonOk,
                     onConfirm: { viewModel.duplicateImportDialogMessage = nil }
+                )
+            }
+            if let count = viewModel.pendingImportOriginalsCount {
+                ImportOriginalsDecisionSheet(
+                    selectionCount: count,
+                    rememberChoice: $viewModel.rememberImportOriginalsChoice,
+                    onKeepOriginals: { viewModel.confirmPendingImportOriginals(action: .keepOriginals) },
+                    onDeleteOriginals: { viewModel.confirmPendingImportOriginals(action: .deleteOriginals) }
+                )
+            }
+            if let message = viewModel.originalsActionDialogMessage {
+                LNDialog(
+                    title: L10n.tr("import_originals_result_title"),
+                    message: message,
+                    confirmTitle: L10n.commonOk,
+                    onConfirm: { viewModel.originalsActionDialogMessage = nil }
                 )
             }
         }
@@ -314,6 +331,142 @@ struct VaultHomeView: View {
         } else {
             router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .recent))
         }
+    }
+}
+
+private struct ImportOriginalsDecisionSheet: View {
+    let selectionCount: Int
+    @Binding var rememberChoice: Bool
+    let onKeepOriginals: () -> Void
+    let onDeleteOriginals: () -> Void
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            LNColor.scrim.ignoresSafeArea()
+            VStack(spacing: 14) {
+                Text(L10n.tr("import_originals_sheet_title"))
+                    .font(.system(size: 25, weight: .bold))
+                    .foregroundStyle(LNColor.title)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                Text(L10n.tr("import_originals_sheet_message", selectionCount))
+                    .font(LNTypography.bodyLarge())
+                    .foregroundStyle(LNColor.subtitle)
+                    .lineSpacing(2)
+                    .multilineTextAlignment(.center)
+
+                importFlow
+                deleteNote
+                rememberRow
+
+                HStack(spacing: 10) {
+                    LNButton(
+                        title: L10n.tr("import_originals_keep_action"),
+                        variant: .secondary,
+                        action: onKeepOriginals
+                    )
+                    LNButton(
+                        title: L10n.tr("import_originals_delete_action"),
+                        variant: .danger,
+                        action: onDeleteOriginals
+                    )
+                }
+            }
+            .padding(.top, 22)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 24)
+            .background(LNColor.dialogBg)
+            .clipShape(RoundedCorner(radius: 26, corners: [.topLeft, .topRight]))
+            .overlay(
+                RoundedCorner(radius: 26, corners: [.topLeft, .topRight])
+                    .stroke(LNColor.stroke, lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.35), radius: 28, x: 0, y: -14)
+        }
+        .accessibilityIdentifier("import_originals_decision_sheet")
+    }
+
+    private var importFlow: some View {
+        HStack(spacing: 18) {
+            flowItem(icon: "photo.on.rectangle", title: L10n.tr("import_originals_photos_label"), tint: LNColor.amberWarning)
+            Image(systemName: "arrow.right")
+                .font(.system(size: 27, weight: .semibold))
+                .foregroundStyle(LNColor.title)
+            flowItem(icon: "lock.shield", title: L10n.appName, tint: LNColor.brandBlue)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 2)
+    }
+
+    private func flowItem(icon: String, title: String, tint: Color) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 25, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 52, height: 52)
+                .background(tint.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .overlay(RoundedRectangle(cornerRadius: 15).stroke(tint.opacity(0.45), lineWidth: 1))
+            Text(title)
+                .font(LNTypography.labelMedium().weight(.semibold))
+                .foregroundStyle(LNColor.subtitle)
+        }
+        .frame(width: 82)
+    }
+
+    private var deleteNote: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "info.circle")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(LNColor.brandBlue)
+            Text(L10n.tr("import_originals_delete_note"))
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .lineSpacing(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(LNColor.sectionBg.opacity(0.8))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
+    }
+
+    private var rememberRow: some View {
+        Button {
+            rememberChoice.toggle()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: rememberChoice ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(rememberChoice ? LNColor.brandBlue : LNColor.subtitle)
+                Text(L10n.tr("import_originals_remember"))
+                    .font(LNTypography.titleMedium())
+                    .foregroundStyle(LNColor.title)
+                Spacer(minLength: 0)
+            }
+            .frame(height: 48)
+            .padding(.horizontal, 14)
+            .background(LNColor.sectionBg.opacity(0.55))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
+        }
+        .buttonStyle(.lnPressable())
+        .accessibilityIdentifier("import_originals_remember_choice")
+    }
+}
+
+private struct RoundedCorner: Shape {
+    var radius: CGFloat
+    var corners: UIRectCorner
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
     }
 }
 
