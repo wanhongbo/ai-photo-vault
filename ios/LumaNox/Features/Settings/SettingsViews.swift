@@ -698,6 +698,7 @@ struct ChangePinView: View {
                     .disabled(isSaving)
                     .padding(.top, 4)
             }
+            .padding(.top, 64)
         }
         .overlay { pinDialogs }
     }
