@@ -324,22 +324,44 @@
               "id": "t5NZdf",
               "x": 20,
               "y": 118,
-              "fill": "#4A9EFF",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 125,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#183E68",
+                    "position": 0
+                  },
+                  {
+                    "color": "#10294A",
+                    "position": 0.46
+                  },
+                  {
+                    "color": "#07162A",
+                    "position": 1
+                  }
+                ]
+              },
               "width": 321,
               "height": 54,
               "stroke": {
                 "thickness": 1,
-                "fill": "#98CAFF"
+                "fill": "#5F8FC766"
               },
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
-                "color": "#4A9EFF44",
+                "color": "#06162E88",
                 "offset": {
                   "x": 0,
                   "y": 10
                 },
-                "blur": 22
+                "blur": 20
               }
             },
             {
@@ -504,8 +526,12 @@
                   "id": "hrPZs",
                   "width": 30,
                   "height": 30,
-                  "fill": "#FFFFFF24",
+                  "fill": "#B7D7FF1F",
                   "cornerRadius": 10,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#B7D7FF2E"
+                  },
                   "layout": "none",
                   "children": [
                     {
@@ -517,14 +543,14 @@
                       "height": 16,
                       "iconFontName": "plus",
                       "iconFontFamily": "lucide",
-                      "fill": "#FFFFFF"
+                      "fill": "#CFE6FF"
                     }
                   ]
                 },
                 {
                   "type": "text",
                   "id": "IADHp",
-                  "fill": "#FFFFFF",
+                  "fill": "#EAF1FF",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "Import photos / videos",
@@ -539,7 +565,7 @@
                   "height": 22,
                   "iconFontName": "chevron-right",
                   "iconFontFamily": "lucide",
-                  "fill": "#FFFFFF"
+                  "fill": "#CFE6FF"
                 }
               ]
             },
