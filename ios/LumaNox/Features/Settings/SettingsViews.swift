@@ -675,19 +675,22 @@ struct ChangePinView: View {
     var body: some View {
         LNScreenScaffold(title: L10n.changePinTitle, onBack: { dismiss() }) {
             VStack(spacing: 18) {
-                Text(step.progressText)
-                    .font(LNTypography.titleMedium())
-                    .foregroundStyle(LNColor.subtitle)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                VStack(spacing: 18) {
+                    Text(step.progressText)
+                        .font(LNTypography.titleLarge())
+                        .foregroundStyle(LNColor.subtitle)
+                        .frame(maxWidth: .infinity, alignment: .center)
 
-                HStack(spacing: 12) {
-                    ForEach(0..<pinLength, id: \.self) { i in
-                        Circle()
-                            .fill(i < activeInput.count ? LNColor.brandBlue : Color.clear)
-                            .frame(width: 12, height: 12)
-                            .overlay(Circle().stroke(LNColor.brandBlue, lineWidth: 1.5))
+                    HStack(spacing: 12) {
+                        ForEach(0..<pinLength, id: \.self) { i in
+                            Circle()
+                                .fill(i < activeInput.count ? LNColor.brandBlue : Color.clear)
+                                .frame(width: 12, height: 12)
+                                .overlay(Circle().stroke(LNColor.brandBlue, lineWidth: 1.5))
+                        }
                     }
                 }
+                .offset(y: -16)
 
                 keypad
                     .disabled(isSaving)
