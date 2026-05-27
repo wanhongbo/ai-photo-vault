@@ -536,29 +536,11 @@
                   "id": "D3DiHT",
                   "width": "fill_container",
                   "height": "fill_container",
-                  "fill": {
-                    "type": "gradient",
-                    "gradientType": "linear",
-                    "enabled": true,
-                    "rotation": 135,
-                    "size": {
-                      "height": 1
-                    },
-                    "colors": [
-                      {
-                        "color": "#17375E",
-                        "position": 0
-                      },
-                      {
-                        "color": "#0A172A",
-                        "position": 1
-                      }
-                    ]
-                  },
+                  "fill": "#08111F",
                   "cornerRadius": 18,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#5F8FC766"
+                    "fill": "#223247"
                   },
                   "gap": 8,
                   "padding": [
@@ -573,7 +555,7 @@
                       "width": "fill_container",
                       "fill": "#00000000",
                       "layout": "vertical",
-                      "gap": 1,
+                      "gap": 2,
                       "children": [
                         {
                           "type": "text",
