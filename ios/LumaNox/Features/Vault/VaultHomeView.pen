@@ -319,52 +319,6 @@
           "layout": "none",
           "children": [
             {
-              "type": "rectangle",
-              "cornerRadius": 18,
-              "id": "t5NZdf",
-              "x": 20,
-              "y": 118,
-              "fill": {
-                "type": "gradient",
-                "gradientType": "linear",
-                "enabled": true,
-                "rotation": 125,
-                "size": {
-                  "height": 1
-                },
-                "colors": [
-                  {
-                    "color": "#183E68",
-                    "position": 0
-                  },
-                  {
-                    "color": "#10294A",
-                    "position": 0.46
-                  },
-                  {
-                    "color": "#07162A",
-                    "position": 1
-                  }
-                ]
-              },
-              "width": 321,
-              "height": 54,
-              "stroke": {
-                "thickness": 1,
-                "fill": "#5F8FC766"
-              },
-              "effect": {
-                "type": "shadow",
-                "shadowType": "outer",
-                "color": "#06162E88",
-                "offset": {
-                  "x": 0,
-                  "y": 10
-                },
-                "blur": 20
-              }
-            },
-            {
               "type": "frame",
               "id": "n9oSiw",
               "x": 249,
@@ -510,62 +464,71 @@
               "type": "frame",
               "id": "i4BwbQ",
               "x": 20,
-              "y": 118,
-              "width": 321,
+              "y": 126,
+              "width": 54,
               "height": 54,
               "fill": "#00000000",
-              "gap": 10,
-              "padding": [
-                0,
-                16
-              ],
-              "alignItems": "center",
+              "layout": "none",
               "children": [
                 {
                   "type": "frame",
                   "id": "hrPZs",
-                  "width": 30,
-                  "height": 30,
-                  "fill": "#B7D7FF1F",
-                  "cornerRadius": 10,
+                  "x": 0,
+                  "y": 0,
+                  "width": 54,
+                  "height": 54,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#183E68",
+                        "position": 0
+                      },
+                      {
+                        "color": "#10294A",
+                        "position": 0.52
+                      },
+                      {
+                        "color": "#07162A",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 18,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#B7D7FF2E"
+                    "fill": "#6FA7E055"
+                  },
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#06162E88",
+                    "offset": {
+                      "x": 0,
+                      "y": 8
+                    },
+                    "blur": 18
                   },
                   "layout": "none",
                   "children": [
                     {
                       "type": "icon_font",
                       "id": "Umkj7",
-                      "x": 7,
-                      "y": 7,
-                      "width": 16,
-                      "height": 16,
+                      "x": 15,
+                      "y": 15,
+                      "width": 24,
+                      "height": 24,
                       "iconFontName": "plus",
                       "iconFontFamily": "lucide",
-                      "fill": "#CFE6FF"
+                      "fill": "#D9ECFF"
                     }
                   ]
-                },
-                {
-                  "type": "text",
-                  "id": "IADHp",
-                  "fill": "#EAF1FF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "Import photos / videos",
-                  "fontFamily": "Inter",
-                  "fontSize": 16,
-                  "fontWeight": "750"
-                },
-                {
-                  "type": "icon_font",
-                  "id": "g7b9Cq",
-                  "width": 22,
-                  "height": 22,
-                  "iconFontName": "chevron-right",
-                  "iconFontFamily": "lucide",
-                  "fill": "#CFE6FF"
                 }
               ]
             },
