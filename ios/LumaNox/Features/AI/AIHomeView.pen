@@ -1,0 +1,69 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "ai_home_empty_vault",
+      "name": "AIHomeView · Empty Vault",
+      "layout": "none",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "image",
+        "mode": "fill",
+        "url": "../../../../docs/assets/vault-privacy-scan/xaNFl.png"
+      }
+    },
+    {
+      "type": "frame",
+      "id": "ai_home_ready_to_scan",
+      "name": "AIHomeView · Ready To Scan",
+      "layout": "none",
+      "x": 433,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "image",
+        "mode": "fill",
+        "url": "../../../../docs/assets/vault-privacy-scan/mjpaV.png"
+      }
+    },
+    {
+      "type": "frame",
+      "id": "ai_home_scanning_vault",
+      "name": "AIHomeView · Scanning Vault",
+      "layout": "none",
+      "x": 866,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "image",
+        "mode": "fill",
+        "url": "../../../../docs/assets/vault-privacy-scan/xkTnU.png"
+      }
+    },
+    {
+      "type": "frame",
+      "id": "ai_home_risks_found",
+      "name": "AIHomeView · Risks Found",
+      "layout": "none",
+      "x": 1299,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "image",
+        "mode": "fill",
+        "url": "../../../../docs/assets/vault-privacy-scan/uaKsu.png"
+      }
+    }
+  ]
+}
