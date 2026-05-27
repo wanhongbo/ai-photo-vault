@@ -98,6 +98,16 @@
 "ai_vault_scan_scope_no_permission" = "No Photos permission";
 "ai_vault_scan_scanning_desc" = "Analyzing decrypted thumbnails locally. File names and OCR text are not shown or uploaded.";
 "ai_vault_scan_live_desc" = "Checks imported vault photos only. Sensitive review, cleanup, and categories share this scan.";
+"ai_preimport_title" = "Check Before Import";
+"ai_preimport_subtitle" = "Pick photos to detect faces, text, and QR codes before they enter the vault.";
+"ai_preimport_scope_selected" = "Selected photos only";
+"ai_preimport_scope_no_full_access" = "No full library access";
+"ai_preimport_action" = "Pick Photos";
+"ai_preimport_import_action" = "Import to Vault";
+"ai_preimport_checking_fmt" = "Checking %d selected photos locally...";
+"ai_preimport_result_risk_fmt" = "%d of %d photos may need masking before import.";
+"ai_preimport_result_clear_fmt" = "%d photos look clear for import.";
+"ai_preimport_failed" = "Could not check selected photos. Import into the vault, then run scan.";
 "ai_summary_scanning_badge" = "Scanning";
 "ai_summary_empty_badge" = "Empty vault";
 "ai_summary_cleanup_badge" = "Cleanup";

@@ -79,6 +79,14 @@ final class PrivacyRedactionService: ObservableObject {
         }
     }
 
+    func detectRegionCount(imageData: Data) async -> Int {
+        do {
+            return try await PrivacyRedactor.detectNormalizedRegions(imageData: imageData).count
+        } catch {
+            return 0
+        }
+    }
+
     func redactAndImport(path: String, style: PrivacyRedactionStyle) async -> PrivacyRedactionResult {
         let detected = await detectRegions(path: path).map {
             PrivacyRedactionRegion(id: $0.id, normalizedRect: $0.normalizedRect, style: style, source: $0.source)
@@ -290,6 +298,24 @@ private enum PrivacyRedactor {
             let encryptedURL = URL(fileURLWithPath: path)
             let data = try VaultCipher.shared.decryptFile(at: encryptedURL)
             guard let image = UIImage(data: data),
+                  let normalized = normalizedImage(from: image),
+                  let cgImage = normalized.cgImage else {
+                throw RedactionError.unsupportedMedia
+            }
+            let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+            return detectRegions(cgImage: cgImage, imageSize: imageSize).map {
+                PrivacyRedactionRegion(
+                    normalizedRect: normalize($0, imageSize: imageSize),
+                    style: .mosaic,
+                    source: .automatic
+                )
+            }
+        }.value
+    }
+
+    static func detectNormalizedRegions(imageData: Data) async throws -> [PrivacyRedactionRegion] {
+        try await Task.detached(priority: .utility) {
+            guard let image = UIImage(data: imageData),
                   let normalized = normalizedImage(from: image),
                   let cgImage = normalized.cgImage else {
                 throw RedactionError.unsupportedMedia

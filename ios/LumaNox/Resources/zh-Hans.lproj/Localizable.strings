@@ -98,6 +98,16 @@
 "ai_vault_scan_scope_no_permission" = "无需相册权限";
 "ai_vault_scan_scanning_desc" = "正在本机分析解密缩略图，不显示或上传文件名与 OCR 文本。";
 "ai_vault_scan_live_desc" = "只检查已导入保险箱的照片；敏感审查、清理和分类共用这次扫描结果。";
+"ai_preimport_title" = "导入前检查";
+"ai_preimport_subtitle" = "先选择照片，在进入保险箱前检测人脸、文字和二维码。";
+"ai_preimport_scope_selected" = "仅所选照片";
+"ai_preimport_scope_no_full_access" = "不读取全相册";
+"ai_preimport_action" = "选择照片";
+"ai_preimport_import_action" = "导入保险箱";
+"ai_preimport_checking_fmt" = "正在本机检查 %d 张已选照片…";
+"ai_preimport_result_risk_fmt" = "%d / %d 张照片可能需要遮盖后再导入。";
+"ai_preimport_result_clear_fmt" = "%d 张照片可直接导入。";
+"ai_preimport_failed" = "暂时无法检查所选照片。可先导入保险箱，再运行扫描。";
 "ai_summary_scanning_badge" = "扫描中";
 "ai_summary_empty_badge" = "保险箱为空";
 "ai_summary_cleanup_badge" = "可清理";

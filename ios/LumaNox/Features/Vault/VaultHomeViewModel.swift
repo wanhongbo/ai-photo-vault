@@ -135,6 +135,22 @@ enum VaultImportFeedback {
         }
         return L10n.tr("home_import_duplicate_dialog_message_count", summary.duplicate)
     }
+
+    static func inlineMessage(for summary: VaultImportSummary) -> String {
+        if summary.added > 0 && (summary.duplicate > 0 || summary.failed > 0) {
+            return L10n.tr("home_import_multi_result", summary.added, summary.duplicate, summary.failed)
+        }
+        if summary.added > 0 {
+            return L10n.tr("home_import_success_count", summary.added)
+        }
+        if summary.duplicate > 0 && summary.failed == 0 {
+            return L10n.tr("home_import_duplicate_count", summary.duplicate)
+        }
+        if summary.failed > 0 {
+            return L10n.tr("home_import_failed")
+        }
+        return L10n.tr("home_import_none")
+    }
 }
 
 private struct VaultPickedMediaFile: Transferable {
