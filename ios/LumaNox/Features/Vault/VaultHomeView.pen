@@ -546,15 +546,15 @@
                     },
                     "colors": [
                       {
-                        "color": "#12365A",
+                        "color": "#0C1727",
                         "position": 0
                       },
                       {
-                        "color": "#08111F",
-                        "position": 0.52
+                        "color": "#07101C",
+                        "position": 0.58
                       },
                       {
-                        "color": "#050A13",
+                        "color": "#05080D",
                         "position": 1
                       }
                     ]
@@ -562,7 +562,7 @@
                   "cornerRadius": 18,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#2D4A68"
+                    "fill": "#223247"
                   },
                   "gap": 8,
                   "padding": [
@@ -583,11 +583,11 @@
                         {
                           "type": "text",
                           "id": "IHKfG",
-                          "fill": "#EAF1FF",
+                          "fill": "#DDE8F8",
                           "content": "Import",
                           "fontFamily": "Inter",
-                          "fontSize": 13,
-                          "fontWeight": "800"
+                          "fontSize": 12,
+                          "fontWeight": "650"
                         },
                         {
                           "type": "text",
@@ -596,33 +596,33 @@
                           "content": "Photos · Videos",
                           "fontFamily": "Inter",
                           "fontSize": 10,
-                          "fontWeight": "600"
+                          "fontWeight": "500"
                         }
                       ]
                     },
                     {
                       "type": "frame",
                       "id": "F9lwW",
-                      "width": 34,
-                      "height": 34,
-                      "fill": "#4A9EFF22",
-                      "cornerRadius": 12,
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#EAF1FF0D",
+                      "cornerRadius": 11,
                       "stroke": {
                         "thickness": 1,
-                        "fill": "#4A9EFF55"
+                        "fill": "#FFFFFF1A"
                       },
                       "layout": "none",
                       "children": [
                         {
                           "type": "icon_font",
                           "id": "addActionIcon",
-                          "x": 8,
-                          "y": 8,
+                          "x": 7,
+                          "y": 7,
                           "width": 18,
                           "height": 18,
                           "iconFontName": "plus",
                           "iconFontFamily": "lucide",
-                          "fill": "#B7D7FF"
+                          "fill": "#8EA2C0"
                         }
                       ]
                     }
@@ -643,15 +643,15 @@
                     },
                     "colors": [
                       {
-                        "color": "#12365A",
+                        "color": "#0C1727",
                         "position": 0
                       },
                       {
-                        "color": "#08111F",
-                        "position": 0.52
+                        "color": "#07101C",
+                        "position": 0.58
                       },
                       {
-                        "color": "#050A13",
+                        "color": "#05080D",
                         "position": 1
                       }
                     ]
@@ -659,7 +659,7 @@
                   "cornerRadius": 18,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#2D4A68"
+                    "fill": "#223247"
                   },
                   "gap": 8,
                   "padding": [
@@ -680,46 +680,46 @@
                         {
                           "type": "text",
                           "id": "hEbxw",
-                          "fill": "#EAF1FF",
+                          "fill": "#DDE8F8",
                           "content": "Scan",
                           "fontFamily": "Inter",
-                          "fontSize": 13,
-                          "fontWeight": "800"
+                          "fontSize": 12,
+                          "fontWeight": "650"
                         },
                         {
                           "type": "text",
                           "id": "n0akl",
-                          "fill": "#AFC4E2",
+                          "fill": "#7E90AB",
                           "content": "By Local AI model",
                           "fontFamily": "Inter",
-                          "fontSize": 8.5,
-                          "fontWeight": "600"
+                          "fontSize": 10,
+                          "fontWeight": "500"
                         }
                       ]
                     },
                     {
                       "type": "frame",
                       "id": "F0US5",
-                      "width": 34,
-                      "height": 34,
-                      "fill": "#4A9EFF22",
-                      "cornerRadius": 12,
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#EAF1FF0D",
+                      "cornerRadius": 11,
                       "stroke": {
                         "thickness": 1,
-                        "fill": "#4A9EFF55"
+                        "fill": "#FFFFFF1A"
                       },
                       "layout": "none",
                       "children": [
                         {
                           "type": "icon_font",
                           "id": "reviewActionIcon",
-                          "x": 8,
-                          "y": 8,
+                          "x": 7,
+                          "y": 7,
                           "width": 18,
                           "height": 18,
                           "iconFontName": "sparkles",
                           "iconFontFamily": "lucide",
-                          "fill": "#B7D7FF"
+                          "fill": "#8EA2C0"
                         }
                       ]
                     }

@@ -351,34 +351,34 @@ private struct HomeHeroActionTile: View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(LNColor.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0xDDE8F8))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Text(subtitle)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(LNColor.subtitle)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(LNColor.navItemIdle)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(LNColor.navItemActive)
-                .frame(width: 34, height: 34)
-                .background(LNColor.brandBlue.opacity(0.14))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(LNColor.subtitle)
+                .frame(width: 32, height: 32)
+                .background(Color.white.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 11))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(LNColor.brandBlue.opacity(0.34), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 11)
+                        .stroke(Color.white.opacity(0.10), lineWidth: 1)
                 )
         }
         .padding(.horizontal, 12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
             LinearGradient(
-                colors: [Color(hex: 0x12365A), Color(hex: 0x08111F), Color(hex: 0x050A13)],
+                colors: [Color(hex: 0x0C1727), Color(hex: 0x07101C), Color(hex: 0x05080D)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -386,7 +386,7 @@ private struct HomeHeroActionTile: View {
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(
             RoundedRectangle(cornerRadius: 18)
-                .stroke(Color(hex: 0x2D4A68), lineWidth: 1)
+                .stroke(LNColor.stroke, lineWidth: 1)
         )
     }
 }
