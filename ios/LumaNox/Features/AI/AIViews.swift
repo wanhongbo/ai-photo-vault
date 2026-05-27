@@ -50,8 +50,9 @@ struct AIHomeView: View {
                 }
                 .padding(LNSpacing.screenHorizontal)
                 .padding(.top, 14)
-                .padding(.bottom, LNSpacing.homeNavBarHeight + 16)
+                .padding(.bottom, LNSpacing.sectionGap)
             }
+            .padding(.bottom, bottomTabClearance)
         }
         .task {
             aiService.refreshSummary()
@@ -67,6 +68,10 @@ struct AIHomeView: View {
             preImportCheckTask?.cancel()
         }
         .accessibilityIdentifier("ai_home_view")
+    }
+
+    private var bottomTabClearance: CGFloat {
+        LNSpacing.homeNavBarHeight + 20
     }
 
     private var aiScanSummaryCard: some View {

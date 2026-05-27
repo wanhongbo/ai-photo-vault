@@ -299,6 +299,85 @@
           "fontSize": 22,
           "fontWeight": "850",
           "fill": "#EAF1FF"
+        },
+        {
+          "type": "text",
+          "id": "ai_opt_tools_count",
+          "content": "3 available",
+          "x": 304,
+          "y": 519,
+          "fontFamily": "Inter",
+          "fontSize": 12,
+          "fontWeight": "600",
+          "fill": "#8EA2C0"
+        },
+        {
+          "type": "frame",
+          "id": "ai_opt_privacy_blur_row",
+          "name": "Privacy Blur row",
+          "layout": "none",
+          "x": 16,
+          "y": 552,
+          "width": 361,
+          "height": 76,
+          "cornerRadius": 18,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#244869", "thickness": 1 },
+          "children": [
+            { "type": "frame", "id": "ai_opt_privacy_icon", "x": 14, "y": 16, "width": 44, "height": 44, "cornerRadius": 13, "fill": "#4A9EFF22" },
+            { "type": "text", "id": "ai_opt_privacy_title", "content": "Privacy Blur", "x": 72, "y": 15, "width": 188, "textGrowth": "fixed-width", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "750", "fill": "#EAF1FF" },
+            { "type": "text", "id": "ai_opt_privacy_desc", "content": "Mask faces, IDs, and screenshots", "x": 72, "y": 40, "width": 185, "textGrowth": "fixed-width", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "500", "fill": "#8EA2C0" },
+            { "type": "frame", "id": "ai_opt_privacy_status", "layout": "horizontal", "alignItems": "center", "justifyContent": "center", "x": 286, "y": 23, "width": 58, "height": 28, "cornerRadius": 14, "fill": "#122033", "stroke": { "fill": "#223247", "thickness": 1 }, "children": [{ "type": "text", "id": "ai_opt_privacy_status_text", "content": "2", "fontFamily": "Inter", "fontSize": 11, "fontWeight": "750", "fill": "#B7C6DD" }] }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ai_opt_classify_row",
+          "name": "Classify row",
+          "layout": "none",
+          "x": 16,
+          "y": 640,
+          "width": 361,
+          "height": 76,
+          "cornerRadius": 18,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            { "type": "frame", "id": "ai_opt_classify_icon", "x": 14, "y": 16, "width": 44, "height": 44, "cornerRadius": 13, "fill": "#18283D" },
+            { "type": "text", "id": "ai_opt_classify_title", "content": "Classify", "x": 72, "y": 15, "width": 188, "textGrowth": "fixed-width", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "750", "fill": "#EAF1FF" },
+            { "type": "text", "id": "ai_opt_classify_desc", "content": "Group vault media by local labels", "x": 72, "y": 40, "width": 185, "textGrowth": "fixed-width", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "500", "fill": "#8EA2C0" },
+            { "type": "frame", "id": "ai_opt_classify_status", "layout": "horizontal", "alignItems": "center", "justifyContent": "center", "x": 286, "y": 23, "width": 58, "height": 28, "cornerRadius": 14, "fill": "#122033", "stroke": { "fill": "#223247", "thickness": 1 }, "children": [{ "type": "text", "id": "ai_opt_classify_status_text", "content": "Live", "fontFamily": "Inter", "fontSize": 11, "fontWeight": "750", "fill": "#B7C6DD" }] }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ai_opt_bottom_tab_clearance",
+          "name": "Bottom tab clearance",
+          "layout": "none",
+          "x": 0,
+          "y": 724,
+          "width": 393,
+          "height": 56,
+          "fill": "#05080D"
+        },
+        {
+          "type": "frame",
+          "id": "ai_opt_bottom_tab_bar",
+          "name": "Floating bottom tab bar",
+          "layout": "none",
+          "x": 16,
+          "y": 780,
+          "width": 361,
+          "height": 66,
+          "cornerRadius": 24,
+          "fill": "#0E1726",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "children": [
+            { "type": "text", "id": "ai_opt_tab_vault", "content": "Vault", "x": 30, "y": 40, "fontFamily": "Inter", "fontSize": 11, "fontWeight": "700", "fill": "#8EA2C0" },
+            { "type": "text", "id": "ai_opt_tab_camera", "content": "Camera", "x": 114, "y": 40, "fontFamily": "Inter", "fontSize": 11, "fontWeight": "700", "fill": "#8EA2C0" },
+            { "type": "text", "id": "ai_opt_tab_ai", "content": "AI", "x": 198, "y": 40, "fontFamily": "Inter", "fontSize": 11, "fontWeight": "700", "fill": "#4A9EFF" },
+            { "type": "text", "id": "ai_opt_tab_settings", "content": "Settings", "x": 282, "y": 40, "fontFamily": "Inter", "fontSize": 11, "fontWeight": "700", "fill": "#8EA2C0" }
+          ]
         }
       ]
     }
