@@ -64,6 +64,243 @@
         "mode": "fill",
         "url": "../../../../docs/assets/vault-privacy-scan/uaKsu.png"
       }
+    },
+    {
+      "type": "frame",
+      "id": "ai_home_optimized_heroes",
+      "name": "AIHomeView · Optimized Heroes",
+      "layout": "none",
+      "x": 1732,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "rotation": 180,
+        "enabled": true,
+        "colors": [
+          { "color": "#0B1324", "position": 0 },
+          { "color": "#05080D", "position": 1 }
+        ],
+        "size": { "height": 1 }
+      },
+      "children": [
+        {
+          "type": "text",
+          "id": "ai_opt_title",
+          "content": "AI Assistant",
+          "x": 16,
+          "y": 54,
+          "fontFamily": "Inter",
+          "fontSize": 30,
+          "fontWeight": "800",
+          "fill": "#EAF1FF"
+        },
+        {
+          "type": "text",
+          "id": "ai_opt_subtitle",
+          "content": "Private scans stay on this device",
+          "x": 16,
+          "y": 92,
+          "width": 330,
+          "textGrowth": "fixed-width",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "500",
+          "fill": "#8EA2C0"
+        },
+        {
+          "type": "frame",
+          "id": "ai_opt_scan_hero",
+          "name": "Primary vault scan hero",
+          "layout": "none",
+          "x": 16,
+          "y": 132,
+          "width": 361,
+          "height": 250,
+          "cornerRadius": 24,
+          "fill": "#0B1421",
+          "stroke": { "fill": "#2B405A", "thickness": 1 },
+          "children": [
+            {
+              "type": "text",
+              "id": "ai_opt_scan_scope",
+              "content": "Encrypted vault only     No Photos permission",
+              "x": 18,
+              "y": 20,
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "750",
+              "fill": "#7DBBFF"
+            },
+            {
+              "type": "text",
+              "id": "ai_opt_scan_badge",
+              "content": "Action needed",
+              "x": 76,
+              "y": 62,
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "750",
+              "fill": "#B7C6DD"
+            },
+            {
+              "type": "text",
+              "id": "ai_opt_scan_headline",
+              "content": "2 sensitive items need review",
+              "x": 76,
+              "y": 82,
+              "width": 260,
+              "textGrowth": "fixed-width",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "850",
+              "fill": "#EAF1FF"
+            },
+            {
+              "type": "text",
+              "id": "ai_opt_scan_desc",
+              "content": "Checks imported vault photos only. Sensitive review, cleanup, and categories share this scan.",
+              "x": 18,
+              "y": 124,
+              "width": 315,
+              "textGrowth": "fixed-width",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "500",
+              "fill": "#8EA2C0"
+            },
+            {
+              "type": "frame",
+              "id": "ai_opt_review_button",
+              "layout": "horizontal",
+              "alignItems": "center",
+              "justifyContent": "center",
+              "x": 18,
+              "y": 186,
+              "width": 206,
+              "height": 44,
+              "cornerRadius": 14,
+              "fill": "#4A9EFF",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ai_opt_review_text",
+                  "content": "Review Risks",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "800",
+                  "fill": "#FFFFFF"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ai_opt_rescan_button",
+              "layout": "horizontal",
+              "alignItems": "center",
+              "justifyContent": "center",
+              "x": 238,
+              "y": 186,
+              "width": 104,
+              "height": 44,
+              "cornerRadius": 14,
+              "fill": "#0E1726",
+              "stroke": { "fill": "#223247", "thickness": 1 },
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ai_opt_rescan_text",
+                  "content": "Rescan",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "750",
+                  "fill": "#B7C6DD"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ai_opt_preimport_strip",
+          "name": "Compact pre-import check",
+          "layout": "none",
+          "x": 16,
+          "y": 396,
+          "width": 361,
+          "height": 92,
+          "cornerRadius": 20,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#21483D", "thickness": 1 },
+          "children": [
+            {
+              "type": "text",
+              "id": "ai_opt_preimport_title",
+              "content": "Check Before Import",
+              "x": 66,
+              "y": 14,
+              "width": 168,
+              "textGrowth": "fixed-width",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "800",
+              "fill": "#EAF1FF"
+            },
+            {
+              "type": "text",
+              "id": "ai_opt_preimport_desc",
+              "content": "Selected photos only · no full library access",
+              "x": 66,
+              "y": 38,
+              "width": 196,
+              "textGrowth": "fixed-width",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "550",
+              "fill": "#8EA2C0"
+            },
+            {
+              "type": "frame",
+              "id": "ai_opt_pick_button",
+              "layout": "horizontal",
+              "alignItems": "center",
+              "justifyContent": "center",
+              "x": 270,
+              "y": 24,
+              "width": 74,
+              "height": 40,
+              "cornerRadius": 13,
+              "fill": "#122033",
+              "stroke": { "fill": "#244869", "thickness": 1 },
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ai_opt_pick_text",
+                  "content": "Pick",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "800",
+                  "fill": "#7DBBFF"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "ai_opt_tools_title",
+          "content": "Tools",
+          "x": 16,
+          "y": 512,
+          "fontFamily": "Inter",
+          "fontSize": 22,
+          "fontWeight": "850",
+          "fill": "#EAF1FF"
+        }
+      ]
     }
   ]
 }

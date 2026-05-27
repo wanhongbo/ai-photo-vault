@@ -100,9 +100,12 @@
 "ai_vault_scan_live_desc" = "Checks imported vault photos only. Sensitive review, cleanup, and categories share this scan.";
 "ai_preimport_title" = "Check Before Import";
 "ai_preimport_subtitle" = "Pick photos to detect faces, text, and QR codes before they enter the vault.";
+"ai_preimport_subtitle_compact" = "Screen selected photos before they enter the vault.";
+"ai_preimport_scope_inline" = "Selected photos only · no full library access";
 "ai_preimport_scope_selected" = "Selected photos only";
 "ai_preimport_scope_no_full_access" = "No full library access";
 "ai_preimport_action" = "Pick Photos";
+"ai_preimport_pick_short" = "Pick";
 "ai_preimport_import_action" = "Import to Vault";
 "ai_preimport_checking_fmt" = "Checking %d selected photos locally...";
 "ai_preimport_result_risk_fmt" = "%d of %d photos may need masking before import.";

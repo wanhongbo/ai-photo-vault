@@ -17,6 +17,7 @@ struct AIHomeView: View {
     @State private var preImportCheckState: AIPreImportCheckState = .idle
     @State private var preImportCheckTask: Task<Void, Never>?
     @State private var isPreImportImporting = false
+    @State private var suppressPreImportSelectionChange = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -56,6 +57,10 @@ struct AIHomeView: View {
             aiService.refreshSummary()
         }
         .onChange(of: preImportPickerItems) { _ in
+            if suppressPreImportSelectionChange {
+                suppressPreImportSelectionChange = false
+                return
+            }
             runPreImportCheck()
         }
         .onDisappear {
@@ -143,70 +148,92 @@ struct AIHomeView: View {
     }
 
     private var preImportCheckCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: preImportCardIsExpanded ? 12 : 0) {
             HStack(spacing: 12) {
-                iconWell(systemName: "checkmark.shield", foreground: LNColor.success, background: Color(hex: 0x0E2B26), size: 44)
+                iconWell(systemName: "checkmark.shield", foreground: LNColor.success, background: Color(hex: 0x0E2B26), size: 40)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.tr("ai_preimport_title"))
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(LNColor.title)
-                    Text(L10n.tr("ai_preimport_subtitle"))
+                        .lineLimit(1)
+                    Text(preImportSupportText)
                         .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(LNColor.subtitle)
                         .lineLimit(2)
                 }
+                Spacer(minLength: 10)
+                preImportPickerButton(isCompact: true)
             }
 
-            HStack(spacing: 8) {
-                AIScopeChip(title: L10n.tr("ai_preimport_scope_selected"), tint: LNColor.success)
-                AIScopeChip(title: L10n.tr("ai_preimport_scope_no_full_access"), tint: LNColor.brandBlue)
-            }
-
-            if let statusText = preImportStatusText {
-                Text(statusText)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(preImportStatusColor)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            HStack(spacing: 12) {
-                PhotosPicker(
-                    selection: $preImportPickerItems,
-                    maxSelectionCount: 12,
-                    matching: .images
-                ) {
-                    AIPreImportButtonLabel(
-                        title: L10n.tr("ai_preimport_action"),
-                        foreground: .white,
-                        background: LNColor.brandBlue
-                    )
+            if preImportCardIsExpanded {
+                if let statusText = preImportStatusText {
+                    HStack(alignment: .top, spacing: 8) {
+                        if case .checking = preImportCheckState {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(LNColor.brandBlue)
+                        }
+                        Text(statusText)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(preImportStatusColor)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
-                .disabled(isPreImportBusy)
 
                 if preImportCanImport {
-                    Button {
-                        importPreImportSelection()
-                    } label: {
-                        AIPreImportButtonLabel(
-                            title: L10n.tr("ai_preimport_import_action"),
-                            foreground: Color(hex: 0xB7C6DD),
-                            background: Color(hex: 0x122033),
-                            stroke: LNColor.stroke
-                        )
+                    HStack(spacing: 12) {
+                        preImportPickerButton(isCompact: false)
+
+                        Button {
+                            importPreImportSelection()
+                        } label: {
+                            AIPreImportButtonLabel(
+                                title: L10n.tr("ai_preimport_import_action"),
+                                foreground: Color(hex: 0xB7C6DD),
+                                background: Color(hex: 0x122033),
+                                stroke: LNColor.stroke
+                            )
+                        }
+                        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
+                        .disabled(isPreImportBusy)
                     }
-                    .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
-                    .disabled(isPreImportBusy)
                 }
             }
         }
-        .padding(LNSpacing.cardPadding)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(LNColor.sectionBg)
-        .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
-        .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(Color(hex: 0x21483D), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: 0x21483D), lineWidth: 1))
         .accessibilityIdentifier("ai_preimport_check_card")
+    }
+
+    private var preImportCardIsExpanded: Bool {
+        preImportCheckState != .idle
+    }
+
+    private var preImportSupportText: String {
+        preImportCardIsExpanded ? L10n.tr("ai_preimport_scope_inline") : L10n.tr("ai_preimport_subtitle_compact")
+    }
+
+    private func preImportPickerButton(isCompact: Bool) -> some View {
+        PhotosPicker(
+            selection: $preImportPickerItems,
+            maxSelectionCount: 12,
+            matching: .images
+        ) {
+            AIPreImportButtonLabel(
+                title: isCompact ? L10n.tr("ai_preimport_pick_short") : L10n.tr("ai_preimport_action"),
+                foreground: isCompact ? Color(hex: 0x7DBBFF) : .white,
+                background: isCompact ? Color(hex: 0x122033) : LNColor.brandBlue,
+                stroke: isCompact ? Color(hex: 0x244869) : nil,
+                width: isCompact ? 74 : nil
+            )
+        }
+        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
+        .disabled(isPreImportBusy)
+        .accessibilityIdentifier("ai_preimport_picker_button")
     }
 
     private var preImportStatusText: String? {
@@ -261,9 +288,11 @@ struct AIHomeView: View {
         preImportCheckState = .checking(items.count)
         preImportCheckTask = Task {
             var flagged = 0
+            var checked = 0
             for item in items.prefix(12) {
                 if Task.isCancelled { return }
                 guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
+                checked += 1
                 let regionCount = await PrivacyRedactionService.shared.detectRegionCount(imageData: data)
                 if regionCount > 0 {
                     flagged += 1
@@ -271,7 +300,7 @@ struct AIHomeView: View {
             }
             if Task.isCancelled { return }
             await MainActor.run {
-                preImportCheckState = .result(selected: items.count, flagged: flagged)
+                preImportCheckState = checked == 0 ? .failed : .result(selected: checked, flagged: flagged)
             }
         }
     }
@@ -290,6 +319,8 @@ struct AIHomeView: View {
             await MainActor.run {
                 preImportCheckState = .imported(VaultImportFeedback.inlineMessage(for: summary))
                 isPreImportImporting = false
+                suppressPreImportSelectionChange = true
+                preImportPickerItems = []
                 aiService.refreshSummary()
             }
         }
@@ -570,6 +601,7 @@ private struct AIPreImportButtonLabel: View {
     let foreground: Color
     let background: Color
     var stroke: Color?
+    var width: CGFloat? = nil
 
     var body: some View {
         Text(title)
@@ -578,6 +610,7 @@ private struct AIPreImportButtonLabel: View {
             .lineLimit(1)
             .minimumScaleFactor(0.82)
             .frame(maxWidth: .infinity)
+            .frame(width: width)
             .frame(height: 40)
             .background(background)
             .clipShape(RoundedRectangle(cornerRadius: 12))
