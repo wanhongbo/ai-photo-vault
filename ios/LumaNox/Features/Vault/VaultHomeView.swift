@@ -456,10 +456,6 @@ private struct RecentMediaCard: View {
                 )
                 .frame(width: max(width - 16, 0), height: 96)
                 .clipShape(RoundedRectangle(cornerRadius: 13))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 13)
-                        .stroke(Color(hex: 0x315D84), lineWidth: 1)
-                )
             }
             .frame(width: width, height: 122, alignment: .center)
             .homeItemCard(cornerRadius: 18)

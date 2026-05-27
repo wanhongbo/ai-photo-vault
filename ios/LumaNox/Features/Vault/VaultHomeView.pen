@@ -888,10 +888,6 @@
                         ]
                       },
                       "cornerRadius": 13,
-                      "stroke": {
-                        "fill": "#315D84",
-                        "thickness": 1
-                      },
                       "layout": "none",
                       "children": [
                         {
@@ -997,10 +993,6 @@
                         ]
                       },
                       "cornerRadius": 13,
-                      "stroke": {
-                        "fill": "#315D84",
-                        "thickness": 1
-                      },
                       "layout": "none",
                       "children": [
                         {
@@ -1117,10 +1109,6 @@
                         ]
                       },
                       "cornerRadius": 13,
-                      "stroke": {
-                        "fill": "#315D84",
-                        "thickness": 1
-                      },
                       "layout": "none",
                       "children": [
                         {
