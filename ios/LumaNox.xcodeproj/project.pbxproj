@@ -37,6 +37,7 @@
 		2B7D644A9AB8494B306E77C6 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EDEEE53B1D9BE4F3642CCA /* PaywallView.swift */; };
 		2E1F88B970C3A51B0214990F /* SettingsAboutView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 24988E0D2A96262B88EEA6D1 /* SettingsAboutView.pen */; };
 		2E34541BB9BA6B36520524B1 /* PlaintextTempFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B224DC7450B7689747A1F9E /* PlaintextTempFileManager.swift */; };
+		2F45BE4EC6F8D06CD9CB30BD /* AIHomeView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 3E02CBE8CBCDD6FEAABB33F3 /* AIHomeView.pen */; };
 		2FBFB90C6D4866359C5BD5A7 /* SettingsDataStorageView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 371D91BB63D60ABCD7FAA36F /* SettingsDataStorageView.pen */; };
 		2FE45563535591870091EC65 /* BackupMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086918DA1D5BF1214B8545AA /* BackupMeta.swift */; };
 		30BBFC5EBA2EA20876555D1B /* AppInstallState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58424E9F8F2B87C526A3CA80 /* AppInstallState.swift */; };
@@ -115,6 +116,7 @@
 		A3762BBED3A87C11CCBFB2DA /* AIRecognitionFixtureImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BF1855A4D106CFD1B09EDDE /* AIRecognitionFixtureImportTests.swift */; };
 		A3C95D375296E51D3DD81D40 /* VaultCipher+Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BDA2787DB5B7CDB9CF79DEE /* VaultCipher+Stream.swift */; };
 		A41B47831E53371E5339BE04 /* BackupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4C456534536B3DE53A4E8BC /* BackupViews.swift */; };
+		A57E22A24F0CED238A1FFDD4 /* PrivacyRiskScanView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 4BD2F82745DEF4084FBB9CB4 /* PrivacyRiskScanView.pen */; };
 		A5C20C25445C0F0CF60A00E9 /* VaultModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA0AF35AC07F37BA5F1622F /* VaultModels.swift */; };
 		A66C9C638B759A414E448ED3 /* QuotaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727B91FB477025D1B3A19427 /* QuotaManager.swift */; };
 		A6EB4FA274288306A693DCDE /* AISensitiveReviewView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 025A53DD2F6B332F7E7CBB30 /* AISensitiveReviewView.pen */; };
@@ -226,12 +228,14 @@
 		371D91BB63D60ABCD7FAA36F /* SettingsDataStorageView.pen */ = {isa = PBXFileReference; path = SettingsDataStorageView.pen; sourceTree = "<group>"; };
 		3B36C7EB0368F50AB6AC2BFC /* CameraViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViews.swift; sourceTree = "<group>"; };
 		3BAB828DB79FA00FEC28F19C /* PrivateCameraView.pen */ = {isa = PBXFileReference; path = PrivateCameraView.pen; sourceTree = "<group>"; };
+		3E02CBE8CBCDD6FEAABB33F3 /* AIHomeView.pen */ = {isa = PBXFileReference; path = AIHomeView.pen; sourceTree = "<group>"; };
 		3FB8CFCE0552877BBDAA93D1 /* AICleanupView.pen */ = {isa = PBXFileReference; path = AICleanupView.pen; sourceTree = "<group>"; };
 		407A509AE813C75AE5E073FF /* screen_1j.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_1j.png; sourceTree = "<group>"; };
 		4241EDA5491F0E3F4AF4FAD5 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = "zh-Hans"; path = "zh-Hans.lproj/privacy_policy.html"; sourceTree = "<group>"; };
 		42C5CCDED95D15E599EE79B1 /* VaultFileHasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultFileHasher.swift; sourceTree = "<group>"; };
 		46CFF782A0797B87261A0450 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		4774BDE54BCD166B53833A58 /* VaultMetadataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultMetadataModels.swift; sourceTree = "<group>"; };
+		4BD2F82745DEF4084FBB9CB4 /* PrivacyRiskScanView.pen */ = {isa = PBXFileReference; path = PrivacyRiskScanView.pen; sourceTree = "<group>"; };
 		4D434010CE450260448B125E /* PrivateCameraViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateCameraViewModel.swift; sourceTree = "<group>"; };
 		5324047407C827B2FCD59CC9 /* LNBottomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNBottomTabBar.swift; sourceTree = "<group>"; };
 		53E9255003D4588EA511C8F6 /* PaywallViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewModel.swift; sourceTree = "<group>"; };
@@ -797,10 +801,12 @@
 			children = (
 				BE6AA7F5102C5480C5BB950C /* AIClassifyDetailView.pen */,
 				3FB8CFCE0552877BBDAA93D1 /* AICleanupView.pen */,
+				3E02CBE8CBCDD6FEAABB33F3 /* AIHomeView.pen */,
 				025A53DD2F6B332F7E7CBB30 /* AISensitiveReviewView.pen */,
 				6ECB0E3F2D108BED30E7C031 /* AIViews.pen */,
 				83D4F776A7ACB59085A82B3F /* AIViews.swift */,
 				B54F71A283BE867B7C0AC126 /* PrivacyRedactView.pen */,
+				4BD2F82745DEF4084FBB9CB4 /* PrivacyRiskScanView.pen */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -912,6 +918,7 @@
 			files = (
 				D6D3FA80DAFBC686A2B5E510 /* AIClassifyDetailView.pen in Resources */,
 				DCFFDDED81FDA7FF3E08431D /* AICleanupView.pen in Resources */,
+				2F45BE4EC6F8D06CD9CB30BD /* AIHomeView.pen in Resources */,
 				A6EB4FA274288306A693DCDE /* AISensitiveReviewView.pen in Resources */,
 				DC60E148161FD21F6A3E8D63 /* AIViews.pen in Resources */,
 				782B97ECE55A70B2FA3E6608 /* AlbumListView.pen in Resources */,
@@ -935,6 +942,7 @@
 				E8658E1F4A813F2983F533D8 /* MainTabView.pen in Resources */,
 				27A063DD7AD399ABA10FDE6E /* PhotoViewerView.pen in Resources */,
 				486B75BFD5833E43971EAA68 /* PrivacyRedactView.pen in Resources */,
+				A57E22A24F0CED238A1FFDD4 /* PrivacyRiskScanView.pen in Resources */,
 				F548A4960AE663233E2D61C4 /* PrivateCameraView.pen in Resources */,
 				F08C2E275153E01C1EE8777C /* RecentPhotosListView.pen in Resources */,
 				7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */,

@@ -46,6 +46,11 @@ struct AIHomeView: View {
 
     private var aiScanSummaryCard: some View {
         VStack(alignment: .leading, spacing: 13) {
+            HStack(spacing: 8) {
+                AIScopeChip(title: L10n.tr("ai_vault_scan_scope_vault"), tint: LNColor.brandBlue)
+                AIScopeChip(title: L10n.tr("ai_vault_scan_scope_no_permission"), tint: LNColor.success)
+            }
+
             HStack(spacing: 12) {
                 iconWell(systemName: summaryIcon, foreground: summaryAccent, background: summaryIconBackground, size: 44)
                 VStack(alignment: .leading, spacing: 4) {
@@ -79,17 +84,18 @@ struct AIHomeView: View {
                         foreground: .white,
                         background: LNColor.brandBlue,
                         fontWeight: .bold,
-                        enabled: aiService.summary.totalCount > 0,
-                        action: startScan
+                        enabled: primarySummaryEnabled,
+                        action: performPrimarySummaryAction
                     )
 
                     AISummaryActionButton(
-                        title: L10n.tr("ai_summary_review_now"),
+                        title: secondarySummaryActionTitle,
                         foreground: Color(hex: 0xB7C6DD),
                         background: Color(hex: 0x122033),
                         stroke: LNColor.stroke,
                         fontWeight: .semibold,
-                        action: { router.pushAI(.aiSensitive) }
+                        enabled: secondarySummaryEnabled,
+                        action: performSecondarySummaryAction
                     )
                 }
             }
@@ -193,11 +199,58 @@ struct AIHomeView: View {
 
     private var summaryDescription: String {
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_summary_empty_desc") }
-        return L10n.tr("ai_summary_live_desc")
+        if aiService.progress.running { return L10n.tr("ai_vault_scan_scanning_desc") }
+        return L10n.tr("ai_vault_scan_live_desc")
     }
 
     private var primarySummaryAction: String {
-        aiService.summary.hasUnscanned ? L10n.tr("ai_action_start_scan") : L10n.tr("ai_action_rescan")
+        if aiService.summary.totalCount == 0 { return L10n.tr("ai_action_open_vault") }
+        if aiService.summary.sensitiveCount > 0 { return L10n.tr("ai_action_review_risks") }
+        if aiService.summary.cleanupCount > 0 { return L10n.tr("ai_action_review_cleanup") }
+        return aiService.summary.hasUnscanned ? L10n.tr("ai_action_scan_vault") : L10n.tr("ai_action_rescan")
+    }
+
+    private var primarySummaryEnabled: Bool {
+        !aiService.progress.running
+    }
+
+    private var secondarySummaryActionTitle: String {
+        if aiService.summary.totalCount == 0 { return L10n.tr("ai_action_private_camera") }
+        if aiService.summary.sensitiveCount > 0 || aiService.summary.cleanupCount > 0 { return L10n.tr("ai_action_rescan") }
+        if aiService.summary.categoryCounts.isEmpty { return L10n.tr("ai_action_view_tools") }
+        return L10n.tr("ai_action_view_categories")
+    }
+
+    private var secondarySummaryEnabled: Bool {
+        !aiService.progress.running
+    }
+
+    private func performPrimarySummaryAction() {
+        if aiService.summary.totalCount == 0 {
+            router.selectedTab = .vault
+            return
+        }
+        if aiService.summary.sensitiveCount > 0 {
+            openAIFeature(.aiSensitive, proFeature: .aiPrivacy, router: router)
+            return
+        }
+        if aiService.summary.cleanupCount > 0 {
+            openAIFeature(.aiCleanup, proFeature: .aiCleanup, router: router)
+            return
+        }
+        startScan()
+    }
+
+    private func performSecondarySummaryAction() {
+        if aiService.summary.totalCount == 0 {
+            router.openPrivateCamera()
+            return
+        }
+        if aiService.summary.sensitiveCount > 0 || aiService.summary.cleanupCount > 0 {
+            startScan()
+            return
+        }
+        router.pushAI(.aiClassify)
     }
 
     private var summaryAccent: Color {
@@ -304,6 +357,24 @@ private struct AISummaryActionButton: View {
         }
         .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
         .disabled(!enabled)
+    }
+}
+
+private struct AIScopeChip: View {
+    let title: String
+    let tint: Color
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(tint)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .padding(.horizontal, 10)
+            .frame(height: 28)
+            .background(tint.opacity(0.16))
+            .clipShape(Capsule())
+            .accessibilityIdentifier("ai_vault_scan_scope_chip")
     }
 }
 
