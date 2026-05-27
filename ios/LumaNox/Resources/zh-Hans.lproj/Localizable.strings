@@ -90,7 +90,10 @@
 "ai_action_review_cleanup" = "查看清理";
 "ai_action_view_tools" = "查看工具";
 "ai_action_view_categories" = "查看分类";
+"ai_action_pause_scan" = "停止扫描";
 "ai_scan_progress_fmt" = "已扫描 %d / %d";
+"ai_scan_incremental_hint" = "已扫描且未变化的保险箱媒体会直接复用；可随时停止，已完成结果仍保存在本机。";
+"ai_scan_cancelling" = "将在当前项目完成后停止，并保存已完成的本地结果。";
 "ai_vault_scan_scope_vault" = "仅加密保险箱";
 "ai_vault_scan_scope_no_permission" = "无需相册权限";
 "ai_vault_scan_scanning_desc" = "正在本机分析解密缩略图，不显示或上传文件名与 OCR 文本。";

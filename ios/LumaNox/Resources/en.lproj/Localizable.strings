@@ -90,7 +90,10 @@
 "ai_action_review_cleanup" = "Review Cleanup";
 "ai_action_view_tools" = "View Tools";
 "ai_action_view_categories" = "View Categories";
+"ai_action_pause_scan" = "Stop Scan";
 "ai_scan_progress_fmt" = "%d of %d scanned";
+"ai_scan_incremental_hint" = "Already scanned and unchanged vault media is reused. Stop anytime; completed results stay local.";
+"ai_scan_cancelling" = "Stopping after the current item and saving completed local results.";
 "ai_vault_scan_scope_vault" = "Encrypted vault only";
 "ai_vault_scan_scope_no_permission" = "No Photos permission";
 "ai_vault_scan_scanning_desc" = "Analyzing decrypted thumbnails locally. File names and OCR text are not shown or uploaded.";

@@ -77,6 +77,20 @@ struct AIHomeView: View {
                 Text(L10n.tr("ai_scan_progress_fmt", aiService.progress.done, aiService.progress.total))
                     .font(LNTypography.labelMedium())
                     .foregroundStyle(LNColor.subtitle)
+                Text(aiService.cancellationPending ? L10n.tr("ai_scan_cancelling") : L10n.tr("ai_scan_incremental_hint"))
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(LNColor.subtitle.opacity(0.92))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                AISummaryActionButton(
+                    title: L10n.tr("ai_action_pause_scan"),
+                    foreground: Color(hex: 0xB7C6DD),
+                    background: Color(hex: 0x122033),
+                    stroke: LNColor.stroke,
+                    fontWeight: .semibold,
+                    enabled: !aiService.cancellationPending,
+                    action: aiService.cancelScan
+                )
             } else {
                 HStack(spacing: 12) {
                     AISummaryActionButton(

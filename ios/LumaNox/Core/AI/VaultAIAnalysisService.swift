@@ -63,6 +63,7 @@ final class VaultAIAnalysisService: ObservableObject {
     @Published private(set) var sensitiveRecords: [VaultMediaRecord] = []
     @Published private(set) var summary = VaultAISummary()
     @Published private(set) var progress = VaultAIProgress()
+    @Published private(set) var cancellationPending = false
     @Published private(set) var lastError: String?
 
     private let vaultStore = VaultStore.shared
@@ -99,6 +100,7 @@ final class VaultAIAnalysisService: ObservableObject {
         guard !targets.isEmpty else { return }
 
         progress = VaultAIProgress(running: true, done: 0, total: targets.count)
+        cancellationPending = false
         lastError = nil
         let documents = documentsDirectory()
         let previousIndexByID = Dictionary(uniqueKeysWithValues: indexStore.load().records.map { ($0.recordID, $0) })
@@ -108,6 +110,7 @@ final class VaultAIAnalysisService: ObservableObject {
         let progressStride = max(1, min(25, targets.count / 50))
 
         for record in targets {
+            if cancellationPending || Task.isCancelled { break }
             do {
                 var result: VaultAIAnalyzer.Result
                 if Self.canReuseAnalysis(for: record) {
@@ -145,17 +148,28 @@ final class VaultAIAnalysisService: ObservableObject {
             }
         }
 
-        markDuplicates(in: &results)
-        let indexPayload = makeAIIndexPayload(from: results)
-
         do {
-            try metadataStore.updateAiMetadata(Dictionary(uniqueKeysWithValues: results.map { ($0.recordID, $0.ai) }))
-            try indexStore.replace(records: indexPayload.records, subjectClusters: indexPayload.clusters)
+            let partialMetadata = Dictionary(uniqueKeysWithValues: results.map { ($0.recordID, $0.ai) })
+            if !partialMetadata.isEmpty {
+                try metadataStore.updateAiMetadata(partialMetadata)
+            }
+            if !cancellationPending && !Task.isCancelled {
+                markDuplicates(in: &results)
+                let indexPayload = makeAIIndexPayload(from: results)
+                try metadataStore.updateAiMetadata(Dictionary(uniqueKeysWithValues: results.map { ($0.recordID, $0.ai) }))
+                try indexStore.replace(records: indexPayload.records, subjectClusters: indexPayload.clusters)
+            }
             refreshSummary()
         } catch {
             lastError = error.localizedDescription
         }
+        cancellationPending = false
         progress = VaultAIProgress()
+    }
+
+    func cancelScan() {
+        guard progress.running else { return }
+        cancellationPending = true
     }
 
     nonisolated static func isSensitive(_ record: VaultMediaRecord) -> Bool {
