@@ -64,22 +64,22 @@ struct VaultHomeView: View {
     }
 
     private var heroCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top, spacing: 14) {
-                VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 7) {
                     Text(L10n.appName)
-                        .font(.system(size: 29, weight: .black))
-                        .foregroundStyle(Color(hex: 0xF6F9FF))
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(Color(hex: 0xF2F6FF))
                     Text(L10n.tr("home_vault_security_info_total", viewModel.totalCount))
                         .font(LNTypography.labelMedium())
-                        .foregroundStyle(Color(hex: 0xAFC4E2))
+                        .foregroundStyle(Color(hex: 0x9BAEC8))
                         .lineLimit(2)
                 }
                 Spacer(minLength: 8)
                 AppIconHeroView()
             }
 
-            HStack(spacing: 7) {
+            HStack(spacing: 8) {
                 HomeHeroBadge(icon: "wifi.slash", title: L10n.tr("home_hero_badge_offline"))
                 HomeHeroBadge(icon: "lock.shield", title: L10n.tr("home_hero_badge_encrypted"))
                 HomeHeroBadge(icon: "sparkles", title: L10n.tr("home_hero_badge_ai_ready"))
@@ -114,23 +114,23 @@ struct VaultHomeView: View {
                 .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.86))
                 .accessibilityIdentifier("vault_ai_scan_shortcut")
             }
-            .frame(height: 68)
+            .frame(height: 56)
         }
-        .padding(20)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
-                colors: [Color(hex: 0x07101E), Color(hex: 0x0B1730), Color(hex: 0x123A60)],
+                colors: [Color(hex: 0x07101A), Color(hex: 0x081321), Color(hex: 0x0D2238)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         )
-        .clipShape(RoundedRectangle(cornerRadius: 28))
+        .clipShape(RoundedRectangle(cornerRadius: 24))
         .overlay(
-            RoundedRectangle(cornerRadius: 28)
-                .stroke(Color(hex: 0x31506F), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(LNColor.stroke, lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.40), radius: 17, x: 0, y: 16)
+        .shadow(color: .black.opacity(0.33), radius: 14, x: 0, y: 12)
     }
 
     private var loadingVaultCard: some View {
@@ -324,20 +324,20 @@ private struct HomeHeroBadge: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: 10, weight: .medium))
             Text(title)
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 9, weight: .medium))
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
         }
-        .foregroundStyle(Color(hex: 0xC7DAF7))
-        .frame(maxWidth: .infinity)
-        .frame(height: 30)
-        .background(Color.white.opacity(0.07))
-        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .foregroundStyle(Color(hex: 0xAFC4E2))
+        .padding(.horizontal, 10)
+        .frame(height: 26)
+        .background(Color.white.opacity(0.035))
+        .clipShape(RoundedRectangle(cornerRadius: 13))
         .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(Color.white.opacity(0.09), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 13)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1)
         )
     }
 }
@@ -383,9 +383,9 @@ private struct HomeHeroActionTile: View {
                 endPoint: .bottomTrailing
             )
         )
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
-            RoundedRectangle(cornerRadius: 18)
+            RoundedRectangle(cornerRadius: 16)
                 .stroke(LNColor.stroke, lineWidth: 1)
         )
     }
@@ -610,12 +610,12 @@ private struct AppIconHeroView: View {
             Image("AppLogo")
                 .resizable()
                 .scaledToFill()
-            RoundedRectangle(cornerRadius: 21)
-                .stroke(Color(hex: 0x74B5FF).opacity(0.55), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 17)
+                .stroke(Color.white.opacity(0.14), lineWidth: 1)
         }
-        .frame(width: 76, height: 76)
-        .clipShape(RoundedRectangle(cornerRadius: 21))
-        .shadow(color: LNColor.brandBlue.opacity(0.32), radius: 13, x: 0, y: 10)
+        .frame(width: 58, height: 58)
+        .clipShape(RoundedRectangle(cornerRadius: 17))
+        .shadow(color: LNColor.brandBlue.opacity(0.14), radius: 10, x: 0, y: 7)
         .accessibilityHidden(true)
     }
 }

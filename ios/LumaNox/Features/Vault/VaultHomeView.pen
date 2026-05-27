@@ -277,7 +277,7 @@
           "name": "Hero - app icon secure vault",
           "clip": true,
           "width": 361,
-          "height": 224,
+          "height": 204,
           "fill": {
             "type": "gradient",
             "gradientType": "linear",
@@ -288,95 +288,64 @@
             },
             "colors": [
               {
-                "color": "#07101E",
+                "color": "#07101A",
                 "position": 0
               },
               {
-                "color": "#0B1730",
-                "position": 0.52
+                "color": "#081321",
+                "position": 0.56
               },
               {
-                "color": "#123A60",
+                "color": "#0D2238",
                 "position": 1
               }
             ]
           },
-          "cornerRadius": 28,
+          "cornerRadius": 24,
           "stroke": {
             "thickness": 1,
-            "fill": "#31506F"
+            "fill": "#223247"
           },
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
-            "color": "#00000066",
+            "color": "#00000055",
             "offset": {
               "x": 0,
-              "y": 16
+              "y": 12
             },
-            "blur": 34
+            "blur": 24
           },
           "layout": "none",
           "children": [
             {
-              "type": "ellipse",
-              "id": "fSMnC",
-              "x": 230,
-              "y": 118,
-              "fill": "#4A9EFF18",
-              "width": 120,
-              "height": 86
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 4,
-              "id": "jps7t",
-              "x": 252,
-              "y": 112,
-              "rotation": -34,
-              "fill": "#7DB8FF55",
-              "width": 82,
-              "height": 4
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 3,
-              "id": "GgGBR",
-              "x": 274,
-              "y": 132,
-              "rotation": -34,
-              "fill": "#4A9EFF44",
-              "width": 46,
-              "height": 3
-            },
-            {
               "type": "frame",
               "id": "tbmtT",
-              "x": 257,
+              "x": 283,
               "y": 20,
               "clip": true,
-              "width": 76,
-              "height": 76,
+              "width": 58,
+              "height": 58,
               "fill": {
                 "type": "image",
                 "enabled": true,
                 "url": "../../Resources/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
                 "mode": "fill"
               },
-              "cornerRadius": 21,
+              "cornerRadius": 17,
               "stroke": {
                 "thickness": 1,
-                "fill": "#74B5FF88"
+                "fill": "#FFFFFF22"
               },
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
-                "color": "#4A9EFF55",
+                "color": "#4A9EFF22",
                 "offset": {
                   "x": 0,
-                  "y": 10
+                  "y": 8
                 },
-                "blur": 26
+                "blur": 18
               },
               "layout": "none"
             },
@@ -385,45 +354,45 @@
               "id": "A1zQp",
               "x": 20,
               "y": 22,
-              "fill": "#F6F9FF",
+              "fill": "#F2F6FF",
               "content": "LumaNox",
               "fontFamily": "Inter",
-              "fontSize": 29,
-              "fontWeight": "900"
+              "fontSize": 28,
+              "fontWeight": "800"
             },
             {
               "type": "text",
               "id": "ds0Tp",
               "x": 20,
               "y": 63,
-              "fill": "#AFC4E2",
+              "fill": "#9BAEC8",
               "textGrowth": "fixed-width",
               "width": 210,
               "content": "3 photos · Local AES-256 vault",
               "fontFamily": "Inter",
               "fontSize": 12,
-              "fontWeight": "550"
+              "fontWeight": "500"
             },
             {
               "type": "frame",
               "id": "dtg2J",
               "x": 20,
               "y": 88,
-              "width": 218,
-              "height": 30,
+              "width": 246,
+              "height": 26,
               "fill": "#00000000",
-              "gap": 7,
+              "gap": 8,
               "children": [
                 {
                   "type": "frame",
                   "id": "KlTi8",
                   "width": "fill_container",
                   "height": "fill_container",
-                  "fill": "#EAF1FF12",
-                  "cornerRadius": 15,
+                  "fill": "#FFFFFF08",
+                  "cornerRadius": 13,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#FFFFFF18"
+                    "fill": "#FFFFFF10"
                   },
                   "gap": 4,
                   "justifyContent": "center",
@@ -432,20 +401,20 @@
                     {
                       "type": "icon_font",
                       "id": "t4bVq4",
-                      "width": 11,
-                      "height": 11,
+                      "width": 10,
+                      "height": 10,
                       "iconFontName": "wifi-off",
                       "iconFontFamily": "lucide",
-                      "fill": "#B7D7FF"
+                      "fill": "#8EA2C0"
                     },
                     {
                       "type": "text",
                       "id": "tcnYU",
-                      "fill": "#C7DAF7",
+                      "fill": "#AFC4E2",
                       "content": "Offline",
                       "fontFamily": "Inter",
                       "fontSize": 9,
-                      "fontWeight": "700"
+                      "fontWeight": "500"
                     }
                   ]
                 },
@@ -454,11 +423,11 @@
                   "id": "i7flB",
                   "width": "fill_container",
                   "height": "fill_container",
-                  "fill": "#EAF1FF12",
-                  "cornerRadius": 15,
+                  "fill": "#FFFFFF08",
+                  "cornerRadius": 13,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#FFFFFF18"
+                    "fill": "#FFFFFF10"
                   },
                   "gap": 4,
                   "justifyContent": "center",
@@ -467,20 +436,20 @@
                     {
                       "type": "icon_font",
                       "id": "UL70v",
-                      "width": 11,
-                      "height": 11,
+                      "width": 10,
+                      "height": 10,
                       "iconFontName": "lock-keyhole",
                       "iconFontFamily": "lucide",
-                      "fill": "#B7D7FF"
+                      "fill": "#8EA2C0"
                     },
                     {
                       "type": "text",
                       "id": "gSoBX",
-                      "fill": "#C7DAF7",
+                      "fill": "#AFC4E2",
                       "content": "Encrypted",
                       "fontFamily": "Inter",
                       "fontSize": 9,
-                      "fontWeight": "700"
+                      "fontWeight": "500"
                     }
                   ]
                 },
@@ -489,11 +458,11 @@
                   "id": "UQrih",
                   "width": "fill_container",
                   "height": "fill_container",
-                  "fill": "#EAF1FF12",
-                  "cornerRadius": 15,
+                  "fill": "#FFFFFF08",
+                  "cornerRadius": 13,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#FFFFFF18"
+                    "fill": "#FFFFFF10"
                   },
                   "gap": 4,
                   "justifyContent": "center",
@@ -502,20 +471,20 @@
                     {
                       "type": "icon_font",
                       "id": "lFjIQ",
-                      "width": 11,
-                      "height": 11,
+                      "width": 10,
+                      "height": 10,
                       "iconFontName": "sparkles",
                       "iconFontFamily": "lucide",
-                      "fill": "#B7D7FF"
+                      "fill": "#8EA2C0"
                     },
                     {
                       "type": "text",
                       "id": "G3XJJ",
-                      "fill": "#C7DAF7",
+                      "fill": "#AFC4E2",
                       "content": "AI ready",
                       "fontFamily": "Inter",
                       "fontSize": 9,
-                      "fontWeight": "700"
+                      "fontWeight": "500"
                     }
                   ]
                 }
@@ -525,9 +494,9 @@
               "type": "frame",
               "id": "p0Eiu",
               "x": 20,
-              "y": 136,
+              "y": 128,
               "width": 321,
-              "height": 68,
+              "height": 56,
               "fill": "#00000000",
               "gap": 10,
               "children": [
@@ -559,7 +528,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": 18,
+                  "cornerRadius": 16,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#223247"
@@ -656,7 +625,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": 18,
+                  "cornerRadius": 16,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#223247"
@@ -733,7 +702,7 @@
           "type": "frame",
           "id": "rcHk5",
           "x": 16,
-          "y": 296,
+          "y": 276,
           "name": "Recent media section - balanced cards",
           "width": 361,
           "height": 196,
@@ -1270,7 +1239,7 @@
           "type": "frame",
           "id": "Gw2US",
           "x": 16,
-          "y": 508,
+          "y": 488,
           "name": "Albums section - uniform cards",
           "width": 361,
           "height": 220,
