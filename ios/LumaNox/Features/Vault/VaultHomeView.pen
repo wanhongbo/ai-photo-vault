@@ -536,11 +536,33 @@
                   "id": "D3DiHT",
                   "width": "fill_container",
                   "height": "fill_container",
-                  "fill": "#08111F",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#12365A",
+                        "position": 0
+                      },
+                      {
+                        "color": "#08111F",
+                        "position": 0.52
+                      },
+                      {
+                        "color": "#050A13",
+                        "position": 1
+                      }
+                    ]
+                  },
                   "cornerRadius": 18,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#223247"
+                    "fill": "#2D4A68"
                   },
                   "gap": 8,
                   "padding": [
@@ -553,9 +575,10 @@
                       "type": "frame",
                       "id": "Sygj5",
                       "width": "fill_container",
+                      "height": 34,
                       "fill": "#00000000",
                       "layout": "vertical",
-                      "gap": 2,
+                      "gap": 1,
                       "children": [
                         {
                           "type": "text",
@@ -570,7 +593,7 @@
                           "type": "text",
                           "id": "J1hew",
                           "fill": "#8EA2C0",
-                          "content": "Photos",
+                          "content": "Photos · Videos",
                           "fontFamily": "Inter",
                           "fontSize": 10,
                           "fontWeight": "600"
@@ -609,11 +632,33 @@
                   "id": "WNQt3",
                   "width": "fill_container",
                   "height": "fill_container",
-                  "fill": "#08111F",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#12365A",
+                        "position": 0
+                      },
+                      {
+                        "color": "#08111F",
+                        "position": 0.52
+                      },
+                      {
+                        "color": "#050A13",
+                        "position": 1
+                      }
+                    ]
+                  },
                   "cornerRadius": 18,
                   "stroke": {
                     "thickness": 1,
-                    "fill": "#223247"
+                    "fill": "#2D4A68"
                   },
                   "gap": 8,
                   "padding": [
@@ -626,15 +671,16 @@
                       "type": "frame",
                       "id": "I0HE5G",
                       "width": "fill_container",
+                      "height": 34,
                       "fill": "#00000000",
                       "layout": "vertical",
-                      "gap": 2,
+                      "gap": 1,
                       "children": [
                         {
                           "type": "text",
                           "id": "hEbxw",
                           "fill": "#EAF1FF",
-                          "content": "AI scan",
+                          "content": "Scan",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "800"
@@ -642,10 +688,10 @@
                         {
                           "type": "text",
                           "id": "n0akl",
-                          "fill": "#8EA2C0",
-                          "content": "Ready · private",
+                          "fill": "#AFC4E2",
+                          "content": "By Local AI model",
                           "fontFamily": "Inter",
-                          "fontSize": 10,
+                          "fontSize": 8.5,
                           "fontWeight": "600"
                         }
                       ]
@@ -668,7 +714,7 @@
                           "type": "text",
                           "id": "zRGgX",
                           "fill": "#B7D7FF",
-                          "content": "Scan",
+                          "content": "Review",
                           "fontFamily": "Inter",
                           "fontSize": 10,
                           "fontWeight": "800"
