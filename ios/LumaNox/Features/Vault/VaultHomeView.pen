@@ -309,13 +309,26 @@
                       "fontWeight": "650"
                     },
                     {
-                      "type": "text",
+                      "type": "frame",
                       "id": "txt_1d",
-                      "content": "View all",
-                      "fontFamily": "Inter",
-                      "fill": "#B7D7FF",
-                      "fontSize": 13,
-                      "letterSpacing": 0
+                      "name": "View all hit target",
+                      "layout": "horizontal",
+                      "fill": "transparent",
+                      "width": 72,
+                      "height": 44,
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "txt_1d_label",
+                          "content": "View all",
+                          "fontFamily": "Inter",
+                          "fill": "#B7D7FF",
+                          "fontSize": 13,
+                          "letterSpacing": 0
+                        }
+                      ]
                     }
                   ]
                 },
@@ -507,13 +520,26 @@
                       "fontWeight": "650"
                     },
                     {
-                      "type": "text",
+                      "type": "frame",
                       "id": "txt_1h",
-                      "content": "View more",
-                      "fontFamily": "Inter",
-                      "fill": "#B7D7FF",
-                      "fontSize": 13,
-                      "letterSpacing": 0
+                      "name": "View more hit target",
+                      "layout": "horizontal",
+                      "fill": "transparent",
+                      "width": 72,
+                      "height": 44,
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "txt_1h_label",
+                          "content": "View more",
+                          "fontFamily": "Inter",
+                          "fill": "#B7D7FF",
+                          "fontSize": 13,
+                          "letterSpacing": 0
+                        }
+                      ]
                     }
                   ]
                 },

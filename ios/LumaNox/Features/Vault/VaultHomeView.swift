@@ -239,10 +239,12 @@ struct VaultHomeView: View {
                     .font(LNTypography.titleMedium())
                     .foregroundStyle(LNColor.title)
                 Spacer()
-                Button(L10n.tr("home_albums_view_all")) { router.pushVault(.albumList) }
-                    .font(LNTypography.labelMedium())
-                    .foregroundStyle(LNColor.navItemActive)
-                    .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
+                sectionHeaderAction(
+                    title: L10n.tr("home_albums_view_all"),
+                    accessibilityIdentifier: "home_albums_view_all"
+                ) {
+                    router.pushVault(.albumList)
+                }
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -308,10 +310,12 @@ struct VaultHomeView: View {
                     .font(LNTypography.titleMedium())
                     .foregroundStyle(LNColor.title)
                 Spacer()
-                Button(L10n.tr("home_recent_view_more")) { router.pushVault(.recentList) }
-                    .font(LNTypography.labelMedium())
-                    .foregroundStyle(LNColor.navItemActive)
-                    .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
+                sectionHeaderAction(
+                    title: L10n.tr("home_recent_view_more"),
+                    accessibilityIdentifier: "home_recent_view_more"
+                ) {
+                    router.pushVault(.recentList)
+                }
             }
 
             LazyVGrid(
@@ -338,6 +342,7 @@ struct VaultHomeView: View {
                             RoundedRectangle(cornerRadius: LNRadius.homeThumb)
                                 .stroke(LNColor.stroke, lineWidth: 1)
                         )
+                        .contentShape(RoundedRectangle(cornerRadius: LNRadius.homeThumb))
                     }
                     .buttonStyle(.lnPressable())
                 }
@@ -345,6 +350,22 @@ struct VaultHomeView: View {
         }
         .padding(LNSpacing.cardPadding)
         .lnOutlinedCard()
+    }
+
+    private func sectionHeaderAction(
+        title: String,
+        accessibilityIdentifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(LNColor.navItemActive)
+                .frame(minWidth: 72, minHeight: LNSpacing.minTouchTarget, alignment: .trailing)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
 
