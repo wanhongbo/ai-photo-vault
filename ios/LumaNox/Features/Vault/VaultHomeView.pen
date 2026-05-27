@@ -588,7 +588,7 @@
                           "type": "text",
                           "id": "J1hew",
                           "fill": "#8EA2C0",
-                          "content": "Add",
+                          "content": "Photos",
                           "fontFamily": "Inter",
                           "fontSize": 10,
                           "fontWeight": "600"
@@ -598,26 +598,25 @@
                     {
                       "type": "frame",
                       "id": "F9lwW",
-                      "width": 34,
-                      "height": 34,
-                      "fill": "#B7D7FF1E",
-                      "cornerRadius": 12,
+                      "width": 46,
+                      "height": 28,
+                      "fill": "#4A9EFF22",
+                      "cornerRadius": 14,
                       "stroke": {
                         "thickness": 1,
-                        "fill": "#B7D7FF2E"
+                        "fill": "#4A9EFF55"
                       },
-                      "layout": "none",
+                      "justifyContent": "center",
+                      "alignItems": "center",
                       "children": [
                         {
-                          "type": "icon_font",
-                          "id": "RgRIk",
-                          "x": 8,
-                          "y": 8,
-                          "width": 18,
-                          "height": 18,
-                          "iconFontName": "plus",
-                          "iconFontFamily": "lucide",
-                          "fill": "#D9ECFF"
+                          "type": "text",
+                          "id": "cwSV2",
+                          "fill": "#B7D7FF",
+                          "content": "Add",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "800"
                         }
                       ]
                     }
