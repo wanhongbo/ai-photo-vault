@@ -1,0 +1,527 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "screen_intruder_alert_content",
+      "name": "IntruderAlertView - Content",
+      "layout": "vertical",
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": "#05080D",
+      "padding": [54, 16, 24, 16],
+      "gap": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "intruder_nav_content",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 44,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_back_content",
+              "layout": "none",
+              "width": 44,
+              "height": 44,
+              "cornerRadius": 14,
+              "fill": "#0C1523",
+              "stroke": { "fill": "#223247", "thickness": 1 },
+              "children": [
+                { "type": "icon_font", "id": "intruder_back_icon_content", "iconFontFamily": "lucide", "iconFontName": "chevron-left", "x": 10, "y": 10, "width": 24, "height": 24, "fill": "#EAF1FF" }
+              ]
+            },
+            { "type": "text", "id": "intruder_title_content", "content": "入侵者警报", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "750", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "intruder_intro_card_content",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "cornerRadius": 20,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "padding": 18,
+          "gap": 14,
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_intro_top_content",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": "fit_content",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "intruder_intro_icon_box_content",
+                  "layout": "none",
+                  "width": 42,
+                  "height": 42,
+                  "cornerRadius": 14,
+                  "fill": "#2A1820",
+                  "children": [
+                    { "type": "icon_font", "id": "intruder_intro_icon_content", "iconFontFamily": "lucide", "iconFontName": "shield-alert", "x": 9, "y": 9, "width": 24, "height": 24, "fill": "#FF6B8F" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "intruder_intro_copy_content",
+                  "layout": "vertical",
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "gap": 3,
+                  "children": [
+                    { "type": "text", "id": "intruder_intro_heading_content", "content": "本机安全记录", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+                    { "type": "text", "id": "intruder_intro_subheading_content", "content": "错误 PIN 后记录时间、尝试 PIN 和前置抓拍。", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "intruder_enabled_pill_content",
+                  "layout": "horizontal",
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "padding": [6, 10],
+                  "cornerRadius": 999,
+                  "fill": "#102B22",
+                  "children": [
+                    { "type": "text", "id": "intruder_enabled_text_content", "content": "已开启", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "700", "fill": "#21C277" }
+                  ]
+                }
+              ]
+            },
+            { "type": "text", "id": "intruder_intro_body_content", "content": "记录只保存在这台设备，不进入系统相册。你可以随时清除全部警报。", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "lineHeight": 1.35, "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "intruder_toggle_card_content",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": "fit_content",
+          "alignItems": "center",
+          "gap": 12,
+          "cornerRadius": 18,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "padding": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_toggle_copy_content",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": "fit_content",
+              "gap": 3,
+              "children": [
+                { "type": "text", "id": "intruder_toggle_title_content", "content": "入侵者抓拍", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+                { "type": "text", "id": "intruder_toggle_desc_content", "content": "每次错误 PIN 都会生成一条本机记录", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "intruder_switch_on_content",
+              "layout": "none",
+              "width": 52,
+              "height": 32,
+              "cornerRadius": 999,
+              "fill": "#4A9EFF",
+              "children": [
+                { "type": "ellipse", "id": "intruder_switch_knob_content", "x": 23, "y": 3, "width": 26, "height": 26, "fill": "#FFFFFF" }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "intruder_list_header_content",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 28,
+          "alignItems": "center",
+          "children": [
+            { "type": "text", "id": "intruder_records_label_content", "content": "警报记录", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "intruder_clear_all_content", "content": "清除全部", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "700", "fill": "#4A9EFF" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "intruder_records_card_content",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "cornerRadius": 20,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "padding": [6, 0],
+          "gap": 0,
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_record_row_1",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 76,
+              "padding": [10, 14],
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "intruder_thumb_1",
+                  "layout": "none",
+                  "width": 56,
+                  "height": 56,
+                  "cornerRadius": 12,
+                  "fill": "#1F3758",
+                  "stroke": { "fill": "#314765", "thickness": 1 },
+                  "clip": true,
+                  "children": [
+                    { "type": "icon_font", "id": "intruder_thumb_icon_1", "iconFontFamily": "lucide", "iconFontName": "user-round", "x": 16, "y": 14, "width": 24, "height": 24, "fill": "#8EA2C0" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "intruder_record_text_1",
+                  "layout": "vertical",
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "gap": 2,
+                  "children": [
+                    { "type": "text", "id": "intruder_record_day_1", "content": "今天", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#EAF1FF" },
+                    { "type": "text", "id": "intruder_record_time_1", "content": "18:10", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "500", "fill": "#8EA2C0" }
+                  ]
+                },
+                { "type": "text", "id": "intruder_pin_1", "content": "000000", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "650", "fill": "#8EA2C0" }
+              ]
+            },
+            { "type": "rectangle", "id": "intruder_divider_1", "width": "fill_container", "height": 1, "fill": "#223247" },
+            {
+              "type": "frame",
+              "id": "intruder_record_row_2",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 76,
+              "padding": [10, 14],
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "intruder_thumb_2",
+                  "layout": "none",
+                  "width": 56,
+                  "height": 56,
+                  "cornerRadius": 12,
+                  "fill": "#263043",
+                  "stroke": { "fill": "#314765", "thickness": 1 },
+                  "clip": true,
+                  "children": [
+                    { "type": "icon_font", "id": "intruder_thumb_icon_2", "iconFontFamily": "lucide", "iconFontName": "user-round", "x": 16, "y": 14, "width": 24, "height": 24, "fill": "#8EA2C0" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "intruder_record_text_2",
+                  "layout": "vertical",
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "gap": 2,
+                  "children": [
+                    { "type": "text", "id": "intruder_record_day_2", "content": "今天", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#EAF1FF" },
+                    { "type": "text", "id": "intruder_record_time_2", "content": "18:09", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "500", "fill": "#8EA2C0" }
+                  ]
+                },
+                { "type": "text", "id": "intruder_pin_2", "content": "111111", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "650", "fill": "#8EA2C0" }
+              ]
+            },
+            { "type": "rectangle", "id": "intruder_divider_2", "width": "fill_container", "height": 1, "fill": "#223247" },
+            {
+              "type": "frame",
+              "id": "intruder_record_row_3",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 76,
+              "padding": [10, 14],
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "intruder_thumb_3",
+                  "layout": "none",
+                  "width": 56,
+                  "height": 56,
+                  "cornerRadius": 12,
+                  "fill": "#1B2F2C",
+                  "stroke": { "fill": "#314765", "thickness": 1 },
+                  "clip": true,
+                  "children": [
+                    { "type": "icon_font", "id": "intruder_thumb_icon_3", "iconFontFamily": "lucide", "iconFontName": "user-round", "x": 16, "y": 14, "width": 24, "height": 24, "fill": "#8EA2C0" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "intruder_record_text_3",
+                  "layout": "vertical",
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "gap": 2,
+                  "children": [
+                    { "type": "text", "id": "intruder_record_day_3", "content": "今天", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#EAF1FF" },
+                    { "type": "text", "id": "intruder_record_time_3", "content": "18:09", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "500", "fill": "#8EA2C0" }
+                  ]
+                },
+                { "type": "text", "id": "intruder_pin_3", "content": "000000", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "650", "fill": "#8EA2C0" }
+              ]
+            }
+          ]
+        },
+        { "type": "text", "id": "intruder_footer_note_content", "content": "清除警报不会影响保险箱中的照片和视频。", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "500", "fill": "#61718A", "textGrowth": "fixed-width", "width": "fill_container" }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "screen_intruder_alert_empty",
+      "name": "IntruderAlertView - Empty",
+      "layout": "vertical",
+      "x": 433,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": "#05080D",
+      "padding": [54, 16, 24, 16],
+      "gap": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "intruder_nav_empty",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 44,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_back_empty",
+              "layout": "none",
+              "width": 44,
+              "height": 44,
+              "cornerRadius": 14,
+              "fill": "#0C1523",
+              "stroke": { "fill": "#223247", "thickness": 1 },
+              "children": [
+                { "type": "icon_font", "id": "intruder_back_icon_empty", "iconFontFamily": "lucide", "iconFontName": "chevron-left", "x": 10, "y": 10, "width": 24, "height": 24, "fill": "#EAF1FF" }
+              ]
+            },
+            { "type": "text", "id": "intruder_title_empty", "content": "入侵者警报", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "750", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "intruder_empty_card",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "alignItems": "center",
+          "cornerRadius": 22,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "padding": [30, 22],
+          "gap": 14,
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_empty_icon_box",
+              "layout": "none",
+              "width": 62,
+              "height": 62,
+              "cornerRadius": 20,
+              "fill": "#102B22",
+              "children": [
+                { "type": "icon_font", "id": "intruder_empty_icon", "iconFontFamily": "lucide", "iconFontName": "shield-check", "x": 17, "y": 17, "width": 28, "height": 28, "fill": "#21C277" }
+              ]
+            },
+            { "type": "text", "id": "intruder_empty_title", "content": "暂无警报", "fontFamily": "Inter", "fontSize": 20, "fontWeight": "750", "fill": "#EAF1FF" },
+            { "type": "text", "id": "intruder_empty_body", "content": "开启后，错误 PIN 尝试会保存在本机。没有记录时，说明最近没有失败解锁。", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "lineHeight": 1.35, "textAlign": "center", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "intruder_empty_toggle_card",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": "fit_content",
+          "alignItems": "center",
+          "gap": 12,
+          "cornerRadius": 18,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "padding": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_empty_toggle_copy",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": "fit_content",
+              "gap": 3,
+              "children": [
+                { "type": "text", "id": "intruder_empty_toggle_title", "content": "入侵者抓拍", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+                { "type": "text", "id": "intruder_empty_toggle_desc", "content": "开启后需要相机权限", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "intruder_empty_switch_on",
+              "layout": "none",
+              "width": 52,
+              "height": 32,
+              "cornerRadius": 999,
+              "fill": "#4A9EFF",
+              "children": [
+                { "type": "ellipse", "id": "intruder_empty_switch_knob", "x": 23, "y": 3, "width": 26, "height": 26, "fill": "#FFFFFF" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "screen_intruder_alert_permission",
+      "name": "IntruderAlertView - Permission",
+      "layout": "vertical",
+      "x": 866,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": "#05080D",
+      "padding": [54, 16, 24, 16],
+      "gap": 16,
+      "children": [
+        {
+          "type": "frame",
+          "id": "intruder_nav_permission",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 44,
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_back_permission",
+              "layout": "none",
+              "width": 44,
+              "height": 44,
+              "cornerRadius": 14,
+              "fill": "#0C1523",
+              "stroke": { "fill": "#223247", "thickness": 1 },
+              "children": [
+                { "type": "icon_font", "id": "intruder_back_icon_permission", "iconFontFamily": "lucide", "iconFontName": "chevron-left", "x": 10, "y": 10, "width": 24, "height": 24, "fill": "#EAF1FF" }
+              ]
+            },
+            { "type": "text", "id": "intruder_title_permission", "content": "入侵者警报", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "750", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "intruder_permission_card",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "cornerRadius": 22,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "padding": 20,
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_permission_icon_box",
+              "layout": "none",
+              "width": 56,
+              "height": 56,
+              "cornerRadius": 18,
+              "fill": "#2A2112",
+              "children": [
+                { "type": "icon_font", "id": "intruder_permission_icon", "iconFontFamily": "lucide", "iconFontName": "camera-off", "x": 14, "y": 14, "width": 28, "height": 28, "fill": "#E8C547" }
+              ]
+            },
+            { "type": "text", "id": "intruder_permission_title", "content": "需要相机权限", "fontFamily": "Inter", "fontSize": 20, "fontWeight": "750", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            { "type": "text", "id": "intruder_permission_body", "content": "没有相机权限时，LumaNox 仍可记录错误 PIN 的时间和尝试值，但不会抓拍照片。", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "lineHeight": 1.35, "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" },
+            {
+              "type": "frame",
+              "id": "intruder_permission_button",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": 52,
+              "cornerRadius": 16,
+              "fill": "#4A9EFF",
+              "alignItems": "center",
+              "justifyContent": "center",
+              "gap": 8,
+              "children": [
+                { "type": "icon_font", "id": "intruder_permission_button_icon", "iconFontFamily": "lucide", "iconFontName": "settings", "width": 20, "height": 20, "fill": "#FFFFFF" },
+                { "type": "text", "id": "intruder_permission_button_text", "content": "打开系统设置", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#FFFFFF" }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "intruder_permission_record_preview",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": "fit_content",
+          "alignItems": "center",
+          "gap": 12,
+          "cornerRadius": 18,
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "padding": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "intruder_permission_preview_icon_box",
+              "layout": "none",
+              "width": 48,
+              "height": 48,
+              "cornerRadius": 14,
+              "fill": "#1A202C",
+              "children": [
+                { "type": "icon_font", "id": "intruder_permission_preview_icon", "iconFontFamily": "lucide", "iconFontName": "lock-keyhole", "x": 12, "y": 12, "width": 24, "height": 24, "fill": "#8EA2C0" }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "intruder_permission_preview_copy",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": "fit_content",
+              "gap": 3,
+              "children": [
+                { "type": "text", "id": "intruder_permission_preview_title", "content": "仅记录 PIN 尝试", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+                { "type": "text", "id": "intruder_permission_preview_desc", "content": "授权前不会访问摄像头。", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
