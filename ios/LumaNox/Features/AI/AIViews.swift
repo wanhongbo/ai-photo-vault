@@ -2270,12 +2270,6 @@ private struct AISensitiveCandidateRow: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)
             }
-
-            Text(L10n.tr("ai_sensitive_preview_hint"))
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color(hex: 0x66758A))
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
         }
     }
 

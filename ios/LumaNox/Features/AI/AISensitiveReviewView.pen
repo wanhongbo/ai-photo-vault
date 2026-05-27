@@ -419,17 +419,6 @@
                           "width": "fill_container"
                         }
                       ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "sensitive_row_high_hint",
-                      "content": "点击缩略图预览原图",
-                      "fontFamily": "Inter",
-                      "fill": "#66758A",
-                      "fontSize": 11,
-                      "fontWeight": "600",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     }
                   ]
                 },
@@ -657,17 +646,6 @@
                           "width": "fill_container"
                         }
                       ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "sensitive_row_medium_hint",
-                      "content": "点击缩略图预览原图",
-                      "fontFamily": "Inter",
-                      "fill": "#66758A",
-                      "fontSize": 11,
-                      "fontWeight": "600",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     }
                   ]
                 },
@@ -895,17 +873,6 @@
                           "width": "fill_container"
                         }
                       ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "sensitive_row_low_hint",
-                      "content": "点击缩略图预览原图",
-                      "fontFamily": "Inter",
-                      "fill": "#66758A",
-                      "fontSize": 11,
-                      "fontWeight": "600",
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     }
                   ]
                 },
