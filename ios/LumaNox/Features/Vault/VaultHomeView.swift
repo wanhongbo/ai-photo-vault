@@ -607,25 +607,9 @@ private struct AlbumPreviewGrid: View {
 private struct AppIconHeroView: View {
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(hex: 0x102A46), Color(hex: 0x07101C)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            Circle()
-                .fill(LNColor.brandBlue.opacity(0.18))
-                .frame(width: 50, height: 50)
-            Image(systemName: "lock.shield.fill")
-                .font(.system(size: 32, weight: .semibold))
-                .foregroundStyle(LNColor.navItemActive)
-            Circle()
-                .fill(LNColor.brandBlue.opacity(0.58))
-                .frame(width: 8, height: 8)
-                .offset(x: 22, y: -22)
-            Circle()
-                .fill(LNColor.navItemActive.opacity(0.45))
-                .frame(width: 5, height: 5)
-                .offset(x: -24, y: 20)
+            Image("AppLogo")
+                .resizable()
+                .scaledToFill()
             RoundedRectangle(cornerRadius: 21)
                 .stroke(Color(hex: 0x74B5FF).opacity(0.55), lineWidth: 1)
         }
