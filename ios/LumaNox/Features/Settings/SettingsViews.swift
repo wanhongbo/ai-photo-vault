@@ -675,15 +675,10 @@ struct ChangePinView: View {
     var body: some View {
         LNScreenScaffold(title: L10n.changePinTitle, onBack: { dismiss() }) {
             VStack(spacing: 18) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(step.subtitle)
-                        .font(LNTypography.bodyMedium())
-                        .foregroundStyle(LNColor.subtitle)
-                    Text(step.progressText)
-                        .font(LNTypography.labelMedium())
-                        .foregroundStyle(LNColor.subtitle.opacity(0.85))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(step.progressText)
+                    .font(LNTypography.titleMedium())
+                    .foregroundStyle(LNColor.subtitle)
+                    .frame(maxWidth: .infinity, alignment: .center)
 
                 HStack(spacing: 12) {
                     ForEach(0..<pinLength, id: \.self) { i in

@@ -87,23 +87,13 @@
           "children": [
             {
               "type": "text",
-              "id": "change_pin_subtitle",
-              "content": "请输入当前 6 位 PIN，验证通过后才能设置新 PIN。",
-              "fontFamily": "Inter",
-              "fontSize": 14,
-              "fontWeight": "400",
-              "fill": "#8EA2C0",
-              "textGrowth": "fixed-width",
-              "width": "fill_container"
-            },
-            {
-              "type": "text",
               "id": "change_pin_step",
-              "content": "验证当前 PIN",
+              "content": "输入新 PIN",
               "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500",
-              "fill": "#8EA2C0D9",
+              "fontSize": 16,
+              "fontWeight": "600",
+              "fill": "#8EA2C0",
+              "textAlign": "center",
               "textGrowth": "fixed-width",
               "width": "fill_container"
             }
