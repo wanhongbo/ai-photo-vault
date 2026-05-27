@@ -534,7 +534,7 @@
                 {
                   "type": "frame",
                   "id": "D3DiHT",
-                  "width": 105,
+                  "width": "fill_container",
                   "height": "fill_container",
                   "fill": {
                     "type": "gradient",
@@ -560,39 +560,13 @@
                     "thickness": 1,
                     "fill": "#5F8FC766"
                   },
-                  "gap": 9,
+                  "gap": 8,
                   "padding": [
                     0,
-                    10
+                    12
                   ],
                   "alignItems": "center",
                   "children": [
-                    {
-                      "type": "frame",
-                      "id": "F9lwW",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "#B7D7FF1E",
-                      "cornerRadius": 12,
-                      "stroke": {
-                        "thickness": 1,
-                        "fill": "#B7D7FF2E"
-                      },
-                      "layout": "none",
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "RgRIk",
-                          "x": 9,
-                          "y": 9,
-                          "width": 18,
-                          "height": 18,
-                          "iconFontName": "plus",
-                          "iconFontFamily": "lucide",
-                          "fill": "#D9ECFF"
-                        }
-                      ]
-                    },
                     {
                       "type": "frame",
                       "id": "Sygj5",
@@ -620,6 +594,32 @@
                           "fontWeight": "600"
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "F9lwW",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#B7D7FF1E",
+                      "cornerRadius": 12,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#B7D7FF2E"
+                      },
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "RgRIk",
+                          "x": 8,
+                          "y": 8,
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "plus",
+                          "iconFontFamily": "lucide",
+                          "fill": "#D9ECFF"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -634,39 +634,13 @@
                     "thickness": 1,
                     "fill": "#223247"
                   },
-                  "gap": 10,
+                  "gap": 8,
                   "padding": [
                     0,
                     12
                   ],
                   "alignItems": "center",
                   "children": [
-                    {
-                      "type": "frame",
-                      "id": "OSatH",
-                      "width": 36,
-                      "height": 36,
-                      "fill": "#4A9EFF18",
-                      "cornerRadius": 12,
-                      "stroke": {
-                        "thickness": 1,
-                        "fill": "#4A9EFF38"
-                      },
-                      "layout": "none",
-                      "children": [
-                        {
-                          "type": "icon_font",
-                          "id": "N6WHnF",
-                          "x": 9,
-                          "y": 9,
-                          "width": 18,
-                          "height": 18,
-                          "iconFontName": "sparkles",
-                          "iconFontFamily": "lucide",
-                          "fill": "#B7D7FF"
-                        }
-                      ]
-                    },
                     {
                       "type": "frame",
                       "id": "I0HE5G",
@@ -698,10 +672,10 @@
                     {
                       "type": "frame",
                       "id": "F0US5",
-                      "width": 44,
-                      "height": 26,
+                      "width": 46,
+                      "height": 28,
                       "fill": "#E8C54722",
-                      "cornerRadius": 13,
+                      "cornerRadius": 14,
                       "stroke": {
                         "thickness": 1,
                         "fill": "#E8C54755"
