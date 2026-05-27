@@ -447,22 +447,21 @@ private struct RecentMediaCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 0) {
+            ZStack {
                 VaultMediaThumbnailView(
                     encryptedPath: item.path,
                     isVideo: item.isVideo,
                     contentMode: .fill,
                     targetPixelSize: 300
                 )
-                .frame(height: 106)
+                .frame(width: max(width - 16, 0), height: 96)
                 .clipShape(RoundedRectangle(cornerRadius: 13))
                 .overlay(
                     RoundedRectangle(cornerRadius: 13)
                         .stroke(Color(hex: 0x315D84), lineWidth: 1)
                 )
             }
-            .padding(8)
-            .frame(width: width, height: 122, alignment: .topLeading)
+            .frame(width: width, height: 122, alignment: .center)
             .homeItemCard(cornerRadius: 18)
         }
         .buttonStyle(.lnPressable())
