@@ -304,7 +304,7 @@ struct VaultHomeView: View {
                     }
                 }
             }
-            .frame(height: 144)
+            .frame(height: 122)
         }
     }
 
@@ -447,31 +447,19 @@ private struct RecentMediaCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .leading, spacing: 0) {
                 VaultMediaThumbnailView(
                     encryptedPath: item.path,
                     isVideo: item.isVideo,
                     contentMode: .fill,
                     targetPixelSize: 300
                 )
-                .frame(height: 78)
+                .frame(height: 106)
                 .clipShape(RoundedRectangle(cornerRadius: 13))
                 .overlay(
                     RoundedRectangle(cornerRadius: 13)
                         .stroke(Color(hex: 0x315D84), lineWidth: 1)
                 )
-
-                Text(item.fileName)
-                    .font(.system(size: 12, weight: .heavy))
-                    .foregroundStyle(Color(hex: 0xF6F9FF))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-
-                Text(item.isVideo ? L10n.tr("photo_viewer_info_type_video") : item.createdAt)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0xAFC4E2))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.76)
             }
             .padding(8)
             .frame(width: width, height: 122, alignment: .topLeading)
@@ -498,14 +486,9 @@ private struct AlbumHomeCard: View {
                     .foregroundStyle(Color(hex: 0xF6F9FF))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
-
-                Text(L10n.tr("home_album_item_count", album.photoCount))
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0xAFC4E2))
-                    .lineLimit(1)
             }
             .padding(9)
-            .frame(width: width, height: 144, alignment: .topLeading)
+            .frame(width: width, height: 122, alignment: .topLeading)
             .homeItemCard(cornerRadius: 18)
         }
         .buttonStyle(.lnPressable())
@@ -543,14 +526,9 @@ private struct CreateAlbumHomeCard: View {
                     .foregroundStyle(Color(hex: 0xF6F9FF))
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
-
-                Text(L10n.homeAlbumCreateConfirm)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0xAFC4E2))
-                    .lineLimit(1)
             }
             .padding(9)
-            .frame(width: width, height: 144, alignment: .topLeading)
+            .frame(width: width, height: 122, alignment: .topLeading)
             .homeItemCard(cornerRadius: 18)
         }
         .buttonStyle(.lnPressable())
