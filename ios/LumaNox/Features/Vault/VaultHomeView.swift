@@ -38,7 +38,7 @@ struct VaultHomeView: View {
                 }
                 .padding(.horizontal, LNSpacing.screenHorizontal)
                 .padding(.top, 10)
-                .padding(.bottom, LNSpacing.homeNavBarHeight + 28)
+                .padding(.bottom, 28)
             }
         }
         .onAppear { viewModel.onAppear() }

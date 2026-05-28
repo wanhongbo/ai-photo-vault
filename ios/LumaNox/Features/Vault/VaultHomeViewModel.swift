@@ -74,6 +74,12 @@ final class VaultHomeViewModel: ObservableObject {
     var shouldShowFloatingImportButton: Bool {
         snapshot != nil && !isEmpty && !showPermissionDenied
     }
+    var shouldHideBottomTabBar: Bool {
+        showCreateAlbum ||
+            duplicateImportDialogMessage != nil ||
+            pendingImportOriginalsCount != nil ||
+            originalsActionDialogMessage != nil
+    }
     var totalCount: Int { snapshot?.totalCount ?? 0 }
     var imageCount: Int { snapshot?.imageCount ?? 0 }
     var videoCount: Int { snapshot?.videoCount ?? 0 }

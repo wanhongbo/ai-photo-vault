@@ -1,4 +1,6 @@
+import Combine
 import SwiftUI
+import UIKit
 
 struct MainTabView: View {
     @EnvironmentObject private var router: AppRouter
@@ -6,39 +8,14 @@ struct MainTabView: View {
     @StateObject private var vaultHomeViewModel = VaultHomeViewModel()
     @StateObject private var privateCameraViewModel = PrivateCameraViewModel()
     @State private var didApplyDebugStartRoute = false
+    @State private var isKeyboardVisible = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Group {
-                switch router.selectedTab {
-                case .vault:
-                    NavigationStack(path: $router.vaultPath) {
-                        VaultHomeView(viewModel: vaultHomeViewModel)
-                            .routeNavigationDestinations()
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
-                    .swipeBackEnabled()
-                case .camera:
-                    CameraHomeView()
-                case .ai:
-                    NavigationStack(path: $router.aiPath) {
-                        AIHomeView()
-                            .routeNavigationDestinations()
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
-                    .swipeBackEnabled()
-                case .settings:
-                    NavigationStack(path: $router.settingsPath) {
-                        SettingsHomeView()
-                            .routeNavigationDestinations()
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
-                    .swipeBackEnabled()
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            mainContent
+                .padding(.bottom, bottomTabReservedHeight)
 
-            if router.shouldShowBottomTabBar {
+            if shouldShowBottomTabBar {
                 LNBottomTabBar(selected: $router.selectedTab, onCameraTap: {
                     router.openPrivateCamera()
                 })
@@ -46,7 +23,7 @@ struct MainTabView: View {
             }
         }
         .lnScreenBackground()
-        .animation(.easeInOut(duration: 0.18), value: router.shouldShowBottomTabBar)
+        .animation(.easeInOut(duration: 0.18), value: shouldShowBottomTabBar)
         .fullScreenCover(isPresented: Binding(
             get: { router.presentedRoute != nil },
             set: { if !$0 { router.dismissPresented() } }
@@ -67,6 +44,12 @@ struct MainTabView: View {
         .onChange(of: scenePhase) { phase in
             handleScenePhase(phase)
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            isKeyboardVisible = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            isKeyboardVisible = false
+        }
         .onChange(of: router.presentedRoute) { route in
             guard route == nil else { return }
             prewarmCameraIfPossible()
@@ -83,6 +66,48 @@ struct MainTabView: View {
             prewarmCameraIfPossible()
         }
         .accessibilityIdentifier("main_tab_view")
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        Group {
+            switch router.selectedTab {
+            case .vault:
+                NavigationStack(path: $router.vaultPath) {
+                    VaultHomeView(viewModel: vaultHomeViewModel)
+                        .routeNavigationDestinations()
+                        .toolbar(.hidden, for: .navigationBar)
+                }
+                .swipeBackEnabled()
+            case .camera:
+                CameraHomeView()
+            case .ai:
+                NavigationStack(path: $router.aiPath) {
+                    AIHomeView()
+                        .routeNavigationDestinations()
+                        .toolbar(.hidden, for: .navigationBar)
+                }
+                .swipeBackEnabled()
+            case .settings:
+                NavigationStack(path: $router.settingsPath) {
+                    SettingsHomeView()
+                        .routeNavigationDestinations()
+                        .toolbar(.hidden, for: .navigationBar)
+                }
+                .swipeBackEnabled()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var shouldShowBottomTabBar: Bool {
+        router.shouldShowBottomTabBar &&
+            !isKeyboardVisible &&
+            !(router.selectedTab == .vault && vaultHomeViewModel.shouldHideBottomTabBar)
+    }
+
+    private var bottomTabReservedHeight: CGFloat {
+        shouldShowBottomTabBar ? LNSpacing.homeNavBarHeight + 8 : 0
     }
 
     private func handleScenePhase(_ phase: ScenePhase) {

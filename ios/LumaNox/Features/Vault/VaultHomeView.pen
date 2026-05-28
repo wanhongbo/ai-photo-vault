@@ -94,7 +94,7 @@
           "id": "vbNoW",
           "x": 16,
           "y": 744,
-          "name": "Bottom tab bar",
+          "name": "Bottom tab bar - safe inset, hides for dialogs and keyboard",
           "width": 361,
           "height": 88,
           "fill": "#0E1726CC",
@@ -319,7 +319,7 @@
           "name": "Hero - compact vault command center",
           "clip": true,
           "width": 361,
-          "height": 154,
+          "height": 163,
           "fill": {
             "type": "gradient",
             "gradientType": "linear",
@@ -535,7 +535,7 @@
               "type": "frame",
               "id": "vault_home_hero_chips",
               "x": 20,
-              "y": 104,
+              "y": 119,
               "width": 268,
               "height": 26,
               "fill": "#00000000",
@@ -746,13 +746,11 @@
                       "width": "fill_container",
                       "height": "fill_container",
                       "fill": "#00000000",
-                      "cornerRadius": 0,
                       "stroke": {
                         "thickness": 0,
                         "fill": "#00000000"
                       },
                       "layout": "vertical",
-                      "gap": 0,
                       "children": [
                         {
                           "type": "frame",
@@ -842,13 +840,11 @@
                       "width": "fill_container",
                       "height": "fill_container",
                       "fill": "#00000000",
-                      "cornerRadius": 0,
                       "stroke": {
                         "thickness": 0,
                         "fill": "#00000000"
                       },
                       "layout": "vertical",
-                      "gap": 0,
                       "children": [
                         {
                           "type": "frame",
@@ -948,13 +944,11 @@
                       "width": "fill_container",
                       "height": "fill_container",
                       "fill": "#00000000",
-                      "cornerRadius": 0,
                       "stroke": {
                         "thickness": 0,
                         "fill": "#00000000"
                       },
                       "layout": "vertical",
-                      "gap": 0,
                       "alignItems": "center",
                       "children": [
                         {
@@ -1008,6 +1002,204 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "vault_home_create_album_keyboard_state",
+      "x": 790,
+      "y": 0,
+      "name": "VaultHomeView - create album keyboard",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#0F2944",
+            "position": 0
+          },
+          {
+            "color": "#071A2C",
+            "position": 0.42
+          },
+          {
+            "color": "#02060C",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "vault_home_keyboard_state_content_hint",
+          "x": 16,
+          "y": 56,
+          "name": "Dimmed home content hint",
+          "opacity": 0.42,
+          "width": 361,
+          "height": 616,
+          "fill": "#0C1523",
+          "cornerRadius": 26,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#223247"
+          },
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_keyboard_state_scrim",
+          "x": 0,
+          "y": 0,
+          "name": "Dialog scrim covers tab area",
+          "width": 393,
+          "height": 852,
+          "fill": "#000000CC",
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_keyboard_state_dialog",
+          "x": 32,
+          "y": 248,
+          "name": "Create album dialog above keyboard",
+          "width": 329,
+          "height": 206,
+          "fill": "#101722",
+          "cornerRadius": 22,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#223247"
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            26,
+            22,
+            22,
+            22
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "vault_home_keyboard_state_dialog_title",
+              "fill": "#EAF1FF",
+              "content": "New Album",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "800"
+            },
+            {
+              "type": "frame",
+              "id": "vault_home_keyboard_state_field",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "#0C1523",
+              "cornerRadius": 12,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#2A3B52"
+              },
+              "gap": 8,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "vault_home_keyboard_state_caret",
+                  "fill": "#4A9EFF",
+                  "width": 2,
+                  "height": 24
+                },
+                {
+                  "type": "text",
+                  "id": "vault_home_keyboard_state_placeholder",
+                  "fill": "#8EA2C0",
+                  "content": "Album name",
+                  "fontFamily": "Inter",
+                  "fontSize": 16
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vault_home_keyboard_state_buttons",
+              "width": "fill_container",
+              "height": 54,
+              "fill": "#00000000",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vault_home_keyboard_state_cancel",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#182131",
+                  "cornerRadius": 16,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vault_home_keyboard_state_cancel_label",
+                      "fill": "#EAF1FF",
+                      "content": "Cancel",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vault_home_keyboard_state_create",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#344052",
+                  "cornerRadius": 16,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vault_home_keyboard_state_create_label",
+                      "fill": "#8EA2C0",
+                      "content": "Create",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_keyboard_state_system_keyboard",
+          "x": 0,
+          "y": 548,
+          "name": "System keyboard area; bottom tab hidden",
+          "width": 393,
+          "height": 304,
+          "fill": "#2A2A2D",
+          "layout": "none"
         }
       ]
     },
