@@ -2,9 +2,11 @@ package com.xpx.vault.ui
 
 import android.app.Activity
 import android.app.RecoverableSecurityException
+import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.provider.OpenableColumns
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -34,8 +37,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -60,6 +62,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -71,6 +75,7 @@ import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
+import com.xpx.vault.ui.theme.AppFontFamily
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
@@ -120,6 +125,8 @@ fun HomeScreen(
     var pendingImportUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var rememberOriginalsChoice by remember { mutableStateOf(false) }
     var retryDeleteUrisAfterPermission by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var pendingDeleteRequestCount by remember { mutableStateOf(0) }
+    var pendingDeleteUnsupportedCount by remember { mutableStateOf(0) }
     val tabs = remember { homeTabs() }
     val isVaultEmpty = remember(albums, recentPhotos) {
         recentPhotos.isEmpty() && albums.sumOf { it.photoCount } == 0
@@ -152,18 +159,19 @@ fun HomeScreen(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
     ) { result ->
         val retryUris = retryDeleteUrisAfterPermission
+        val requestedCount = pendingDeleteRequestCount
+        val unsupportedCount = pendingDeleteUnsupportedCount
         retryDeleteUrisAfterPermission = emptyList()
+        pendingDeleteRequestCount = 0
+        pendingDeleteUnsupportedCount = 0
         if (result.resultCode == Activity.RESULT_OK) {
             if (retryUris.isNotEmpty()) {
                 scope.launch {
                     val deleted = deleteOriginalUrisDirect(context, retryUris).deletedCount
-                    importTip = ImportTip(
-                        context.getString(R.string.import_originals_delete_success, deleted),
-                        false,
-                    )
+                    importTip = buildDeleteOriginalsTip(context, deleted, unsupportedCount)
                 }
             } else {
-                importTip = ImportTip(context.getString(R.string.import_originals_delete_requested), false)
+                importTip = buildDeleteOriginalsTip(context, requestedCount, unsupportedCount)
             }
         } else {
             importTip = ImportTip(context.getString(R.string.import_originals_delete_canceled), false)
@@ -171,31 +179,35 @@ fun HomeScreen(
     }
 
     fun requestDeleteOriginals(uris: List<Uri>) {
-        val uniqueUris = mediaStoreDeleteUris(context, uris)
-        if (uniqueUris.isEmpty()) return
+        val targets = mediaStoreDeleteTargets(context, uris)
+        if (targets.uris.isEmpty()) {
+            importTip = ImportTip(context.getString(R.string.import_originals_delete_unavailable), true)
+            return
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val request = runCatching {
-                MediaStore.createDeleteRequest(context.contentResolver, uniqueUris).let { pendingIntent ->
+                MediaStore.createDeleteRequest(context.contentResolver, targets.uris).let { pendingIntent ->
                     IntentSenderRequest.Builder(pendingIntent.intentSender).build()
                 }
             }.getOrNull()
             if (request != null) {
                 retryDeleteUrisAfterPermission = emptyList()
+                pendingDeleteRequestCount = targets.uris.size
+                pendingDeleteUnsupportedCount = targets.unsupportedCount
                 deleteOriginalsLauncher.launch(request)
             } else {
                 importTip = ImportTip(context.getString(R.string.import_originals_delete_failed), true)
             }
         } else {
             scope.launch {
-                val result = deleteOriginalUrisDirect(context, uniqueUris)
+                val result = deleteOriginalUrisDirect(context, targets.uris)
                 if (result.permissionRequest != null) {
                     retryDeleteUrisAfterPermission = result.retryUris
+                    pendingDeleteRequestCount = result.retryUris.size
+                    pendingDeleteUnsupportedCount = targets.unsupportedCount
                     deleteOriginalsLauncher.launch(result.permissionRequest)
                 } else {
-                    importTip = ImportTip(
-                        context.getString(R.string.import_originals_delete_success, result.deletedCount),
-                        result.deletedCount == 0 && uniqueUris.isNotEmpty(),
-                    )
+                    importTip = buildDeleteOriginalsTip(context, result.deletedCount, targets.unsupportedCount)
                 }
             }
         }
@@ -216,7 +228,10 @@ fun HomeScreen(
                         added += 1
                         deleteCandidates += uri
                     }
-                    VaultImportResult.DUPLICATE -> duplicate += 1
+                    VaultImportResult.DUPLICATE -> {
+                        duplicate += 1
+                        deleteCandidates += uri
+                    }
                     VaultImportResult.QUOTA_EXCEEDED -> {
                         quotaExceeded = true
                         break
@@ -242,7 +257,7 @@ fun HomeScreen(
                 )
             }
             importing = false
-            if (originalsAction == ImportOriginalsAction.DELETE_ORIGINALS && added > 0) {
+            if (originalsAction == ImportOriginalsAction.DELETE_ORIGINALS && deleteCandidates.isNotEmpty()) {
                 requestDeleteOriginals(deleteCandidates)
             }
             if (quotaExceeded) {
@@ -448,64 +463,238 @@ private fun ImportOriginalsDecisionDialog(
 ) {
     if (!show) return
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        containerColor = UiColors.Dialog.bg,
-        title = {
-            Text(
-                text = stringResource(R.string.import_originals_sheet_title),
-                color = UiColors.Dialog.title,
-                fontSize = UiTextSize.dialogTitle,
-                fontWeight = FontWeight.Bold,
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.72f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss,
+                )
+                .safeDrawingPadding(),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 480.dp)
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 28.dp,
+                        shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+                        clip = false,
+                    )
+                    .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+                    .background(UiColors.Dialog.bg)
+                    .border(
+                        width = 1.dp,
+                        color = UiColors.Home.emptyCardStroke,
+                        shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { }
+                    .padding(start = 20.dp, top = 22.dp, end = 20.dp, bottom = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.import_originals_sheet_title),
+                    color = UiColors.Dialog.title,
+                    fontFamily = AppFontFamily,
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 31.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Text(
                     text = stringResource(R.string.import_originals_sheet_message, itemCount),
-                    color = UiColors.Dialog.body,
-                    fontSize = UiTextSize.dialogBody,
-                )
-                Text(
-                    text = stringResource(R.string.import_originals_delete_note_android),
                     color = UiColors.Home.subtitle,
-                    fontSize = UiTextSize.settingsRowDesc,
+                    fontFamily = AppFontFamily,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 19.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
                 )
+
+                ImportOriginalsFlow()
+                ImportOriginalsDeleteNote()
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(UiRadius.settingsRow))
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(UiColors.Home.sectionBg)
+                        .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(14.dp))
                         .clickable { onRememberChoiceChange(!rememberChoice) }
-                        .padding(vertical = 4.dp),
+                        .padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Checkbox(
-                        checked = rememberChoice,
-                        onCheckedChange = onRememberChoiceChange,
-                    )
+                    ImportOriginalsCheckbox(checked = rememberChoice)
                     Text(
                         text = stringResource(R.string.import_originals_remember),
-                        color = UiColors.Dialog.body,
-                        fontSize = UiTextSize.dialogBody,
+                        color = UiColors.Home.title,
+                        fontFamily = AppFontFamily,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    AppButton(
+                        text = stringResource(R.string.import_originals_keep_action),
+                        onClick = onKeepOriginals,
+                        variant = AppButtonVariant.SECONDARY,
+                        modifier = Modifier.weight(1f),
+                    )
+                    AppButton(
+                        text = stringResource(R.string.import_originals_delete_action),
+                        onClick = onDeleteOriginals,
+                        variant = AppButtonVariant.DANGER,
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
-        },
-        confirmButton = {
-            AppButton(
-                text = stringResource(R.string.import_originals_delete_action),
-                onClick = onDeleteOriginals,
-                variant = AppButtonVariant.DANGER,
+        }
+    }
+}
+
+@Composable
+private fun ImportOriginalsFlow() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(78.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ImportOriginalsFlowItem(
+            iconRes = R.drawable.ic_home_nav_album,
+            title = stringResource(R.string.import_originals_gallery_label),
+            tint = UiColors.Ai.cleanupExecBtnBg,
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_chevron_right),
+            contentDescription = null,
+            tint = UiColors.Home.title,
+            modifier = Modifier
+                .padding(horizontal = 18.dp)
+                .size(30.dp),
+        )
+        ImportOriginalsFlowItem(
+            iconRes = R.drawable.ic_home_nav_vault,
+            title = stringResource(R.string.app_name),
+            tint = UiColors.Lock.brandBlue,
+        )
+    }
+}
+
+@Composable
+private fun ImportOriginalsFlowItem(
+    iconRes: Int,
+    title: String,
+    tint: Color,
+) {
+    Column(
+        modifier = Modifier.width(82.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .clip(RoundedCornerShape(15.dp))
+                .background(tint.copy(alpha = 0.12f))
+                .border(1.dp, tint.copy(alpha = 0.45f), RoundedCornerShape(15.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(25.dp),
             )
-        },
-        dismissButton = {
-            AppButton(
-                text = stringResource(R.string.import_originals_keep_action),
-                onClick = onKeepOriginals,
-                variant = AppButtonVariant.SECONDARY,
+        }
+        Text(
+            text = title,
+            color = UiColors.Home.subtitle,
+            fontFamily = AppFontFamily,
+            fontSize = UiTextSize.homeNavLabel,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun ImportOriginalsDeleteNote() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(UiColors.Home.sectionBg.copy(alpha = 0.80f))
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_ai_help),
+            contentDescription = null,
+            tint = UiColors.Lock.brandBlue,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = stringResource(R.string.import_originals_delete_note_android),
+            color = UiColors.Home.subtitle,
+            fontFamily = AppFontFamily,
+            fontSize = UiTextSize.settingsRowDesc,
+            fontWeight = FontWeight.Medium,
+            lineHeight = 16.sp,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun ImportOriginalsCheckbox(checked: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .clip(RoundedCornerShape(7.dp))
+            .background(if (checked) UiColors.Lock.brandBlue else Color.Transparent)
+            .border(
+                width = 1.5.dp,
+                color = if (checked) UiColors.Lock.brandBlue else UiColors.Home.navItemIdle,
+                shape = RoundedCornerShape(7.dp),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (checked) {
+            Box(
+                modifier = Modifier
+                    .size(9.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(Color.White),
             )
-        },
-    )
+        }
+    }
 }
 
 @Composable
@@ -1023,11 +1212,16 @@ private data class DeleteOriginalsDirectResult(
     val retryUris: List<Uri>,
 )
 
+private data class DeleteOriginalsTargets(
+    val uris: List<Uri>,
+    val unsupportedCount: Int,
+)
+
 private suspend fun deleteOriginalUrisDirect(
     context: Context,
     uris: List<Uri>,
 ): DeleteOriginalsDirectResult = withContext(Dispatchers.IO) {
-    val deleteUris = mediaStoreDeleteUris(context, uris)
+    val deleteUris = mediaStoreDeleteTargets(context, uris).uris
     var deletedCount = 0
     for ((index, uri) in deleteUris.withIndex()) {
         try {
@@ -1053,13 +1247,185 @@ private suspend fun deleteOriginalUrisDirect(
     )
 }
 
-private fun mediaStoreDeleteUris(context: Context, uris: List<Uri>): List<Uri> =
-    uris.map { uri ->
+private fun mediaStoreDeleteTargets(context: Context, uris: List<Uri>): DeleteOriginalsTargets {
+    val resolved = uris.mapNotNull { resolveMediaStoreDeleteUri(context, it) }.distinct()
+    return DeleteOriginalsTargets(
+        uris = resolved,
+        unsupportedCount = (uris.size - resolved.size).coerceAtLeast(0),
+    )
+}
+
+private fun resolveMediaStoreDeleteUri(context: Context, uri: Uri): Uri? {
+    if (isDeletableMediaStoreUri(uri)) return uri
+
+    val pickerMetadata = readPickerMetadata(context, uri)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val converted = runCatching { MediaStore.getMediaUri(context, uri) }.getOrNull()
+        if (converted != null && isDeletableMediaStoreUri(converted)) {
+            return converted.takeIf { mediaStoreUriExists(context, it) }
+        }
+    }
+
+    resolvePickerUriByMediaId(context, uri, pickerMetadata)?.let { return it }
+    return resolveMediaStoreUriByMetadata(context, pickerMetadata)
+}
+
+private fun resolvePickerUriByMediaId(
+    context: Context,
+    uri: Uri,
+    metadata: PickerMediaMetadata,
+): Uri? {
+    val id = uri.pathSegments.lastOrNull()?.toLongOrNull() ?: return null
+    val candidates = mediaStoreCollections(metadata.mimeType)
+        .map { collection -> ContentUris.withAppendedId(collection, id) }
+    return candidates.firstOrNull { candidate -> mediaStoreUriExists(context, candidate) }
+        ?: candidates.firstOrNull()
+}
+
+private fun mediaStoreUriExists(context: Context, uri: Uri): Boolean =
+    runCatching {
+        context.contentResolver.query(
+            uri,
+            arrayOf(MediaStore.MediaColumns._ID),
+            null,
+            null,
+            null,
+        )?.use { cursor -> cursor.moveToFirst() } ?: false
+    }.getOrElse { true }
+
+private fun resolveMediaStoreUriByMetadata(
+    context: Context,
+    metadata: PickerMediaMetadata,
+): Uri? {
+    val displayName = metadata.displayName ?: return null
+    val size = metadata.size ?: return null
+    val matches = mediaStoreCollections(metadata.mimeType).flatMap { collection ->
+        queryMediaStoreMatches(context, collection, displayName, size, metadata.mimeType)
+    }
+    return matches.distinct().singleOrNull()
+}
+
+private fun queryMediaStoreMatches(
+    context: Context,
+    collection: Uri,
+    displayName: String,
+    size: Long,
+    mimeType: String?,
+): List<Uri> {
+    val selectionParts = mutableListOf(
+        "${MediaStore.MediaColumns.DISPLAY_NAME}=?",
+        "${MediaStore.MediaColumns.SIZE}=?",
+    )
+    val selectionArgs = mutableListOf(displayName, size.toString())
+    if (!mimeType.isNullOrBlank()) {
+        selectionParts += "${MediaStore.MediaColumns.MIME_TYPE}=?"
+        selectionArgs += mimeType
+    }
+    val projection = arrayOf(MediaStore.MediaColumns._ID)
+    return runCatching {
+        context.contentResolver.query(
+            collection,
+            projection,
+            selectionParts.joinToString(" AND "),
+            selectionArgs.toTypedArray(),
+            null,
+        )?.use { cursor ->
+            buildList {
+                val idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
+                while (cursor.moveToNext()) {
+                    add(ContentUris.withAppendedId(collection, cursor.getLong(idIndex)))
+                }
+            }
+        }.orEmpty()
+    }.getOrDefault(emptyList())
+}
+
+private fun mediaStoreCollections(mimeType: String?): List<Uri> {
+    val includeImages = mimeType == null || mimeType.startsWith("image/")
+    val includeVideos = mimeType == null || mimeType.startsWith("video/")
+    val volumes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        listOf(MediaStore.VOLUME_EXTERNAL, MediaStore.VOLUME_EXTERNAL_PRIMARY)
+    } else {
+        emptyList()
+    }
+    return buildList {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            runCatching { MediaStore.getMediaUri(context, uri) ?: uri }.getOrDefault(uri)
+            for (volume in volumes) {
+                if (includeImages) add(MediaStore.Images.Media.getContentUri(volume))
+                if (includeVideos) add(MediaStore.Video.Media.getContentUri(volume))
+            }
         } else {
-            uri
+            if (includeImages) add(MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            if (includeVideos) add(MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
         }
     }.distinct()
+}
+
+private fun isDeletableMediaStoreUri(uri: Uri): Boolean {
+    val segments = uri.pathSegments
+    return uri.scheme == "content" &&
+        uri.authority == MediaStore.AUTHORITY &&
+        segments.size >= 4 &&
+        segments[1] in setOf("images", "video") &&
+        segments[2] == "media" &&
+        segments.lastOrNull()?.toLongOrNull() != null
+}
+
+private data class PickerMediaMetadata(
+    val displayName: String?,
+    val size: Long?,
+    val mimeType: String?,
+)
+
+private fun readPickerMetadata(context: Context, uri: Uri): PickerMediaMetadata {
+    var displayName: String? = null
+    var size: Long? = null
+    runCatching {
+        context.contentResolver.query(
+            uri,
+            arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                displayName = cursor.stringOrNull(OpenableColumns.DISPLAY_NAME)
+                size = cursor.longOrNull(OpenableColumns.SIZE)
+            }
+        }
+    }
+    return PickerMediaMetadata(
+        displayName = displayName,
+        size = size,
+        mimeType = runCatching { context.contentResolver.getType(uri) }.getOrNull(),
+    )
+}
+
+private fun android.database.Cursor.stringOrNull(columnName: String): String? {
+    val index = getColumnIndex(columnName)
+    return if (index >= 0 && !isNull(index)) getString(index) else null
+}
+
+private fun android.database.Cursor.longOrNull(columnName: String): Long? {
+    val index = getColumnIndex(columnName)
+    return if (index >= 0 && !isNull(index)) getLong(index) else null
+}
+
+private fun buildDeleteOriginalsTip(
+    context: Context,
+    deletedCount: Int,
+    unsupportedCount: Int,
+): ImportTip {
+    val message = when {
+        deletedCount > 0 && unsupportedCount > 0 -> context.getString(
+            R.string.import_originals_delete_partial,
+            deletedCount,
+            unsupportedCount,
+        )
+        deletedCount > 0 -> context.getString(R.string.import_originals_delete_success, deletedCount)
+        else -> context.getString(R.string.import_originals_delete_unavailable)
+    }
+    return ImportTip(message, deletedCount == 0 || unsupportedCount > 0)
+}
 
 private data class ImportTip(val message: String, val isError: Boolean)
