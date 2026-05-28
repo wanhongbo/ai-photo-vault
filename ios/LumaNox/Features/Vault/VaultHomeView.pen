@@ -363,149 +363,18 @@
             {
               "type": "frame",
               "id": "vault_home_app_icon_blended",
-              "x": 252,
-              "y": 17,
-              "name": "App icon blended image",
-              "width": 82,
-              "height": 82,
+              "x": 237,
+              "y": 2,
+              "name": "App icon blended hero image",
+              "width": 112,
+              "height": 112,
               "fill": {
-                "type": "gradient",
-                "gradientType": "radial",
+                "type": "image",
                 "enabled": true,
-                "rotation": 0,
-                "size": {
-                  "width": 1.22,
-                  "height": 1.22
-                },
-                "colors": [
-                  {
-                    "color": "#4A9EFF1F",
-                    "position": 0
-                  },
-                  {
-                    "color": "#0D223822",
-                    "position": 0.42
-                  },
-                  {
-                    "color": "#0D22380A",
-                    "position": 0.74
-                  },
-                  {
-                    "color": "#0D223800",
-                    "position": 1
-                  }
-                ]
+                "url": "../../Resources/Assets.xcassets/AppLogoHero.imageset/AppLogoHero.png",
+                "mode": "fit"
               },
-              "cornerRadius": 24,
-              "effect": {
-                "type": "shadow",
-                "shadowType": "outer",
-                "color": "#4A9EFF20",
-                "offset": {
-                  "x": 0,
-                  "y": 12
-                },
-                "blur": 30
-              },
-              "layout": "none",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "vault_home_app_icon_image",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Actual App Icon",
-                  "clip": true,
-                  "width": 82,
-                  "height": 82,
-                  "fill": {
-                    "type": "image",
-                    "opacity": 0.86,
-                    "enabled": true,
-                    "url": "../../Resources/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
-                    "mode": "fill"
-                  },
-                  "cornerRadius": 24,
-                  "layout": "none"
-                },
-                {
-                  "type": "frame",
-                  "id": "vault_home_app_icon_edge_blend",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Icon edge blend overlay",
-                  "width": 82,
-                  "height": 82,
-                  "fill": {
-                    "type": "gradient",
-                    "gradientType": "radial",
-                    "enabled": true,
-                    "rotation": 0,
-                    "size": {
-                      "width": 1.12,
-                      "height": 1.12
-                    },
-                    "colors": [
-                      {
-                        "color": "#0D223800",
-                        "position": 0
-                      },
-                      {
-                        "color": "#0D223800",
-                        "position": 0.5
-                      },
-                      {
-                        "color": "#0D223844",
-                        "position": 0.78
-                      },
-                      {
-                        "color": "#0D223899",
-                        "position": 1
-                      }
-                    ],
-                    "center": {
-                      "y": 0.48
-                    }
-                  },
-                  "cornerRadius": 24,
-                  "layout": "none"
-                },
-                {
-                  "type": "frame",
-                  "id": "vault_home_app_icon_soft_glow",
-                  "x": 10,
-                  "y": 10,
-                  "name": "Icon blue soft glow",
-                  "width": 62,
-                  "height": 62,
-                  "fill": {
-                    "type": "gradient",
-                    "gradientType": "radial",
-                    "enabled": true,
-                    "rotation": 0,
-                    "size": {
-                      "width": 1,
-                      "height": 1
-                    },
-                    "colors": [
-                      {
-                        "color": "#4A9EFF20",
-                        "position": 0
-                      },
-                      {
-                        "color": "#4A9EFF0C",
-                        "position": 0.48
-                      },
-                      {
-                        "color": "#4A9EFF00",
-                        "position": 1
-                      }
-                    ]
-                  },
-                  "cornerRadius": 31,
-                  "layout": "none"
-                }
-              ]
+              "layout": "none"
             },
             {
               "type": "text",

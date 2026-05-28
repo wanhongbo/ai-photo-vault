@@ -138,8 +138,8 @@ struct VaultHomeView: View {
                 Spacer()
                 AppIconHeroView()
             }
-            .padding(.top, 17)
-            .padding(.trailing, 27)
+            .padding(.top, 2)
+            .padding(.trailing, 12)
 
         }
         .frame(height: 163)
@@ -730,43 +730,11 @@ private struct AlbumCoverPreview: View {
 
 private struct AppIconHeroView: View {
     var body: some View {
-        ZStack {
-            RadialGradient(
-                colors: [LNColor.brandBlue.opacity(0.12), Color(hex: 0x0D2238).opacity(0.10), Color.clear],
-                center: .center,
-                startRadius: 4,
-                endRadius: 46
-            )
-            .frame(width: 82, height: 82)
-            .clipShape(RoundedRectangle(cornerRadius: 24))
-
-            Image("AppLogo")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 82, height: 82)
-                .opacity(0.86)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-                .overlay(
-                    RadialGradient(
-                        colors: [Color.clear, Color.clear, Color(hex: 0x0D2238).opacity(0.58)],
-                        center: UnitPoint(x: 0.5, y: 0.48),
-                        startRadius: 18,
-                        endRadius: 52
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 24))
-                )
-                .overlay(
-                    RadialGradient(
-                        colors: [LNColor.brandBlue.opacity(0.12), LNColor.brandBlue.opacity(0.05), Color.clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 34
-                    )
-                    .frame(width: 62, height: 62)
-                )
-        }
-        .frame(width: 82, height: 82)
-        .shadow(color: LNColor.brandBlue.opacity(0.12), radius: 24, x: 0, y: 10)
+        Image("AppLogoHero")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 112, height: 112)
+            .compositingGroup()
         .accessibilityHidden(true)
     }
 }
