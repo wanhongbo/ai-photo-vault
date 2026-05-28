@@ -1,3 +1,4 @@
+import Photos
 import PhotosUI
 import SwiftUI
 import UIKit
@@ -316,7 +317,8 @@ struct VaultMediaGridCard: View {
                 PhotosPicker(
                     selection: importSelection,
                     maxSelectionCount: 32,
-                    matching: .any(of: [.images, .videos])
+                    matching: .any(of: [.images, .videos]),
+                    photoLibrary: PHPhotoLibrary.shared()
                 ) {
                     VaultMediaImportGridTile(size: cellWidth, isImporting: isImporting)
                 }

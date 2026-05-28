@@ -1,3 +1,4 @@
+import Photos
 import PhotosUI
 import SwiftUI
 import UIKit
@@ -139,7 +140,8 @@ struct VaultHomeView: View {
         PhotosPicker(
             selection: $viewModel.pickerItems,
             maxSelectionCount: 32,
-            matching: .any(of: [.images, .videos])
+            matching: .any(of: [.images, .videos]),
+            photoLibrary: PHPhotoLibrary.shared()
         ) {
             Image(systemName: "plus")
                 .font(.system(size: 31, weight: .semibold))
@@ -260,7 +262,8 @@ struct VaultHomeView: View {
             PhotosPicker(
                 selection: $viewModel.pickerItems,
                 maxSelectionCount: 32,
-                matching: .any(of: [.images, .videos])
+                matching: .any(of: [.images, .videos]),
+                photoLibrary: PHPhotoLibrary.shared()
             ) {
                 Text(L10n.homeEmptyAction)
                     .font(LNTypography.button())
