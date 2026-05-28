@@ -275,9 +275,9 @@ struct VaultHomeView: View {
                     .font(LNTypography.button())
                     .foregroundStyle(LNColor.title)
                     .frame(maxWidth: .infinity)
-                    .frame(height: LNSpacing.buttonHeightSecondary)
+                    .frame(height: LNSpacing.buttonHeightPrimary)
                     .background(LNColor.buttonSecondaryBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
             }
             .buttonStyle(.lnPressable())
         }

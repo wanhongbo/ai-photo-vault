@@ -1007,6 +1007,282 @@
     },
     {
       "type": "frame",
+      "id": "vault_home_empty_state_screen",
+      "x": 395,
+      "y": 0,
+      "name": "VaultHomeView - empty state",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#0F2944",
+            "position": 0
+          },
+          {
+            "color": "#071A2C",
+            "position": 0.42
+          },
+          {
+            "color": "#02060C",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "vault_home_empty_status_bar",
+          "x": 0,
+          "y": 0,
+          "name": "iOS status bar",
+          "width": 393,
+          "height": 46,
+          "fill": "#00000000",
+          "padding": [
+            14,
+            24,
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "vault_home_empty_status_time",
+              "fill": "#EAF1FF",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_empty_hero",
+          "x": 16,
+          "y": 56,
+          "name": "Hero - empty vault command center",
+          "clip": true,
+          "width": 361,
+          "height": 163,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 132,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0C1929",
+                "position": 0
+              },
+              {
+                "color": "#08111D",
+                "position": 0.52
+              },
+              {
+                "color": "#0D2238",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 28,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#274260"
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "vault_home_empty_hero_brand",
+              "x": 20,
+              "y": 34,
+              "fill": "#F2F6FF",
+              "content": "LumaNox",
+              "fontFamily": "Inter",
+              "fontSize": 28,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "vault_home_empty_hero_status",
+              "x": 20,
+              "y": 70,
+              "width": 230,
+              "textGrowth": "fixed-width",
+              "fill": "#9BAEC8",
+              "content": "0 items · Local AES-256 vault",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_empty_card",
+          "x": 16,
+          "y": 239,
+          "name": "Empty vault card",
+          "width": 361,
+          "height": 406,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0C2137",
+                "position": 0
+              },
+              {
+                "color": "#071827",
+                "position": 0.6
+              },
+              {
+                "color": "#040A12",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 24,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#203A59"
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            32,
+            16,
+            32,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "vault_home_empty_icon_wrap",
+              "name": "Empty icon",
+              "width": 96,
+              "height": 96,
+              "fill": "#132944",
+              "cornerRadius": 28,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "vault_home_empty_icon",
+                  "width": 36,
+                  "height": 36,
+                  "iconFontName": "shield",
+                  "iconFontFamily": "lucide",
+                  "fill": "#4A9EFF"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "vault_home_empty_title",
+              "fill": "#EAF1FF",
+              "content": "Vault is empty",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "vault_home_empty_body",
+              "width": 296,
+              "textGrowth": "fixed-width",
+              "fill": "#8EA2C0",
+              "content": "Imported photos and videos appear here, protected by your lock screen.",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "textAlign": "center",
+              "lineHeight": 1.35
+            },
+            {
+              "type": "frame",
+              "id": "vault_home_empty_import_cta",
+              "name": "Primary CTA - 54pt",
+              "width": "fill_container",
+              "height": 54,
+              "fill": "#4A9EFF",
+              "cornerRadius": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vault_home_empty_import_label",
+                  "fill": "#FFFFFF",
+                  "content": "Import from Photos",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vault_home_empty_camera_cta",
+              "name": "Secondary CTA - aligned 54pt",
+              "width": "fill_container",
+              "height": 54,
+              "fill": "#1A202C",
+              "cornerRadius": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vault_home_empty_camera_label",
+                  "fill": "#EAF1FF",
+                  "content": "Take private photo",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "vault_home_empty_indicator",
+          "x": 129,
+          "y": 831,
+          "name": "Home indicator",
+          "width": 135,
+          "height": 5,
+          "fill": "#FFFFFFCC",
+          "cornerRadius": 3
+        }
+      ]
+    },
+    {
+      "type": "frame",
       "id": "vault_home_create_album_keyboard_state",
       "x": 790,
       "y": 0,
