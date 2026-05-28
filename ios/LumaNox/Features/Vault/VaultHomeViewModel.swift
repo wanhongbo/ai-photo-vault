@@ -66,8 +66,11 @@ final class VaultHomeViewModel: ObservableObject {
     }
 
     var isEmpty: Bool { recentPhotos.isEmpty }
+    var hasUserCreatedAlbum: Bool {
+        albums.contains { $0.name != vaultDefaultAlbumName }
+    }
     var shouldShowInitialLoading: Bool { snapshot == nil && isLoadingSnapshot }
-    var shouldShowEmptyState: Bool { snapshot != nil && isEmpty && !isImporting }
+    var shouldShowEmptyState: Bool { snapshot != nil && isEmpty && !hasUserCreatedAlbum && !isImporting }
     var shouldShowFloatingImportButton: Bool {
         snapshot != nil && !isEmpty && !showPermissionDenied
     }

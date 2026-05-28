@@ -39,6 +39,7 @@
 "home_recent_view_more" = "View more";
 "home_album_photo_count" = "%d photos";
 "home_album_item_count" = "%d items";
+"album_default_name" = "Default";
 "home_album_create_title" = "New Album";
 "home_album_create_input_hint" = "Album name";
 "home_album_create_confirm" = "Create";

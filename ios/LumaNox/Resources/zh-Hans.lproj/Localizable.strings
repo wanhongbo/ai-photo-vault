@@ -39,6 +39,7 @@
 "home_recent_view_more" = "查看更多";
 "home_album_photo_count" = "%d 张照片";
 "home_album_item_count" = "%d 项";
+"album_default_name" = "主相册";
 "home_album_create_title" = "新建相册";
 "home_album_create_input_hint" = "输入相册名称";
 "home_album_create_confirm" = "创建";

@@ -13,8 +13,11 @@ struct VaultHomeView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            vaultHomeBackground
+                .ignoresSafeArea()
+
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 20) {
                     heroCard
 
                     if !viewModel.hasPinConfigured {
@@ -34,13 +37,8 @@ struct VaultHomeView: View {
                     }
                 }
                 .padding(.horizontal, LNSpacing.screenHorizontal)
-                .padding(.top, 8)
-                .padding(.bottom, LNSpacing.homeNavBarHeight + 72)
-            }
-
-            if viewModel.shouldShowFloatingImportButton {
-                floatingImportButton
-                    .padding(.bottom, LNSpacing.homeNavBarHeight + 22)
+                .padding(.top, 10)
+                .padding(.bottom, LNSpacing.homeNavBarHeight + 28)
             }
         }
         .onAppear { viewModel.onAppear() }
@@ -87,11 +85,30 @@ struct VaultHomeView: View {
         .accessibilityIdentifier("vault_home_view")
     }
 
+    private var vaultHomeBackground: some View {
+        ZStack(alignment: .top) {
+            LinearGradient(
+                colors: [Color(hex: 0x0F2944), Color(hex: 0x071A2C), Color(hex: 0x02060C)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            LinearGradient(
+                colors: [Color(hex: 0x123A5E).opacity(0.34), Color(hex: 0x08243A).opacity(0.16), Color.clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 330)
+            .offset(y: 360)
+            .allowsHitTesting(false)
+        }
+    }
+
     private var heroCard: some View {
         ZStack(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.appName)
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.system(size: 29, weight: .bold))
                     .foregroundStyle(Color(hex: 0xF2F6FF))
                     .lineLimit(1)
                 Text(viewModel.heroStatusText)
@@ -101,25 +118,26 @@ struct VaultHomeView: View {
                     .minimumScaleFactor(0.82)
             }
             .frame(width: 230, alignment: .leading)
-            .padding(.leading, 20)
-            .padding(.top, 34)
+            .padding(.leading, 22)
+            .padding(.top, 30)
 
             HStack(spacing: 8) {
                 HomeHeroBadge(icon: "wifi.slash", title: L10n.tr("home_hero_badge_offline"), width: 68)
                 HomeHeroBadge(icon: "lock.shield", title: L10n.tr("home_hero_badge_encrypted"), width: 80)
-                HomeHeroBadge(icon: "sparkles", title: L10n.tr("home_hero_badge_ai_local"), width: 104)
+                HomeHeroBadge(icon: "sparkles", title: L10n.tr("home_hero_badge_ai_ready"), width: 90)
             }
-            .padding(.leading, 20)
-            .padding(.top, 104)
+            .padding(.leading, 22)
+            .padding(.top, 98)
 
             HStack {
                 Spacer()
                 AppIconHeroView()
             }
-            .padding(.top, 19)
-            .padding(.trailing, 8)
+            .padding(.top, 17)
+            .padding(.trailing, 27)
+
         }
-        .frame(height: 150)
+        .frame(height: 154)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
@@ -128,40 +146,12 @@ struct VaultHomeView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .clipShape(RoundedRectangle(cornerRadius: 28))
         .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(LNColor.stroke, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 28)
+                .stroke(Color(hex: 0x274260), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.33), radius: 14, x: 0, y: 12)
-    }
-
-    private var floatingImportButton: some View {
-        PhotosPicker(
-            selection: $viewModel.pickerItems,
-            maxSelectionCount: 32,
-            matching: .any(of: [.images, .videos]),
-            photoLibrary: PHPhotoLibrary.shared()
-        ) {
-            Image(systemName: "plus")
-                .font(.system(size: 31, weight: .semibold))
-                .foregroundStyle(LNColor.navItemActive)
-                .frame(width: 64, height: 64)
-                .background(
-                    LinearGradient(
-                        colors: [Color(hex: 0x153A5C), Color(hex: 0x10233A), Color(hex: 0x07101C)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color(hex: 0x2F5F8E), lineWidth: 1))
-                .shadow(color: Color(hex: 0x153A5C).opacity(0.40), radius: 28, x: 0, y: 14)
-        }
-        .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
-        .disabled(viewModel.isImporting)
-        .accessibilityLabel(L10n.tr("home_import_fab_accessibility"))
-        .accessibilityIdentifier("vault_import_button")
+        .shadow(color: .black.opacity(0.40), radius: 30, x: 0, y: 18)
     }
 
     private var loadingVaultCard: some View {
@@ -314,35 +304,15 @@ struct VaultHomeView: View {
 
     private var albumsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text(L10n.albumListTitle)
-                    .font(.system(size: 18, weight: .heavy))
-                    .foregroundStyle(Color(hex: 0xF6F9FF))
-                Spacer()
-                Button {
-                    viewModel.showCreateAlbum = true
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 13, weight: .bold))
-                        Text(L10n.tr("home_album_new_action"))
-                            .font(.system(size: 12, weight: .heavy))
-                    }
-                    .foregroundStyle(LNColor.navItemActive)
-                    .frame(width: 78, height: 30)
-                    .background(LNColor.navBarBg.opacity(0.8))
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(Color(hex: 0x2F5F8E), lineWidth: 1))
-                }
-                .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
-                .accessibilityIdentifier("home_create_album_button")
-            }
+            Text(L10n.albumListTitle)
+                .font(.system(size: 20, weight: .heavy))
+                .foregroundStyle(Color(hex: 0xF6F9FF))
             .frame(height: 34)
 
             GeometryReader { proxy in
                 let cardWidth = floor((proxy.size.width - 10) / 2)
-                LazyVGrid(columns: albumGridColumns(cardWidth: cardWidth), spacing: 10) {
-                    ForEach(Array(viewModel.albums.prefix(4))) { album in
+                LazyVGrid(columns: albumGridColumns(cardWidth: cardWidth), alignment: .leading, spacing: 10) {
+                    ForEach(viewModel.albums) { album in
                         AlbumHomeCard(
                             album: album,
                             mediaItems: viewModel.recentMediaItems(for: album),
@@ -351,11 +321,17 @@ struct VaultHomeView: View {
                             router.pushVault(.album(name: album.name))
                         }
                     }
+                    CreateAlbumHomeCard(width: cardWidth) {
+                        viewModel.showCreateAlbum = true
+                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .frame(width: proxy.size.width, alignment: .topLeading)
             }
-            .frame(height: 380)
+            .frame(height: albumGridHeight)
         }
+        .padding(16)
+        .homeGlassCard(cornerRadius: 26, stroke: LNColor.stroke)
+        .shadow(color: .black.opacity(0.33), radius: 24, x: 0, y: 16)
         .accessibilityIdentifier("vault_album_grid_section")
     }
 
@@ -373,6 +349,12 @@ struct VaultHomeView: View {
             GridItem(.fixed(cardWidth), spacing: 10),
         ]
     }
+
+    private var albumGridHeight: CGFloat {
+        let itemCount = viewModel.albums.count + 1
+        let rowCount = max(1, Int(ceil(Double(itemCount) / 2.0)))
+        return CGFloat(rowCount) * AlbumHomeLayout.tileHeight + CGFloat(rowCount - 1) * 10
+    }
 }
 
 private struct ImportOriginalsDecisionSheet: View {
@@ -382,7 +364,7 @@ private struct ImportOriginalsDecisionSheet: View {
     let onDeleteOriginals: () -> Void
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack {
             LNColor.scrim.ignoresSafeArea()
             VStack(spacing: 14) {
                 Text(L10n.tr("import_originals_sheet_title"))
@@ -413,16 +395,18 @@ private struct ImportOriginalsDecisionSheet: View {
                     )
                 }
             }
+            .frame(maxWidth: 361)
             .padding(.top, 22)
             .padding(.horizontal, 20)
             .padding(.bottom, 24)
             .background(LNColor.dialogBg)
-            .clipShape(RoundedCorner(radius: 26, corners: [.topLeft, .topRight]))
+            .clipShape(RoundedRectangle(cornerRadius: 26))
             .overlay(
-                RoundedCorner(radius: 26, corners: [.topLeft, .topRight])
+                RoundedRectangle(cornerRadius: 26)
                     .stroke(LNColor.stroke, lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.35), radius: 28, x: 0, y: -14)
+            .shadow(color: .black.opacity(0.35), radius: 28, x: 0, y: 14)
+            .padding(.horizontal, LNSpacing.screenHorizontal)
         }
         .accessibilityIdentifier("import_originals_decision_sheet")
     }
@@ -497,31 +481,18 @@ private struct ImportOriginalsDecisionSheet: View {
     }
 }
 
-private struct RoundedCorner: Shape {
-    var radius: CGFloat
-    var corners: UIRectCorner
-
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(
-            roundedRect: rect,
-            byRoundingCorners: corners,
-            cornerRadii: CGSize(width: radius, height: radius)
-        )
-        return Path(path.cgPath)
-    }
-}
-
 private struct HomeHeroBadge: View {
     let icon: String
     let title: String
     let width: CGFloat
+    var fontSize: CGFloat = 9
 
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.system(size: 10, weight: .medium))
             Text(title)
-                .font(.system(size: 9, weight: .medium))
+                .font(.system(size: fontSize, weight: .medium))
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
         }
@@ -666,39 +637,27 @@ private struct AlbumHomeCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                AlbumPreviewGrid(mediaItems: mediaItems)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 86)
+            VStack(alignment: .leading, spacing: 0) {
+                AlbumCoverPreview(mediaItems: mediaItems, width: width)
 
-                HStack(spacing: 6) {
-                    Text(album.name)
-                        .font(.system(size: 14, weight: .heavy))
-                        .foregroundStyle(Color(hex: 0xF6F9FF))
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                HStack {
+                    Text(displayName)
+                        .font(.system(size: 13, weight: .heavy))
+                        .foregroundStyle(Color(hex: 0xF4F8FF))
                         .lineLimit(1)
                         .minimumScaleFactor(0.72)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(LNColor.navItemActive)
+                    Spacer(minLength: 0)
                 }
-                .frame(height: 20)
-
-                Text(albumCountText)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(LNColor.subtitle)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .lineLimit(1)
+                .padding(.horizontal, 10)
+                .frame(height: AlbumHomeLayout.labelHeight)
             }
-            .padding(10)
-            .frame(width: width, height: 185, alignment: .top)
-            .homeItemCard(cornerRadius: 20)
+            .frame(width: width, height: AlbumHomeLayout.tileHeight, alignment: .top)
         }
         .buttonStyle(.lnPressable())
     }
 
-    private var albumCountText: String {
-        L10n.tr("home_album_item_count", album.photoCount)
+    private var displayName: String {
+        album.name == vaultDefaultAlbumName ? L10n.tr("album_default_name") : album.name
     }
 }
 
@@ -708,89 +667,58 @@ private struct CreateAlbumHomeCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .center, spacing: 0) {
+            VStack(spacing: 0) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: 0x102A46), Color(hex: 0x07101C)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                    Color(hex: 0x0D2742)
                     Image(systemName: "plus")
-                        .font(.system(size: 26, weight: .semibold))
+                        .font(.system(size: 34, weight: .regular))
                         .foregroundStyle(LNColor.navItemActive)
                 }
-                .frame(width: 82, height: 82)
+                .frame(width: width, height: AlbumHomeLayout.coverHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
 
-                Spacer(minLength: 0)
-
-                Text(L10n.homeAlbumCreateTitle)
-                    .font(.system(size: 12, weight: .heavy))
-                    .foregroundStyle(Color(hex: 0xF6F9FF))
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                Color.clear
+                    .frame(width: width, height: AlbumHomeLayout.labelHeight)
             }
-            .padding(9)
-            .frame(width: width, height: 122, alignment: .top)
-            .homeItemCard(cornerRadius: 18)
+            .frame(width: width, height: AlbumHomeLayout.tileHeight, alignment: .top)
         }
         .buttonStyle(.lnPressable())
         .accessibilityIdentifier("home_create_album_card")
     }
 }
 
-private struct AlbumPreviewGrid: View {
+private enum AlbumHomeLayout {
+    static let coverHeight: CGFloat = 142
+    static let labelHeight: CGFloat = 34
+    static let tileHeight: CGFloat = coverHeight + labelHeight
+}
+
+private struct AlbumCoverPreview: View {
     let mediaItems: [LNMediaItem]
+    let width: CGFloat
 
     var body: some View {
-        GeometryReader { proxy in
-            let tileSize = max(0, floor((proxy.size.width - 19) / 2))
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.fixed(tileSize), spacing: 5), count: 2),
-                spacing: 5
-            ) {
-                ForEach(0..<4, id: \.self) { index in
-                    if index < mediaItems.count {
-                        VaultMediaThumbnailView(
-                            encryptedPath: mediaItems[index].path,
-                            isVideo: mediaItems[index].isVideo,
-                            contentMode: .fill,
-                            targetPixelSize: 180,
-                            showVideoIndicator: false
-                        )
-                        .frame(width: tileSize, height: 32)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                    } else {
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(hex: 0x1D4773), Color(hex: 0x0B1727)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: tileSize, height: 32)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                            )
-                    }
-                }
+        ZStack {
+            Color(hex: 0x12304C)
+            if let item = mediaItems.first {
+                VaultMediaThumbnailView(
+                    encryptedPath: item.path,
+                    isVideo: item.isVideo,
+                    contentMode: .fill,
+                    targetPixelSize: 320,
+                    showVideoIndicator: true
+                )
+                .frame(width: width, height: AlbumHomeLayout.coverHeight)
+                .clipped()
+            } else {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .font(.system(size: 34, weight: .regular))
+                    .foregroundStyle(Color(hex: 0xAFC4E2).opacity(0.54))
             }
-            .padding(7)
         }
-        .background(
-            LinearGradient(
-                colors: [Color(hex: 0x102A46), Color(hex: 0x07101C)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .frame(width: width, height: AlbumHomeLayout.coverHeight)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .contentShape(RoundedRectangle(cornerRadius: 20))
     }
 }
 
@@ -801,25 +729,25 @@ private struct AppIconHeroView: View {
                 colors: [LNColor.brandBlue.opacity(0.12), Color(hex: 0x0D2238).opacity(0.10), Color.clear],
                 center: .center,
                 startRadius: 4,
-                endRadius: 60
+                endRadius: 46
             )
-            .frame(width: 108, height: 108)
-            .clipShape(RoundedRectangle(cornerRadius: 34))
+            .frame(width: 82, height: 82)
+            .clipShape(RoundedRectangle(cornerRadius: 24))
 
             Image("AppLogo")
                 .resizable()
                 .scaledToFill()
-                .frame(width: 87, height: 87)
+                .frame(width: 82, height: 82)
                 .opacity(0.86)
-                .clipShape(RoundedRectangle(cornerRadius: 26))
+                .clipShape(RoundedRectangle(cornerRadius: 24))
                 .overlay(
                     RadialGradient(
                         colors: [Color.clear, Color.clear, Color(hex: 0x0D2238).opacity(0.58)],
                         center: UnitPoint(x: 0.5, y: 0.48),
                         startRadius: 18,
-                        endRadius: 56
+                        endRadius: 52
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 26))
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
                 )
                 .overlay(
                     RadialGradient(
@@ -828,11 +756,11 @@ private struct AppIconHeroView: View {
                         startRadius: 0,
                         endRadius: 34
                     )
-                    .frame(width: 66, height: 66)
+                    .frame(width: 62, height: 62)
                 )
         }
-        .frame(width: 108, height: 108)
-        .shadow(color: LNColor.brandBlue.opacity(0.12), radius: 30, x: 0, y: 12)
+        .frame(width: 82, height: 82)
+        .shadow(color: LNColor.brandBlue.opacity(0.12), radius: 24, x: 0, y: 10)
         .accessibilityHidden(true)
     }
 }
