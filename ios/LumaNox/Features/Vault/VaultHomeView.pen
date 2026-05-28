@@ -977,6 +977,22 @@
           "layout": "none",
           "children": [
             {
+              "type": "frame",
+              "id": "vault_home_empty_app_icon_blended",
+              "x": 237,
+              "y": 2,
+              "name": "App icon blended hero image",
+              "width": 112,
+              "height": 112,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "../../Resources/Assets.xcassets/AppLogoHero.imageset/AppLogoHero.png",
+                "mode": "fit"
+              },
+              "layout": "none"
+            },
+            {
               "type": "text",
               "id": "vault_home_empty_hero_brand",
               "x": 20,
