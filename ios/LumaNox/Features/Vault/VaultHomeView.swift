@@ -6,6 +6,8 @@ import UIKit
 struct VaultHomeView: View {
     @EnvironmentObject private var router: AppRouter
     @ObservedObject private var viewModel: VaultHomeViewModel
+    @State private var visibleImportToast: VaultHomeImportToast?
+    @State private var importToastDismissTask: Task<Void, Never>?
 
     init(viewModel: VaultHomeViewModel) {
         self.viewModel = viewModel
@@ -40,10 +42,24 @@ struct VaultHomeView: View {
                 .padding(.top, 10)
                 .padding(.bottom, 28)
             }
+
+            if let visibleImportToast {
+                VaultHomeImportToastView(toast: visibleImportToast)
+                    .padding(.bottom, 20)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(2)
+            }
         }
         .onAppear { viewModel.onAppear() }
+        .onDisappear {
+            importToastDismissTask?.cancel()
+            importToastDismissTask = nil
+        }
         .onChange(of: viewModel.pickerItems) { _ in
             _ = viewModel.onPickerItemsChanged(router: router)
+        }
+        .onReceive(viewModel.$importToast.compactMap { $0 }) { toast in
+            showImportToast(toast)
         }
         .overlay {
             if viewModel.showCreateAlbum {
@@ -193,21 +209,12 @@ struct VaultHomeView: View {
 
     @ViewBuilder
     private var statusMessage: some View {
-        if viewModel.isImporting || viewModel.importTip != nil {
-            VStack(alignment: .leading, spacing: 8) {
-                if viewModel.isImporting {
-                    HStack(spacing: 8) {
-                        ProgressView().tint(LNColor.brandBlue)
-                        Text(L10n.commonLoading)
-                            .font(LNTypography.bodyMedium())
-                            .foregroundStyle(LNColor.subtitle)
-                    }
-                }
-                if let tip = viewModel.importTip {
-                    Text(tip)
-                        .font(LNTypography.bodyMedium())
-                        .foregroundStyle(viewModel.importTipIsError ? LNColor.error : LNColor.success)
-                }
+        if viewModel.isImporting {
+            HStack(spacing: 8) {
+                ProgressView().tint(LNColor.brandBlue)
+                Text(L10n.commonLoading)
+                    .font(LNTypography.bodyMedium())
+                    .foregroundStyle(LNColor.subtitle)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -360,6 +367,52 @@ struct VaultHomeView: View {
         let itemCount = viewModel.albums.count + 1
         let rowCount = max(1, Int(ceil(Double(itemCount) / 2.0)))
         return CGFloat(rowCount) * AlbumHomeLayout.tileHeight + CGFloat(rowCount - 1) * 10
+    }
+
+    private func showImportToast(_ toast: VaultHomeImportToast) {
+        importToastDismissTask?.cancel()
+        withAnimation(.easeInOut(duration: 0.2)) {
+            visibleImportToast = toast
+        }
+        importToastDismissTask = Task {
+            try? await Task.sleep(nanoseconds: 2_400_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard visibleImportToast?.id == toast.id else { return }
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    visibleImportToast = nil
+                }
+            }
+        }
+    }
+}
+
+private struct VaultHomeImportToastView: View {
+    let toast: VaultHomeImportToast
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: toast.isError ? "exclamationmark.circle" : "checkmark")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(toast.isError ? LNColor.error : LNColor.success)
+            Text(toast.message)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(LNColor.title)
+                .lineLimit(2)
+                .minimumScaleFactor(0.9)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 16)
+        .frame(width: 301, alignment: .leading)
+        .frame(minHeight: 48)
+        .background(Color(hex: 0x101722).opacity(0.93))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .stroke((toast.isError ? LNColor.error : LNColor.success).opacity(0.33), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.40), radius: 28, x: 0, y: 14)
+        .accessibilityIdentifier("vault_import_toast")
     }
 }
 

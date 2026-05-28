@@ -16,6 +16,7 @@ final class VaultHomeViewModel: ObservableObject {
     @Published var pendingImportOriginalsCount: Int?
     @Published var rememberImportOriginalsChoice = false
     @Published var originalsActionDialogMessage: String?
+    @Published var importToast: VaultHomeImportToast?
     @Published private(set) var snapshot: VaultSnapshot?
     @Published private(set) var isLoadingSnapshot = false
     @Published private(set) var hasPinConfigured = AppDebugPolicy.skipsPinGate || SecuritySettingsStore.shared.hasPinConfigured
@@ -166,6 +167,12 @@ final class VaultHomeViewModel: ObservableObject {
             )
         }
         duplicateImportDialogMessage = VaultImportFeedback.duplicateDialogMessage(for: summary)
+        if duplicateImportDialogMessage == nil {
+            importToast = VaultHomeImportToast(
+                message: VaultImportFeedback.inlineMessage(for: summary),
+                isError: summary.added == 0 && summary.failed > 0
+            )
+        }
         snapshot = vaultStore.snapshot
     }
 
@@ -182,6 +189,12 @@ final class VaultHomeViewModel: ObservableObject {
             snapshot = vaultStore.snapshot
         }
     }
+}
+
+struct VaultHomeImportToast: Identifiable, Equatable {
+    let id = UUID()
+    let message: String
+    let isError: Bool
 }
 
 enum VaultImportFeedback {
