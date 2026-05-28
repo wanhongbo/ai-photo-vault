@@ -108,7 +108,7 @@ struct VaultHomeView: View {
         ZStack(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.appName)
-                    .font(.system(size: 29, weight: .bold))
+                    .font(.system(size: 28, weight: .heavy))
                     .foregroundStyle(Color(hex: 0xF2F6FF))
                     .lineLimit(1)
                 Text(viewModel.heroStatusText)
@@ -118,16 +118,21 @@ struct VaultHomeView: View {
                     .minimumScaleFactor(0.82)
             }
             .frame(width: 230, alignment: .leading)
-            .padding(.leading, 22)
-            .padding(.top, 30)
+            .padding(.leading, 20)
+            .padding(.top, 34)
 
             HStack(spacing: 8) {
                 HomeHeroBadge(icon: "wifi.slash", title: L10n.tr("home_hero_badge_offline"), width: 68)
                 HomeHeroBadge(icon: "lock.shield", title: L10n.tr("home_hero_badge_encrypted"), width: 80)
-                HomeHeroBadge(icon: "sparkles", title: L10n.tr("home_hero_badge_ai_ready"), width: 90)
+                HomeHeroBadge(
+                    icon: "sparkles",
+                    title: L10n.tr("home_hero_badge_ai_local"),
+                    width: 104,
+                    fontSize: 8
+                )
             }
-            .padding(.leading, 22)
-            .padding(.top, 98)
+            .padding(.leading, 20)
+            .padding(.top, 119)
 
             HStack {
                 Spacer()
@@ -137,11 +142,11 @@ struct VaultHomeView: View {
             .padding(.trailing, 27)
 
         }
-        .frame(height: 154)
+        .frame(height: 163)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
-                colors: [Color(hex: 0x07101A), Color(hex: 0x081321), Color(hex: 0x0D2238)],
+                colors: [Color(hex: 0x0C1929), Color(hex: 0x08111D), Color(hex: 0x0D2238)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
