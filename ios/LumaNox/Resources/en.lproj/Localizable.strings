@@ -44,6 +44,13 @@
 "home_album_create_input_hint" = "Album name";
 "home_album_create_confirm" = "Create";
 "album_import_media_action" = "Import to this album";
+"album_more_actions" = "Album actions";
+"album_delete_action" = "Delete Album";
+"album_delete_title" = "Delete Album";
+"album_delete_message" = "Media in this album will be moved to Trash and can be restored within 30 days.";
+"album_delete_confirm" = "Delete";
+"album_delete_error_title" = "Could not delete album";
+"album_delete_error_message" = "Album deletion did not finish. Please try again.";
 "home_camera_empty_action" = "Take private photo";
 "import_originals_sheet_title" = "Copy files into your vault?";
 "import_originals_sheet_message" = "%d selected items will be copied into your encrypted local vault first. Choose what should happen to the originals in Photos.";

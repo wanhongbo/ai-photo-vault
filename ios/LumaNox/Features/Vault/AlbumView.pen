@@ -94,31 +94,31 @@
         },
         {
           "type": "frame",
-          "id": "export_album_1",
-          "name": "Bulk export button",
-          "layout": "horizontal",
-          "fill": "#142741",
-          "x": 16,
-          "y": 114,
-          "width": 361,
-          "height": 48,
+          "id": "more_album_1",
+          "name": "More actions button",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 333,
+          "y": 48,
+          "width": 44,
+          "height": 44,
           "cornerRadius": 14,
-          "justifyContent": "center",
-          "alignItems": "center",
           "stroke": {
             "thickness": 1,
             "fill": "#243348"
           },
           "children": [
             {
-              "type": "text",
-              "id": "export_text_album_1",
-              "content": "Bulk Export",
-              "fontFamily": "Inter",
+              "type": "icon_font",
+              "id": "more_icon_album_1",
+              "iconFontFamily": "lucide",
+              "iconFontName": "ellipsis",
+              "x": 11,
+              "y": 11,
+              "width": 22,
+              "height": 22,
               "fill": "#EAF1FF",
-              "fontSize": 15,
-              "letterSpacing": 0,
-              "fontWeight": "650"
+              "rotation": 90
             }
           ]
         },
@@ -129,7 +129,7 @@
           "layout": "none",
           "fill": "#0C1523",
           "x": 16,
-          "y": 186,
+          "y": 114,
           "width": 361,
           "height": 337,
           "cornerRadius": 18,
@@ -440,31 +440,31 @@
         },
         {
           "type": "frame",
-          "id": "export_album_2",
-          "name": "Bulk export button",
-          "layout": "horizontal",
-          "fill": "#142741",
-          "x": 16,
-          "y": 114,
-          "width": 361,
-          "height": 48,
+          "id": "more_album_2",
+          "name": "More actions button",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 333,
+          "y": 48,
+          "width": 44,
+          "height": 44,
           "cornerRadius": 14,
-          "justifyContent": "center",
-          "alignItems": "center",
           "stroke": {
             "thickness": 1,
             "fill": "#243348"
           },
           "children": [
             {
-              "type": "text",
-              "id": "export_text_album_2",
-              "content": "Bulk Export",
-              "fontFamily": "Inter",
+              "type": "icon_font",
+              "id": "more_icon_album_2",
+              "iconFontFamily": "lucide",
+              "iconFontName": "ellipsis",
+              "x": 11,
+              "y": 11,
+              "width": 22,
+              "height": 22,
               "fill": "#EAF1FF",
-              "fontSize": 15,
-              "letterSpacing": 0,
-              "fontWeight": "650"
+              "rotation": 90
             }
           ]
         },
@@ -475,7 +475,7 @@
           "layout": "none",
           "fill": "#0C1523",
           "x": 16,
-          "y": 186,
+          "y": 114,
           "width": 361,
           "height": 135,
           "cornerRadius": 18,
@@ -510,6 +510,361 @@
                   "width": 29,
                   "height": 29,
                   "fill": "#9FB2D1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "screen_album_more_menu",
+      "name": "AlbumView - More menu open",
+      "layout": "none",
+      "fill": "#05080D",
+      "x": 860,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "children": [
+        {
+          "type": "frame",
+          "id": "status_album_menu",
+          "name": "iOS status bar",
+          "layout": "horizontal",
+          "fill": "transparent",
+          "x": 0,
+          "y": 0,
+          "width": 393,
+          "height": 46,
+          "padding": [14, 24, 0, 24],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "time_album_menu",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 13,
+              "letterSpacing": 0,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "sys_album_menu",
+              "content": "||",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 12,
+              "letterSpacing": 0,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "back_album_menu",
+          "name": "Back button",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 48,
+          "width": 44,
+          "height": 44,
+          "cornerRadius": 14,
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "back_icon_album_menu",
+              "iconFontFamily": "lucide",
+              "iconFontName": "chevron-left",
+              "x": 11,
+              "y": 11,
+              "width": 22,
+              "height": 22,
+              "fill": "#EAF1FF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "title_album_menu",
+          "name": "Album title",
+          "content": "Default",
+          "fontFamily": "Inter",
+          "fill": "#EAF1FF",
+          "fontSize": 16,
+          "letterSpacing": 0,
+          "x": 136,
+          "y": 53,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "more_album_menu",
+          "name": "More actions button active",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 333,
+          "y": 48,
+          "width": 44,
+          "height": 44,
+          "cornerRadius": 14,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#243348"
+          },
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "more_icon_album_menu",
+              "iconFontFamily": "lucide",
+              "iconFontName": "ellipsis",
+              "x": 11,
+              "y": 11,
+              "width": 22,
+              "height": 22,
+              "fill": "#EAF1FF",
+              "rotation": 90
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "grid_card_album_menu",
+          "name": "Album media grid card",
+          "layout": "none",
+          "fill": "#0C1523",
+          "x": 16,
+          "y": 114,
+          "width": 361,
+          "height": 337,
+          "cornerRadius": 18,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#243348"
+          }
+        },
+        {
+          "type": "frame",
+          "id": "album_more_popover",
+          "name": "More actions popover",
+          "layout": "vertical",
+          "fill": "#101722",
+          "x": 173,
+          "y": 99,
+          "width": 204,
+          "height": 112,
+          "cornerRadius": 16,
+          "padding": 8,
+          "gap": 4,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#2A3B52"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "offset": { "x": 0, "y": 12 },
+            "blur": 26,
+            "color": "#00000066"
+          },
+          "children": [
+            {
+              "type": "frame",
+              "id": "album_more_export_row",
+              "name": "Menu item - Bulk Export",
+              "layout": "horizontal",
+              "fill": "#00000000",
+              "width": "fill_container",
+              "height": 48,
+              "cornerRadius": 12,
+              "padding": [0, 12],
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "album_more_export_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "download",
+                  "width": 20,
+                  "height": 20,
+                  "fill": "#EAF1FF"
+                },
+                {
+                  "type": "text",
+                  "id": "album_more_export_text",
+                  "content": "Bulk Export",
+                  "fontFamily": "Inter",
+                  "fill": "#EAF1FF",
+                  "fontSize": 15,
+                  "letterSpacing": 0,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "album_more_delete_row",
+              "name": "Menu item - Delete Album",
+              "layout": "horizontal",
+              "fill": "#00000000",
+              "width": "fill_container",
+              "height": 48,
+              "cornerRadius": 12,
+              "padding": [0, 12],
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "album_more_delete_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "trash-2",
+                  "width": 20,
+                  "height": 20,
+                  "fill": "#FF4372"
+                },
+                {
+                  "type": "text",
+                  "id": "album_more_delete_text",
+                  "content": "Delete Album",
+                  "fontFamily": "Inter",
+                  "fill": "#FF4372",
+                  "fontSize": 15,
+                  "letterSpacing": 0,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "screen_album_delete_confirm",
+      "name": "AlbumView - Delete album confirmation",
+      "layout": "none",
+      "fill": "#05080D",
+      "x": 1290,
+      "y": 0,
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "children": [
+        {
+          "type": "frame",
+          "id": "album_delete_scrim",
+          "name": "Dialog scrim",
+          "layout": "none",
+          "fill": "#000000B8",
+          "x": 0,
+          "y": 0,
+          "width": 393,
+          "height": 852
+        },
+        {
+          "type": "frame",
+          "id": "album_delete_dialog",
+          "name": "Delete album dialog",
+          "layout": "vertical",
+          "fill": "#101722",
+          "x": 32,
+          "y": 293,
+          "width": 329,
+          "height": 190,
+          "cornerRadius": 22,
+          "padding": [24, 22, 22, 22],
+          "gap": 16,
+          "alignItems": "center",
+          "stroke": {
+            "thickness": 1,
+            "fill": "#223247"
+          },
+          "children": [
+            {
+              "type": "text",
+              "id": "album_delete_title",
+              "content": "Delete Album",
+              "fontFamily": "Inter",
+              "fill": "#EAF1FF",
+              "fontSize": 18,
+              "letterSpacing": 0,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "album_delete_message",
+              "content": "Media in this album will be moved to Trash and can be restored within 30 days.",
+              "fontFamily": "Inter",
+              "fill": "#8EA2C0",
+              "fontSize": 14,
+              "letterSpacing": 0,
+              "lineHeight": 1.35,
+              "textGrowth": "fixed-width",
+              "textAlign": "center",
+              "width": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "album_delete_buttons",
+              "layout": "horizontal",
+              "fill": "#00000000",
+              "width": "fill_container",
+              "height": 54,
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "album_delete_cancel",
+                  "layout": "horizontal",
+                  "fill": "#182131",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "cornerRadius": 16,
+                  "alignItems": "center",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "album_delete_cancel_text",
+                      "content": "Cancel",
+                      "fontFamily": "Inter",
+                      "fill": "#EAF1FF",
+                      "fontSize": 16,
+                      "letterSpacing": 0,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "album_delete_confirm_button",
+                  "layout": "horizontal",
+                  "fill": "#3A1622",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "cornerRadius": 16,
+                  "alignItems": "center",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "album_delete_confirm_text",
+                      "content": "Delete",
+                      "fontFamily": "Inter",
+                      "fill": "#FF4372",
+                      "fontSize": 16,
+                      "letterSpacing": 0,
+                      "fontWeight": "700"
+                    }
+                  ]
                 }
               ]
             }

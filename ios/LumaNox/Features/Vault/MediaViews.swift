@@ -124,7 +124,22 @@ struct RecentPhotosView: View {
 struct VaultListScreenChrome<Content: View>: View {
     let title: String
     let onBack: () -> Void
+    let trailingAction: AnyView
     @ViewBuilder let content: (CGFloat) -> Content
+
+    init(
+        title: String,
+        onBack: @escaping () -> Void,
+        trailingAction: AnyView? = nil,
+        @ViewBuilder content: @escaping (CGFloat) -> Content
+    ) {
+        self.title = title
+        self.onBack = onBack
+        self.trailingAction = trailingAction ?? AnyView(
+            Color.clear.frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
+        )
+        self.content = content
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -162,8 +177,7 @@ struct VaultListScreenChrome<Content: View>: View {
                 .minimumScaleFactor(0.75)
                 .accessibilityAddTraits(.isHeader)
 
-            Color.clear
-                .frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
+            trailingAction
         }
         .padding(.horizontal, LNSpacing.screenHorizontal)
         .padding(.top, 0)
@@ -391,6 +405,8 @@ struct AlbumView: View {
     let albumName: String
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var duplicateImportDialogMessage: String?
+    @State private var showDeleteAlbumDialog = false
+    @State private var deleteAlbumErrorMessage: String?
 
     private var safeAlbumName: String {
         vaultStore.sanitizeAlbumName(albumName)
@@ -401,16 +417,14 @@ struct AlbumView: View {
     }
 
     var body: some View {
-        VaultListScreenChrome(title: safeAlbumName, onBack: { dismiss() }) { availableWidth in
+        VaultListScreenChrome(
+            title: safeAlbumName,
+            onBack: { dismiss() },
+            trailingAction: AnyView(albumMoreMenu)
+        ) { availableWidth in
             let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
 
-            VStack(spacing: 24) {
-                LNButton(title: L10n.tr("bulk_export_title"), variant: .secondary) {
-                    ExportRuntimeState.prepareSource(albumName: safeAlbumName)
-                    router.pushInCurrentTab(.bulkExport)
-                }
-                .frame(width: cardWidth)
-
+            VStack(spacing: 0) {
                 VaultMediaGridCard(
                     items: albumItems,
                     width: cardWidth,
@@ -436,7 +450,53 @@ struct AlbumView: View {
                     onConfirm: { duplicateImportDialogMessage = nil }
                 )
             }
+            if showDeleteAlbumDialog {
+                LNDialog(
+                    title: L10n.tr("album_delete_title"),
+                    message: L10n.tr("album_delete_message"),
+                    confirmTitle: L10n.tr("album_delete_confirm"),
+                    dismissTitle: L10n.commonCancel,
+                    confirmVariant: .danger,
+                    onConfirm: deleteAlbum,
+                    onDismiss: { showDeleteAlbumDialog = false }
+                )
+            }
+            if let deleteAlbumErrorMessage {
+                LNDialog(
+                    title: L10n.tr("album_delete_error_title"),
+                    message: deleteAlbumErrorMessage,
+                    confirmTitle: L10n.commonOk,
+                    onConfirm: { self.deleteAlbumErrorMessage = nil }
+                )
+            }
         }
+    }
+
+    private var albumMoreMenu: some View {
+        Menu {
+            Button {
+                ExportRuntimeState.prepareSource(albumName: safeAlbumName)
+                router.pushInCurrentTab(.bulkExport)
+            } label: {
+                Label(L10n.tr("bulk_export_title"), systemImage: "square.and.arrow.up")
+            }
+
+            Button(role: .destructive) {
+                showDeleteAlbumDialog = true
+            } label: {
+                Label(L10n.tr("album_delete_action"), systemImage: "trash")
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(LNColor.title)
+                .frame(width: LNSpacing.minTouchTarget, height: LNSpacing.minTouchTarget)
+                .background(LNColor.navBarBg.opacity(0.8))
+                .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
+        }
+        .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
+        .accessibilityLabel(L10n.tr("album_more_actions"))
+        .accessibilityIdentifier("album_more_actions")
     }
 
     private func open(_ item: LNMediaItem) {
@@ -462,6 +522,18 @@ struct AlbumView: View {
             vaultStore.endImportBatch()
             await vaultStore.finalizeImportBatch(summary)
             duplicateImportDialogMessage = VaultImportFeedback.duplicateDialogMessage(for: summary)
+        }
+    }
+
+    private func deleteAlbum() {
+        showDeleteAlbumDialog = false
+        Task {
+            let deleted = await vaultStore.moveAlbumToTrash(named: safeAlbumName)
+            if deleted {
+                dismiss()
+            } else {
+                deleteAlbumErrorMessage = L10n.tr("album_delete_error_message")
+            }
         }
     }
 }

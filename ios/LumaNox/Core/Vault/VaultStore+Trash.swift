@@ -47,6 +47,52 @@ extension VaultStore {
         }
     }
 
+    @discardableResult
+    func moveAlbumToTrash(named albumName: String) async -> Bool {
+        do {
+            let safeAlbum = sanitizeAlbumName(albumName)
+            let albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
+            var isDirectory: ObjCBool = false
+            guard fileManager.fileExists(atPath: albumDir.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+                return false
+            }
+
+            let files = try fileManager
+                .contentsOfDirectory(at: albumDir, includingPropertiesForKeys: nil)
+                .filter { isVaultMediaFile($0) }
+            let trashRoot = try trashDirectory()
+            let targetDir = trashRoot.appendingPathComponent(safeAlbum, isDirectory: true)
+            try fileManager.createDirectory(at: targetDir, withIntermediateDirectories: true)
+
+            for file in files {
+                let dest = targetDir.appendingPathComponent(file.lastPathComponent)
+                if fileManager.fileExists(atPath: dest.path) {
+                    ThumbnailService.shared.invalidate(encryptedPath: dest.path)
+                    try fileManager.removeItem(at: dest)
+                }
+                ThumbnailService.shared.invalidate(encryptedPath: file.path)
+                try fileManager.moveItem(at: file, to: dest)
+                try fileManager.setAttributes([.modificationDate: Date()], ofItemAtPath: dest.path)
+                ThumbnailService.shared.invalidate(encryptedPath: dest.path)
+            }
+
+            if safeAlbum != vaultDefaultAlbumName {
+                let remaining = try? fileManager.contentsOfDirectory(atPath: albumDir.path)
+                if remaining?.isEmpty == true {
+                    try fileManager.removeItem(at: albumDir)
+                }
+            }
+
+            invalidateCache()
+            await loadSnapshot()
+            return true
+        } catch {
+            lastImportMessage = error.localizedDescription
+            lastImportIsError = true
+            return false
+        }
+    }
+
     func listTrashItems() async -> [VaultTrashItem] {
         do {
             let trashRoot = try trashDirectory()

@@ -44,6 +44,13 @@
 "home_album_create_input_hint" = "输入相册名称";
 "home_album_create_confirm" = "创建";
 "album_import_media_action" = "向此相册导入";
+"album_more_actions" = "相册更多操作";
+"album_delete_action" = "删除相册";
+"album_delete_title" = "删除相册";
+"album_delete_message" = "此相册中的媒体将移入回收站，可在 30 天内恢复。";
+"album_delete_confirm" = "删除";
+"album_delete_error_title" = "无法删除相册";
+"album_delete_error_message" = "相册删除未完成，请稍后重试。";
 "home_camera_empty_action" = "拍摄私密照片";
 "import_originals_sheet_title" = "将文件复制到保险箱？";
 "import_originals_sheet_message" = "会先将 %d 项所选内容复制进本机加密保险箱。然后选择如何处理 Photos 中的原始文件。";
