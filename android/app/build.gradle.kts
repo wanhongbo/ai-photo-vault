@@ -8,6 +8,23 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+private val hasFirebaseConfig: Boolean = listOf(
+    file("google-services.json"),
+    file("src/dev/google-services.json"),
+    file("src/prod/google-services.json"),
+    file("src/debug/google-services.json"),
+    file("src/release/google-services.json"),
+    file("src/devDebug/google-services.json"),
+    file("src/prodDebug/google-services.json"),
+    file("src/devRelease/google-services.json"),
+    file("src/prodRelease/google-services.json"),
+).any { it.isFile }
+
+if (hasFirebaseConfig) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
+
 // RevenueCat Android Public API Key：写在 android/local.properties（勿提交），与 CI 环境变量注入二选一。
 private val localPropertiesFile = rootProject.file("local.properties")
 private val localProperties = Properties().apply {
@@ -152,6 +169,9 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.revenuecat.purchases)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
     ksp(libs.hilt.compiler)
 
     debugImplementation(libs.androidx.compose.ui.tooling)

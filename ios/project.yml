@@ -9,6 +9,9 @@ packages:
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios.git
     from: "5.14.0"
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    from: "11.15.0"
 options:
   bundleIdPrefix: com.xpx
   deploymentTarget:
@@ -48,10 +51,18 @@ targets:
         MARKETING_VERSION: 0.2.0
         DEVELOPMENT_LANGUAGE: zh-Hans
         SWIFT_EMIT_LOC_STRINGS: YES
+        OTHER_LDFLAGS: "$(inherited) -ObjC"
+        DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
     dependencies:
       - package: Argon2Swift
       - package: RevenueCat
         product: RevenueCat
+      - package: Firebase
+        product: FirebaseCore
+      - package: Firebase
+        product: FirebaseAnalytics
+      - package: Firebase
+        product: FirebaseCrashlytics
       - sdk: Photos.framework
       - sdk: PhotosUI.framework
       - sdk: LocalAuthentication.framework
@@ -59,6 +70,18 @@ targets:
       - sdk: Vision.framework
       - sdk: CryptoKit.framework
       - sdk: WebKit.framework
+    postBuildScripts:
+      - name: Upload Firebase Crashlytics dSYMs
+        basedOnDependencyAnalysis: false
+        script: |
+          set -e
+          GOOGLE_SERVICE_INFO="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist"
+          CRASHLYTICS_RUN="${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+          if [ -f "${GOOGLE_SERVICE_INFO}" ] && [ -x "${CRASHLYTICS_RUN}" ]; then
+            "${CRASHLYTICS_RUN}"
+          else
+            echo "Skipping Firebase Crashlytics dSYM upload: GoogleService-Info.plist or Crashlytics/run is not available."
+          fi
   LumaNoxTests:
     type: bundle.unit-test
     platform: iOS

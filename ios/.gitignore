@@ -5,4 +5,6 @@ build/
 xcuserdata/
 .DS_Store
 Config/Local.xcconfig
+LumaNox/GoogleService-Info.plist
+LumaNox/**/GoogleService-Info.plist
 LumaNox/DesignPreviews/runtime/

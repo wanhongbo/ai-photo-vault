@@ -1,26 +1,30 @@
 package com.xpx.vault
 
+import android.app.Application
 import android.util.Log
+import com.xpx.vault.telemetry.FirebaseTelemetry
 
 /**
  * 统一日志入口：禁止输出照片内容、密钥、密文、可识别用户路径。
- * 一期不接入 Firebase；仅 Logcat / 后续 Play 控制台崩溃。
+ * Crashlytics 仅接收已脱敏的 breadcrumb；不要在 message 中放照片内容、PIN、密钥或明文路径。
  */
 object AppLogger {
     private const val GLOBAL_TAG = "Luma"
 
-    fun install() {
-        // 预留：若后续需要集中开关、采样或本地计数，可在此扩展。
+    fun install(application: Application? = null) {
+        application?.let { FirebaseTelemetry.install(it) }
     }
 
     fun d(tag: String, message: String) {
+        val scrubbed = scrub(message)
         if (BuildConfig.DEBUG) {
-            Log.d(GLOBAL_TAG, format(tag, scrub(message)))
+            Log.d(GLOBAL_TAG, format(tag, scrubbed))
         }
     }
 
     fun e(tag: String, message: String, throwable: Throwable? = null) {
         val line = format(tag, scrub(message))
+        FirebaseTelemetry.breadcrumb(tag, line)
         if (throwable != null) {
             Log.e(GLOBAL_TAG, line, throwable)
         } else {
@@ -30,6 +34,7 @@ object AppLogger {
 
     fun w(tag: String, message: String, throwable: Throwable? = null) {
         val line = format(tag, scrub(message))
+        FirebaseTelemetry.breadcrumb(tag, line)
         if (throwable != null) {
             Log.w(GLOBAL_TAG, line, throwable)
         } else {

@@ -19,9 +19,9 @@ class LumaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppLogger.install(this)
         BillingBootstrap.init(this)
         LanguageManager.initialize(this)
-        AppLogger.install()
         installGlobalExceptionBoundary()
         appLockManager.start()
         // 备份启动自检：修复上次可能残留的 .writing / .bak 中间态；清理旧模型的文件。

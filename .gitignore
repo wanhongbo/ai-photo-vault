@@ -11,6 +11,8 @@
 .kotlin/
 android/local.properties
 android/keystore.properties
+android/app/google-services.json
+android/app/src/**/google-services.json
 android/*.jks
 android/*.keystore
 android/.idea/

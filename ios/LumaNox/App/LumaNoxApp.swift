@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct LumaNoxApp: App {
     init() {
+        FirebaseTelemetry.configure()
         BillingBootstrap.configure()
         AutoBackupScheduler.registerBackgroundTasks()
         ExternalBackupLocation.sanitizeOnStartup()
