@@ -39,7 +39,7 @@ struct VaultHomeView: View {
                     }
                 }
                 .padding(.horizontal, LNSpacing.screenHorizontal)
-                .padding(.top, 10)
+                .padding(.top, VaultHomeLayout.topContentSafePadding)
                 .padding(.bottom, 28)
             }
 
@@ -389,6 +389,10 @@ struct VaultHomeView: View {
             }
         }
     }
+}
+
+private enum VaultHomeLayout {
+    static let topContentSafePadding: CGFloat = 32
 }
 
 private struct VaultHomeImportToastView: View {
