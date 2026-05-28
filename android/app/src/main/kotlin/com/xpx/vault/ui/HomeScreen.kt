@@ -494,23 +494,23 @@ private fun ImportOriginalsDecisionDialog(
                     onClick = onDismiss,
                 )
                 .safeDrawingPadding(),
-            contentAlignment = Alignment.BottomCenter,
+            contentAlignment = Alignment.Center,
         ) {
             Column(
                 modifier = Modifier
-                    .widthIn(max = 480.dp)
+                    .widthIn(max = 328.dp)
                     .fillMaxWidth()
                     .shadow(
                         elevation = 28.dp,
-                        shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+                        shape = RoundedCornerShape(26.dp),
                         clip = false,
                     )
-                    .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+                    .clip(RoundedCornerShape(26.dp))
                     .background(UiColors.Dialog.bg)
                     .border(
                         width = 1.dp,
                         color = UiColors.Home.emptyCardStroke,
-                        shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+                        shape = RoundedCornerShape(26.dp),
                     )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },

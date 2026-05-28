@@ -14,40 +14,50 @@ struct VaultHomeView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            vaultHomeBackground
-                .ignoresSafeArea()
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                vaultHomeBackground
+                    .ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
-                    heroCard
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        heroCard
 
-                    if !viewModel.hasPinConfigured {
-                        pinSetupBanner
+                        if !viewModel.hasPinConfigured {
+                            pinSetupBanner
+                        }
+
+                        statusMessage
+
+                        if viewModel.showPermissionDenied {
+                            permissionCard
+                        } else if viewModel.shouldShowInitialLoading {
+                            loadingVaultCard
+                        } else if viewModel.shouldShowEmptyState {
+                            emptyVaultCard
+                        } else {
+                            albumsSection
+                        }
                     }
-
-                    statusMessage
-
-                    if viewModel.showPermissionDenied {
-                        permissionCard
-                    } else if viewModel.shouldShowInitialLoading {
-                        loadingVaultCard
-                    } else if viewModel.shouldShowEmptyState {
-                        emptyVaultCard
-                    } else {
-                        albumsSection
-                    }
+                    .padding(.horizontal, LNSpacing.screenHorizontal)
+                    .padding(.top, VaultHomeLayout.topContentSafePadding)
+                    .padding(.bottom, 28)
                 }
-                .padding(.horizontal, LNSpacing.screenHorizontal)
-                .padding(.top, VaultHomeLayout.topContentSafePadding)
-                .padding(.bottom, 28)
-            }
 
-            if let visibleImportToast {
-                VaultHomeImportToastView(toast: visibleImportToast)
-                    .padding(.bottom, 20)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .zIndex(2)
+                VStack(spacing: 0) {
+                    topScrollProtection(safeAreaTop: proxy.safeAreaInsets.top)
+                    Spacer(minLength: 0)
+                }
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+                .zIndex(1)
+
+                if let visibleImportToast {
+                    VaultHomeImportToastView(toast: visibleImportToast)
+                        .padding(.bottom, 20)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .zIndex(2)
+                }
             }
         }
         .onAppear { viewModel.onAppear() }
@@ -126,6 +136,25 @@ struct VaultHomeView: View {
             )
             .allowsHitTesting(false)
         }
+    }
+
+    private func topScrollProtection(safeAreaTop: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            Color(hex: 0x0E233A)
+                .frame(height: safeAreaTop)
+
+            LinearGradient(
+                colors: [
+                    Color(hex: 0x0E233A),
+                    Color(hex: 0x0B1D31).opacity(0.92),
+                    Color(hex: 0x0B1D31).opacity(0.00),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: VaultHomeLayout.topContentSafePadding)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var heroCard: some View {
