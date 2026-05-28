@@ -104,18 +104,26 @@ struct VaultHomeView: View {
     private var vaultHomeBackground: some View {
         ZStack(alignment: .top) {
             LinearGradient(
-                colors: [Color(hex: 0x0F2944), Color(hex: 0x071A2C), Color(hex: 0x02060C)],
+                gradient: Gradient(stops: [
+                    .init(color: Color(hex: 0x0E233A), location: 0.00),
+                    .init(color: Color(hex: 0x0B1D31), location: 0.24),
+                    .init(color: Color(hex: 0x071423), location: 0.54),
+                    .init(color: Color(hex: 0x05080D), location: 1.00),
+                ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
 
             LinearGradient(
-                colors: [Color(hex: 0x123A5E).opacity(0.34), Color(hex: 0x08243A).opacity(0.16), Color.clear],
+                gradient: Gradient(stops: [
+                    .init(color: Color(hex: 0x123A5E).opacity(0.18), location: 0.00),
+                    .init(color: Color(hex: 0x0B2740).opacity(0.12), location: 0.34),
+                    .init(color: Color(hex: 0x071827).opacity(0.07), location: 0.62),
+                    .init(color: Color.clear, location: 1.00),
+                ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 330)
-            .offset(y: 360)
             .allowsHitTesting(false)
         }
     }
@@ -138,17 +146,16 @@ struct VaultHomeView: View {
             .padding(.top, 34)
 
             HStack(spacing: 8) {
-                HomeHeroBadge(icon: "wifi.slash", title: L10n.tr("home_hero_badge_offline"), width: 68)
-                HomeHeroBadge(icon: "lock.shield", title: L10n.tr("home_hero_badge_encrypted"), width: 80)
+                HomeHeroBadge(icon: "wifi.slash", title: L10n.tr("home_hero_badge_offline"), width: 84)
+                HomeHeroBadge(icon: "lock.shield", title: L10n.tr("home_hero_badge_encrypted"), width: 104)
                 HomeHeroBadge(
                     icon: "sparkles",
                     title: L10n.tr("home_hero_badge_ai_local"),
-                    width: 104,
-                    fontSize: 8
+                    width: 128
                 )
             }
             .padding(.leading, 20)
-            .padding(.top, 119)
+            .padding(.top, 111)
 
             HStack {
                 Spacer()
@@ -160,18 +167,7 @@ struct VaultHomeView: View {
         }
         .frame(height: 163)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(
-                colors: [Color(hex: 0x0C1929), Color(hex: 0x08111D), Color(hex: 0x0D2238)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 28))
-        .overlay(
-            RoundedRectangle(cornerRadius: 28)
-                .stroke(Color(hex: 0x274260), lineWidth: 1)
-        )
+        .homeGlassCard(cornerRadius: 28)
         .shadow(color: .black.opacity(0.40), radius: 30, x: 0, y: 18)
     }
 
@@ -552,23 +548,22 @@ private struct HomeHeroBadge: View {
     let icon: String
     let title: String
     let width: CGFloat
-    var fontSize: CGFloat = 9
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
             Text(title)
-                .font(.system(size: fontSize, weight: .medium))
+                .font(LNTypography.labelMedium())
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
         }
         .foregroundStyle(Color(hex: 0xAFC4E2))
-        .frame(width: width, height: 26)
+        .frame(width: width, height: 30)
         .background(Color.white.opacity(0.035))
-        .clipShape(RoundedRectangle(cornerRadius: 13))
+        .clipShape(RoundedRectangle(cornerRadius: 15))
         .overlay(
-            RoundedRectangle(cornerRadius: 13)
+            RoundedRectangle(cornerRadius: 15)
                 .stroke(Color.white.opacity(0.06), lineWidth: 1)
         )
     }

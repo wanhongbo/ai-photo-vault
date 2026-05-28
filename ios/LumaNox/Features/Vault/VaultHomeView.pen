@@ -20,15 +20,19 @@
         },
         "colors": [
           {
-            "color": "#0F2944",
+            "color": "#0E233A",
             "position": 0
           },
           {
-            "color": "#071A2C",
-            "position": 0.42
+            "color": "#0B1D31",
+            "position": 0.24
           },
           {
-            "color": "#02060C",
+            "color": "#071423",
+            "position": 0.54
+          },
+          {
+            "color": "#05080D",
             "position": 1
           }
         ]
@@ -277,37 +281,36 @@
           "type": "frame",
           "id": "vault_home_page_lower_blue_wash",
           "x": 0,
-          "y": 360,
+          "y": 0,
           "name": "Page lower blue wash",
           "width": 393,
-          "height": 330,
+          "height": 690,
           "fill": {
             "type": "gradient",
-            "gradientType": "radial",
+            "gradientType": "linear",
             "enabled": true,
-            "rotation": 0,
+            "rotation": 180,
             "size": {
-              "width": 1.15,
-              "height": 1.05
+              "height": 1
             },
             "colors": [
               {
-                "color": "#123A5E55",
+                "color": "#123A5E2E",
                 "position": 0
               },
               {
-                "color": "#08243A2A",
-                "position": 0.48
+                "color": "#0B27401F",
+                "position": 0.34
+              },
+              {
+                "color": "#07182712",
+                "position": 0.62
               },
               {
                 "color": "#03070D00",
                 "position": 1
               }
-            ],
-            "center": {
-              "x": 0.55,
-              "y": 0.16
-            }
+            ]
           },
           "layout": "none"
         },
@@ -330,15 +333,15 @@
             },
             "colors": [
               {
-                "color": "#0C1929",
+                "color": "#07101E",
                 "position": 0
               },
               {
-                "color": "#08111D",
+                "color": "#0B172A",
                 "position": 0.52
               },
               {
-                "color": "#0D2238",
+                "color": "#102A46",
                 "position": 1
               }
             ]
@@ -346,7 +349,7 @@
           "cornerRadius": 28,
           "stroke": {
             "thickness": 1,
-            "fill": "#274260"
+            "fill": "#2D4A68"
           },
           "effect": {
             "type": "shadow",
@@ -404,32 +407,32 @@
               "type": "frame",
               "id": "vault_home_hero_chips",
               "x": 20,
-              "y": 119,
-              "width": 268,
-              "height": 26,
+              "y": 111,
+              "width": 332,
+              "height": 30,
               "fill": "#00000000",
               "gap": 8,
               "children": [
                 {
                   "type": "frame",
                   "id": "vault_home_chip_offline_short",
-                  "width": 68,
+                  "width": 84,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
                   },
-                  "gap": 4,
+                  "gap": 6,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_offline_short_icon",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "wifi-off",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -440,7 +443,7 @@
                       "fill": "#AFC4E2",
                       "content": "Offline",
                       "fontFamily": "Inter",
-                      "fontSize": 9,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]
@@ -448,23 +451,23 @@
                 {
                   "type": "frame",
                   "id": "vault_home_chip_encrypted_short",
-                  "width": 80,
+                  "width": 104,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
                   },
-                  "gap": 4,
+                  "gap": 6,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_encrypted_short_icon",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "lock-keyhole",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -475,7 +478,7 @@
                       "fill": "#AFC4E2",
                       "content": "Encrypted",
                       "fontFamily": "Inter",
-                      "fontSize": 9,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]
@@ -483,23 +486,23 @@
                 {
                   "type": "frame",
                   "id": "vault_home_chip_ai_short",
-                  "width": 104,
+                  "width": 128,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
                   },
-                  "gap": 4,
+                  "gap": 6,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_ai_short_icon",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "sparkles",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -510,7 +513,7 @@
                       "fill": "#AFC4E2",
                       "content": "Local AI Models",
                       "fontFamily": "Inter",
-                      "fontSize": 8,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]
@@ -893,15 +896,19 @@
         },
         "colors": [
           {
-            "color": "#0F2944",
+            "color": "#0E233A",
             "position": 0
           },
           {
-            "color": "#071A2C",
-            "position": 0.42
+            "color": "#0B1D31",
+            "position": 0.24
           },
           {
-            "color": "#02060C",
+            "color": "#071423",
+            "position": 0.54
+          },
+          {
+            "color": "#05080D",
             "position": 1
           }
         ]
@@ -956,15 +963,15 @@
             },
             "colors": [
               {
-                "color": "#0C1929",
+                "color": "#07101E",
                 "position": 0
               },
               {
-                "color": "#08111D",
+                "color": "#0B172A",
                 "position": 0.52
               },
               {
-                "color": "#0D2238",
+                "color": "#102A46",
                 "position": 1
               }
             ]
@@ -972,7 +979,7 @@
           "cornerRadius": 28,
           "stroke": {
             "thickness": 1,
-            "fill": "#274260"
+            "fill": "#2D4A68"
           },
           "layout": "none",
           "children": [
@@ -1036,15 +1043,15 @@
             },
             "colors": [
               {
-                "color": "#0C2137",
+                "color": "#07101E",
                 "position": 0
               },
               {
-                "color": "#071827",
-                "position": 0.6
+                "color": "#0B172A",
+                "position": 0.52
               },
               {
-                "color": "#040A12",
+                "color": "#102A46",
                 "position": 1
               }
             ]
@@ -1052,7 +1059,7 @@
           "cornerRadius": 24,
           "stroke": {
             "thickness": 1,
-            "fill": "#203A59"
+            "fill": "#2D4A68"
           },
           "layout": "vertical",
           "gap": 16,
@@ -1185,15 +1192,19 @@
         },
         "colors": [
           {
-            "color": "#0F2944",
+            "color": "#0E233A",
             "position": 0
           },
           {
-            "color": "#071A2C",
-            "position": 0.42
+            "color": "#0B1D31",
+            "position": 0.24
           },
           {
-            "color": "#02060C",
+            "color": "#071423",
+            "position": 0.54
+          },
+          {
+            "color": "#05080D",
             "position": 1
           }
         ]
@@ -1361,6 +1372,366 @@
           "height": 304,
           "fill": "#2A2A2D",
           "layout": "none"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "vault_home_import_success_toast_state",
+      "x": 1303,
+      "y": 0,
+      "name": "VaultHomeView - import success toast",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#0E233A",
+            "position": 0
+          },
+          {
+            "color": "#0B1D31",
+            "position": 0.24
+          },
+          {
+            "color": "#071423",
+            "position": 0.54
+          },
+          {
+            "color": "#05080D",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "vault_home_toast_status_bar",
+          "x": 0,
+          "y": 0,
+          "name": "iOS status bar",
+          "width": 393,
+          "height": 46,
+          "fill": "#00000000",
+          "padding": [
+            14,
+            24,
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "vault_home_toast_status_time",
+              "fill": "#EAF1FF",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_toast_hero",
+          "x": 16,
+          "y": 56,
+          "name": "Hero - compact vault command center",
+          "clip": true,
+          "width": 361,
+          "height": 163,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 132,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#07101E",
+                "position": 0
+              },
+              {
+                "color": "#0B172A",
+                "position": 0.52
+              },
+              {
+                "color": "#102A46",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 28,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#2D4A68"
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "vault_home_toast_app_icon_blended",
+              "x": 237,
+              "y": 2,
+              "name": "App icon blended hero image",
+              "width": 112,
+              "height": 112,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "../../Resources/Assets.xcassets/AppLogoHero.imageset/AppLogoHero.png",
+                "mode": "fit"
+              },
+              "layout": "none"
+            },
+            {
+              "type": "text",
+              "id": "vault_home_toast_hero_brand",
+              "x": 20,
+              "y": 34,
+              "fill": "#F2F6FF",
+              "content": "LumaNox",
+              "fontFamily": "Inter",
+              "fontSize": 28,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "vault_home_toast_hero_status",
+              "x": 20,
+              "y": 70,
+              "width": 230,
+              "textGrowth": "fixed-width",
+              "fill": "#9BAEC8",
+              "content": "3 photos · Local AES-256 vault",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_toast_album_section",
+          "x": 16,
+          "y": 230,
+          "name": "Albums shelf behind toast",
+          "clip": true,
+          "width": 361,
+          "height": 442,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0C2137",
+                "position": 0
+              },
+              {
+                "color": "#071827",
+                "position": 0.6
+              },
+              {
+                "color": "#040A12",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 26,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#203A59"
+          },
+          "layout": "vertical",
+          "gap": 14,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "vault_home_toast_album_title",
+              "fill": "#F6F9FF",
+              "content": "Albums",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "800"
+            },
+            {
+              "type": "frame",
+              "id": "vault_home_toast_album_grid_row",
+              "width": "fill_container",
+              "height": 146,
+              "fill": "#00000000",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vault_home_toast_album_card_a",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#102A46",
+                  "cornerRadius": 14
+                },
+                {
+                  "type": "frame",
+                  "id": "vault_home_toast_album_card_b",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "#102A46",
+                  "cornerRadius": 14
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_import_success_toast",
+          "x": 46,
+          "y": 676,
+          "name": "Import success toast overlay",
+          "width": 301,
+          "height": 48,
+          "fill": "#101722EE",
+          "cornerRadius": 18,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#21C27755"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "offset": {
+              "x": 0,
+              "y": 14
+            },
+            "blur": 28,
+            "color": "#00000066"
+          },
+          "layout": "horizontal",
+          "gap": 10,
+          "padding": [
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "vault_home_import_success_toast_icon",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "check",
+              "iconFontFamily": "lucide",
+              "fill": "#21C277"
+            },
+            {
+              "type": "text",
+              "id": "vault_home_import_success_toast_label",
+              "fill": "#EAF1FF",
+              "content": "已成功导入 6 项到保险箱",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "vault_home_toast_bottom_tab",
+          "x": 16,
+          "y": 744,
+          "name": "Bottom tab bar - safe inset",
+          "width": 361,
+          "height": 88,
+          "fill": "#0E1726CC",
+          "cornerRadius": 24,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#243348"
+          },
+          "layout": "horizontal",
+          "gap": 4,
+          "padding": 8,
+          "children": [
+            {
+              "type": "frame",
+              "id": "vault_home_toast_tab_vault",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#1F4A9EFF",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#4A9EFF"
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vault_home_toast_tab_vault_label",
+                  "fill": "#EAF1FF",
+                  "content": "Vault",
+                  "fontFamily": "Inter",
+                  "fontSize": 10,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vault_home_toast_tab_camera",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#00000000",
+              "cornerRadius": 16
+            },
+            {
+              "type": "frame",
+              "id": "vault_home_toast_tab_ai",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#00000000",
+              "cornerRadius": 16
+            },
+            {
+              "type": "frame",
+              "id": "vault_home_toast_tab_settings",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#00000000",
+              "cornerRadius": 16
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "vault_home_toast_indicator",
+          "x": 129,
+          "y": 831,
+          "name": "Home indicator",
+          "width": 135,
+          "height": 5,
+          "fill": "#FFFFFFCC",
+          "cornerRadius": 3
         }
       ]
     },
