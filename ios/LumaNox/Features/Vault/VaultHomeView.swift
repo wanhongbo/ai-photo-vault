@@ -331,7 +331,7 @@ struct VaultHomeView: View {
                             mediaItems: viewModel.recentMediaItems(for: album),
                             width: cardWidth
                         ) {
-                            router.pushVault(.album(name: album.name))
+                            open(album)
                         }
                     }
                     CreateAlbumHomeCard(width: cardWidth) {
@@ -353,6 +353,14 @@ struct VaultHomeView: View {
             router.pushVault(.videoPlayer(path: item.path))
         } else {
             router.pushVault(.photoViewer(path: item.path, isTrash: false, source: .recent))
+        }
+    }
+
+    private func open(_ album: VaultAlbum) {
+        if let category = album.aiCategory {
+            router.pushVault(.aiClassifyDetail(category: category))
+        } else {
+            router.pushVault(.album(name: album.name))
         }
     }
 
@@ -716,7 +724,10 @@ private struct AlbumHomeCard: View {
     }
 
     private var displayName: String {
-        album.name == vaultDefaultAlbumName ? L10n.tr("album_default_name") : album.name
+        if let category = album.aiCategory {
+            return localizedVaultAICategory(category)
+        }
+        return album.name == vaultDefaultAlbumName ? L10n.tr("album_default_name") : album.name
     }
 }
 
@@ -790,6 +801,12 @@ private struct AppIconHeroView: View {
             .compositingGroup()
         .accessibilityHidden(true)
     }
+}
+
+private func localizedVaultAICategory(_ category: String) -> String {
+    let key = VaultAIAnalysisService.categoryLabelKey(category)
+    let localized = L10n.tr(key)
+    return localized == key ? L10n.tr("ai_category_other") : localized
 }
 
 private extension View {

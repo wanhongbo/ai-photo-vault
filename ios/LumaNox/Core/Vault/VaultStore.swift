@@ -45,9 +45,7 @@ final class VaultStore: ObservableObject {
             let trash = try trashDirectory()
             vaultDebugLog("loadSnapshot begin root=\(root.path) trash=\(trash.path)")
             let metadata = try metadataStore.reconcile(vaultRoot: root, trashRoot: trash)
-            let albums = metadata.albums.map {
-                VaultAlbum(id: $0.id, name: $0.name, photoCount: $0.mediaCount)
-            }
+            let albums = makeVaultAlbums(from: metadata)
             let recent = metadata.recentActive(limit: recentLimit).map { mediaRecordToVaultPhoto($0) }
             let total = metadata.totalActiveCount
             let activeMedia = metadata.activeMedia
@@ -74,6 +72,20 @@ final class VaultStore: ObservableObject {
             .map { mediaRecordToVaultPhoto($0) }
     }
 
+    func photos(for album: VaultAlbum) -> [VaultPhoto] {
+        switch album.source {
+        case .user:
+            return photos(in: album.name)
+        case .aiCategory(let category):
+            return metadataStore
+                .load()
+                .activeMedia
+                .filter { $0.ai.category == category }
+                .sorted { $0.modifiedAtMs > $1.modifiedAtMs }
+                .map { mediaRecordToVaultPhoto($0) }
+        }
+    }
+
     func searchPhotos(query: String, limit: Int = 200) -> [VaultPhoto] {
         metadataStore
             .search(query: query, limit: limit)
@@ -82,6 +94,54 @@ final class VaultStore: ObservableObject {
 
     func storageSummary() -> VaultStorageSummary {
         metadataStore.storageSummary()
+    }
+
+    private func makeVaultAlbums(from metadata: VaultMetadataSnapshot) -> [VaultAlbum] {
+        let userAlbums = metadata.albums.map {
+            VaultAlbum(id: $0.id, name: $0.name, photoCount: $0.mediaCount, source: .user)
+        }
+        let aiAlbums = makeAIClassificationAlbums(from: metadata.activeMedia)
+        return userAlbums + aiAlbums
+    }
+
+    private func makeAIClassificationAlbums(from media: [VaultMediaRecord]) -> [VaultAlbum] {
+        let counts = media.reduce(into: [String: Int]()) { partial, record in
+            guard record.ai.scannedAtMs != nil,
+                  let category = record.ai.category,
+                  !category.isEmpty
+            else { return }
+            partial[category, default: 0] += 1
+        }
+
+        return counts
+            .filter { $0.value > 0 }
+            .sorted { lhs, rhs in
+                if lhs.value == rhs.value {
+                    return aiCategorySortRank(lhs.key) < aiCategorySortRank(rhs.key)
+                }
+                return lhs.value > rhs.value
+            }
+            .map { category, count in
+                VaultAlbum(
+                    id: "ai_category:\(category)",
+                    name: category,
+                    photoCount: count,
+                    source: .aiCategory(category)
+                )
+            }
+    }
+
+    private func aiCategorySortRank(_ category: String) -> Int {
+        switch category {
+        case VaultAICategory.people: return 0
+        case VaultAICategory.documents: return 1
+        case VaultAICategory.screenshots: return 2
+        case VaultAICategory.food: return 3
+        case VaultAICategory.nature: return 4
+        case VaultAICategory.videos: return 5
+        case VaultAICategory.other: return 6
+        default: return 100
+        }
     }
 
     func createAlbum(named name: String) throws -> String {

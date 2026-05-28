@@ -160,6 +160,7 @@ final class VaultAIAnalysisService: ObservableObject {
                 try indexStore.replace(records: indexPayload.records, subjectClusters: indexPayload.clusters)
             }
             refreshSummary()
+            await vaultStore.loadSnapshot()
         } catch {
             lastError = error.localizedDescription
         }

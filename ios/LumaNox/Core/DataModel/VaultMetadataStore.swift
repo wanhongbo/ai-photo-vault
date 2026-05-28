@@ -308,7 +308,11 @@ final class VaultMetadataStore {
                 createdAtMs: (values?.creationDate ?? Date()).epochMs,
                 modifiedAtMs: latestMedia ?? (values?.contentModificationDate ?? Date()).epochMs
             )
-        }.sorted { $0.name < $1.name }
+        }.sorted { lhs, rhs in
+            if lhs.name == vaultDefaultAlbumName { return true }
+            if rhs.name == vaultDefaultAlbumName { return false }
+            return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+        }
     }
 
     private func encryptedSha256Hex(_ file: URL) -> String? {

@@ -1000,9 +1000,9 @@ struct AIClassifyDetailView: View {
             tag: selectedTag == AIClassifyTagFilter.all ? nil : selectedTag
         )
         if item.isVideo {
-            router.pushAI(.videoPlayer(path: item.path, isTrash: false, source: source))
+            router.pushInCurrentTab(.videoPlayer(path: item.path, isTrash: false, source: source))
         } else {
-            router.pushAI(.photoViewer(path: item.path, isTrash: false, source: source))
+            router.pushInCurrentTab(.photoViewer(path: item.path, isTrash: false, source: source))
         }
     }
 }

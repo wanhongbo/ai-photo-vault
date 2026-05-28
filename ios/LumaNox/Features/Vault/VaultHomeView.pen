@@ -705,7 +705,7 @@
                     {
                       "type": "frame",
                       "id": "vault_home_album_created",
-                      "name": "Album card - created album",
+                      "name": "Album card - AI category album",
                       "width": "fill_container",
                       "height": "fill_container",
                       "fill": "#00000000",
@@ -787,7 +787,7 @@
                               "fill": "#F4F8FF",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "明后",
+                              "content": "人物",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "800"

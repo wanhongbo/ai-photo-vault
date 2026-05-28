@@ -60,15 +60,15 @@ final class VaultHomeViewModel: ObservableObject {
     }
 
     func recentMediaItems(for album: VaultAlbum, limit: Int = 4) -> [LNMediaItem] {
-        snapshot?.recentPhotos
-            .filter { $0.albumName == album.name }
+        vaultStore
+            .photos(for: album)
             .prefix(limit)
-            .map { $0.toMediaItem() } ?? []
+            .map { $0.toMediaItem() }
     }
 
     var isEmpty: Bool { recentPhotos.isEmpty }
     var hasUserCreatedAlbum: Bool {
-        albums.contains { $0.name != vaultDefaultAlbumName }
+        albums.contains { $0.source == .user && $0.name != vaultDefaultAlbumName }
     }
     var shouldShowInitialLoading: Bool { snapshot == nil && isLoadingSnapshot }
     var shouldShowEmptyState: Bool { snapshot != nil && isEmpty && !hasUserCreatedAlbum && !isImporting }

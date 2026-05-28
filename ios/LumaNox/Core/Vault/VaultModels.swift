@@ -34,10 +34,21 @@ struct VaultPhoto: Identifiable, Hashable {
     }
 }
 
+enum VaultAlbumSource: Hashable {
+    case user
+    case aiCategory(String)
+}
+
 struct VaultAlbum: Identifiable, Hashable {
     let id: String
     let name: String
     let photoCount: Int
+    let source: VaultAlbumSource
+
+    var aiCategory: String? {
+        if case .aiCategory(let category) = source { return category }
+        return nil
+    }
 }
 
 struct VaultSnapshot {

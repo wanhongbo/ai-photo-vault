@@ -20,12 +20,12 @@ struct AlbumListView: View {
                 LazyVGrid(columns: albumColumns(cardWidth: cardWidth), spacing: 12) {
                     ForEach(vaultStore.snapshot?.albums ?? []) { album in
                         Button {
-                            router.pushVault(.album(name: album.name))
+                            open(album)
                         } label: {
                             VaultAlbumListCard(
                                 width: cardWidth,
-                                title: album.name,
-                                subtitle: L10n.tr("home_album_photo_count", album.photoCount),
+                                title: displayName(for: album),
+                                subtitle: L10n.tr("home_album_item_count", album.photoCount),
                                 coverItem: coverItem(for: album)
                             )
                         }
@@ -66,7 +66,24 @@ struct AlbumListView: View {
     }
 
     private func coverItem(for album: VaultAlbum) -> LNMediaItem? {
-        vaultStore.photos(in: album.name).first?.toMediaItem()
+        vaultStore.photos(for: album).first?.toMediaItem()
+    }
+
+    private func open(_ album: VaultAlbum) {
+        if let category = album.aiCategory {
+            router.pushVault(.aiClassifyDetail(category: category))
+        } else {
+            router.pushVault(.album(name: album.name))
+        }
+    }
+
+    private func displayName(for album: VaultAlbum) -> String {
+        if let category = album.aiCategory {
+            let key = VaultAIAnalysisService.categoryLabelKey(category)
+            let localized = L10n.tr(key)
+            return localized == key ? L10n.tr("ai_category_other") : localized
+        }
+        return album.name == vaultDefaultAlbumName ? L10n.tr("album_default_name") : album.name
     }
 
     private func createAlbumAndOpen() {
