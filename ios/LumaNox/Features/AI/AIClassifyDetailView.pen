@@ -98,7 +98,7 @@
           "fill": "#0C1523",
           "stroke": { "fill": "#243348", "thickness": 1 },
           "x": 16,
-          "y": 142,
+          "y": 172,
           "width": 361,
           "height": "fit_content",
           "padding": 16,
@@ -188,19 +188,58 @@
           ]
         },
         {
-          "type": "text",
-          "id": "ai_generated_note_ai_classify_detail",
-          "name": "AI generated album note",
-          "content": "本相册由AI自动生成",
-          "fontFamily": "Inter",
-          "fill": "#8EA2C0",
-          "fontSize": 13,
-          "letterSpacing": 0,
-          "fontWeight": "500",
-          "textGrowth": "fixed-width",
+          "type": "frame",
+          "id": "ai_generated_banner_ai_classify_detail",
+          "name": "AI generated album banner",
+          "layout": "horizontal",
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
           "x": 16,
-          "y": 106,
-          "width": 361
+          "y": 104,
+          "width": 361,
+          "height": 52,
+          "cornerRadius": 16,
+          "padding": [10, 12],
+          "gap": 10,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ai_generated_icon_wrap_ai_classify_detail",
+              "name": "AI icon wrap",
+              "layout": "none",
+              "fill": "#13345A",
+              "width": 32,
+              "height": 32,
+              "cornerRadius": 10,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "ai_generated_icon_ai_classify_detail",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "sparkles",
+                  "x": 8,
+                  "y": 8,
+                  "width": 16,
+                  "height": 16,
+                  "fill": "#8EC5FF"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "ai_generated_note_ai_classify_detail",
+              "name": "AI generated album note",
+              "content": "本相册由AI自动生成",
+              "fontFamily": "Inter",
+              "fill": "#C8D8EF",
+              "fontSize": 13,
+              "letterSpacing": 0,
+              "fontWeight": "600",
+              "textGrowth": "fixed-width",
+              "width": "fill_container"
+            }
+          ]
         }
       ]
     }

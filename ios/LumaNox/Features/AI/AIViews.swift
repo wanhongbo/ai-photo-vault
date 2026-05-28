@@ -951,8 +951,8 @@ struct AIClassifyDetailView: View {
 
             if categoryRecords.isEmpty {
                 VStack(alignment: .leading, spacing: 14) {
-                    aiGeneratedAlbumNote
-                        .frame(width: cardWidth, alignment: .leading)
+                    AIClassifyGeneratedAlbumBanner()
+                        .frame(width: cardWidth)
 
                     AIEmptyActionView(
                         systemImage: "tray",
@@ -966,8 +966,8 @@ struct AIClassifyDetailView: View {
                 .padding(.bottom, 28)
             } else {
                 VStack(alignment: .leading, spacing: 14) {
-                    aiGeneratedAlbumNote
-                        .frame(width: cardWidth, alignment: .leading)
+                    AIClassifyGeneratedAlbumBanner()
+                        .frame(width: cardWidth)
 
                     AIClassifyTagFilterBar(
                         tags: availableTags,
@@ -1001,14 +1001,6 @@ struct AIClassifyDetailView: View {
         .accessibilityIdentifier("ai_classify_detail_view")
     }
 
-    private var aiGeneratedAlbumNote: some View {
-        Text(L10n.tr("ai_classify_detail_generated_note"))
-            .font(LNTypography.bodyMedium())
-            .foregroundStyle(LNColor.subtitle)
-            .lineLimit(2)
-            .accessibilityIdentifier("ai_classify_generated_note")
-    }
-
     private func open(_ item: LNMediaItem) {
         let source = PhotoViewerSource.aiClassify(
             category: category,
@@ -1019,6 +1011,34 @@ struct AIClassifyDetailView: View {
         } else {
             router.pushInCurrentTab(.photoViewer(path: item.path, isTrash: false, source: source))
         }
+    }
+}
+
+private struct AIClassifyGeneratedAlbumBanner: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color(hex: 0x8EC5FF))
+                .frame(width: 32, height: 32)
+                .background(Color(hex: 0x13345A))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            Text(L10n.tr("ai_classify_detail_generated_note"))
+                .font(LNTypography.labelMedium().weight(.semibold))
+                .foregroundStyle(Color(hex: 0xC8D8EF))
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 12)
+        .frame(minHeight: 52)
+        .background(LNColor.sectionBg)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(LNColor.stroke, lineWidth: 1)
+        )
+        .accessibilityIdentifier("ai_classify_generated_note")
     }
 }
 
