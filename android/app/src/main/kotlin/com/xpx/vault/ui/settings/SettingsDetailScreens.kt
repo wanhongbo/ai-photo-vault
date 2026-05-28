@@ -234,6 +234,7 @@ private fun PerkStatusRow(label: String, value: String, highlighted: Boolean) {
 fun SettingsSecurityPrivacyScreen(
     onBack: () -> Unit,
     onOpenChangePin: () -> Unit,
+    onOpenIntruderAlert: () -> Unit,
 ) {
     var biometricEnabled by remember { mutableStateOf(true) }
     var autoLockEnabled by remember { mutableStateOf(true) }
@@ -285,7 +286,15 @@ fun SettingsSecurityPrivacyScreen(
                 items = emptyList(),
             )
             SettingsGroupCard(title = stringResource(R.string.settings_sec_privacy)) {
-                SettingsMutedHint(stringResource(R.string.settings_sec_privacy_hint))
+                Spacer(modifier = Modifier.height(UiSize.settingsGroupTitleToRowsGap))
+                SettingsSimpleRow(
+                    SettingsRowModel(
+                        title = stringResource(R.string.intruder_alert_title),
+                        desc = stringResource(R.string.intruder_alert_settings_desc),
+                        trailing = SettingsTrailing.CHEVRON,
+                        onClick = onOpenIntruderAlert,
+                    ),
+                )
             }
         }
     }

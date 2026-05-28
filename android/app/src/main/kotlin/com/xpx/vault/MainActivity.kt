@@ -51,6 +51,7 @@ import com.xpx.vault.ui.ai.PrivacyRedactScreen
 import com.xpx.vault.ui.LanguageSettingsScreen
 import com.xpx.vault.ui.SettingsHubDestination
 import com.xpx.vault.ui.settings.LegalWebViewScreen
+import com.xpx.vault.ui.settings.IntruderAlertScreen
 import com.xpx.vault.ui.settings.SettingsAboutSupportScreen
 import com.xpx.vault.ui.settings.SettingsBackupSyncScreen
 import com.xpx.vault.ui.settings.SettingsDataStorageScreen
@@ -405,6 +406,14 @@ class MainActivity : FragmentActivity() {
                                 onOpenChangePin = {
                                     navController.navigate(ROUTE_CHANGE_PIN) { launchSingleTop = true }
                                 },
+                                onOpenIntruderAlert = {
+                                    navController.navigate(ROUTE_INTRUDER_ALERT) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_INTRUDER_ALERT) {
+                            IntruderAlertScreen(
+                                onBack = { navController.popBackStack() },
                             )
                         }
                         composable(ROUTE_SETTINGS_BACKUP_SYNC) {
@@ -768,6 +777,7 @@ class MainActivity : FragmentActivity() {
         private const val ROUTE_LANGUAGE_SETTINGS = "language_settings"
         private const val ROUTE_SETTINGS_SUBSCRIPTION = "settings_subscription"
         private const val ROUTE_SETTINGS_SECURITY = "settings_security"
+        private const val ROUTE_INTRUDER_ALERT = "intruder_alert"
         private const val ROUTE_SETTINGS_BACKUP_SYNC = "settings_backup_sync"
         private const val ROUTE_SETTINGS_DATA_STORAGE = "settings_data_storage"
         private const val ROUTE_SETTINGS_GENERAL = "settings_general"

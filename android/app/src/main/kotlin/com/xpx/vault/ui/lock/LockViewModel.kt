@@ -15,6 +15,7 @@ import com.xpx.vault.ui.backup.LocalBackupMvpService
 import com.xpx.vault.AppLockManager
 import com.xpx.vault.R
 import com.xpx.vault.ui.setup.FirstLaunchRouter
+import com.xpx.vault.ui.settings.IntruderAlertStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -221,6 +222,7 @@ class LockViewModel @Inject constructor(
             } else {
                 val nextFail = setting.failCount + 1
                 dao.upsert(setting.copy(failCount = nextFail))
+                IntruderAlertStore.recordFailedPinAttempt(appContext, pin)
                 _state.value = _state.value.copy(
                     enteredPin = "",
                     error = appContext.getString(R.string.lock_error_wrong_pin, nextFail),
