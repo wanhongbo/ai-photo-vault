@@ -43,6 +43,7 @@ struct LumaNoxApp: App {
 struct RootView: View {
     @EnvironmentObject private var router: AppRouter
     @EnvironmentObject private var appLock: AppLockManager
+    @StateObject private var privateCameraViewModel = PrivateCameraViewModel()
 
     var body: some View {
         Group {
@@ -52,10 +53,27 @@ struct RootView: View {
             case .lock:
                 LockView()
             case .main:
-                MainTabView()
+                MainTabView(privateCameraViewModel: privateCameraViewModel)
             }
         }
         .animation(.easeInOut(duration: 0.25), value: router.phase)
+        .fullScreenCover(isPresented: Binding(
+            get: { router.presentedRoute != nil },
+            set: { if !$0 { router.dismissPresented() } }
+        )) {
+            if let route = router.presentedRoute {
+                NavigationStack {
+                    switch route {
+                    case .privateCamera:
+                        PrivateCameraView(viewModel: privateCameraViewModel)
+                    default:
+                        RouteDestinationView(route: route)
+                    }
+                }
+                .toolbar(.hidden, for: .navigationBar)
+                .swipeBackEnabled()
+            }
+        }
         .overlay {
             if appLock.protectsAppSwitcherSnapshot {
                 PrivacySnapshotLockView()
@@ -63,6 +81,9 @@ struct RootView: View {
             }
         }
         .onAppear {
+            router.preparePrivateCameraForPresentation = { [privateCameraViewModel] in
+                privateCameraViewModel.startForPresentation()
+            }
             #if DEBUG
             applyDebugLaunchRouteIfNeeded()
             #endif

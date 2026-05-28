@@ -6,7 +6,7 @@ struct MainTabView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var vaultHomeViewModel = VaultHomeViewModel()
-    @StateObject private var privateCameraViewModel = PrivateCameraViewModel()
+    @ObservedObject var privateCameraViewModel: PrivateCameraViewModel
     @State private var didApplyDebugStartRoute = false
     @State private var isKeyboardVisible = false
 
@@ -24,23 +24,6 @@ struct MainTabView: View {
         }
         .lnScreenBackground()
         .animation(.easeInOut(duration: 0.18), value: shouldShowBottomTabBar)
-        .fullScreenCover(isPresented: Binding(
-            get: { router.presentedRoute != nil },
-            set: { if !$0 { router.dismissPresented() } }
-        )) {
-            if let route = router.presentedRoute {
-                NavigationStack {
-                    switch route {
-                    case .privateCamera:
-                        PrivateCameraView(viewModel: privateCameraViewModel)
-                    default:
-                        RouteDestinationView(route: route)
-                    }
-                }
-                .toolbar(.hidden, for: .navigationBar)
-                .swipeBackEnabled()
-            }
-        }
         .onChange(of: scenePhase) { phase in
             handleScenePhase(phase)
         }
@@ -58,9 +41,6 @@ struct MainTabView: View {
             prewarmCameraIfPossible()
         }
         .onAppear {
-            router.preparePrivateCameraForPresentation = { [privateCameraViewModel] in
-                privateCameraViewModel.startForPresentation()
-            }
             scheduleOnboardingPaywallIfNeeded()
             applyDebugStartRouteIfNeeded()
             prewarmCameraIfPossible()
