@@ -50,6 +50,7 @@ struct RouteDestinationView: View {
             case .languageSettings: LanguageSettingsView()
             case .settingsSubscription: SettingsSubscriptionView()
             case .settingsSecurity: SettingsSecurityView()
+            case .intruderAlert: IntruderAlertView()
             case .settingsBackupSync: SettingsBackupSyncView()
             case .settingsDataStorage: SettingsDataStorageView()
             case .importOriginalsPreference: ImportOriginalsPreferenceView()

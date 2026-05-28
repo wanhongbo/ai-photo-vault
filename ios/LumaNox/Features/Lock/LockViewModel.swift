@@ -189,6 +189,7 @@ final class LockViewModel: ObservableObject {
                 state.unlockSuccess = true
             } else {
                 let fails = (try? securityStore.recordFailedAttempt()) ?? 1
+                IntruderAlertStore.shared.recordFailedPinAttempt(pin)
                 state = LockUiState(
                     stage: .unlock,
                     title: L10n.tr("lock_title"),

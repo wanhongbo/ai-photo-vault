@@ -44,6 +44,61 @@
             { "type": "text", "id": "security_pin", "content": "修改 PIN · 先验证当前 PIN", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "500", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
             { "type": "text", "id": "security_autolock", "content": "切到后台后回前台立即锁定", "fontFamily": "Inter", "fontSize": 14, "fontWeight": "400", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "privacy_group",
+          "name": "Privacy protection",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "fill": "#0C1523",
+          "stroke": { "fill": "#223247", "thickness": 1 },
+          "cornerRadius": 20,
+          "padding": 18,
+          "gap": 12,
+          "children": [
+            { "type": "text", "id": "privacy_group_title", "content": "隐私保护", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+            {
+              "type": "frame",
+              "id": "privacy_intruder_row",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": "fit_content",
+              "fill": "#101A2A",
+              "cornerRadius": 12,
+              "padding": 12,
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "privacy_intruder_icon_box",
+                  "layout": "none",
+                  "width": 42,
+                  "height": 42,
+                  "cornerRadius": 12,
+                  "fill": "#2A1820",
+                  "children": [
+                    { "type": "icon_font", "id": "privacy_intruder_icon", "iconFontFamily": "lucide", "iconFontName": "shield-alert", "x": 9, "y": 9, "width": 24, "height": 24, "fill": "#FF6B8F" }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "privacy_intruder_copy",
+                  "layout": "vertical",
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "gap": 3,
+                  "children": [
+                    { "type": "text", "id": "privacy_intruder_title", "content": "入侵者警报", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+                    { "type": "text", "id": "privacy_intruder_desc", "content": "记录错误 PIN 尝试和本机抓拍", "fontFamily": "Inter", "fontSize": 13, "fontWeight": "500", "fill": "#8EA2C0", "textGrowth": "fixed-width", "width": "fill_container" }
+                  ]
+                },
+                { "type": "icon_font", "id": "privacy_intruder_chevron", "iconFontFamily": "lucide", "iconFontName": "chevron-right", "width": 20, "height": 20, "fill": "#8EA2C0" }
+              ]
+            }
+          ]
         }
       ]
     }

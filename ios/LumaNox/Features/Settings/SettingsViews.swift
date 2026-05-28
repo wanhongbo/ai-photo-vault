@@ -380,10 +380,12 @@ struct SettingsSecurityView: View {
                 )
             }
             LNSettingsGroupCard(title: L10n.tr("settings_sec_privacy")) {
-                Text(L10n.tr("settings_sec_privacy_hint"))
-                    .font(LNTypography.bodyMedium())
-                    .foregroundStyle(LNColor.subtitle)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                LNSettingsRow(
+                    title: L10n.tr("intruder_alert_title"),
+                    subtitle: L10n.tr("intruder_alert_settings_desc")
+                ) {
+                    router.pushSettings(.intruderAlert)
+                }
             }
         }
         .overlay {

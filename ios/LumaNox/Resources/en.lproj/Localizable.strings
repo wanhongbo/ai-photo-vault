@@ -4,6 +4,8 @@
 "common_confirm" = "Confirm";
 "common_ok" = "OK";
 "common_loading" = "Loading…";
+"common_today" = "Today";
+"common_yesterday" = "Yesterday";
 
 "splash_tagline" = "Private · Encrypted · Yours";
 "home_title" = "My Vault";
@@ -505,6 +507,27 @@
 "settings_sec_unlock" = "Unlock & Lock";
 "settings_sec_privacy" = "Privacy protection";
 "settings_sec_privacy_hint" = "Coming later: decoy mode, intruder capture, anti-screenshot, and more.";
+"intruder_alert_title" = "Intruder Alert";
+"intruder_alert_settings_desc" = "Record wrong PIN attempts and local captures";
+"intruder_alert_intro_title" = "Local security records";
+"intruder_alert_intro_desc" = "When enabled, LumaNox records the time, attempted PIN, and a front-camera capture after a wrong PIN on the normal unlock screen. Records stay on this device.";
+"intruder_alert_enable_title" = "Intruder capture";
+"intruder_alert_enable_desc" = "Off by default. When enabled, each wrong PIN creates an alert.";
+"intruder_alert_permission_title" = "Camera permission needed";
+"intruder_alert_permission_desc" = "Without camera access, LumaNox still records the wrong PIN time and attempted value, but cannot capture a photo.";
+"intruder_alert_open_settings" = "Open system settings";
+"intruder_alert_records" = "Alerts";
+"intruder_alert_empty_title" = "No alerts yet";
+"intruder_alert_empty_desc" = "No records means there have been no recent failed unlock attempts.";
+"intruder_alert_clear_all" = "Clear all";
+"intruder_alert_clear_title" = "Clear alerts?";
+"intruder_alert_clear_desc" = "This deletes all intruder alerts and local captures. Vault media is not affected.";
+"intruder_alert_delete" = "Delete";
+"intruder_alert_footer" = "Clearing alerts does not affect photos or videos in the vault.";
+"intruder_alert_status_captured" = "Captured";
+"intruder_alert_status_permission" = "Camera not allowed";
+"intruder_alert_status_unavailable" = "Camera unavailable";
+"intruder_alert_status_failed" = "Capture failed";
 "settings_pin_title" = "Change PIN";
 "settings_pin_success_title" = "PIN Updated";
 "settings_pin_success_title_first" = "PIN Set";

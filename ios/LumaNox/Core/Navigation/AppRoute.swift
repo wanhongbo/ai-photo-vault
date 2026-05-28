@@ -56,6 +56,7 @@ enum AppRoute: Hashable {
     case languageSettings
     case settingsSubscription
     case settingsSecurity
+    case intruderAlert
     case settingsBackupSync
     case settingsDataStorage
     case importOriginalsPreference
