@@ -68,9 +68,18 @@ final class VaultHomeViewModel: ObservableObject {
     var isEmpty: Bool { recentPhotos.isEmpty }
     var shouldShowInitialLoading: Bool { snapshot == nil && isLoadingSnapshot }
     var shouldShowEmptyState: Bool { snapshot != nil && isEmpty && !isImporting }
+    var shouldShowFloatingImportButton: Bool {
+        snapshot != nil && !isEmpty && !showPermissionDenied
+    }
     var totalCount: Int { snapshot?.totalCount ?? 0 }
     var imageCount: Int { snapshot?.imageCount ?? 0 }
     var videoCount: Int { snapshot?.videoCount ?? 0 }
+    var heroStatusText: String {
+        if videoCount == 0 {
+            return L10n.tr("home_vault_status_photos", imageCount)
+        }
+        return L10n.tr("home_vault_status_items", totalCount)
+    }
 
     func onAppear() {
         refreshAuthorization()
