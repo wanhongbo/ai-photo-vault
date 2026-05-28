@@ -950,18 +950,25 @@ struct AIClassifyDetailView: View {
             let cardWidth = max(0, availableWidth - LNSpacing.screenHorizontal * 2)
 
             if categoryRecords.isEmpty {
-                VStack {
+                VStack(alignment: .leading, spacing: 14) {
+                    aiGeneratedAlbumNote
+                        .frame(width: cardWidth, alignment: .leading)
+
                     AIEmptyActionView(
                         systemImage: "tray",
                         title: L10n.tr("ai_classify_detail_empty"),
                         message: L10n.tr("ai_classify_empty_desc")
                     )
+                    .frame(width: cardWidth)
                 }
                 .padding(.horizontal, LNSpacing.screenHorizontal)
                 .padding(.top, 22)
                 .padding(.bottom, 28)
             } else {
                 VStack(alignment: .leading, spacing: 14) {
+                    aiGeneratedAlbumNote
+                        .frame(width: cardWidth, alignment: .leading)
+
                     AIClassifyTagFilterBar(
                         tags: availableTags,
                         selectedTag: selectedTag,
@@ -992,6 +999,14 @@ struct AIClassifyDetailView: View {
         }
         .task { aiService.refreshSummary() }
         .accessibilityIdentifier("ai_classify_detail_view")
+    }
+
+    private var aiGeneratedAlbumNote: some View {
+        Text(L10n.tr("ai_classify_detail_generated_note"))
+            .font(LNTypography.bodyMedium())
+            .foregroundStyle(LNColor.subtitle)
+            .lineLimit(2)
+            .accessibilityIdentifier("ai_classify_generated_note")
     }
 
     private func open(_ item: LNMediaItem) {

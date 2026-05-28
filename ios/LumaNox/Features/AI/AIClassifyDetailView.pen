@@ -98,7 +98,7 @@
           "fill": "#0C1523",
           "stroke": { "fill": "#243348", "thickness": 1 },
           "x": 16,
-          "y": 114,
+          "y": 142,
           "width": 361,
           "height": "fit_content",
           "padding": 16,
@@ -186,6 +186,21 @@
               ]
             }
           ]
+        },
+        {
+          "type": "text",
+          "id": "ai_generated_note_ai_classify_detail",
+          "name": "AI generated album note",
+          "content": "本相册由AI自动生成",
+          "fontFamily": "Inter",
+          "fill": "#8EA2C0",
+          "fontSize": 13,
+          "letterSpacing": 0,
+          "fontWeight": "500",
+          "textGrowth": "fixed-width",
+          "x": 16,
+          "y": 106,
+          "width": 361
         }
       ]
     }

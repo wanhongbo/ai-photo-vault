@@ -200,6 +200,7 @@
 "ai_classify_empty_title" = "暂无分类";
 "ai_classify_empty_desc" = "运行本地扫描后会按内容整理保险箱媒体。";
 "ai_classify_items_fmt" = "%d 项";
+"ai_classify_detail_generated_note" = "本相册由AI自动生成";
 "ai_classify_detail_empty" = "此分类暂无项目";
 "ai_classify_detail_filter_empty" = "此标签暂无匹配";
 "ai_classify_detail_filter_empty_desc" = "可切换标签，或重新扫描刷新结果。";
