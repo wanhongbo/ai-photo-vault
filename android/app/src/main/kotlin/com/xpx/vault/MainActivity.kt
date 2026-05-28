@@ -4,6 +4,15 @@ import android.os.Bundle
 import android.net.Uri
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.compose.setContent
 import androidx.fragment.app.FragmentActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -14,10 +23,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -89,14 +98,48 @@ class MainActivity : FragmentActivity() {
     @Inject
     lateinit var paywallGatekeeper: com.xpx.vault.billing.PaywallGatekeeper
 
+    private var taskSnapshotLockCover: View? = null
+    private var currentRouteForSnapshot: String? = null
+
     override fun attachBaseContext(newBase: Context) {
         // 将持久化的应用内语言应用到 Activity Context，覆盖所有 API 级别
         super.attachBaseContext(LanguageManager.wrapContext(newBase))
     }
 
     override fun onUserLeaveHint() {
-        appLockManager.onUserLeavingApp()
+        if (shouldShowTaskSnapshotLockCover() && appLockManager.onUserLeavingApp()) {
+            showTaskSnapshotLockCover()
+        }
         super.onUserLeaveHint()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        if (!hasFocus && shouldShowTaskSnapshotLockCover()) {
+            showTaskSnapshotLockCover()
+        }
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && !appLockManager.isUnlockRequired()) {
+            hideTaskSnapshotLockCover()
+        }
+    }
+
+    override fun onPause() {
+        if (shouldShowTaskSnapshotLockCover() && appLockManager.onUserLeavingApp()) {
+            showTaskSnapshotLockCover()
+        }
+        super.onPause()
+    }
+
+    override fun onStop() {
+        if (shouldShowTaskSnapshotLockCover()) {
+            showTaskSnapshotLockCover()
+        }
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        hideTaskSnapshotLockCover()
+        super.onDestroy()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,7 +156,9 @@ class MainActivity : FragmentActivity() {
                     val requireUnlock by appLockManager.requireUnlock.collectAsState()
                     val backStackEntry by navController.currentBackStackEntryAsState()
                     val currentRoute = backStackEntry?.destination?.route
-                    val previousRoute = navController.previousBackStackEntry?.destination?.route
+                    SideEffect {
+                        currentRouteForSnapshot = currentRoute
+                    }
 
                     // 解锁后自动启动一次增量 AI 扫描（增量扫描、mutex 去重，安全反复触发）。
                     LaunchedEffect(requireUnlock) {
@@ -138,22 +183,15 @@ class MainActivity : FragmentActivity() {
                     // 用 rememberUpdatedState 保障 LaunchedEffect 内能读到最新值，避免闭包过期。
                     val requireUnlockState = rememberUpdatedState(requireUnlock)
                     val currentRouteState = rememberUpdatedState(currentRoute)
-                    val previousRouteState = rememberUpdatedState(previousRoute)
 
-                    LaunchedEffect(requireUnlock, currentRoute, previousRoute) {
+                    LaunchedEffect(requireUnlock, currentRoute) {
                         if (!requireUnlock) return@LaunchedEffect
-                        // Race 保护：解锁成功瞬间 requireUnlock=false 和 currentRoute=main 可能不同步推送，
-                        // 等下一帧开始时再重读，此刻 Compose 已应用本帧所有 snapshot 变化。
-                        withFrameNanos { }
                         if (!requireUnlockState.value) return@LaunchedEffect
                         val latestRoute = currentRouteState.value
-                        val shouldSkipLock =
-                            isBackupRestoreRoute(latestRoute) || isBackupRestoreRoute(previousRouteState.value)
                         if (latestRoute != null &&
                             latestRoute != ROUTE_SPLASH &&
                             latestRoute != ROUTE_LOCK &&
-                            latestRoute != ROUTE_PRIVATE_CAMERA &&
-                            !shouldSkipLock
+                            latestRoute != ROUTE_PRIVATE_CAMERA
                         ) {
                             navController.navigate(ROUTE_LOCK) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -163,6 +201,15 @@ class MainActivity : FragmentActivity() {
                                 launchSingleTop = true
                                 restoreState = false
                             }
+                        }
+                        if (latestRoute == ROUTE_LOCK || latestRoute == ROUTE_PRIVATE_CAMERA) {
+                            hideTaskSnapshotLockCover()
+                        }
+                    }
+
+                    LaunchedEffect(requireUnlock) {
+                        if (!requireUnlock) {
+                            hideTaskSnapshotLockCover()
                         }
                     }
 
@@ -727,6 +774,150 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    private fun showTaskSnapshotLockCover() {
+        if (taskSnapshotLockCover != null) return
+        val cover = FrameLayout(this).apply {
+            setBackgroundColor(LOCK_BG)
+            isClickable = true
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(24.dp(), 24.dp(), 24.dp(), 24.dp())
+        }
+        cover.addView(
+            content,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER,
+            ),
+        )
+        content.addView(
+            TextView(this).apply {
+                text = getString(R.string.lock_unlock_title)
+                setTextColor(LOCK_TEXT_MAIN)
+                textSize = 38f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        content.addView(
+            TextView(this).apply {
+                text = getString(R.string.lock_unlock_subtitle)
+                setTextColor(LOCK_TEXT_SUB)
+                textSize = 16f
+                gravity = Gravity.CENTER
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                topMargin = 12.dp()
+            },
+        )
+        content.addView(
+            makeSnapshotPinDots(),
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                topMargin = 22.dp()
+            },
+        )
+        listOf(
+            listOf("1", "2", "3"),
+            listOf("4", "5", "6"),
+            listOf("7", "8", "9"),
+            listOf("", "0", "⌫"),
+        ).forEachIndexed { index, labels ->
+            content.addView(makeSnapshotKeyRow(labels), LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                topMargin = if (index == 0) 24.dp() else 14.dp()
+            })
+        }
+        addContentView(
+            cover,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        taskSnapshotLockCover = cover
+    }
+
+    private fun shouldShowTaskSnapshotLockCover(): Boolean {
+        val route = currentRouteForSnapshot
+        return appLockManager.shouldProtectTaskSnapshot() &&
+            route != null &&
+            route != ROUTE_SPLASH &&
+            route != ROUTE_LOCK &&
+            route != ROUTE_PRIVATE_CAMERA
+    }
+
+    private fun hideTaskSnapshotLockCover() {
+        val cover = taskSnapshotLockCover ?: return
+        (cover.parent as? ViewGroup)?.removeView(cover)
+        taskSnapshotLockCover = null
+    }
+
+    private fun makeSnapshotPinDots(): View {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            repeat(6) {
+                addView(
+                    View(this@MainActivity).apply {
+                        background = ovalDrawable(Color.TRANSPARENT, LOCK_BLUE, 2.dp())
+                    },
+                    LinearLayout.LayoutParams(14.dp(), 14.dp()).apply {
+                        leftMargin = 8.dp()
+                        rightMargin = 8.dp()
+                    },
+                )
+            }
+        }
+    }
+
+    private fun makeSnapshotKeyRow(labels: List<String>): View {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            labels.forEach { label ->
+                addView(
+                    TextView(this@MainActivity).apply {
+                        text = label
+                        setTextColor(LOCK_TEXT_MAIN)
+                        textSize = 34f
+                        gravity = Gravity.CENTER
+                        background = ovalDrawable(LOCK_KEY_BG, LOCK_BLUE, 2.dp())
+                    },
+                    LinearLayout.LayoutParams(86.dp(), 86.dp()).apply {
+                        leftMargin = 8.dp()
+                        rightMargin = 8.dp()
+                    },
+                )
+            }
+        }
+    }
+
+    private fun ovalDrawable(fill: Int, stroke: Int, strokeWidth: Int): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(fill)
+            setStroke(strokeWidth, stroke)
+        }
+    }
+
+    private fun Int.dp(): Int = (this * resources.displayMetrics.density + 0.5f).toInt()
+
     private fun viewerRouteForPath(path: String): String {
         val encoded = Uri.encode(path)
         return if (isVideoPath(path)) {
@@ -755,21 +946,17 @@ class MainActivity : FragmentActivity() {
             lower.endsWith(".mkv")
     }
 
-    private fun isBackupRestoreRoute(route: String?): Boolean {
-        if (route == null) return false
-        return route == ROUTE_BACKUP_RESTORE ||
-            route == ROUTE_BACKUP_RESULT ||
-            route == ROUTE_RESTORE_RESULT ||
-            route.startsWith(ROUTE_BACKUP_PROGRESS) ||
-            route.startsWith(ROUTE_RESTORE_PROGRESS)
-    }
-
     private fun isChineseLocale(): Boolean {
         val locale = resources.configuration.locales[0]
         return locale.language == "zh"
     }
 
     companion object {
+        private const val LOCK_BG = 0xFF05080D.toInt()
+        private const val LOCK_KEY_BG = 0xFF131C29.toInt()
+        private const val LOCK_BLUE = 0xFF4A9EFF.toInt()
+        private const val LOCK_TEXT_MAIN = 0xFFEAF1FF.toInt()
+        private const val LOCK_TEXT_SUB = 0xFF7E90AB.toInt()
         private const val ROUTE_SPLASH = "splash"
         private const val ROUTE_LOCK = "lock"
         private const val ROUTE_MAIN = "main"

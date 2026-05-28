@@ -94,9 +94,15 @@ class AppLockManager @Inject constructor(
     }
 
     /** Activity 收到用户离开提示时调用，比进程 onStop 更早，可覆盖最近任务切换缩略图时机。 */
-    fun onUserLeavingApp() {
-        requestUnlockIfPinConfigured("user leaving app")
+    fun onUserLeavingApp(): Boolean {
+        return requestUnlockIfPinConfigured("user leaving app")
     }
+
+    fun shouldProtectTaskSnapshot(): Boolean {
+        return pinConfigured == true && externalSystemUiDepth <= 0
+    }
+
+    fun isUnlockRequired(): Boolean = _requireUnlock.value
 
     fun beginExternalSystemUi(reason: String) {
         externalSystemUiDepth += 1
@@ -112,18 +118,20 @@ class AppLockManager @Inject constructor(
         requestUnlockIfPinConfigured("process stopped")
     }
 
-    private fun requestUnlockIfPinConfigured(reason: String) {
-        if (pinConfigured != true) return
+    private fun requestUnlockIfPinConfigured(reason: String): Boolean {
+        if (pinConfigured != true) return false
         if (externalSystemUiDepth > 0) {
             AppLogger.d(
                 TAG,
                 "lock skipped: $reason while external system ui active depth=$externalSystemUiDepth",
             )
-            return
+            return false
         }
-        if (_requireUnlock.value) return
-        _requireUnlock.value = true
-        AppLogger.d(TAG, "lock required: $reason")
+        if (!_requireUnlock.value) {
+            _requireUnlock.value = true
+            AppLogger.d(TAG, "lock required: $reason")
+        }
+        return true
     }
 
     companion object {
