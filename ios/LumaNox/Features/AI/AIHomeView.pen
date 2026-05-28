@@ -357,7 +357,7 @@
           "x": 0,
           "y": 724,
           "width": 393,
-          "height": 56,
+          "height": 24,
           "fill": "#05080D"
         },
         {
@@ -366,9 +366,9 @@
           "name": "Floating bottom tab bar",
           "layout": "none",
           "x": 16,
-          "y": 780,
+          "y": 748,
           "width": 361,
-          "height": 66,
+          "height": 88,
           "cornerRadius": 24,
           "fill": "#0E1726",
           "stroke": { "fill": "#223247", "thickness": 1 },
