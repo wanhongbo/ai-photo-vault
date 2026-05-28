@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,8 +47,11 @@ import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.theme.UiColors
+import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
+import com.xpx.vault.ui.vault.ImportOriginalsAction
+import com.xpx.vault.ui.vault.ImportOriginalsPreferenceStore
 import kotlinx.coroutines.launch
 
 @Composable
@@ -362,7 +367,12 @@ fun SettingsDataStorageScreen(
     onOpenStorageUsage: () -> Unit,
     onOpenBulkExport: () -> Unit,
     onOpenTrashBin: () -> Unit,
+    onOpenImportOriginals: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val importOriginalsAction by ImportOriginalsPreferenceStore
+        .observe(context)
+        .collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -387,6 +397,12 @@ fun SettingsDataStorageScreen(
                         trailing = SettingsTrailing.CHEVRON,
                         onClick = onOpenStorageUsage,
                     ),
+                    SettingsRowModel(
+                        title = stringResource(R.string.import_originals_settings_title),
+                        desc = stringResource(importOriginalsAction.titleRes),
+                        trailing = SettingsTrailing.CHEVRON,
+                        onClick = onOpenImportOriginals,
+                    ),
                 ),
             )
             SettingsGroup(
@@ -407,6 +423,97 @@ fun SettingsDataStorageScreen(
                 ),
             )
         }
+    }
+}
+
+@Composable
+fun SettingsImportOriginalsScreen(
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    val selectedAction by ImportOriginalsPreferenceStore
+        .observe(context)
+        .collectAsState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(UiColors.Home.bgBottom)
+            .safeDrawingPadding(),
+    ) {
+        AppTopBar(title = stringResource(R.string.import_originals_settings_title), onBack = onBack)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = UiSize.settingsScreenHorizontalPad)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(UiSize.settingsSectionGap),
+        ) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.import_originals_settings_desc_android),
+                color = UiColors.Home.subtitle,
+                fontSize = UiTextSize.settingsRowDesc,
+            )
+            SettingsGroupCard(title = stringResource(R.string.import_originals_settings_section)) {
+                ImportOriginalsOptionRow(
+                    action = ImportOriginalsAction.ASK_EACH_TIME,
+                    selected = selectedAction == ImportOriginalsAction.ASK_EACH_TIME,
+                    onSelect = { ImportOriginalsPreferenceStore.set(context, ImportOriginalsAction.ASK_EACH_TIME) },
+                )
+                Spacer(Modifier.height(UiSize.settingsRowGap))
+                ImportOriginalsOptionRow(
+                    action = ImportOriginalsAction.KEEP_ORIGINALS,
+                    selected = selectedAction == ImportOriginalsAction.KEEP_ORIGINALS,
+                    onSelect = { ImportOriginalsPreferenceStore.set(context, ImportOriginalsAction.KEEP_ORIGINALS) },
+                )
+                Spacer(Modifier.height(UiSize.settingsRowGap))
+                ImportOriginalsOptionRow(
+                    action = ImportOriginalsAction.DELETE_ORIGINALS,
+                    selected = selectedAction == ImportOriginalsAction.DELETE_ORIGINALS,
+                    onSelect = { ImportOriginalsPreferenceStore.set(context, ImportOriginalsAction.DELETE_ORIGINALS) },
+                )
+            }
+            SettingsMutedHint(text = stringResource(R.string.import_originals_settings_safety_note_android))
+        }
+    }
+}
+
+@Composable
+private fun ImportOriginalsOptionRow(
+    action: ImportOriginalsAction,
+    selected: Boolean,
+    onSelect: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(UiRadius.settingsRow))
+            .background(UiColors.Home.emptyCardBg)
+            .clickable(onClick = onSelect)
+            .padding(
+                horizontal = UiSize.settingsRowPaddingHorizontal,
+                vertical = UiSize.settingsRowPaddingVertical,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(action.titleRes),
+                color = if (action == ImportOriginalsAction.DELETE_ORIGINALS) {
+                    UiColors.Lock.error
+                } else {
+                    UiColors.Home.emptyTitle
+                },
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                text = stringResource(action.descRes),
+                color = UiColors.Home.emptyBody,
+                fontSize = UiTextSize.settingsRowDesc,
+                modifier = Modifier.padding(top = UiSize.settingsProfileDescTopGap),
+            )
+        }
+        RadioButton(selected = selected, onClick = onSelect)
     }
 }
 

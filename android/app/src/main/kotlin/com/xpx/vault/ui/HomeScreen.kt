@@ -1,6 +1,13 @@
 package com.xpx.vault.ui
 
+import android.app.Activity
+import android.app.RecoverableSecurityException
+import android.content.Context
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -27,6 +34,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -67,11 +76,15 @@ import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.DEFAULT_ALBUM_NAME
+import com.xpx.vault.ui.vault.ImportOriginalsAction
+import com.xpx.vault.ui.vault.ImportOriginalsPreferenceStore
 import com.xpx.vault.ui.vault.VaultAlbum
 import com.xpx.vault.ui.vault.VaultImportResult
 import com.xpx.vault.ui.vault.VaultPhoto
 import com.xpx.vault.ui.vault.VaultStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun HomeScreen(
@@ -104,6 +117,9 @@ fun HomeScreen(
     var vaultLoaded by remember { mutableStateOf(cachedSnapshot != null) }
     var importing by remember { mutableStateOf(false) }
     var importTip by remember { mutableStateOf<ImportTip?>(null) }
+    var pendingImportUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var rememberOriginalsChoice by remember { mutableStateOf(false) }
+    var retryDeleteUrisAfterPermission by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val tabs = remember { homeTabs() }
     val isVaultEmpty = remember(albums, recentPhotos) {
         recentPhotos.isEmpty() && albums.sumOf { it.photoCount } == 0
@@ -132,48 +148,121 @@ fun HomeScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    val deleteOriginalsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        val retryUris = retryDeleteUrisAfterPermission
+        retryDeleteUrisAfterPermission = emptyList()
+        if (result.resultCode == Activity.RESULT_OK) {
+            if (retryUris.isNotEmpty()) {
+                scope.launch {
+                    val deleted = deleteOriginalUrisDirect(context, retryUris).deletedCount
+                    importTip = ImportTip(
+                        context.getString(R.string.import_originals_delete_success, deleted),
+                        false,
+                    )
+                }
+            } else {
+                importTip = ImportTip(context.getString(R.string.import_originals_delete_requested), false)
+            }
+        } else {
+            importTip = ImportTip(context.getString(R.string.import_originals_delete_canceled), false)
+        }
+    }
+
+    fun requestDeleteOriginals(uris: List<Uri>) {
+        val uniqueUris = mediaStoreDeleteUris(context, uris)
+        if (uniqueUris.isEmpty()) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val request = runCatching {
+                MediaStore.createDeleteRequest(context.contentResolver, uniqueUris).let { pendingIntent ->
+                    IntentSenderRequest.Builder(pendingIntent.intentSender).build()
+                }
+            }.getOrNull()
+            if (request != null) {
+                retryDeleteUrisAfterPermission = emptyList()
+                deleteOriginalsLauncher.launch(request)
+            } else {
+                importTip = ImportTip(context.getString(R.string.import_originals_delete_failed), true)
+            }
+        } else {
+            scope.launch {
+                val result = deleteOriginalUrisDirect(context, uniqueUris)
+                if (result.permissionRequest != null) {
+                    retryDeleteUrisAfterPermission = result.retryUris
+                    deleteOriginalsLauncher.launch(result.permissionRequest)
+                } else {
+                    importTip = ImportTip(
+                        context.getString(R.string.import_originals_delete_success, result.deletedCount),
+                        result.deletedCount == 0 && uniqueUris.isNotEmpty(),
+                    )
+                }
+            }
+        }
+    }
+
+    fun importSelectedUris(uris: List<Uri>, originalsAction: ImportOriginalsAction) {
+        if (uris.isEmpty()) return
+        scope.launch {
+            importing = true
+            var added = 0
+            var duplicate = 0
+            var failed = 0
+            var quotaExceeded = false
+            val deleteCandidates = mutableListOf<Uri>()
+            for (uri in uris) {
+                when (VaultStore.importFromPicker(context, uri, DEFAULT_ALBUM_NAME)) {
+                    VaultImportResult.ADDED -> {
+                        added += 1
+                        deleteCandidates += uri
+                    }
+                    VaultImportResult.DUPLICATE -> duplicate += 1
+                    VaultImportResult.QUOTA_EXCEEDED -> {
+                        quotaExceeded = true
+                        break
+                    }
+                    VaultImportResult.FAILED -> failed += 1
+                }
+            }
+            refreshVault()
+            // 导入完成后触发一次增量 AI 扫描（mutex + rescanRequested 会合并多次触发）。
+            if (added > 0) {
+                com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
+            }
+            importTip = if (uris.size == 1) {
+                when {
+                    added == 1 -> ImportTip(context.getString(R.string.home_import_success_default_album), false)
+                    duplicate == 1 -> ImportTip(context.getString(R.string.home_import_duplicate_default_album), false)
+                    else -> ImportTip(context.getString(R.string.home_import_failed), true)
+                }
+            } else {
+                ImportTip(
+                    context.getString(R.string.home_import_multi_result, added, duplicate, failed),
+                    failed > 0 && added == 0,
+                )
+            }
+            importing = false
+            if (originalsAction == ImportOriginalsAction.DELETE_ORIGINALS && added > 0) {
+                requestDeleteOriginals(deleteCandidates)
+            }
+            if (quotaExceeded) {
+                onPaywallRequired()
+            }
+        }
+    }
+
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 30),
     ) { uris ->
         if (uris.isNotEmpty()) {
-            scope.launch {
-                importing = true
-                var added = 0
-                var duplicate = 0
-                var failed = 0
-                var quotaExceeded = false
-                for (uri in uris) {
-                    when (VaultStore.importFromPicker(context, uri, DEFAULT_ALBUM_NAME)) {
-                        VaultImportResult.ADDED -> added += 1
-                        VaultImportResult.DUPLICATE -> duplicate += 1
-                        VaultImportResult.QUOTA_EXCEEDED -> {
-                            quotaExceeded = true
-                            break
-                        }
-                        VaultImportResult.FAILED -> failed += 1
-                    }
+            when (val action = ImportOriginalsPreferenceStore.current(context)) {
+                ImportOriginalsAction.ASK_EACH_TIME -> {
+                    pendingImportUris = uris
+                    rememberOriginalsChoice = false
                 }
-                refreshVault()
-                // 导入完成后触发一次增量 AI 扫描（mutex + rescanRequested 会合并多次触发）。
-                if (added > 0) {
-                    com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
-                }
-                importTip = if (uris.size == 1) {
-                    when {
-                        added == 1 -> ImportTip(context.getString(R.string.home_import_success_default_album), false)
-                        duplicate == 1 -> ImportTip(context.getString(R.string.home_import_duplicate_default_album), false)
-                        else -> ImportTip(context.getString(R.string.home_import_failed), true)
-                    }
-                } else {
-                    ImportTip(
-                        context.getString(R.string.home_import_multi_result, added, duplicate, failed),
-                        failed > 0 && added == 0,
-                    )
-                }
-                importing = false
-                if (quotaExceeded) {
-                    onPaywallRequired()
-                }
+                ImportOriginalsAction.KEEP_ORIGINALS,
+                ImportOriginalsAction.DELETE_ORIGINALS,
+                -> importSelectedUris(uris, action)
             }
         }
     }
@@ -316,6 +405,105 @@ fun HomeScreen(
         onDismiss = {
             newAlbumName = ""
             creatingAlbum = false
+        },
+    )
+
+    ImportOriginalsDecisionDialog(
+        show = pendingImportUris.isNotEmpty(),
+        itemCount = pendingImportUris.size,
+        rememberChoice = rememberOriginalsChoice,
+        onRememberChoiceChange = { rememberOriginalsChoice = it },
+        onKeepOriginals = {
+            val uris = pendingImportUris
+            pendingImportUris = emptyList()
+            if (rememberOriginalsChoice) {
+                ImportOriginalsPreferenceStore.set(context, ImportOriginalsAction.KEEP_ORIGINALS)
+            }
+            importSelectedUris(uris, ImportOriginalsAction.KEEP_ORIGINALS)
+        },
+        onDeleteOriginals = {
+            val uris = pendingImportUris
+            pendingImportUris = emptyList()
+            if (rememberOriginalsChoice) {
+                ImportOriginalsPreferenceStore.set(context, ImportOriginalsAction.DELETE_ORIGINALS)
+            }
+            importSelectedUris(uris, ImportOriginalsAction.DELETE_ORIGINALS)
+        },
+        onDismiss = {
+            pendingImportUris = emptyList()
+            rememberOriginalsChoice = false
+        },
+    )
+}
+
+@Composable
+private fun ImportOriginalsDecisionDialog(
+    show: Boolean,
+    itemCount: Int,
+    rememberChoice: Boolean,
+    onRememberChoiceChange: (Boolean) -> Unit,
+    onKeepOriginals: () -> Unit,
+    onDeleteOriginals: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    if (!show) return
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = UiColors.Dialog.bg,
+        title = {
+            Text(
+                text = stringResource(R.string.import_originals_sheet_title),
+                color = UiColors.Dialog.title,
+                fontSize = UiTextSize.dialogTitle,
+                fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text(
+                    text = stringResource(R.string.import_originals_sheet_message, itemCount),
+                    color = UiColors.Dialog.body,
+                    fontSize = UiTextSize.dialogBody,
+                )
+                Text(
+                    text = stringResource(R.string.import_originals_delete_note_android),
+                    color = UiColors.Home.subtitle,
+                    fontSize = UiTextSize.settingsRowDesc,
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(UiRadius.settingsRow))
+                        .clickable { onRememberChoiceChange(!rememberChoice) }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = rememberChoice,
+                        onCheckedChange = onRememberChoiceChange,
+                    )
+                    Text(
+                        text = stringResource(R.string.import_originals_remember),
+                        color = UiColors.Dialog.body,
+                        fontSize = UiTextSize.dialogBody,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            AppButton(
+                text = stringResource(R.string.import_originals_delete_action),
+                onClick = onDeleteOriginals,
+                variant = AppButtonVariant.DANGER,
+            )
+        },
+        dismissButton = {
+            AppButton(
+                text = stringResource(R.string.import_originals_keep_action),
+                onClick = onKeepOriginals,
+                variant = AppButtonVariant.SECONDARY,
+            )
         },
     )
 }
@@ -828,5 +1016,50 @@ fun homeTabs(): List<HomeNavTab> = listOf(
     HomeNavTab(HomeTab.AI, R.drawable.ic_home_nav_ai, R.string.home_nav_ai, R.string.home_ai_empty_title, R.string.home_ai_empty_desc, R.string.home_ai_empty_action),
     HomeNavTab(HomeTab.SETTINGS, R.drawable.ic_home_nav_settings, R.string.home_nav_settings, R.string.home_settings_empty_title, R.string.home_settings_empty_desc, R.string.home_settings_empty_action),
 )
+
+private data class DeleteOriginalsDirectResult(
+    val deletedCount: Int,
+    val permissionRequest: IntentSenderRequest?,
+    val retryUris: List<Uri>,
+)
+
+private suspend fun deleteOriginalUrisDirect(
+    context: Context,
+    uris: List<Uri>,
+): DeleteOriginalsDirectResult = withContext(Dispatchers.IO) {
+    val deleteUris = mediaStoreDeleteUris(context, uris)
+    var deletedCount = 0
+    for ((index, uri) in deleteUris.withIndex()) {
+        try {
+            if (context.contentResolver.delete(uri, null, null) > 0) {
+                deletedCount += 1
+            }
+        } catch (error: Throwable) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && error is RecoverableSecurityException) {
+                val retryUris = deleteUris.drop(index)
+                val request = IntentSenderRequest.Builder(error.userAction.actionIntent.intentSender).build()
+                return@withContext DeleteOriginalsDirectResult(
+                    deletedCount = deletedCount,
+                    permissionRequest = request,
+                    retryUris = retryUris,
+                )
+            }
+        }
+    }
+    DeleteOriginalsDirectResult(
+        deletedCount = deletedCount,
+        permissionRequest = null,
+        retryUris = emptyList(),
+    )
+}
+
+private fun mediaStoreDeleteUris(context: Context, uris: List<Uri>): List<Uri> =
+    uris.map { uri ->
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            runCatching { MediaStore.getMediaUri(context, uri) ?: uri }.getOrDefault(uri)
+        } else {
+            uri
+        }
+    }.distinct()
 
 private data class ImportTip(val message: String, val isError: Boolean)

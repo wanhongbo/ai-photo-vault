@@ -56,6 +56,7 @@ import com.xpx.vault.ui.settings.SettingsAboutSupportScreen
 import com.xpx.vault.ui.settings.SettingsBackupSyncScreen
 import com.xpx.vault.ui.settings.SettingsDataStorageScreen
 import com.xpx.vault.ui.settings.SettingsGeneralScreen
+import com.xpx.vault.ui.settings.SettingsImportOriginalsScreen
 import com.xpx.vault.ui.settings.SettingsSecurityPrivacyScreen
 import com.xpx.vault.ui.settings.SettingsSubscriptionPlaceholderScreen
 import com.xpx.vault.ui.PaywallScreen
@@ -436,6 +437,14 @@ class MainActivity : FragmentActivity() {
                                 onOpenTrashBin = {
                                     navController.navigate(ROUTE_TRASH_BIN) { launchSingleTop = true }
                                 },
+                                onOpenImportOriginals = {
+                                    navController.navigate(ROUTE_SETTINGS_IMPORT_ORIGINALS) { launchSingleTop = true }
+                                },
+                            )
+                        }
+                        composable(ROUTE_SETTINGS_IMPORT_ORIGINALS) {
+                            SettingsImportOriginalsScreen(
+                                onBack = { navController.popBackStack() },
                             )
                         }
                         composable(ROUTE_SETTINGS_GENERAL) {
@@ -780,6 +789,7 @@ class MainActivity : FragmentActivity() {
         private const val ROUTE_INTRUDER_ALERT = "intruder_alert"
         private const val ROUTE_SETTINGS_BACKUP_SYNC = "settings_backup_sync"
         private const val ROUTE_SETTINGS_DATA_STORAGE = "settings_data_storage"
+        private const val ROUTE_SETTINGS_IMPORT_ORIGINALS = "settings_import_originals"
         private const val ROUTE_SETTINGS_GENERAL = "settings_general"
         private const val ROUTE_SETTINGS_ABOUT = "settings_about"
         private const val ROUTE_PRIVACY_POLICY = "privacy_policy"
