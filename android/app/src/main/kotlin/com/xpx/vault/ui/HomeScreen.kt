@@ -701,11 +701,11 @@ private fun ImportOriginalsCheckbox(checked: Boolean) {
         contentAlignment = Alignment.Center,
     ) {
         if (checked) {
-            Box(
-                modifier = Modifier
-                    .size(9.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(Color.White),
+            Icon(
+                painter = painterResource(R.drawable.ic_result_success),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(14.dp),
             )
         }
     }

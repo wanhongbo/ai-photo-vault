@@ -618,6 +618,7 @@
     <string name="ai_classify_empty_scanning">扫描中…</string>
     <string name="ai_classify_empty_no_data">该分类暂无数据</string>
     <string name="ai_classify_scan_hint">点击上方「扫描」按钮，AI 将为你的照片自动打标分类。</string>
+    <string name="ai_classify_detail_generated_note">本相册由AI自动生成</string>
     <string name="ai_classify_screenshot">截图</string>
     <string name="ai_classify_id_card">证件</string>
     <string name="ai_classify_portrait">人像</string>

@@ -46,6 +46,7 @@ import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
+import com.xpx.vault.ui.theme.AppFontFamily
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
@@ -288,13 +289,19 @@ private fun ClassifyCategoryDetail(
             .padding(16.dp),
     ) {
         AppTopBar(title = labelFor(category), onBack = onBack)
+        ClassifyGeneratedAlbumBanner(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+        )
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(top = 12.dp)
+                .padding(top = 14.dp)
                 .clip(RoundedCornerShape(UiRadius.homeCard))
                 .background(UiColors.Home.sectionBg)
+                .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
                 .padding(UiSize.homeCardPadding),
         ) {
             if (paths.isEmpty()) {
@@ -319,6 +326,45 @@ private fun ClassifyCategoryDetail(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ClassifyGeneratedAlbumBanner(
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(UiColors.Home.sectionBg)
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFF13345A)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_ai_sparkles),
+                contentDescription = null,
+                tint = Color(0xFF8EC5FF),
+                modifier = Modifier.size(16.dp),
+            )
+        }
+        Text(
+            text = stringResource(R.string.ai_classify_detail_generated_note),
+            color = Color(0xFFC8D8EF),
+            fontFamily = AppFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            lineHeight = 18.sp,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
