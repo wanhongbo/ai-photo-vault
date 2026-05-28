@@ -48,6 +48,8 @@ final class SystemPhotoLibraryExportService {
         let album = try await album()
         var didCreateAsset = false
 
+        let lockToken = AppLockManager.shared.beginSystemInteraction()
+        defer { AppLockManager.shared.endSystemInteraction(lockToken) }
         try await PHPhotoLibrary.shared().performChanges {
             let assetRequest = self.makeAssetChangeRequest(fileURL: fileURL)
 
@@ -66,6 +68,8 @@ final class SystemPhotoLibraryExportService {
 
     private func exportToPhotoLibrary(fileURL: URL) async throws {
         var didCreateAsset = false
+        let lockToken = AppLockManager.shared.beginSystemInteraction()
+        defer { AppLockManager.shared.endSystemInteraction(lockToken) }
         try await PHPhotoLibrary.shared().performChanges {
             guard self.makeAssetChangeRequest(fileURL: fileURL) != nil else { return }
             didCreateAsset = true
@@ -79,9 +83,13 @@ final class SystemPhotoLibraryExportService {
     private func requestPhotoReadWriteAuthorization() async -> PHAuthorizationStatus {
         let current = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         guard current == .notDetermined else { return current }
+        let lockToken = AppLockManager.shared.beginSystemInteraction()
         return await withCheckedContinuation { continuation in
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
-                continuation.resume(returning: status)
+                Task { @MainActor in
+                    AppLockManager.shared.endSystemInteraction(lockToken)
+                    continuation.resume(returning: status)
+                }
             }
         }
     }
@@ -92,6 +100,8 @@ final class SystemPhotoLibraryExportService {
         }
 
         var createdIdentifier: String?
+        let lockToken = AppLockManager.shared.beginSystemInteraction()
+        defer { AppLockManager.shared.endSystemInteraction(lockToken) }
         try await PHPhotoLibrary.shared().performChanges {
             let request = PHAssetCollectionChangeRequest.creationRequestForAssetCollection(
                 withTitle: Self.albumTitle

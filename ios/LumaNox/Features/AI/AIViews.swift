@@ -236,6 +236,7 @@ struct AIHomeView: View {
                 width: isCompact ? 74 : nil
             )
         }
+        .appLockSystemInteraction()
         .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
         .disabled(isPreImportBusy)
         .accessibilityIdentifier("ai_preimport_picker_button")
@@ -1028,6 +1029,7 @@ struct PrivacyRedactView: View {
     @State private var isPreparingShare = false
     @State private var shareURL: URL?
     @State private var showShareSheet = false
+    @State private var shareSheetLockToken: UUID?
     @State private var redactedPreviewImage: UIImage?
     @State private var previewTask: Task<Void, Never>?
     @State private var previewRequestID = UUID()
@@ -1164,6 +1166,10 @@ struct PrivacyRedactView: View {
             if !isPresented, let shareURL {
                 PlaintextTempFileManager.shared.removeItem(shareURL)
                 self.shareURL = nil
+            }
+            if !isPresented {
+                AppLockManager.shared.endSystemInteraction(shareSheetLockToken)
+                shareSheetLockToken = nil
             }
         }
         .edgeSwipeBack { dismiss() }
@@ -1461,6 +1467,7 @@ struct PrivacyRedactView: View {
                 isPreparingShare = false
                 if let url {
                     shareURL = url
+                    shareSheetLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
                     showShareSheet = true
                 } else {
                     redactionService.updateMessage(L10n.tr("privacy_redact_share_failed"), isError: true)

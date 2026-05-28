@@ -82,8 +82,10 @@ final class CameraSessionController: NSObject, ObservableObject {
         case .notDetermined:
             guard !isRequestingVideoAccess else { return }
             isRequestingVideoAccess = true
+            let lockToken = AppLockManager.shared.beginSystemInteraction()
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 Task { @MainActor in
+                    AppLockManager.shared.endSystemInteraction(lockToken)
                     self?.isRequestingVideoAccess = false
                     if granted {
                         self?.startSession()
@@ -434,8 +436,10 @@ final class CameraSessionController: NSObject, ObservableObject {
             microphoneDenied = false
             addAudioInputIfPossible(completion: completion)
         case .notDetermined:
+            let lockToken = AppLockManager.shared.beginSystemInteraction()
             AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
                 Task { @MainActor in
+                    AppLockManager.shared.endSystemInteraction(lockToken)
                     self?.microphoneDenied = !granted
                 }
                 if granted {

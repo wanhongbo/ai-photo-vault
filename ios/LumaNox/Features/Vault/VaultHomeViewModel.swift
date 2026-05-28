@@ -109,8 +109,10 @@ final class VaultHomeViewModel: ObservableObject {
     }
 
     func requestPhotoAccess() {
+        let lockToken = AppLockManager.shared.beginSystemInteraction()
         PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in
             Task { @MainActor in
+                AppLockManager.shared.endSystemInteraction(lockToken)
                 self.refreshAuthorization()
             }
         }
@@ -344,14 +346,20 @@ enum PhotosOriginalDeletionService {
     private static func readWriteAuthorizationStatus() async -> PHAuthorizationStatus {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         guard status == .notDetermined else { return status }
+        let lockToken = AppLockManager.shared.beginSystemInteraction()
         return await withCheckedContinuation { continuation in
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { newStatus in
-                continuation.resume(returning: newStatus)
+                Task { @MainActor in
+                    AppLockManager.shared.endSystemInteraction(lockToken)
+                    continuation.resume(returning: newStatus)
+                }
             }
         }
     }
 
     private static func performDelete(_ assets: PHFetchResult<PHAsset>) async throws {
+        let lockToken = AppLockManager.shared.beginSystemInteraction()
+        defer { AppLockManager.shared.endSystemInteraction(lockToken) }
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             PHPhotoLibrary.shared().performChanges {
                 PHAssetChangeRequest.deleteAssets(assets)

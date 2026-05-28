@@ -295,7 +295,9 @@ struct SettingsSubscriptionView: View {
     private func restorePurchases() async {
         guard !isRestoring else { return }
         isRestoring = true
+        let lockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
         let result = await subscription.restorePurchases()
+        AppLockManager.shared.endSystemInteraction(lockToken)
         isRestoring = false
         switch result {
         case .success:
@@ -435,6 +437,7 @@ struct SettingsBackupSyncView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = SettingsBackupSyncViewModel()
     @State private var showFolderPicker = false
+    @State private var folderPickerLockToken: UUID?
 
     var body: some View {
         LNScreenScaffold(title: L10n.settingsBackup, onBack: { dismiss() }) {
@@ -452,6 +455,7 @@ struct SettingsBackupSyncView: View {
                     title: L10n.tr("backup_folder_pick"),
                     subtitle: viewModel.folderPath ?? L10n.tr("backup_folder_not_set")
                 ) {
+                    folderPickerLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
                     showFolderPicker = true
                 }
                 if viewModel.folderWritable {
@@ -494,6 +498,8 @@ struct SettingsBackupSyncView: View {
             allowedContentTypes: [.folder],
             allowsMultipleSelection: false
         ) { result in
+            AppLockManager.shared.endSystemInteraction(folderPickerLockToken)
+            folderPickerLockToken = nil
             switch result {
             case .success(let urls):
                 guard let url = urls.first else { return }

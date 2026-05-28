@@ -12,7 +12,10 @@ final class AppLockManager: ObservableObject {
 
     private var wasBackgrounded = false
     private var hasPendingForegroundBiometricRequest = false
+    private var systemInteractionTokens = Set<UUID>()
+    private var systemInteractionGraceUntil: Date?
     private let securityStore = SecuritySettingsStore.shared
+    private let systemInteractionGraceInterval: TimeInterval = 1.0
 
     private init() {
         requireUnlock = securityStore.hasPinConfigured
@@ -35,9 +38,36 @@ final class AppLockManager: ObservableObject {
         }
     }
 
+    @discardableResult
+    func beginSystemInteraction(timeout: TimeInterval = 120) -> UUID {
+        let token = UUID()
+        systemInteractionTokens.insert(token)
+        systemInteractionGraceUntil = nil
+        scheduleSystemInteractionTimeout(token, timeout: timeout)
+        return token
+    }
+
+    func endSystemInteraction(_ token: UUID?) {
+        guard let token else { return }
+        guard systemInteractionTokens.remove(token) != nil else { return }
+        systemInteractionGraceUntil = Date().addingTimeInterval(systemInteractionGraceInterval)
+    }
+
     func handleScenePhase(_ phase: ScenePhase, lockScreenVisible: Bool = false) {
         switch phase {
-        case .background, .inactive:
+        case .inactive:
+            if securityStore.hasPinConfigured {
+                guard !lockScreenVisible else {
+                    protectsAppSwitcherSnapshot = false
+                    return
+                }
+                guard !isSystemInteractionActiveOrGrace else { return }
+                wasBackgrounded = true
+                requireUnlock = true
+                protectsAppSwitcherSnapshot = true
+                hasPendingForegroundBiometricRequest = true
+            }
+        case .background:
             if securityStore.hasPinConfigured {
                 guard !lockScreenVisible else {
                     protectsAppSwitcherSnapshot = false
@@ -49,6 +79,10 @@ final class AppLockManager: ObservableObject {
                 hasPendingForegroundBiometricRequest = true
             }
         case .active:
+            if !wasBackgrounded, !systemInteractionTokens.isEmpty {
+                systemInteractionTokens.removeAll()
+                systemInteractionGraceUntil = Date().addingTimeInterval(systemInteractionGraceInterval)
+            }
             protectsAppSwitcherSnapshot = false
             guard securityStore.hasPinConfigured, wasBackgrounded else { return }
             wasBackgrounded = false
@@ -63,5 +97,31 @@ final class AppLockManager: ObservableObject {
 
     func consumeForegroundBiometricRequest() {
         hasPendingForegroundBiometricRequest = false
+    }
+
+    private var isSystemInteractionActiveOrGrace: Bool {
+        if !systemInteractionTokens.isEmpty { return true }
+        guard let systemInteractionGraceUntil else { return false }
+        return Date() < systemInteractionGraceUntil
+    }
+
+    private func scheduleSystemInteractionTimeout(_ token: UUID, timeout: TimeInterval) {
+        Task { @MainActor in
+            let nanoseconds = UInt64(max(1, timeout) * 1_000_000_000)
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            if systemInteractionTokens.remove(token) != nil {
+                systemInteractionGraceUntil = Date().addingTimeInterval(systemInteractionGraceInterval)
+            }
+        }
+    }
+}
+
+extension View {
+    func appLockSystemInteraction(timeout: TimeInterval = 120) -> some View {
+        simultaneousGesture(
+            TapGesture().onEnded {
+                AppLockManager.shared.beginSystemInteraction(timeout: timeout)
+            }
+        )
     }
 }

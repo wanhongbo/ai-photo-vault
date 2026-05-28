@@ -32,6 +32,7 @@ struct VideoPlayerView: View {
     @State private var isExportingSystem = false
     @State private var shareURL: URL?
     @State private var showShareSheet = false
+    @State private var shareSheetLockToken: UUID?
     @State private var showShareFailure = false
     @State private var exportAlertMessage: String?
     @State private var showExportAlert = false
@@ -136,6 +137,10 @@ struct VideoPlayerView: View {
             if !isPresented, let shareURL {
                 PlaintextTempFileManager.shared.removeItem(shareURL)
                 self.shareURL = nil
+            }
+            if !isPresented {
+                AppLockManager.shared.endSystemInteraction(shareSheetLockToken)
+                shareSheetLockToken = nil
             }
         }
         .alert(L10n.tr("photo_viewer_share_failed"), isPresented: $showShareFailure) {
@@ -329,6 +334,7 @@ struct VideoPlayerView: View {
                 let url = try await makeShareURL()
                 await MainActor.run {
                     shareURL = url
+                    shareSheetLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
                     showShareSheet = true
                     isPreparingShare = false
                 }

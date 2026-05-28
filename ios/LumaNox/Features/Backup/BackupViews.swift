@@ -6,6 +6,7 @@ struct BackupRestoreView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = BackupRestoreViewModel()
     @State private var showImporter = false
+    @State private var importerLockToken: UUID?
 
     var body: some View {
         LNScreenScaffold(title: L10n.backupRestoreTitle, onBack: { dismiss() }) {
@@ -41,6 +42,7 @@ struct BackupRestoreView: View {
                 variant: .secondary,
                 loading: false
             ) {
+                importerLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
                 showImporter = true
             }
         }
@@ -50,6 +52,8 @@ struct BackupRestoreView: View {
             allowedContentTypes: [.data, .item],
             allowsMultipleSelection: false
         ) { result in
+            AppLockManager.shared.endSystemInteraction(importerLockToken)
+            importerLockToken = nil
             switch result {
             case .success(let urls):
                 guard let url = urls.first else { return }
@@ -229,6 +233,7 @@ struct BackupProgressView: View {
 struct BackupResultView: View {
     @EnvironmentObject private var router: AppRouter
     @State private var showExporter = false
+    @State private var exporterLockToken: UUID?
     @State private var exportDocument = BackupExportDocument()
     @State private var saved = false
     @State private var errorMessage: String?
@@ -252,6 +257,7 @@ struct BackupResultView: View {
             if !saved, let outputURL = BackupFlowState.backupOutputURL {
                 LNButton(title: L10n.tr("backup_result_save_file"), variant: .primary) {
                     exportDocument = BackupExportDocument(fileURL: outputURL)
+                    exporterLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
                     showExporter = true
                 }
             }
@@ -266,6 +272,8 @@ struct BackupResultView: View {
             contentType: .aivaultBackup,
             defaultFilename: defaultBackupFilename
         ) { result in
+            AppLockManager.shared.endSystemInteraction(exporterLockToken)
+            exporterLockToken = nil
             switch result {
             case .success:
                 cleanupExport()

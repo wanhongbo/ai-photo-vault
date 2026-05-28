@@ -13,6 +13,7 @@ struct LockView: View {
     @State private var pendingAutoBiometricTask: Task<Void, Never>?
     @State private var showAbandonDialog = false
     @State private var showRestoreFolderPicker = false
+    @State private var restoreFolderPickerLockToken: UUID?
 
     private let pinLength = 6
 
@@ -48,6 +49,8 @@ struct LockView: View {
             allowedContentTypes: [.folder],
             allowsMultipleSelection: false
         ) { result in
+            AppLockManager.shared.endSystemInteraction(restoreFolderPickerLockToken)
+            restoreFolderPickerLockToken = nil
             if case .success(let urls) = result, let url = urls.first {
                 viewModel.onRestoreFolderPicked(url)
             }
@@ -210,6 +213,7 @@ struct LockView: View {
             }
         } else if viewModel.state.stage == .setupEnter {
             LNButton(title: L10n.tr("lock_restore_pick_folder"), variant: .secondary) {
+                restoreFolderPickerLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
                 showRestoreFolderPicker = true
             }
         } else if viewModel.state.stage == .restoreLogin, viewModel.state.showAbandonBackupEntry {

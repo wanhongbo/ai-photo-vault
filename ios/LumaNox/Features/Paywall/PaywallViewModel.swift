@@ -37,7 +37,9 @@ final class PaywallViewModel: ObservableObject {
         surfaceError = nil
         PaywallAnalytics.trackPurchaseStart(packageId: pkg.packageIdentifier, source: source)
         defer { purchasing = false }
+        let lockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
         let result = await subscription.purchase(packageIdentifier: pkg.packageIdentifier)
+        AppLockManager.shared.endSystemInteraction(lockToken)
         switch result {
         case .success:
             PaywallAnalytics.trackPurchaseSuccess(packageId: pkg.packageIdentifier)
@@ -58,7 +60,9 @@ final class PaywallViewModel: ObservableObject {
         purchasing = true
         surfaceError = nil
         defer { purchasing = false }
+        let lockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
         let result = await subscription.restorePurchases()
+        AppLockManager.shared.endSystemInteraction(lockToken)
         switch result {
         case .success:
             isPremium = subscription.isPremium

@@ -268,6 +268,7 @@ struct VaultHomeView: View {
                     .background(LNColor.buttonPrimaryBg)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            .appLockSystemInteraction()
             .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.88))
             Button { router.openPrivateCamera() } label: {
                 Text(L10n.tr("home_camera_empty_action"))

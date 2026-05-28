@@ -45,7 +45,9 @@ final class IntruderAlertStore: ObservableObject {
         case .authorized:
             cameraAuthorized = true
         case .notDetermined:
+            let lockToken = AppLockManager.shared.beginSystemInteraction()
             let granted = await AVCaptureDevice.requestAccess(for: .video)
+            AppLockManager.shared.endSystemInteraction(lockToken)
             cameraAuthorized = granted
         default:
             cameraAuthorized = false

@@ -336,6 +336,7 @@ struct VaultMediaGridCard: View {
                 ) {
                     VaultMediaImportGridTile(size: cellWidth, isImporting: isImporting)
                 }
+                .appLockSystemInteraction()
                 .disabled(isImporting)
                 .buttonStyle(.lnPressable())
                 .accessibilityLabel(L10n.tr("album_import_media_action"))
@@ -597,6 +598,7 @@ struct PhotoViewerView: View {
     @State private var isExportingSystem = false
     @State private var shareURL: URL?
     @State private var showShareSheet = false
+    @State private var shareSheetLockToken: UUID?
     @State private var showShareFailure = false
     @State private var exportAlertMessage: String?
     @State private var showExportAlert = false
@@ -674,6 +676,10 @@ struct PhotoViewerView: View {
                 PlaintextTempFileManager.shared.removeItem(shareURL)
                 self.shareURL = nil
             }
+            if !isPresented {
+                AppLockManager.shared.endSystemInteraction(shareSheetLockToken)
+                shareSheetLockToken = nil
+            }
         }
         .alert(L10n.tr("photo_viewer_share_failed"), isPresented: $showShareFailure) {
             Button(L10n.commonOk, role: .cancel) {}
@@ -727,6 +733,7 @@ struct PhotoViewerView: View {
                 let url = try await makeShareURL(for: pathToShare)
                 await MainActor.run {
                     shareURL = url
+                    shareSheetLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
                     showShareSheet = true
                     isPreparingShare = false
                 }
