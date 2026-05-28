@@ -68,6 +68,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
+import com.xpx.vault.findAppLockManager
+import com.xpx.vault.launchExternalSystemUi
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppInputDialog
@@ -109,6 +111,10 @@ fun HomeScreen(
     val pinStatusVm: PinSetupStatusViewModel = hiltViewModel()
     val hasPin by pinStatusVm.hasPin.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val appLockManager = remember(context) { context.findAppLockManager() }
+    fun launchSystemUi(reason: String, launch: () -> Unit) {
+        appLockManager?.launchExternalSystemUi(reason, launch) ?: launch()
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     var creatingAlbum by remember { mutableStateOf(false) }
@@ -158,6 +164,7 @@ fun HomeScreen(
     val deleteOriginalsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
     ) { result ->
+        appLockManager?.endExternalSystemUi("home delete originals result")
         val retryUris = retryDeleteUrisAfterPermission
         val requestedCount = pendingDeleteRequestCount
         val unsupportedCount = pendingDeleteUnsupportedCount
@@ -194,7 +201,9 @@ fun HomeScreen(
                 retryDeleteUrisAfterPermission = emptyList()
                 pendingDeleteRequestCount = targets.uris.size
                 pendingDeleteUnsupportedCount = targets.unsupportedCount
-                deleteOriginalsLauncher.launch(request)
+                launchSystemUi("home delete originals permission") {
+                    deleteOriginalsLauncher.launch(request)
+                }
             } else {
                 importTip = ImportTip(context.getString(R.string.import_originals_delete_failed), true)
             }
@@ -205,7 +214,9 @@ fun HomeScreen(
                     retryDeleteUrisAfterPermission = result.retryUris
                     pendingDeleteRequestCount = result.retryUris.size
                     pendingDeleteUnsupportedCount = targets.unsupportedCount
-                    deleteOriginalsLauncher.launch(result.permissionRequest)
+                    launchSystemUi("home delete originals permission") {
+                        deleteOriginalsLauncher.launch(result.permissionRequest)
+                    }
                 } else {
                     importTip = buildDeleteOriginalsTip(context, result.deletedCount, targets.unsupportedCount)
                 }
@@ -269,6 +280,7 @@ fun HomeScreen(
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 30),
     ) { uris ->
+        appLockManager?.endExternalSystemUi("home photo picker result")
         if (uris.isNotEmpty()) {
             when (val action = ImportOriginalsPreferenceStore.current(context)) {
                 ImportOriginalsAction.ASK_EACH_TIME -> {
@@ -292,11 +304,13 @@ fun HomeScreen(
                 if (gate is com.xpx.vault.billing.GateResult.HardWall) {
                     onPaywallRequired()
                 } else {
-                    pickerLauncher.launch(
-                        PickVisualMediaRequest.Builder()
-                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                            .build(),
-                    )
+                    launchSystemUi("home photo picker") {
+                        pickerLauncher.launch(
+                            PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                                .build(),
+                        )
+                    }
                 }
             }
         }

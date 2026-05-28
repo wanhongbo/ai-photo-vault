@@ -1,5 +1,6 @@
 package com.xpx.vault
 
+import android.content.Context
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -18,9 +19,9 @@ import kotlinx.coroutines.withContext
 /**
  * 应用级锁屏策略：
  * - 冷启动默认需要解锁（_requireUnlock 初始 true）；若本机尚未配置 PIN，异步读库后会置为无需解锁。
- * - 进入后台(onStop)不立即上锁，只记录时间戳；只有再次回前台(onStart)且后台时长超过阈值才上锁。
- *   这样 SAF/系统相册/相机/分享 等短时间外部 Activity 回来不会弹 PIN。
- * - 未设置 PIN 时，不因后台超时触发锁屏（无 PIN 可验证）。
+ * - 进入后台或用户主动切换应用时立即要求重新解锁，避免最近任务/回前台直接暴露保险箱内容。
+ * - 由应用主动拉起的系统页面（照片选择、权限弹窗、SAF 文件选择等）临时跳过后台锁。
+ * - 未设置 PIN 时，不触发应用锁（无 PIN 可验证）。
  * - 解锁成功调用 [onUnlockSucceeded] 清空状态。
  */
 @Singleton
@@ -41,12 +42,8 @@ class AppLockManager @Inject constructor(
     @Volatile
     private var pinConfigured: Boolean? = null
 
-    /** 最近一次 onStop 的时间戳（ms）。0 表示"当前并未在后台"。 */
     @Volatile
-    private var lastStopAtMs: Long = 0L
-
-    /** 后台超时阈值：小于该值的后台切换不触发锁屏。可在后续接入设置项改为可配置。 */
-    private val backgroundTimeoutMs: Long = DEFAULT_BACKGROUND_TIMEOUT_MS
+    private var externalSystemUiDepth: Int = 0
 
     fun start() {
         if (started) return
@@ -65,7 +62,6 @@ class AppLockManager @Inject constructor(
 
     fun onUnlockSucceeded() {
         _requireUnlock.value = false
-        lastStopAtMs = 0L
     }
 
     /** 与数据库同步：是否已配置 PIN（用于后台锁与导航）。 */
@@ -94,40 +90,56 @@ class AppLockManager @Inject constructor(
      * 目前未使用，作为公开 API 保留。
      */
     fun forceLockNow() {
-        if (pinConfigured != true) return
-        _requireUnlock.value = true
-        lastStopAtMs = 0L
+        requestUnlockIfPinConfigured("manual force lock")
+    }
+
+    /** Activity 收到用户离开提示时调用，比进程 onStop 更早，可覆盖最近任务切换缩略图时机。 */
+    fun onUserLeavingApp() {
+        requestUnlockIfPinConfigured("user leaving app")
+    }
+
+    fun beginExternalSystemUi(reason: String) {
+        externalSystemUiDepth += 1
+        AppLogger.d(TAG, "external system ui started: $reason depth=$externalSystemUiDepth")
+    }
+
+    fun endExternalSystemUi(reason: String) {
+        externalSystemUiDepth = (externalSystemUiDepth - 1).coerceAtLeast(0)
+        AppLogger.d(TAG, "external system ui ended: $reason depth=$externalSystemUiDepth")
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        // 只记录时间戳，避免短暂切换(SAF/相机/选择器/分享)回来立刻弹 PIN。
-        lastStopAtMs = System.currentTimeMillis()
+        requestUnlockIfPinConfigured("process stopped")
     }
 
-    override fun onStart(owner: LifecycleOwner) {
+    private fun requestUnlockIfPinConfigured(reason: String) {
         if (pinConfigured != true) return
-        val stopAt = lastStopAtMs
-        if (stopAt <= 0L) return
-        val elapsed = System.currentTimeMillis() - stopAt
-        lastStopAtMs = 0L
-        if (elapsed >= backgroundTimeoutMs) {
-            _requireUnlock.value = true
+        if (externalSystemUiDepth > 0) {
             AppLogger.d(
                 TAG,
-                "lock triggered: background elapsedMs=$elapsed thresholdMs=$backgroundTimeoutMs",
+                "lock skipped: $reason while external system ui active depth=$externalSystemUiDepth",
             )
-        } else {
-            AppLogger.d(
-                TAG,
-                "lock skipped: background elapsedMs=$elapsed < thresholdMs=$backgroundTimeoutMs",
-            )
+            return
         }
+        if (_requireUnlock.value) return
+        _requireUnlock.value = true
+        AppLogger.d(TAG, "lock required: $reason")
     }
 
     companion object {
         private const val TAG = "AppLockManager"
+    }
+}
 
-        /** 默认后台超时 60 秒：短于该时间从外部 Activity 回来不重新上锁。 */
-        const val DEFAULT_BACKGROUND_TIMEOUT_MS: Long = 60_000L
+fun Context.findAppLockManager(): AppLockManager? =
+    (applicationContext as? LumaApp)?.appLockManager
+
+inline fun AppLockManager.launchExternalSystemUi(reason: String, launch: () -> Unit) {
+    beginExternalSystemUi(reason)
+    try {
+        launch()
+    } catch (throwable: Throwable) {
+        endExternalSystemUi("$reason failed")
+        throw throwable
     }
 }

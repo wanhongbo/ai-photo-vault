@@ -55,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
+import com.xpx.vault.findAppLockManager
+import com.xpx.vault.launchExternalSystemUi
 import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.export.ExportRuntimeState
 import com.xpx.vault.ui.feedback.pressFeedback
@@ -78,6 +80,10 @@ fun AlbumScreen(
     onPaywallRequired: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    val appLockManager = remember(context) { context.findAppLockManager() }
+    fun launchSystemUi(reason: String, launch: () -> Unit) {
+        appLockManager?.launchExternalSystemUi(reason, launch) ?: launch()
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val cachedPhotos = remember(albumName) { VaultStore.peekCachedAlbumPhotos(albumName) }
@@ -125,6 +131,7 @@ fun AlbumScreen(
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 30),
     ) { uris ->
+        appLockManager?.endExternalSystemUi("album photo picker result")
         if (uris.isNotEmpty()) {
             scope.launch {
                 var quotaExceeded = false
@@ -154,11 +161,13 @@ fun AlbumScreen(
             if (gate is com.xpx.vault.billing.GateResult.HardWall) {
                 onPaywallRequired()
             } else {
-                pickerLauncher.launch(
-                    PickVisualMediaRequest.Builder()
-                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                        .build(),
-                )
+                launchSystemUi("album photo picker") {
+                    pickerLauncher.launch(
+                        PickVisualMediaRequest.Builder()
+                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                            .build(),
+                    )
+                }
             }
         }
     }

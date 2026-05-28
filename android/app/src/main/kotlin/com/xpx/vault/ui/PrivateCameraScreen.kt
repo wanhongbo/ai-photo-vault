@@ -106,6 +106,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.Observer
 import com.xpx.vault.R
+import com.xpx.vault.findAppLockManager
+import com.xpx.vault.launchExternalSystemUi
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.theme.UiColors
@@ -159,6 +161,10 @@ fun PrivateCameraScreen(
     onPaywallRequired: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    val appLockManager = remember(context) { context.findAppLockManager() }
+    fun launchSystemUi(reason: String, launch: () -> Unit) {
+        appLockManager?.launchExternalSystemUi(reason, launch) ?: launch()
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
@@ -234,12 +240,17 @@ fun PrivateCameraScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
+        appLockManager?.endExternalSystemUi("private camera permission result")
         hasCameraPermission = granted
         if (!granted) message = context.getString(R.string.camera_permission_denied)
     }
 
     LaunchedEffect(Unit) {
-        if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
+        if (!hasCameraPermission) {
+            launchSystemUi("private camera permission") {
+                permissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
     }
 
     DisposableEffect(lifecycleOwner) {

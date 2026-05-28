@@ -51,6 +51,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xpx.vault.AppLogger
 import com.xpx.vault.R
+import com.xpx.vault.findAppLockManager
+import com.xpx.vault.launchExternalSystemUi
 import com.xpx.vault.ui.backup.AutoBackupScheduler
 import com.xpx.vault.ui.backup.BackupMeta
 import com.xpx.vault.ui.backup.BackupSecretsStore
@@ -97,6 +99,11 @@ fun BackupRestoreScreen(
     viewModel: BackupRestoreViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val appLockManager = remember(context) { context.findAppLockManager() }
+    fun launchSystemUi(reason: String, launch: () -> Unit) {
+        appLockManager?.launchExternalSystemUi(reason, launch) ?: launch()
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // App 回前台 / 首次进入时刷新 SAF 授权状态 + meta
@@ -113,6 +120,7 @@ fun BackupRestoreScreen(
     val manualBackupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
     ) { uri ->
+        appLockManager?.endExternalSystemUi("manual backup file picker result")
         if (uri != null) {
             viewModel.exportBackupToUri(uri)
         } else {
@@ -122,6 +130,7 @@ fun BackupRestoreScreen(
     val manualRestoreLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri ->
+        appLockManager?.endExternalSystemUi("manual restore file picker result")
         if (uri != null) {
             pendingRestoreUri = uri
             viewModel.showPinDialog()
@@ -132,6 +141,7 @@ fun BackupRestoreScreen(
     val safTreeLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
+        appLockManager?.endExternalSystemUi("backup folder picker result")
         if (uri != null) {
             viewModel.onTreeUriAuthorized(uri)
         }
@@ -175,7 +185,7 @@ fun BackupRestoreScreen(
         onConfirm = { viewModel.consumeRestoreSuccess() },
     )
 
-    val backupSuccessContext = LocalContext.current
+    val backupSuccessContext = context
     AppDialog(
         show = state.showBackupSuccess,
         title = stringResource(R.string.backup_result_success),
@@ -221,7 +231,9 @@ fun BackupRestoreScreen(
                     authorized = state.safAuthorized,
                     treeUri = state.treeUriDisplay,
                     onPickTree = {
-                        safTreeLauncher.launch(null)
+                        launchSystemUi("backup folder picker") {
+                            safTreeLauncher.launch(null)
+                        }
                     },
                     onClearTree = { viewModel.clearTreeAuthorization() },
                 )
@@ -250,7 +262,9 @@ fun BackupRestoreScreen(
                         viewModel.requestBackupAccess(
                             onAllowed = {
                                 val name = "AIVault_Backup_${formatStamp(System.currentTimeMillis())}.aivb"
-                                manualBackupLauncher.launch(name)
+                                launchSystemUi("manual backup file picker") {
+                                    manualBackupLauncher.launch(name)
+                                }
                             },
                             onBlocked = onPaywallRequired,
                         )
@@ -266,7 +280,9 @@ fun BackupRestoreScreen(
                     desc = stringResource(R.string.restore_card_desc),
                     action = stringResource(R.string.restore_card_action),
                     onAction = {
-                        manualRestoreLauncher.launch(arrayOf("application/octet-stream", "*/*"))
+                        launchSystemUi("manual restore file picker") {
+                            manualRestoreLauncher.launch(arrayOf("application/octet-stream", "*/*"))
+                        }
                     },
                     badgeRes = R.drawable.ic_restore_page,
                     secondary = true,

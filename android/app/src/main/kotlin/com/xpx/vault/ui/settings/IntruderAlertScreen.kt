@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.xpx.vault.R
+import com.xpx.vault.findAppLockManager
+import com.xpx.vault.launchExternalSystemUi
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
@@ -63,6 +65,10 @@ import kotlinx.coroutines.withContext
 @Composable
 fun IntruderAlertScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val appLockManager = remember(context) { context.findAppLockManager() }
+    fun launchSystemUi(reason: String, launch: () -> Unit) {
+        appLockManager?.launchExternalSystemUi(reason, launch) ?: launch()
+    }
     val scope = rememberCoroutineScope()
     var enabled by remember { mutableStateOf(IntruderAlertStore.isEnabled(context)) }
     var records by remember { mutableStateOf<List<IntruderAlertRecord>>(emptyList()) }
@@ -73,6 +79,7 @@ fun IntruderAlertScreen(onBack: () -> Unit) {
         )
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        appLockManager?.endExternalSystemUi("intruder camera permission result")
         cameraGranted = granted
         enabled = true
         IntruderAlertStore.setEnabled(context, true)
@@ -117,7 +124,9 @@ fun IntruderAlertScreen(onBack: () -> Unit) {
                         enabled = checked
                         IntruderAlertStore.setEnabled(context, checked)
                         if (checked && !cameraGranted) {
-                            permissionLauncher.launch(Manifest.permission.CAMERA)
+                            launchSystemUi("intruder camera permission") {
+                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
                         }
                     },
                 )
