@@ -870,6 +870,7 @@
 				C716979EA1398DDA5E6D7564 /* Sources */,
 				F88E759AAA8F677363D02297 /* Resources */,
 				72FC677F8F21D5C4904CAE1F /* Frameworks */,
+				07BF538EC1B515495110C8D6 /* Bundle Firebase Config */,
 				ABC872B1FA35F47AD9238031 /* Upload Firebase Crashlytics dSYMs */,
 			);
 			buildRules = (
@@ -1028,6 +1029,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		07BF538EC1B515495110C8D6 /* Bundle Firebase Config */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle Firebase Config";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nCANDIDATES=(\n  \"${SRCROOT}/LumaNox/Supporting/GoogleService-Info.plist\"\n  \"${SRCROOT}/LumaNox/GoogleService-Info.plist\"\n)\nDESTINATION=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nfor candidate in \"${CANDIDATES[@]}\"; do\n  if [ -f \"${candidate}\" ]; then\n    mkdir -p \"$(dirname \"${DESTINATION}\")\"\n    cp \"${candidate}\" \"${DESTINATION}\"\n    echo \"Bundled Firebase config from ${candidate}\"\n    exit 0\n  fi\ndone\necho \"Skipping Firebase config bundle: GoogleService-Info.plist is not available.\"\n";
+		};
 		ABC872B1FA35F47AD9238031 /* Upload Firebase Crashlytics dSYMs */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -1045,7 +1065,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nGOOGLE_SERVICE_INFO=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nCRASHLYTICS_RUN=\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nif [ -f \"${GOOGLE_SERVICE_INFO}\" ] && [ -x \"${CRASHLYTICS_RUN}\" ]; then\n  \"${CRASHLYTICS_RUN}\"\nelse\n  echo \"Skipping Firebase Crashlytics dSYM upload: GoogleService-Info.plist or Crashlytics/run is not available.\"\nfi\n";
+			shellScript = "set -e\nif [ \"${CONFIGURATION}\" = \"Debug\" ]; then\n  echo \"Skipping Firebase Crashlytics dSYM upload for Debug builds.\"\n  exit 0\nfi\nGOOGLE_SERVICE_INFO=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nCRASHLYTICS_RUN=\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nif [ ! -x \"${CRASHLYTICS_RUN}\" ]; then\n  CRASHLYTICS_RUN=\"${SRCROOT}/build/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nfi\nif [ -f \"${GOOGLE_SERVICE_INFO}\" ] && [ -x \"${CRASHLYTICS_RUN}\" ]; then\n  \"${CRASHLYTICS_RUN}\"\nelse\n  echo \"Skipping Firebase Crashlytics dSYM upload: GoogleService-Info.plist or Crashlytics/run is not available.\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
