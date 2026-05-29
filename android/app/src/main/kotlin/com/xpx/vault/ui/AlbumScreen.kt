@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -52,6 +51,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
@@ -62,9 +62,9 @@ import com.xpx.vault.ui.export.ExportRuntimeState
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
 import com.xpx.vault.ui.feedback.throttledClickable
+import com.xpx.vault.ui.theme.AppFontFamily
 import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
-import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.theme.UiTouch
 import com.xpx.vault.ui.vault.VaultPhoto
@@ -177,7 +177,7 @@ fun AlbumScreen(
             .fillMaxSize()
             .background(UiColors.Home.bgBottom)
             .safeDrawingPadding()
-            .padding(16.dp),
+            .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp),
     ) {
         AlbumTopBar(
             title = if (selectionMode) stringResource(R.string.album_select_mode_title, selected.size) else albumName,
@@ -202,17 +202,18 @@ fun AlbumScreen(
         } else {
             Box(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
-                    .padding(top = 12.dp)
-                    .clip(RoundedCornerShape(UiRadius.homeCard))
+                    .padding(top = 22.dp)
+                    .height(if (photos.isEmpty()) 135.dp else 337.dp)
+                    .clip(RoundedCornerShape(18.dp))
                     .background(UiColors.Home.sectionBg)
-                    .padding(UiSize.homeCardPadding),
+                    .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(18.dp))
+                    .padding(16.dp),
             ) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
-                    horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
-                    verticalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     if (!selectionMode) {
                         item {
@@ -273,14 +274,14 @@ private fun AlbumImportGridItem(
 
     Box(
         modifier = Modifier
-            .size(UiSize.homeThumbSize)
-            .plusPressFeedback(addInteraction, RoundedCornerShape(UiRadius.homeThumb))
-            .clip(RoundedCornerShape(UiRadius.homeThumb))
-            .background(UiColors.Home.emptyIconBg)
+            .size(103.dp)
+            .plusPressFeedback(addInteraction, RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFF142741))
             .border(
                 width = if (addPressed.value) 1.8.dp else 1.2.dp,
-                color = if (addPressed.value) UiColors.Home.navItemActive else UiColors.Home.navItemActiveStroke.copy(alpha = 0.45f),
-                shape = RoundedCornerShape(UiRadius.homeThumb),
+                color = if (addPressed.value) UiColors.Home.navItemActive else UiColors.Home.emptyCardStroke,
+                shape = RoundedCornerShape(10.dp),
             )
             .throttledClickable(interactionSource = addInteraction, indication = null) {
                 onClick()
@@ -290,7 +291,8 @@ private fun AlbumImportGridItem(
         Icon(
             painter = painterResource(R.drawable.ic_home_action_add),
             contentDescription = stringResource(R.string.album_action_add),
-            tint = UiColors.Home.navItemActive,
+            tint = Color(0xFF9FB2D1),
+            modifier = Modifier.size(29.dp),
         )
     }
 }
@@ -304,15 +306,17 @@ private fun AlbumTopBar(
     onToggleSelection: () -> Unit,
     onToggleSelectAll: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp),
     ) {
         Row(
             modifier = Modifier
+                .align(Alignment.CenterStart)
                 .size(UiTouch.minTarget)
-                .clip(RoundedCornerShape(10.dp))
-                .background(UiColors.Home.navBarBg)
+                .clip(RoundedCornerShape(14.dp))
+                .background(UiColors.Home.sectionBg)
                 .throttledClickable(onClick = onBack),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -327,9 +331,10 @@ private fun AlbumTopBar(
         Text(
             text = title,
             color = UiColors.Home.title,
-            fontSize = UiTextSize.homeTitle,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f),
+            fontFamily = AppFontFamily,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.align(Alignment.Center),
             textAlign = TextAlign.Center,
         )
         if (selectionMode) {
@@ -339,6 +344,7 @@ private fun AlbumTopBar(
                 fontSize = UiTextSize.homeNavLabel,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
+                    .align(Alignment.CenterEnd)
                     .height(36.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .throttledClickable(onClick = onToggleSelectAll)
@@ -348,18 +354,20 @@ private fun AlbumTopBar(
         } else {
             Row(
                 modifier = Modifier
+                    .align(Alignment.CenterEnd)
                     .size(UiTouch.minTarget)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(UiColors.Home.navBarBg)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(UiColors.Home.sectionBg)
+                    .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(14.dp))
                     .throttledClickable(onClick = onToggleSelection),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_photo_select),
-                    contentDescription = stringResource(R.string.album_action_select),
+                    painter = painterResource(R.drawable.ic_video_more),
+                    contentDescription = stringResource(R.string.album_action_more),
                     tint = UiColors.Home.title,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(22.dp),
                 )
             }
         }
@@ -381,15 +389,15 @@ private fun AlbumGridItem(
 ) {
     Box(
         modifier = Modifier
-            .size(UiSize.homeThumbSize)
-            .clip(RoundedCornerShape(UiRadius.homeThumb))
+            .size(103.dp)
+            .clip(RoundedCornerShape(10.dp))
             .throttledClickable(onClick = onClick),
     ) {
         VaultProgressiveImage(
             path = photo.path,
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(UiRadius.homeThumb)),
+                .clip(RoundedCornerShape(10.dp)),
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             thumbnailMaxPx = 360,
             showVideoIndicator = true,

@@ -772,15 +772,7 @@ private fun VaultHeroCard(
             .height(163.dp)
             .shadow(18.dp, RoundedCornerShape(28.dp), clip = false)
             .clip(RoundedCornerShape(28.dp))
-            .background(
-                Brush.linearGradient(
-                    colorStops = arrayOf(
-                        0.00f to Color(0xFF0C1929),
-                        0.52f to Color(0xFF08111D),
-                        1.00f to Color(0xFF0D2238),
-                    ),
-                ),
-            )
+            .background(homeCardBrush())
             .border(1.dp, Color(0xFF274260), RoundedCornerShape(28.dp)),
     ) {
         Column(
@@ -883,11 +875,14 @@ private fun VaultHeroChip(
 }
 
 private fun homeShelfBrush(): Brush =
+    homeCardBrush()
+
+private fun homeCardBrush(): Brush =
     Brush.verticalGradient(
         colorStops = arrayOf(
-            0.00f to Color(0xFF0C2137),
-            0.60f to Color(0xFF071827),
-            1.00f to Color(0xFF040A12),
+            0.00f to Color(0xFF0C1929),
+            0.52f to Color(0xFF08111D),
+            1.00f to Color(0xFF0D2238),
         ),
     )
 
@@ -1061,15 +1056,7 @@ private fun VaultEmptyState(
             .height(406.dp)
             .shadow(16.dp, RoundedCornerShape(24.dp), clip = false)
             .clip(RoundedCornerShape(24.dp))
-            .background(
-                Brush.verticalGradient(
-                    colorStops = arrayOf(
-                        0.00f to Color(0xFF0C2137),
-                        0.60f to Color(0xFF071827),
-                        1.00f to Color(0xFF040A12),
-                    ),
-                ),
-            )
+            .background(homeCardBrush())
             .border(1.dp, Color(0xFF203A59), RoundedCornerShape(24.dp))
             .padding(horizontal = 16.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
