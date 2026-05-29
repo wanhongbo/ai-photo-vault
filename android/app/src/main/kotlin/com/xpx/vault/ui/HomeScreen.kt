@@ -35,10 +35,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.Image
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -52,15 +52,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -316,101 +320,120 @@ fun HomeScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(colors = listOf(UiColors.Home.bgTop, UiColors.Home.bgBottom)))
-            .safeDrawingPadding()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .background(
+                Brush.verticalGradient(
+                    colorStops = arrayOf(
+                        0.00f to Color(0xFF0F2944),
+                        0.42f to Color(0xFF071A2C),
+                        1.00f to Color(0xFF02060C),
+                    ),
+                ),
+            )
+            .drawBehind {
+                drawCircle(
+                    color = Color(0x33123A5E),
+                    radius = size.width * 0.82f,
+                    center = Offset(size.width * 0.55f, size.height * 0.58f),
+                )
+            },
     ) {
-        VaultHeader(
-            totalCount = totalCount,
-            imageCount = imageCount,
-            videoCount = videoCount,
-            onSearch = onOpenSearch,
-            onImport = triggerImportFromLibrary,
-        )
-        if (selectedTab == HomeTab.VAULT && !hasPin) {
-            HomePinSetupBanner(
-                message = stringResource(R.string.home_pin_banner_message),
-                actionLabel = stringResource(R.string.home_pin_banner_action),
-                onClick = onOpenPinSettings,
-                modifier = Modifier.padding(top = 10.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+        ) {
+            VaultHeroCard(
+                totalCount = totalCount,
+                onSearch = onOpenSearch,
+                onImport = triggerImportFromLibrary,
             )
-        }
-        importTip?.let { tip ->
-            Text(
-                text = tip.message,
-                color = if (tip.isError) UiColors.Lock.error else UiColors.Lock.success,
-                fontSize = UiTextSize.homeNavLabel,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-        }
-
-        if (!vaultLoaded) {
-            val vaultBodyTapSink = remember { MutableInteractionSource() }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = vaultBodyTapSink,
-                        indication = null,
-                    ) { },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(text = stringResource(R.string.common_loading), color = UiColors.Home.subtitle)
-            }
-        } else if (isVaultEmpty) {
-            val vaultBodyTapSink = remember { MutableInteractionSource() }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = vaultBodyTapSink,
-                        indication = null,
-                    ) { },
-                contentAlignment = Alignment.Center,
-            ) {
-                VaultEmptyState(
-                    isLoading = importing,
-                    onImport = triggerImportFromLibrary,
-                    onTakePrivatePhoto = onOpenPrivateCamera,
+            if (selectedTab == HomeTab.VAULT && !hasPin && !isVaultEmpty) {
+                HomePinSetupBanner(
+                    message = stringResource(R.string.home_pin_banner_message),
+                    actionLabel = stringResource(R.string.home_pin_banner_action),
+                    onClick = onOpenPinSettings,
+                    modifier = Modifier.padding(top = 10.dp),
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(UiSize.homeSectionGap),
-            ) {
-                item {
-                    AlbumsSection(
-                        albums = albums,
-                        onOpenAlbum = onOpenAlbum,
-                        onViewAll = onOpenAlbumList,
-                        onCreateAlbum = { creatingAlbum = true },
+            importTip?.let { tip ->
+                Text(
+                    text = tip.message,
+                    color = if (tip.isError) UiColors.Lock.error else UiColors.Lock.success,
+                    fontSize = UiTextSize.homeNavLabel,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+
+            if (!vaultLoaded) {
+                val vaultBodyTapSink = remember { MutableInteractionSource() }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = vaultBodyTapSink,
+                            indication = null,
+                        ) { },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = stringResource(R.string.common_loading), color = UiColors.Home.subtitle)
+                }
+            } else if (isVaultEmpty) {
+                val vaultBodyTapSink = remember { MutableInteractionSource() }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(top = 20.dp)
+                        .clickable(
+                            interactionSource = vaultBodyTapSink,
+                            indication = null,
+                        ) { },
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    VaultEmptyState(
+                        isLoading = importing,
+                        onImport = triggerImportFromLibrary,
+                        onTakePrivatePhoto = onOpenPrivateCamera,
                     )
                 }
-                item {
-                    RecentSection(
-                        photos = recentPhotos,
-                        onOpenPhoto = { onOpenPhotoViewer(it.path) },
-                        onViewMore = onOpenRecentList,
-                    )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(top = 11.dp),
+                    verticalArrangement = Arrangement.spacedBy(UiSize.homeSectionGap),
+                ) {
+                    item {
+                        AlbumsSection(
+                            albums = albums,
+                            onOpenAlbum = onOpenAlbum,
+                            onViewAll = onOpenAlbumList,
+                            onCreateAlbum = { creatingAlbum = true },
+                        )
+                    }
+                    item {
+                        RecentSection(
+                            photos = recentPhotos,
+                            onOpenPhoto = { onOpenPhotoViewer(it.path) },
+                            onViewMore = onOpenRecentList,
+                        )
+                    }
                 }
             }
-        }
 
-        if (showBottomNav) {
-            HomeBottomNav(
-                tabs = tabs,
-                selectedIndex = selectedTab.ordinal,
-                onSelect = { idx -> onOpenTab(tabs[idx].tab) },
-            )
+            if (showBottomNav) {
+                HomeBottomNav(
+                    tabs = tabs,
+                    selectedIndex = selectedTab.ordinal,
+                    onSelect = { idx -> onOpenTab(tabs[idx].tab) },
+                )
+            }
         }
     }
 
@@ -745,42 +768,150 @@ private fun HomePinSetupBanner(
 }
 
 @Composable
-private fun VaultHeader(
+private fun VaultHeroCard(
     totalCount: Int,
-    imageCount: Int,
-    videoCount: Int,
     onSearch: () -> Unit,
     onImport: () -> Unit,
 ) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-        Column(modifier = Modifier.weight(1f)) {
+    val interaction = rememberFeedbackInteractionSource()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(163.dp)
+            .shadow(18.dp, RoundedCornerShape(28.dp), clip = false)
+            .clip(RoundedCornerShape(28.dp))
+            .background(
+                Brush.linearGradient(
+                    colorStops = arrayOf(
+                        0.00f to Color(0xFF0C1929),
+                        0.52f to Color(0xFF08111D),
+                        1.00f to Color(0xFF0D2238),
+                    ),
+                ),
+            )
+            .border(1.dp, Color(0xFF274260), RoundedCornerShape(28.dp))
+            .pressFeedback(interaction)
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onSearch),
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(start = 20.dp, top = 34.dp)
+                .width(230.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
             Text(
                 text = stringResource(R.string.home_vault_title),
-                color = UiColors.Home.title,
-                fontSize = UiTextSize.homeTitle,
-                fontWeight = FontWeight.Bold,
+                color = Color(0xFFF2F6FF),
+                fontFamily = AppFontFamily,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 1,
             )
             Text(
-                text = stringResource(R.string.home_vault_security_info, totalCount),
-                color = UiColors.Home.subtitle,
-                fontSize = UiTextSize.homeSubtitle,
-                modifier = Modifier.padding(top = 6.dp),
+                text = stringResource(R.string.home_vault_hero_status, totalCount),
+                color = Color(0xFF9BAEC8),
+                fontFamily = AppFontFamily,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
             )
-            Row(
-                modifier = Modifier.padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                HeaderInfoTag(stringResource(R.string.home_header_stat_photos, imageCount))
-                HeaderInfoTag(stringResource(R.string.home_header_stat_videos, videoCount))
-            }
         }
-        HeaderActionButton(
-            iconRes = R.drawable.ic_home_action_add,
-            contentDesc = stringResource(R.string.home_vault_empty_action),
-            onClick = onImport,
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 20.dp, bottom = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            VaultHeroChip(
+                iconRes = R.drawable.ic_ai_eye_off,
+                text = stringResource(R.string.home_hero_chip_offline),
+                width = 68.dp,
+            )
+            VaultHeroChip(
+                iconRes = R.drawable.ic_home_nav_vault,
+                text = stringResource(R.string.home_hero_chip_encrypted),
+                width = 80.dp,
+            )
+            VaultHeroChip(
+                iconRes = R.drawable.ic_home_nav_ai,
+                text = stringResource(R.string.home_hero_chip_ai_local),
+                width = 104.dp,
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 17.dp, end = 27.dp)
+                .size(82.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0x334A9EFF),
+                            Color(0x140D2238),
+                            Color(0x000D2238),
+                        ),
+                    ),
+                )
+                .throttledClickable(onClick = onImport),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(R.mipmap.ic_launcher_v2),
+                contentDescription = stringResource(R.string.home_vault_empty_action),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(20.dp)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun VaultHeroChip(
+    iconRes: Int,
+    text: String,
+    width: Dp,
+) {
+    Row(
+        modifier = Modifier
+            .width(width)
+            .height(26.dp)
+            .clip(RoundedCornerShape(13.dp))
+            .background(Color.White.copy(alpha = 0.03f))
+            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(13.dp)),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = Color(0xFFB7D7FF),
+            modifier = Modifier.size(12.dp),
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = text,
+            color = Color(0xFFD9E9FF),
+            fontFamily = AppFontFamily,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
         )
     }
 }
+
+private fun homeShelfBrush(): Brush =
+    Brush.verticalGradient(
+        colorStops = arrayOf(
+            0.00f to Color(0xFF0C2137),
+            0.60f to Color(0xFF071827),
+            1.00f to Color(0xFF040A12),
+        ),
+    )
 
 @Composable
 private fun AlbumsSection(
@@ -792,9 +923,10 @@ private fun AlbumsSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.sectionBg)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
+            .shadow(16.dp, RoundedCornerShape(26.dp), clip = false)
+            .clip(RoundedCornerShape(26.dp))
+            .background(homeShelfBrush())
+            .border(1.dp, Color(0xFF203A59), RoundedCornerShape(26.dp))
             .padding(UiSize.homeCardPadding),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -927,9 +1059,10 @@ private fun RecentSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.sectionBg)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
+            .shadow(16.dp, RoundedCornerShape(26.dp), clip = false)
+            .clip(RoundedCornerShape(26.dp))
+            .background(homeShelfBrush())
+            .border(1.dp, Color(0xFF203A59), RoundedCornerShape(26.dp))
             .padding(UiSize.homeCardPadding),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -960,19 +1093,6 @@ private fun RecentSection(
 }
 
 @Composable
-private fun HeaderInfoTag(text: String) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(UiColors.Home.sectionBg)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-    ) {
-        Text(text = text, color = UiColors.Home.subtitle, fontSize = UiTextSize.homeNavLabel)
-    }
-}
-
-@Composable
 private fun PhotoThumb(
     path: String,
     onClick: () -> Unit,
@@ -997,32 +1117,6 @@ private fun PhotoThumb(
 }
 
 @Composable
-private fun HeaderActionButton(
-    iconRes: Int,
-    contentDesc: String,
-    onClick: () -> Unit,
-) {
-    val interaction = rememberFeedbackInteractionSource()
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(UiColors.Home.navBarBg)
-            .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(12.dp))
-            .pressFeedback(interaction)
-            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = contentDesc,
-            tint = UiColors.Home.navItemActive,
-            modifier = Modifier.size(20.dp),
-        )
-    }
-}
-
-@Composable
 private fun VaultEmptyState(
     isLoading: Boolean,
     onImport: () -> Unit,
@@ -1031,63 +1125,67 @@ private fun VaultEmptyState(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(UiRadius.homeCard))
-            .background(UiColors.Home.sectionBg)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
-            .padding(
-                start = 20.dp,
-                end = 20.dp,
-                top = UiSize.vaultEmptyCardTopPad,
-                bottom = UiSize.vaultEmptyCardBottomPad,
-            ),
+            .height(406.dp)
+            .shadow(16.dp, RoundedCornerShape(24.dp), clip = false)
+            .clip(RoundedCornerShape(24.dp))
+            .background(
+                Brush.verticalGradient(
+                    colorStops = arrayOf(
+                        0.00f to Color(0xFF0C2137),
+                        0.60f to Color(0xFF071827),
+                        1.00f to Color(0xFF040A12),
+                    ),
+                ),
+            )
+            .border(1.dp, Color(0xFF203A59), RoundedCornerShape(24.dp))
+            .padding(horizontal = 16.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Box(
             modifier = Modifier
-                .size(UiSize.vaultEmptyIconWrap)
-                .background(UiColors.Home.emptyIconBg, CircleShape)
-                .border(1.dp, UiColors.Home.navItemActiveStroke, CircleShape)
-                .clip(RoundedCornerShape(UiRadius.vaultEmptyIconWrap)),
+                .size(96.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color(0xFF132944)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(R.drawable.shield_check),
+                painter = painterResource(R.drawable.ic_home_nav_vault),
                 contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(UiSize.vaultEmptyIcon),
+                tint = UiColors.Lock.brandBlue,
+                modifier = Modifier.size(36.dp),
             )
         }
         Text(
             text = stringResource(R.string.home_vault_empty_title),
             color = UiColors.Home.emptyTitle,
             fontSize = UiTextSize.vaultEmptyTitle,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = UiSize.vaultEmptyTitleTopGap),
         )
         Text(
             text = stringResource(R.string.home_vault_empty_desc),
             color = UiColors.Home.emptyBody,
             fontSize = UiTextSize.vaultEmptyBody,
+            lineHeight = 20.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = UiSize.vaultEmptyBodyTopGap),
+            modifier = Modifier.width(296.dp),
         )
         VaultEmptyActionButton(
             text = stringResource(R.string.home_vault_empty_action),
             onClick = onImport,
             isPrimary = true,
             loading = isLoading,
+            showIcon = false,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = UiSize.vaultEmptyPrimaryTopGap),
+                .fillMaxWidth(),
         )
         VaultEmptyActionButton(
             text = stringResource(R.string.home_vault_take_private_photo),
             onClick = onTakePrivatePhoto,
             isPrimary = false,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = UiSize.vaultEmptySecondaryTopGap),
+                .fillMaxWidth(),
         )
     }
 }
@@ -1104,8 +1202,8 @@ private fun VaultEmptyActionButton(
     val interaction = rememberFeedbackInteractionSource()
     Row(
         modifier = modifier
-            .height(52.dp)
-            .clip(RoundedCornerShape(26.dp))
+            .height(54.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(if (isPrimary) UiColors.Button.primaryContainer else UiColors.Button.secondaryContainer)
             .pressFeedback(interaction)
             .throttledClickable(
@@ -1136,8 +1234,9 @@ private fun VaultEmptyActionButton(
             Text(
                 text = text,
                 color = if (isPrimary) UiColors.Button.primaryContent else UiColors.Button.secondaryContent,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontFamily = AppFontFamily,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
             )
         }
     }

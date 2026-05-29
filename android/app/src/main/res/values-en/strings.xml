@@ -11,8 +11,8 @@
     <string name="home_empty_title">No encrypted content yet</string>
     <string name="home_empty_desc">Import photos or videos, and they will be encrypted locally and protected by lock screen.</string>
     <string name="home_empty_action">Import now</string>
-    <string name="home_vault_empty_title">Your vault is empty</string>
-    <string name="home_vault_empty_desc">Items you move to the vault appear here and stay lock-protected.</string>
+    <string name="home_vault_empty_title">Vault is empty</string>
+    <string name="home_vault_empty_desc">Imported photos and videos appear here, protected by your lock screen.</string>
     <string name="home_vault_empty_action">Import from gallery</string>
     <string name="home_camera_empty_title">Private camera entry</string>
     <string name="home_camera_empty_desc">After capture, files go directly into encrypted flow to avoid exposure in public albums.</string>
@@ -89,6 +89,10 @@
     <string name="home_action_search">Search</string>
     <string name="home_vault_title">LumaNox</string>
     <string name="home_vault_security_info">%1$d photos · AES-256 local encryption</string>
+    <string name="home_vault_hero_status">%1$d items · Local AES-256 vault</string>
+    <string name="home_hero_chip_offline">Offline</string>
+    <string name="home_hero_chip_encrypted">Encrypted</string>
+    <string name="home_hero_chip_ai_local">Local AI</string>
     <string name="home_import_success_default_album">Imported to Default album</string>
     <string name="home_import_duplicate_default_album">Already exists, duplicate skipped</string>
     <string name="home_import_multi_result">Import done: %1$d added, %2$d duplicated, %3$d failed</string>

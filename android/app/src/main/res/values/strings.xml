@@ -13,7 +13,7 @@
     <string name="home_empty_desc">导入照片或视频后，它们会在本地加密存储并受锁屏保护。</string>
     <string name="home_empty_action">立即导入</string>
     <string name="home_vault_empty_title">保险箱暂无项目</string>
-    <string name="home_vault_empty_desc">你收藏到保险箱的内容会显示在这里，并受到锁屏保护。</string>
+    <string name="home_vault_empty_desc">导入的照片和视频会显示在这里，并受到锁屏保护。</string>
     <string name="home_vault_empty_action">从相册导入</string>
     <string name="home_camera_empty_title">相机拍摄入口</string>
     <string name="home_camera_empty_desc">拍摄完成后可直接进入加密流程，避免内容暴露在公开相册中。</string>
@@ -90,6 +90,10 @@
     <string name="home_action_search">搜索</string>
     <string name="home_vault_title">LumaNox</string>
     <string name="home_vault_security_info">%1$d 张图片 · AES-256 本地加密</string>
+    <string name="home_vault_hero_status">%1$d 项 · AES-256 本地加密</string>
+    <string name="home_hero_chip_offline">离线</string>
+    <string name="home_hero_chip_encrypted">已加密</string>
+    <string name="home_hero_chip_ai_local">本地 AI</string>
     <string name="home_import_success_default_album">已成功导入到 Default 相册</string>
     <string name="home_import_duplicate_default_album">该内容已存在，已跳过重复导入</string>
     <string name="home_import_multi_result">导入完成：新增 %1$d，重复 %2$d，失败 %3$d</string>
