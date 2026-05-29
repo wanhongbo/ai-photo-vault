@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,11 +31,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -91,7 +87,6 @@ import com.xpx.vault.ui.vault.ImportOriginalsAction
 import com.xpx.vault.ui.vault.ImportOriginalsPreferenceStore
 import com.xpx.vault.ui.vault.VaultAlbum
 import com.xpx.vault.ui.vault.VaultImportResult
-import com.xpx.vault.ui.vault.VaultPhoto
 import com.xpx.vault.ui.vault.VaultStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -344,7 +339,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .safeDrawingPadding()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(start = 16.dp, top = 32.dp, end = 16.dp, bottom = 16.dp),
         ) {
             VaultHeroCard(
                 totalCount = totalCount,
@@ -412,15 +407,7 @@ fun HomeScreen(
                         AlbumsSection(
                             albums = albums,
                             onOpenAlbum = onOpenAlbum,
-                            onViewAll = onOpenAlbumList,
                             onCreateAlbum = { creatingAlbum = true },
-                        )
-                    }
-                    item {
-                        RecentSection(
-                            photos = recentPhotos,
-                            onOpenPhoto = { onOpenPhotoViewer(it.path) },
-                            onViewMore = onOpenRecentList,
                         )
                     }
                 }
@@ -900,9 +887,14 @@ private fun homeShelfBrush(): Brush =
 private fun AlbumsSection(
     albums: List<VaultAlbum>,
     onOpenAlbum: (String) -> Unit,
-    onViewAll: () -> Unit,
     onCreateAlbum: () -> Unit,
 ) {
+    val albumItems = remember(albums) {
+        buildList<VaultHomeAlbumTile> {
+            albums.forEach { add(VaultHomeAlbumTile.Album(it)) }
+            add(VaultHomeAlbumTile.Create)
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -911,28 +903,47 @@ private fun AlbumsSection(
             .background(homeShelfBrush())
             .border(1.dp, Color(0xFF203A59), RoundedCornerShape(26.dp))
             .padding(UiSize.homeCardPadding),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(
-                text = stringResource(R.string.home_albums_title),
-                color = UiColors.Home.title,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = stringResource(R.string.home_albums_view_all),
-                color = UiColors.Home.navItemActive,
-                modifier = Modifier.throttledClickable(onClick = onViewAll),
-            )
-        }
-        LazyRow(
-            modifier = Modifier.padding(top = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(albums, key = { it.name }) { album ->
-                AlbumCard(album = album, onClick = { onOpenAlbum(album.name) })
-            }
-            item(key = "__create_album__") {
-                CreateAlbumCard(onClick = onCreateAlbum)
+        Text(
+            text = stringResource(R.string.home_albums_title),
+            color = Color(0xFFF6F9FF),
+            fontFamily = AppFontFamily,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.height(34.dp),
+        )
+        albumItems.chunked(2).forEach { rowItems ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(176.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                rowItems.forEach { item ->
+                    when (item) {
+                        is VaultHomeAlbumTile.Album -> AlbumCard(
+                            album = item.album,
+                            onClick = { onOpenAlbum(item.album.name) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                        )
+                        VaultHomeAlbumTile.Create -> CreateAlbumCard(
+                            onClick = onCreateAlbum,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                        )
+                    }
+                }
+                if (rowItems.size == 1) {
+                    Spacer(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                    )
+                }
             }
         }
     }
@@ -942,24 +953,25 @@ private fun AlbumsSection(
 private fun AlbumCard(
     album: VaultAlbum,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val interaction = rememberFeedbackInteractionSource()
+    val albumName = if (album.name == DEFAULT_ALBUM_NAME) {
+        stringResource(R.string.album_default_name)
+    } else {
+        album.name
+    }
     Column(
-        modifier = Modifier
-            .width(UiSize.homeAlbumCardWidth)
-            .clip(RoundedCornerShape(UiRadius.homeAlbumCard))
-            .background(UiColors.Home.bgBottom)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeAlbumCard))
+        modifier = modifier
             .pressFeedback(interaction)
-            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
-            .padding(10.dp),
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(UiSize.homeAlbumCoverHeight)
-                .clip(RoundedCornerShape(UiRadius.homeThumb))
-                .background(UiColors.Home.emptyIconBg),
+                .height(142.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF12304C)),
             contentAlignment = Alignment.Center,
         ) {
             if (album.coverPath != null) {
@@ -972,18 +984,24 @@ private fun AlbumCard(
                 )
             } else {
                 Icon(
-                    painter = painterResource(R.drawable.ic_home_nav_vault),
+                    painter = painterResource(R.drawable.ic_home_nav_album),
                     contentDescription = null,
-                    tint = UiColors.Home.navItemActive,
-                    modifier = Modifier.size(24.dp),
+                    tint = Color(0x8AAFC4E2),
+                    modifier = Modifier.size(34.dp),
                 )
             }
         }
-        Text(album.name, color = UiColors.Home.emptyTitle, modifier = Modifier.padding(top = 6.dp))
         Text(
-            text = stringResource(R.string.home_album_photo_count, album.photoCount),
-            color = UiColors.Home.emptyBody,
-            fontSize = UiTextSize.homeNavLabel,
+            text = albumName,
+            color = Color(0xFFF4F8FF),
+            fontFamily = AppFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.ExtraBold,
+            maxLines = 1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(34.dp)
+                .padding(horizontal = 10.dp, vertical = 8.dp),
         )
     }
 }
@@ -991,112 +1009,36 @@ private fun AlbumCard(
 @Composable
 private fun CreateAlbumCard(
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val interaction = rememberFeedbackInteractionSource()
     Column(
-        modifier = Modifier
-            .width(UiSize.homeAlbumCardWidth)
-            .clip(RoundedCornerShape(UiRadius.homeAlbumCard))
-            .background(UiColors.Home.bgBottom)
-            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeAlbumCard))
+        modifier = modifier
             .pressFeedback(interaction)
-            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick)
-            .padding(10.dp),
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(UiSize.homeAlbumCoverHeight)
-                .clip(RoundedCornerShape(UiRadius.homeThumb))
-                .background(UiColors.Home.emptyIconBg),
+                .height(142.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF0D2742)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_home_action_add),
                 contentDescription = null,
                 tint = UiColors.Home.navItemActive,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(34.dp),
             )
         }
-        Text(
-            text = stringResource(R.string.home_album_create_title),
-            color = UiColors.Home.emptyTitle,
-            maxLines = 1,
-            modifier = Modifier.padding(top = 6.dp),
-        )
-        // 占位副标题行，与 AlbumCard 高度对齐
-        Text(
-            text = " ",
-            color = UiColors.Home.emptyBody,
-            fontSize = UiTextSize.homeNavLabel,
-        )
+        Spacer(modifier = Modifier.height(34.dp))
     }
 }
 
-@Composable
-private fun RecentSection(
-    photos: List<VaultPhoto>,
-    onOpenPhoto: (VaultPhoto) -> Unit,
-    onViewMore: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(16.dp, RoundedCornerShape(26.dp), clip = false)
-            .clip(RoundedCornerShape(26.dp))
-            .background(homeShelfBrush())
-            .border(1.dp, Color(0xFF203A59), RoundedCornerShape(26.dp))
-            .padding(UiSize.homeCardPadding),
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(
-                text = stringResource(R.string.home_recent_title),
-                color = UiColors.Home.title,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = stringResource(R.string.home_recent_view_more),
-                color = UiColors.Home.navItemActive,
-                modifier = Modifier.throttledClickable(onClick = onViewMore),
-            )
-        }
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier
-                .height(240.dp)
-                .padding(top = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
-            verticalArrangement = Arrangement.spacedBy(UiSize.homeGridGap),
-        ) {
-            items(photos.take(30), key = { it.path }) { photo ->
-                PhotoThumb(path = photo.path, onClick = { onOpenPhoto(photo) })
-            }
-        }
-    }
-}
-
-@Composable
-private fun PhotoThumb(
-    path: String,
-    onClick: () -> Unit,
-) {
-    val interaction = rememberFeedbackInteractionSource()
-    Box(
-        modifier = Modifier
-            .size(UiSize.homeThumbSize)
-            .clip(RoundedCornerShape(UiRadius.homeThumb))
-            .background(UiColors.Home.emptyIconBg)
-            .pressFeedback(interaction)
-            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
-    ) {
-        VaultProgressiveImage(
-            path = path,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-            thumbnailMaxPx = 320,
-            showVideoIndicator = true,
-        )
-    }
+private sealed interface VaultHomeAlbumTile {
+    data class Album(val album: VaultAlbum) : VaultHomeAlbumTile
+    data object Create : VaultHomeAlbumTile
 }
 
 @Composable

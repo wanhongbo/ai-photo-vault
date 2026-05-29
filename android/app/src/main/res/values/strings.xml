@@ -116,6 +116,7 @@
     <string name="common_cancel">取消</string>
     <string name="common_today">今天</string>
     <string name="common_yesterday">昨天</string>
+    <string name="album_default_name">主相册</string>
     <string name="home_albums_title">相册</string>
     <string name="home_albums_view_all">显示全部</string>
     <string name="home_album_photo_count">%1$d 张</string>
