@@ -20,19 +20,15 @@
         },
         "colors": [
           {
-            "color": "#0E233A",
+            "color": "#0F2944",
             "position": 0
           },
           {
-            "color": "#0B1D31",
-            "position": 0.24
+            "color": "#071A2C",
+            "position": 0.42
           },
           {
-            "color": "#071423",
-            "position": 0.54
-          },
-          {
-            "color": "#05080D",
+            "color": "#02060C",
             "position": 1
           }
         ]
@@ -227,36 +223,37 @@
           "type": "frame",
           "id": "vault_home_page_lower_blue_wash",
           "x": 0,
-          "y": 0,
+          "y": 360,
           "name": "Page lower blue wash",
           "width": 393,
-          "height": 690,
+          "height": 330,
           "fill": {
             "type": "gradient",
-            "gradientType": "linear",
+            "gradientType": "radial",
             "enabled": true,
-            "rotation": 180,
+            "rotation": 0,
             "size": {
-              "height": 1
+              "width": 1.15,
+              "height": 1.05
             },
             "colors": [
               {
-                "color": "#123A5E2E",
+                "color": "#123A5E55",
                 "position": 0
               },
               {
-                "color": "#0B27401F",
-                "position": 0.34
-              },
-              {
-                "color": "#07182712",
-                "position": 0.62
+                "color": "#08243A2A",
+                "position": 0.48
               },
               {
                 "color": "#03070D00",
                 "position": 1
               }
-            ]
+            ],
+            "center": {
+              "x": 0.55,
+              "y": 0.16
+            }
           },
           "layout": "none"
         },
@@ -279,15 +276,15 @@
             },
             "colors": [
               {
-                "color": "#07101E",
+                "color": "#0C1929",
                 "position": 0
               },
               {
-                "color": "#0B172A",
+                "color": "#08111D",
                 "position": 0.52
               },
               {
-                "color": "#102A46",
+                "color": "#0D2238",
                 "position": 1
               }
             ]
@@ -295,7 +292,7 @@
           "cornerRadius": 28,
           "stroke": {
             "thickness": 1,
-            "fill": "#2D4A68"
+            "fill": "#274260"
           },
           "effect": {
             "type": "shadow",
@@ -312,18 +309,149 @@
             {
               "type": "frame",
               "id": "vault_home_app_icon_blended",
-              "x": 237,
-              "y": 2,
-              "name": "App icon blended hero image",
-              "width": 112,
-              "height": 112,
+              "x": 252,
+              "y": 17,
+              "name": "App icon blended image",
+              "width": 82,
+              "height": 82,
               "fill": {
-                "type": "image",
+                "type": "gradient",
+                "gradientType": "radial",
                 "enabled": true,
-                "url": "../../Resources/Assets.xcassets/AppLogoHero.imageset/AppLogoHero.png",
-                "mode": "fit"
+                "rotation": 0,
+                "size": {
+                  "width": 1.22,
+                  "height": 1.22
+                },
+                "colors": [
+                  {
+                    "color": "#4A9EFF1F",
+                    "position": 0
+                  },
+                  {
+                    "color": "#0D223822",
+                    "position": 0.42
+                  },
+                  {
+                    "color": "#0D22380A",
+                    "position": 0.74
+                  },
+                  {
+                    "color": "#0D223800",
+                    "position": 1
+                  }
+                ]
               },
-              "layout": "none"
+              "cornerRadius": 24,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#4A9EFF20",
+                "offset": {
+                  "x": 0,
+                  "y": 12
+                },
+                "blur": 30
+              },
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vault_home_app_icon_image",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Actual App Icon",
+                  "clip": true,
+                  "width": 82,
+                  "height": 82,
+                  "fill": {
+                    "type": "image",
+                    "opacity": 0.86,
+                    "enabled": true,
+                    "url": "../../Resources/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 24,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "vault_home_app_icon_edge_blend",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Icon edge blend overlay",
+                  "width": 82,
+                  "height": 82,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "radial",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "width": 1.12,
+                      "height": 1.12
+                    },
+                    "colors": [
+                      {
+                        "color": "#0D223800",
+                        "position": 0
+                      },
+                      {
+                        "color": "#0D223800",
+                        "position": 0.5
+                      },
+                      {
+                        "color": "#0D223844",
+                        "position": 0.78
+                      },
+                      {
+                        "color": "#0D223899",
+                        "position": 1
+                      }
+                    ],
+                    "center": {
+                      "y": 0.48
+                    }
+                  },
+                  "cornerRadius": 24,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "vault_home_app_icon_soft_glow",
+                  "x": 10,
+                  "y": 10,
+                  "name": "Icon blue soft glow",
+                  "width": 62,
+                  "height": 62,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "radial",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "width": 1,
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#4A9EFF20",
+                        "position": 0
+                      },
+                      {
+                        "color": "#4A9EFF0C",
+                        "position": 0.48
+                      },
+                      {
+                        "color": "#4A9EFF00",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 31,
+                  "layout": "none"
+                }
+              ]
             },
             {
               "type": "text",
@@ -353,32 +481,32 @@
               "type": "frame",
               "id": "vault_home_hero_chips",
               "x": 20,
-              "y": 111,
-              "width": 332,
-              "height": 30,
+              "y": 119,
+              "width": 268,
+              "height": 26,
               "fill": "#00000000",
               "gap": 8,
               "children": [
                 {
                   "type": "frame",
                   "id": "vault_home_chip_offline_short",
-                  "width": 84,
+                  "width": 68,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 15,
+                  "cornerRadius": 13,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
                   },
-                  "gap": 6,
+                  "gap": 4,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_offline_short_icon",
-                      "width": 12,
-                      "height": 12,
+                      "width": 10,
+                      "height": 10,
                       "iconFontName": "wifi-off",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -389,7 +517,7 @@
                       "fill": "#AFC4E2",
                       "content": "Offline",
                       "fontFamily": "Inter",
-                      "fontSize": 12,
+                      "fontSize": 9,
                       "fontWeight": "500"
                     }
                   ]
@@ -397,23 +525,23 @@
                 {
                   "type": "frame",
                   "id": "vault_home_chip_encrypted_short",
-                  "width": 104,
+                  "width": 80,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 15,
+                  "cornerRadius": 13,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
                   },
-                  "gap": 6,
+                  "gap": 4,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_encrypted_short_icon",
-                      "width": 12,
-                      "height": 12,
+                      "width": 10,
+                      "height": 10,
                       "iconFontName": "lock-keyhole",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -424,7 +552,7 @@
                       "fill": "#AFC4E2",
                       "content": "Encrypted",
                       "fontFamily": "Inter",
-                      "fontSize": 12,
+                      "fontSize": 9,
                       "fontWeight": "500"
                     }
                   ]
@@ -432,23 +560,23 @@
                 {
                   "type": "frame",
                   "id": "vault_home_chip_ai_short",
-                  "width": 128,
+                  "width": 104,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 15,
+                  "cornerRadius": 13,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
                   },
-                  "gap": 6,
+                  "gap": 4,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_ai_short_icon",
-                      "width": 12,
-                      "height": 12,
+                      "width": 10,
+                      "height": 10,
                       "iconFontName": "sparkles",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -459,7 +587,7 @@
                       "fill": "#AFC4E2",
                       "content": "Local AI Models",
                       "fontFamily": "Inter",
-                      "fontSize": 12,
+                      "fontSize": 8,
                       "fontWeight": "500"
                     }
                   ]
@@ -654,7 +782,7 @@
                     {
                       "type": "frame",
                       "id": "vault_home_album_created",
-                      "name": "Album card - AI category album",
+                      "name": "Album card - created album",
                       "width": "fill_container",
                       "height": "fill_container",
                       "fill": "#00000000",
@@ -736,7 +864,7 @@
                               "fill": "#F4F8FF",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "人物",
+                              "content": "明后",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "800"
@@ -823,7 +951,7 @@
         },
         {
           "type": "frame",
-          "id": "vault_home_top_scroll_mask",
+          "id": "DZwzJ",
           "x": 0,
           "y": 0,
           "name": "Top scroll safe-area mask",
@@ -890,313 +1018,6 @@
     },
     {
       "type": "frame",
-      "id": "vault_home_empty_state_screen",
-      "x": 395,
-      "y": 0,
-      "name": "VaultHomeView - empty state",
-      "clip": true,
-      "width": 393,
-      "height": 852,
-      "fill": {
-        "type": "gradient",
-        "gradientType": "linear",
-        "enabled": true,
-        "rotation": 180,
-        "size": {
-          "height": 1
-        },
-        "colors": [
-          {
-            "color": "#0E233A",
-            "position": 0
-          },
-          {
-            "color": "#0B1D31",
-            "position": 0.24
-          },
-          {
-            "color": "#071423",
-            "position": 0.54
-          },
-          {
-            "color": "#05080D",
-            "position": 1
-          }
-        ]
-      },
-      "layout": "none",
-      "children": [
-        {
-          "type": "frame",
-          "id": "vault_home_empty_hero",
-          "x": 16,
-          "y": 78,
-          "name": "Hero - empty vault command center",
-          "clip": true,
-          "width": 361,
-          "height": 163,
-          "fill": {
-            "type": "gradient",
-            "gradientType": "linear",
-            "enabled": true,
-            "rotation": 132,
-            "size": {
-              "height": 1
-            },
-            "colors": [
-              {
-                "color": "#07101E",
-                "position": 0
-              },
-              {
-                "color": "#0B172A",
-                "position": 0.52
-              },
-              {
-                "color": "#102A46",
-                "position": 1
-              }
-            ]
-          },
-          "cornerRadius": 28,
-          "stroke": {
-            "thickness": 1,
-            "fill": "#2D4A68"
-          },
-          "layout": "none",
-          "children": [
-            {
-              "type": "frame",
-              "id": "vault_home_empty_app_icon_blended",
-              "x": 237,
-              "y": 2,
-              "name": "App icon blended hero image",
-              "width": 112,
-              "height": 112,
-              "fill": {
-                "type": "image",
-                "enabled": true,
-                "url": "../../Resources/Assets.xcassets/AppLogoHero.imageset/AppLogoHero.png",
-                "mode": "fit"
-              },
-              "layout": "none"
-            },
-            {
-              "type": "text",
-              "id": "vault_home_empty_hero_brand",
-              "x": 20,
-              "y": 34,
-              "fill": "#F2F6FF",
-              "content": "LumaNox",
-              "fontFamily": "Inter",
-              "fontSize": 28,
-              "fontWeight": "800"
-            },
-            {
-              "type": "text",
-              "id": "vault_home_empty_hero_status",
-              "x": 20,
-              "y": 70,
-              "width": 230,
-              "textGrowth": "fixed-width",
-              "fill": "#9BAEC8",
-              "content": "0 items · Local AES-256 vault",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "vault_home_empty_card",
-          "x": 16,
-          "y": 261,
-          "name": "Empty vault card",
-          "width": 361,
-          "height": 406,
-          "fill": {
-            "type": "gradient",
-            "gradientType": "linear",
-            "enabled": true,
-            "rotation": 180,
-            "size": {
-              "height": 1
-            },
-            "colors": [
-              {
-                "color": "#07101E",
-                "position": 0
-              },
-              {
-                "color": "#0B172A",
-                "position": 0.52
-              },
-              {
-                "color": "#102A46",
-                "position": 1
-              }
-            ]
-          },
-          "cornerRadius": 24,
-          "stroke": {
-            "thickness": 1,
-            "fill": "#2D4A68"
-          },
-          "layout": "vertical",
-          "gap": 16,
-          "padding": [
-            32,
-            16,
-            32,
-            16
-          ],
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "vault_home_empty_icon_wrap",
-              "name": "Empty icon",
-              "width": 96,
-              "height": 96,
-              "fill": "#132944",
-              "cornerRadius": 28,
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "vault_home_empty_icon",
-                  "width": 36,
-                  "height": 36,
-                  "iconFontName": "shield",
-                  "iconFontFamily": "lucide",
-                  "fill": "#4A9EFF"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "id": "vault_home_empty_title",
-              "fill": "#EAF1FF",
-              "content": "Vault is empty",
-              "fontFamily": "Inter",
-              "fontSize": 22,
-              "fontWeight": "800"
-            },
-            {
-              "type": "text",
-              "id": "vault_home_empty_body",
-              "width": 296,
-              "textGrowth": "fixed-width",
-              "fill": "#8EA2C0",
-              "content": "Imported photos and videos appear here, protected by your lock screen.",
-              "fontFamily": "Inter",
-              "fontSize": 15,
-              "textAlign": "center",
-              "lineHeight": 1.35
-            },
-            {
-              "type": "frame",
-              "id": "vault_home_empty_import_cta",
-              "name": "Primary CTA - 54pt",
-              "width": "fill_container",
-              "height": 54,
-              "fill": "#4A9EFF",
-              "cornerRadius": 16,
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "vault_home_empty_import_label",
-                  "fill": "#FFFFFF",
-                  "content": "Import from Photos",
-                  "fontFamily": "Inter",
-                  "fontSize": 16,
-                  "fontWeight": "700"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "vault_home_empty_camera_cta",
-              "name": "Secondary CTA - aligned 54pt",
-              "width": "fill_container",
-              "height": 54,
-              "fill": "#1A202C",
-              "cornerRadius": 16,
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "vault_home_empty_camera_label",
-                  "fill": "#EAF1FF",
-                  "content": "Take private photo",
-                  "fontFamily": "Inter",
-                  "fontSize": 16,
-                  "fontWeight": "700"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "rectangle",
-          "id": "vault_home_empty_indicator",
-          "x": 129,
-          "y": 831,
-          "name": "Home indicator",
-          "width": 135,
-          "height": 5,
-          "fill": "#FFFFFFCC",
-          "cornerRadius": 3
-        },
-        {
-          "type": "frame",
-          "id": "vault_home_empty_top_scroll_mask",
-          "x": 0,
-          "y": 0,
-          "name": "Top scroll safe-area mask",
-          "width": 393,
-          "height": 78,
-          "fill": "#0E233A",
-          "layout": "none"
-        },
-        {
-          "type": "frame",
-          "id": "vault_home_empty_status_bar",
-          "x": 0,
-          "y": 0,
-          "name": "iOS status bar",
-          "width": 393,
-          "height": 46,
-          "fill": "#00000000",
-          "padding": [
-            14,
-            24,
-            0,
-            24
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "vault_home_empty_status_time",
-              "fill": "#EAF1FF",
-              "content": "9:41",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "600"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "vault_home_create_album_keyboard_state",
       "x": 790,
       "y": 0,
@@ -1214,19 +1035,15 @@
         },
         "colors": [
           {
-            "color": "#0E233A",
+            "color": "#0F2944",
             "position": 0
           },
           {
-            "color": "#0B1D31",
-            "position": 0.24
+            "color": "#071A2C",
+            "position": 0.42
           },
           {
-            "color": "#071423",
-            "position": 0.54
-          },
-          {
-            "color": "#05080D",
+            "color": "#02060C",
             "position": 1
           }
         ]
@@ -1399,377 +1216,6 @@
     },
     {
       "type": "frame",
-      "id": "vault_home_import_success_toast_state",
-      "x": 1303,
-      "y": 0,
-      "name": "VaultHomeView - import success toast",
-      "clip": true,
-      "width": 393,
-      "height": 852,
-      "fill": {
-        "type": "gradient",
-        "gradientType": "linear",
-        "enabled": true,
-        "rotation": 180,
-        "size": {
-          "height": 1
-        },
-        "colors": [
-          {
-            "color": "#0E233A",
-            "position": 0
-          },
-          {
-            "color": "#0B1D31",
-            "position": 0.24
-          },
-          {
-            "color": "#071423",
-            "position": 0.54
-          },
-          {
-            "color": "#05080D",
-            "position": 1
-          }
-        ]
-      },
-      "layout": "none",
-      "children": [
-        {
-          "type": "frame",
-          "id": "vault_home_toast_hero",
-          "x": 16,
-          "y": 78,
-          "name": "Hero - compact vault command center",
-          "clip": true,
-          "width": 361,
-          "height": 163,
-          "fill": {
-            "type": "gradient",
-            "gradientType": "linear",
-            "enabled": true,
-            "rotation": 132,
-            "size": {
-              "height": 1
-            },
-            "colors": [
-              {
-                "color": "#07101E",
-                "position": 0
-              },
-              {
-                "color": "#0B172A",
-                "position": 0.52
-              },
-              {
-                "color": "#102A46",
-                "position": 1
-              }
-            ]
-          },
-          "cornerRadius": 28,
-          "stroke": {
-            "thickness": 1,
-            "fill": "#2D4A68"
-          },
-          "layout": "none",
-          "children": [
-            {
-              "type": "frame",
-              "id": "vault_home_toast_app_icon_blended",
-              "x": 237,
-              "y": 2,
-              "name": "App icon blended hero image",
-              "width": 112,
-              "height": 112,
-              "fill": {
-                "type": "image",
-                "enabled": true,
-                "url": "../../Resources/Assets.xcassets/AppLogoHero.imageset/AppLogoHero.png",
-                "mode": "fit"
-              },
-              "layout": "none"
-            },
-            {
-              "type": "text",
-              "id": "vault_home_toast_hero_brand",
-              "x": 20,
-              "y": 34,
-              "fill": "#F2F6FF",
-              "content": "LumaNox",
-              "fontFamily": "Inter",
-              "fontSize": 28,
-              "fontWeight": "800"
-            },
-            {
-              "type": "text",
-              "id": "vault_home_toast_hero_status",
-              "x": 20,
-              "y": 70,
-              "width": 230,
-              "textGrowth": "fixed-width",
-              "fill": "#9BAEC8",
-              "content": "3 photos · Local AES-256 vault",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "vault_home_toast_album_section",
-          "x": 16,
-          "y": 252,
-          "name": "Albums shelf behind toast",
-          "clip": true,
-          "width": 361,
-          "height": 442,
-          "fill": {
-            "type": "gradient",
-            "gradientType": "linear",
-            "enabled": true,
-            "rotation": 180,
-            "size": {
-              "height": 1
-            },
-            "colors": [
-              {
-                "color": "#0C2137",
-                "position": 0
-              },
-              {
-                "color": "#071827",
-                "position": 0.6
-              },
-              {
-                "color": "#040A12",
-                "position": 1
-              }
-            ]
-          },
-          "cornerRadius": 26,
-          "stroke": {
-            "thickness": 1,
-            "fill": "#203A59"
-          },
-          "layout": "vertical",
-          "gap": 14,
-          "padding": 16,
-          "children": [
-            {
-              "type": "text",
-              "id": "vault_home_toast_album_title",
-              "fill": "#F6F9FF",
-              "content": "Albums",
-              "fontFamily": "Inter",
-              "fontSize": 20,
-              "fontWeight": "800"
-            },
-            {
-              "type": "frame",
-              "id": "vault_home_toast_album_grid_row",
-              "width": "fill_container",
-              "height": 146,
-              "fill": "#00000000",
-              "gap": 10,
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "vault_home_toast_album_card_a",
-                  "width": "fill_container",
-                  "height": "fill_container",
-                  "fill": "#102A46",
-                  "cornerRadius": 14
-                },
-                {
-                  "type": "frame",
-                  "id": "vault_home_toast_album_card_b",
-                  "width": "fill_container",
-                  "height": "fill_container",
-                  "fill": "#102A46",
-                  "cornerRadius": 14
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "vault_home_import_success_toast",
-          "x": 46,
-          "y": 676,
-          "name": "Import success toast overlay",
-          "width": 301,
-          "height": 48,
-          "fill": "#101722EE",
-          "cornerRadius": 18,
-          "stroke": {
-            "thickness": 1,
-            "fill": "#21C27755"
-          },
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "offset": {
-              "x": 0,
-              "y": 14
-            },
-            "blur": 28,
-            "color": "#00000066"
-          },
-          "layout": "horizontal",
-          "gap": 10,
-          "padding": [
-            0,
-            16
-          ],
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "icon_font",
-              "id": "vault_home_import_success_toast_icon",
-              "width": 18,
-              "height": 18,
-              "iconFontName": "check",
-              "iconFontFamily": "lucide",
-              "fill": "#21C277"
-            },
-            {
-              "type": "text",
-              "id": "vault_home_import_success_toast_label",
-              "fill": "#EAF1FF",
-              "content": "已成功导入 6 项到保险箱",
-              "fontFamily": "Inter",
-              "fontSize": 15,
-              "fontWeight": "600"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "vault_home_toast_bottom_tab",
-          "x": 16,
-          "y": 744,
-          "name": "Bottom tab bar - safe inset",
-          "width": 361,
-          "height": 88,
-          "fill": "#0E1726CC",
-          "cornerRadius": 24,
-          "stroke": {
-            "thickness": 1,
-            "fill": "#243348"
-          },
-          "layout": "horizontal",
-          "gap": 4,
-          "padding": 8,
-          "children": [
-            {
-              "type": "frame",
-              "id": "vault_home_toast_tab_vault",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#1F4A9EFF",
-              "cornerRadius": 16,
-              "stroke": {
-                "thickness": 1,
-                "fill": "#4A9EFF"
-              },
-              "justifyContent": "center",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "vault_home_toast_tab_vault_label",
-                  "fill": "#EAF1FF",
-                  "content": "Vault",
-                  "fontFamily": "Inter",
-                  "fontSize": 10,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "vault_home_toast_tab_camera",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#00000000",
-              "cornerRadius": 16
-            },
-            {
-              "type": "frame",
-              "id": "vault_home_toast_tab_ai",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#00000000",
-              "cornerRadius": 16
-            },
-            {
-              "type": "frame",
-              "id": "vault_home_toast_tab_settings",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#00000000",
-              "cornerRadius": 16
-            }
-          ]
-        },
-        {
-          "type": "rectangle",
-          "id": "vault_home_toast_indicator",
-          "x": 129,
-          "y": 831,
-          "name": "Home indicator",
-          "width": 135,
-          "height": 5,
-          "fill": "#FFFFFFCC",
-          "cornerRadius": 3
-        },
-        {
-          "type": "frame",
-          "id": "vault_home_toast_top_scroll_mask",
-          "x": 0,
-          "y": 0,
-          "name": "Top scroll safe-area mask",
-          "width": 393,
-          "height": 78,
-          "fill": "#0E233A",
-          "layout": "none"
-        },
-        {
-          "type": "frame",
-          "id": "vault_home_toast_status_bar",
-          "x": 0,
-          "y": 0,
-          "name": "iOS status bar",
-          "width": 393,
-          "height": 46,
-          "fill": "#00000000",
-          "padding": [
-            14,
-            24,
-            0,
-            24
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "vault_home_toast_status_time",
-              "fill": "#EAF1FF",
-              "content": "9:41",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "600"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "frm_2f",
       "x": 425,
       "y": 0,
@@ -1816,6 +1262,1471 @@
           "fontFamily": "Inter",
           "fontSize": 12,
           "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "b57G0",
+      "x": 395,
+      "y": 0,
+      "name": "VaultHomeView - empty state",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#0F2944",
+            "position": 0
+          },
+          {
+            "color": "#071A2C",
+            "position": 0.42
+          },
+          {
+            "color": "#02060C",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "duQME",
+          "x": 0,
+          "y": 360,
+          "name": "Page lower blue wash",
+          "width": 393,
+          "height": 330,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "width": 1.15,
+              "height": 1.05
+            },
+            "colors": [
+              {
+                "color": "#123A5E55",
+                "position": 0
+              },
+              {
+                "color": "#08243A2A",
+                "position": 0.48
+              },
+              {
+                "color": "#03070D00",
+                "position": 1
+              }
+            ],
+            "center": {
+              "x": 0.55,
+              "y": 0.16
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "Mkpqp",
+          "x": 16,
+          "y": 78,
+          "name": "Hero - empty vault command center",
+          "clip": true,
+          "width": 361,
+          "height": 163,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 132,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0C1929",
+                "position": 0
+              },
+              {
+                "color": "#08111D",
+                "position": 0.52
+              },
+              {
+                "color": "#0D2238",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 28,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#274260"
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "text",
+              "id": "hwxro",
+              "x": 20,
+              "y": 34,
+              "name": "Brand",
+              "fill": "#F2F6FF",
+              "content": "LumaNox",
+              "fontFamily": "Inter",
+              "fontSize": 28,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "TxfBX",
+              "x": 20,
+              "y": 70,
+              "name": "Status",
+              "fill": "#9BAEC8",
+              "textGrowth": "fixed-width",
+              "width": 230,
+              "content": "0 items · Local AES-256 vault",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500"
+            },
+            {
+              "type": "frame",
+              "id": "S5lTu",
+              "x": 20,
+              "y": 119,
+              "name": "Privacy chips",
+              "width": 268,
+              "height": 26,
+              "fill": "#00000000",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ENH6L",
+                  "height": "fill_container",
+                  "fill": "#11263C",
+                  "cornerRadius": 999,
+                  "gap": 5,
+                  "padding": [
+                    0,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "wsTGr",
+                      "fill": "#B7D7FF",
+                      "content": "Offline",
+                      "fontFamily": "Inter",
+                      "fontSize": 10,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PZgmx",
+                  "height": "fill_container",
+                  "fill": "#11263C",
+                  "cornerRadius": 999,
+                  "gap": 5,
+                  "padding": [
+                    0,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "BDXqH",
+                      "fill": "#B7D7FF",
+                      "content": "Encrypted",
+                      "fontFamily": "Inter",
+                      "fontSize": 10,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "r3JSF",
+                  "height": "fill_container",
+                  "fill": "#11263C",
+                  "cornerRadius": 999,
+                  "gap": 5,
+                  "padding": [
+                    0,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "bhHXS",
+                      "fill": "#B7D7FF",
+                      "content": "Local AI",
+                      "fontFamily": "Inter",
+                      "fontSize": 10,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MxJzF",
+          "x": 16,
+          "y": 261,
+          "name": "Empty vault card - aligned CTA heights",
+          "width": 361,
+          "height": 406,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0C2137",
+                "position": 0
+              },
+              {
+                "color": "#071827",
+                "position": 0.6
+              },
+              {
+                "color": "#040A12",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 24,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#203A59"
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            32,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "TiYzH",
+              "name": "Empty icon",
+              "width": 96,
+              "height": 96,
+              "fill": "#132944",
+              "cornerRadius": 28,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "vjaSV",
+                  "width": 36,
+                  "height": 36,
+                  "iconFontName": "shield",
+                  "iconFontFamily": "lucide",
+                  "fill": "#4A9EFF"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "k8pKX",
+              "fill": "#EAF1FF",
+              "content": "Vault is empty",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "G1KedD",
+              "fill": "#8EA2C0",
+              "textGrowth": "fixed-width",
+              "width": 296,
+              "content": "Imported photos and videos appear here, protected by your lock screen.",
+              "lineHeight": 1.35,
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "gW7QK",
+              "name": "Primary CTA - 54pt",
+              "width": "fill_container",
+              "height": 54,
+              "fill": "#4A9EFF",
+              "cornerRadius": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nCYm7",
+                  "fill": "#FFFFFF",
+                  "content": "Import from Photos",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LTawl",
+              "name": "Secondary CTA - aligned 54pt",
+              "width": "fill_container",
+              "height": 54,
+              "fill": "#1A202C",
+              "cornerRadius": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "YKuJC",
+                  "fill": "#EAF1FF",
+                  "content": "Take private photo",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 3,
+          "id": "N8gYw2",
+          "x": 129,
+          "y": 831,
+          "name": "Home indicator",
+          "fill": "#FFFFFFCC",
+          "width": 135,
+          "height": 5
+        },
+        {
+          "type": "frame",
+          "id": "BMyqt",
+          "x": 0,
+          "y": 0,
+          "name": "Top scroll safe-area mask",
+          "width": 393,
+          "height": 78,
+          "fill": "#0E233A",
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "PDeGX",
+          "x": 0,
+          "y": 0,
+          "name": "iOS status bar",
+          "width": 393,
+          "height": 46,
+          "fill": "#00000000",
+          "padding": [
+            14,
+            24,
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zTyFP",
+      "x": 1303,
+      "y": 0,
+      "name": "VaultHomeView - import success toast",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 180,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#0F2944",
+            "position": 0
+          },
+          {
+            "color": "#071A2C",
+            "position": 0.42
+          },
+          {
+            "color": "#02060C",
+            "position": 1
+          }
+        ]
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "IyvRq",
+          "x": 16,
+          "y": 744,
+          "name": "Bottom tab bar - safe inset, hides for dialogs and keyboard",
+          "width": 361,
+          "height": 88,
+          "fill": "#0E1726CC",
+          "cornerRadius": 24,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#243348"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000055",
+            "offset": {
+              "x": 0,
+              "y": 10
+            },
+            "blur": 24
+          },
+          "gap": 4,
+          "padding": 8,
+          "children": [
+            {
+              "type": "frame",
+              "id": "TAX2e",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#1F4A9EFF",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#4A9EFF"
+              },
+              "layout": "vertical",
+              "gap": 4,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "JsN7B",
+                  "width": 23,
+                  "height": 23,
+                  "iconFontName": "shield",
+                  "iconFontFamily": "lucide",
+                  "fill": "#B7D7FF"
+                },
+                {
+                  "type": "text",
+                  "id": "R9E2rV",
+                  "fill": "#B7D7FF",
+                  "content": "Vault",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "v3v8q",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#00000000",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#00000000"
+              },
+              "layout": "vertical",
+              "gap": 4,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "wa2uy",
+                  "width": 23,
+                  "height": 23,
+                  "iconFontName": "camera",
+                  "iconFontFamily": "lucide",
+                  "fill": "#7E90AB"
+                },
+                {
+                  "type": "text",
+                  "id": "F58c9b",
+                  "fill": "#7E90AB",
+                  "content": "Camera",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Gin5G",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#00000000",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#00000000"
+              },
+              "layout": "vertical",
+              "gap": 4,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Fvk5Q",
+                  "width": 23,
+                  "height": 23,
+                  "iconFontName": "sparkles",
+                  "iconFontFamily": "lucide",
+                  "fill": "#7E90AB"
+                },
+                {
+                  "type": "text",
+                  "id": "tKTRm",
+                  "fill": "#7E90AB",
+                  "content": "AI",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Nplip",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#00000000",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#00000000"
+              },
+              "layout": "vertical",
+              "gap": 4,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "lWhN3",
+                  "width": 23,
+                  "height": 23,
+                  "iconFontName": "settings",
+                  "iconFontFamily": "lucide",
+                  "fill": "#7E90AB"
+                },
+                {
+                  "type": "text",
+                  "id": "kIt7z",
+                  "fill": "#7E90AB",
+                  "content": "Settings",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 3,
+          "id": "KP8N8",
+          "x": 129,
+          "y": 831,
+          "name": "Home indicator",
+          "fill": "#FFFFFFCC",
+          "width": 135,
+          "height": 5
+        },
+        {
+          "type": "frame",
+          "id": "POSSa",
+          "x": 0,
+          "y": 360,
+          "name": "Page lower blue wash",
+          "width": 393,
+          "height": 330,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "width": 1.15,
+              "height": 1.05
+            },
+            "colors": [
+              {
+                "color": "#123A5E55",
+                "position": 0
+              },
+              {
+                "color": "#08243A2A",
+                "position": 0.48
+              },
+              {
+                "color": "#03070D00",
+                "position": 1
+              }
+            ],
+            "center": {
+              "x": 0.55,
+              "y": 0.16
+            }
+          },
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "p42kv",
+          "x": 16,
+          "y": 78,
+          "name": "Hero - compact vault command center",
+          "clip": true,
+          "width": 361,
+          "height": 163,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 132,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0C1929",
+                "position": 0
+              },
+              {
+                "color": "#08111D",
+                "position": 0.52
+              },
+              {
+                "color": "#0D2238",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 28,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#274260"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000066",
+            "offset": {
+              "x": 0,
+              "y": 18
+            },
+            "blur": 30
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Gs86E",
+              "x": 252,
+              "y": 17,
+              "name": "App icon blended image",
+              "width": 82,
+              "height": 82,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "radial",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1.22,
+                  "height": 1.22
+                },
+                "colors": [
+                  {
+                    "color": "#4A9EFF1F",
+                    "position": 0
+                  },
+                  {
+                    "color": "#0D223822",
+                    "position": 0.42
+                  },
+                  {
+                    "color": "#0D22380A",
+                    "position": 0.74
+                  },
+                  {
+                    "color": "#0D223800",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 24,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#4A9EFF20",
+                "offset": {
+                  "x": 0,
+                  "y": 12
+                },
+                "blur": 30
+              },
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "hqCFz",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Actual App Icon",
+                  "clip": true,
+                  "width": 82,
+                  "height": 82,
+                  "fill": {
+                    "type": "image",
+                    "opacity": 0.86,
+                    "enabled": true,
+                    "url": "../../Resources/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 24,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "EP8n9",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Icon edge blend overlay",
+                  "width": 82,
+                  "height": 82,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "radial",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "width": 1.12,
+                      "height": 1.12
+                    },
+                    "colors": [
+                      {
+                        "color": "#0D223800",
+                        "position": 0
+                      },
+                      {
+                        "color": "#0D223800",
+                        "position": 0.5
+                      },
+                      {
+                        "color": "#0D223844",
+                        "position": 0.78
+                      },
+                      {
+                        "color": "#0D223899",
+                        "position": 1
+                      }
+                    ],
+                    "center": {
+                      "y": 0.48
+                    }
+                  },
+                  "cornerRadius": 24,
+                  "layout": "none"
+                },
+                {
+                  "type": "frame",
+                  "id": "j8EBX",
+                  "x": 10,
+                  "y": 10,
+                  "name": "Icon blue soft glow",
+                  "width": 62,
+                  "height": 62,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "radial",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "width": 1,
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#4A9EFF20",
+                        "position": 0
+                      },
+                      {
+                        "color": "#4A9EFF0C",
+                        "position": 0.48
+                      },
+                      {
+                        "color": "#4A9EFF00",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 31,
+                  "layout": "none"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "cUn6t",
+              "x": 20,
+              "y": 34,
+              "fill": "#F2F6FF",
+              "content": "LumaNox",
+              "fontFamily": "Inter",
+              "fontSize": 28,
+              "fontWeight": "800"
+            },
+            {
+              "type": "text",
+              "id": "KFr8V",
+              "x": 20,
+              "y": 70,
+              "fill": "#9BAEC8",
+              "textGrowth": "fixed-width",
+              "width": 230,
+              "content": "3 photos · Local AES-256 vault",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500"
+            },
+            {
+              "type": "frame",
+              "id": "XW9Xf",
+              "x": 20,
+              "y": 119,
+              "width": 268,
+              "height": 26,
+              "fill": "#00000000",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "y4egW8",
+                  "width": 68,
+                  "height": "fill_container",
+                  "fill": "#FFFFFF08",
+                  "cornerRadius": 13,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#FFFFFF10"
+                  },
+                  "gap": 4,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "M8JaI",
+                      "width": 10,
+                      "height": 10,
+                      "iconFontName": "wifi-off",
+                      "iconFontFamily": "lucide",
+                      "fill": "#8EA2C0"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wXxZM",
+                      "fill": "#AFC4E2",
+                      "content": "Offline",
+                      "fontFamily": "Inter",
+                      "fontSize": 9,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vDm1f",
+                  "width": 80,
+                  "height": "fill_container",
+                  "fill": "#FFFFFF08",
+                  "cornerRadius": 13,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#FFFFFF10"
+                  },
+                  "gap": 4,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "cpGVX",
+                      "width": 10,
+                      "height": 10,
+                      "iconFontName": "lock-keyhole",
+                      "iconFontFamily": "lucide",
+                      "fill": "#8EA2C0"
+                    },
+                    {
+                      "type": "text",
+                      "id": "oQarz",
+                      "fill": "#AFC4E2",
+                      "content": "Encrypted",
+                      "fontFamily": "Inter",
+                      "fontSize": 9,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "V5Zm7",
+                  "width": 104,
+                  "height": "fill_container",
+                  "fill": "#FFFFFF08",
+                  "cornerRadius": 13,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#FFFFFF10"
+                  },
+                  "gap": 4,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Z1VaPs",
+                      "width": 10,
+                      "height": 10,
+                      "iconFontName": "sparkles",
+                      "iconFontFamily": "lucide",
+                      "fill": "#8EA2C0"
+                    },
+                    {
+                      "type": "text",
+                      "id": "tMskp",
+                      "fill": "#AFC4E2",
+                      "content": "Local AI Models",
+                      "fontFamily": "Inter",
+                      "fontSize": 8,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "WgLLw",
+          "x": 16,
+          "y": 252,
+          "name": "Albums shelf",
+          "clip": true,
+          "width": 361,
+          "height": 442,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0C2137",
+                "position": 0
+              },
+              {
+                "color": "#071827",
+                "position": 0.6
+              },
+              {
+                "color": "#040A12",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 26,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#203A59"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000055",
+            "offset": {
+              "x": 0,
+              "y": 16
+            },
+            "blur": 28
+          },
+          "layout": "vertical",
+          "gap": 14,
+          "padding": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "XIeXH",
+              "name": "Album grid header",
+              "width": "fill_container",
+              "height": 34,
+              "fill": "#00000000",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "v2LRpc",
+                  "fill": "#F6F9FF",
+                  "content": "Albums",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "850"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LrEQN",
+              "name": "Album list grid",
+              "width": "fill_container",
+              "height": 362,
+              "fill": "#00000000",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nzovc",
+                  "width": "fill_container",
+                  "height": 176,
+                  "fill": "#00000000",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "UWhcb",
+                      "name": "Album card - default",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#00000000",
+                      "stroke": {
+                        "thickness": 0,
+                        "fill": "#00000000"
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "LsHeR",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 142,
+                          "fill": "#12304C",
+                          "cornerRadius": [
+                            20,
+                            20,
+                            16,
+                            16
+                          ],
+                          "stroke": {
+                            "thickness": 0,
+                            "fill": "#00000000"
+                          },
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "nKeGc",
+                              "name": "Single album cover preview",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "#12304C",
+                              "cornerRadius": [
+                                20,
+                                20,
+                                16,
+                                16
+                              ],
+                              "stroke": {
+                                "thickness": 0,
+                                "fill": "#00000000"
+                              },
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "rXLLD",
+                                  "x": 64,
+                                  "y": 54,
+                                  "width": 34,
+                                  "height": 34,
+                                  "iconFontName": "images",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#AFC4E288"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "t5jPv5",
+                          "width": "fill_container",
+                          "height": 34,
+                          "fill": "#00000000",
+                          "padding": [
+                            0,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "R17ib",
+                              "fill": "#F4F8FF",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "主相册",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "cCwGW",
+                      "name": "Album card - created album",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#00000000",
+                      "stroke": {
+                        "thickness": 0,
+                        "fill": "#00000000"
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "N41NKX",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 142,
+                          "fill": "#12304C",
+                          "cornerRadius": [
+                            20,
+                            20,
+                            16,
+                            16
+                          ],
+                          "stroke": {
+                            "thickness": 0,
+                            "fill": "#00000000"
+                          },
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "lVqCH",
+                              "name": "Single album cover preview",
+                              "clip": true,
+                              "width": "fill_container",
+                              "height": "fill_container",
+                              "fill": "#12304C",
+                              "cornerRadius": [
+                                20,
+                                20,
+                                16,
+                                16
+                              ],
+                              "stroke": {
+                                "thickness": 0,
+                                "fill": "#00000000"
+                              },
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "HHd2S",
+                                  "x": 64,
+                                  "y": 54,
+                                  "width": 34,
+                                  "height": 34,
+                                  "iconFontName": "images",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#AFC4E288"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "h0ZlBk",
+                          "width": "fill_container",
+                          "height": 34,
+                          "fill": "#00000000",
+                          "padding": [
+                            0,
+                            10
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "iXBX6",
+                              "fill": "#F4F8FF",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "明后",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "800"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nrgoU",
+                  "width": "fill_container",
+                  "height": 176,
+                  "fill": "#00000000",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "q6Kz3C",
+                      "name": "New album full height plus",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#00000000",
+                      "stroke": {
+                        "thickness": 0,
+                        "fill": "#00000000"
+                      },
+                      "layout": "vertical",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "TAP9X",
+                          "name": "New album full height plus",
+                          "clip": true,
+                          "width": "fill_container",
+                          "height": 142,
+                          "fill": "#0D2742",
+                          "cornerRadius": 20,
+                          "stroke": {
+                            "thickness": 0,
+                            "fill": "#00000000"
+                          },
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "NN3gL",
+                              "x": 64,
+                              "y": 54,
+                              "width": 34,
+                              "height": 34,
+                              "iconFontName": "plus",
+                              "iconFontFamily": "lucide",
+                              "fill": "#B7D7FF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "UmfVf",
+                          "width": "fill_container",
+                          "height": 34,
+                          "fill": "#00000000",
+                          "layout": "none"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ztq1Q",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#00000000",
+                      "layout": "none"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "K2mqw",
+          "x": 46,
+          "y": 676,
+          "name": "Import success toast overlay",
+          "width": 301,
+          "height": 48,
+          "fill": "#101722EE",
+          "cornerRadius": 18,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#21C27755"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000066",
+            "offset": {
+              "x": 0,
+              "y": 14
+            },
+            "blur": 28
+          },
+          "gap": 10,
+          "padding": [
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "gV5uw",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "check",
+              "iconFontFamily": "lucide",
+              "fill": "#21C277"
+            },
+            {
+              "type": "text",
+              "id": "qxv2I",
+              "fill": "#EAF1FF",
+              "content": "已成功导入 6 项到保险箱",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kcl6Z",
+          "x": 0,
+          "y": 0,
+          "name": "Top scroll safe-area mask",
+          "width": 393,
+          "height": 78,
+          "fill": "#0E233A",
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "GmbXT",
+          "x": 0,
+          "y": 0,
+          "name": "iOS status bar",
+          "width": 393,
+          "height": 46,
+          "fill": "#00000000",
+          "padding": [
+            14,
+            24,
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "xFksR",
+              "fill": "#EAF1FF",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "J5Ekm",
+              "fill": "#00000000",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 3,
+                  "id": "C8DMb",
+                  "fill": "#EAF1FF",
+                  "width": 18,
+                  "height": 10
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 2,
+                  "id": "kMEpw",
+                  "fill": "#EAF1FF",
+                  "width": 3,
+                  "height": 6
+                }
+              ]
+            }
+          ]
         }
       ]
     }

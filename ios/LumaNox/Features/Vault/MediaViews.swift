@@ -316,6 +316,7 @@ struct VaultMediaGridCard: View {
     let onSelect: (LNMediaItem) -> Void
     var importSelection: Binding<[PhotosPickerItem]>? = nil
     var isImporting = false
+    var showsOuterBorder = true
 
     private var hasImportTile: Bool {
         importSelection != nil
@@ -386,7 +387,10 @@ struct VaultMediaGridCard: View {
         .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
         .overlay(
             RoundedRectangle(cornerRadius: LNRadius.homeCard)
-                .stroke(LNColor.strokeStrong, lineWidth: 1)
+                .stroke(
+                    showsOuterBorder ? LNColor.strokeStrong : Color.clear,
+                    lineWidth: showsOuterBorder ? 1 : 0
+                )
         )
         .frame(width: width, alignment: .leading)
     }
@@ -448,7 +452,8 @@ struct AlbumView: View {
                     width: cardWidth,
                     onSelect: open,
                     importSelection: $pickerItems,
-                    isImporting: vaultStore.isImporting
+                    isImporting: vaultStore.isImporting,
+                    showsOuterBorder: false
                 )
             }
             .padding(.horizontal, LNSpacing.screenHorizontal)
