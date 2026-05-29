@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +59,7 @@ import com.xpx.vault.ui.theme.UiSize
  */
 @Composable
 fun AiClassifyScreen(
+    initialCategory: ClassifyCategory? = null,
     onBack: () -> Unit,
     onOpenPhoto: (String) -> Unit = {},
     onPaywallRequired: () -> Unit = {},
@@ -66,6 +68,9 @@ fun AiClassifyScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val selected = state.selected
     val context = LocalContext.current
+    LaunchedEffect(initialCategory) {
+        if (initialCategory != null) viewModel.select(initialCategory)
+    }
     val requireAiAccess: (() -> Unit) -> Unit = { action ->
         val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
         val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.AI_CLASSIFY)
@@ -77,13 +82,14 @@ fun AiClassifyScreen(
     }
 
     if (selected != null) {
-        BackHandler(onBack = viewModel::closeDetail)
+        val closeDetail = if (initialCategory != null) onBack else viewModel::closeDetail
+        BackHandler(onBack = closeDetail)
         ClassifyCategoryDetail(
             category = selected,
             tags = state.tags,
             pathByPhotoId = state.pathByPhotoId,
             onOpenPhoto = onOpenPhoto,
-            onBack = viewModel::closeDetail,
+            onBack = closeDetail,
         )
     } else {
         Column(

@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
+import com.xpx.vault.ai.core.ClassifyCategory
 
 /**
  * 隐藏 tab 屏幕的事件吞噬：
@@ -35,6 +36,7 @@ fun MainScreen(
     onOpenPrivateCamera: () -> Unit,
     onOpenSearch: () -> Unit,
     onOpenAlbum: (String) -> Unit,
+    onOpenAiClassifyAlbum: (ClassifyCategory) -> Unit,
     onOpenPhotoViewer: (String) -> Unit,
     onOpenAlbumList: () -> Unit,
     onOpenRecentList: () -> Unit,
@@ -60,6 +62,7 @@ fun MainScreen(
             showBottomNav = selectedTab == HomeTab.VAULT,
             onOpenSearch = onOpenSearch,
             onOpenAlbum = onOpenAlbum,
+            onOpenAiClassifyAlbum = onOpenAiClassifyAlbum,
             onOpenPhotoViewer = onOpenPhotoViewer,
             onOpenAlbumList = onOpenAlbumList,
             onOpenRecentList = onOpenRecentList,

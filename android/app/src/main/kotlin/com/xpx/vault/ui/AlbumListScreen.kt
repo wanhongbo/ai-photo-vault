@@ -45,6 +45,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
+import com.xpx.vault.ai.core.ClassifyCategory
+import com.xpx.vault.ui.ai.AiClassifyVirtualAlbum
+import com.xpx.vault.ui.ai.loadAiClassifyVirtualAlbums
 import com.xpx.vault.ui.components.AppInputDialog
 import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.throttledClickable
@@ -58,6 +61,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AlbumListScreen(
     onOpenAlbum: (String) -> Unit,
+    onOpenAiClassifyAlbum: (ClassifyCategory) -> Unit = {},
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -65,13 +69,16 @@ fun AlbumListScreen(
     val scope = rememberCoroutineScope()
     val cachedAlbums = remember { VaultStore.peekCachedSnapshot()?.albums.orEmpty() }
     var albums by remember { mutableStateOf(cachedAlbums) }
+    var aiAlbums by remember { mutableStateOf<List<AiClassifyVirtualAlbum>>(emptyList()) }
     var loaded by remember { mutableStateOf(cachedAlbums.isNotEmpty()) }
     var creatingAlbum by remember { mutableStateOf(false) }
     var newAlbumName by remember { mutableStateOf("") }
 
     suspend fun refreshAlbums() {
         val latest = VaultStore.listAlbums(context)
+        val latestAiAlbums = loadAiClassifyVirtualAlbums(context)
         if (albums != latest) albums = latest
+        if (aiAlbums != latestAiAlbums) aiAlbums = latestAiAlbums
         loaded = true
     }
 
@@ -128,7 +135,7 @@ fun AlbumListScreen(
                     color = UiColors.Home.subtitle,
                 )
             }
-        } else if (albums.isEmpty()) {
+        } else if (albums.isEmpty() && aiAlbums.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                 Text(
                     text = stringResource(R.string.album_list_empty),
@@ -144,11 +151,17 @@ fun AlbumListScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(albums, key = { it.name }) { album ->
-                    AlbumListCard(
-                        album = album,
-                        onClick = { onOpenAlbum(album.name) },
-                    )
+                items(albumListItems(albums, aiAlbums), key = { it.key }) { item ->
+                    when (item) {
+                        is AlbumListItem.Album -> AlbumListCard(
+                            album = item.album,
+                            onClick = { onOpenAlbum(item.album.name) },
+                        )
+                        is AlbumListItem.AiAlbum -> AiAlbumListCard(
+                            album = item.album,
+                            onClick = { onOpenAiClassifyAlbum(item.album.category) },
+                        )
+                    }
                 }
                 item(key = "__create_album__") {
                     CreateAlbumGridItem(onClick = { creatingAlbum = true })
@@ -232,6 +245,26 @@ private fun FilterTag(
     }
 }
 
+private sealed interface AlbumListItem {
+    val key: String
+
+    data class Album(val album: VaultAlbum) : AlbumListItem {
+        override val key: String = "vault:${album.name}"
+    }
+
+    data class AiAlbum(val album: AiClassifyVirtualAlbum) : AlbumListItem {
+        override val key: String = "ai:${album.category.name}"
+    }
+}
+
+private fun albumListItems(
+    albums: List<VaultAlbum>,
+    aiAlbums: List<AiClassifyVirtualAlbum>,
+): List<AlbumListItem> = buildList {
+    albums.forEach { add(AlbumListItem.Album(it)) }
+    aiAlbums.forEach { add(AlbumListItem.AiAlbum(it)) }
+}
+
 @Composable
 private fun AlbumListCard(
     album: VaultAlbum,
@@ -265,6 +298,70 @@ private fun AlbumListCard(
         }
         Text(
             text = displayName,
+            color = UiColors.Home.title,
+            fontFamily = AppFontFamily,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 13.dp),
+        )
+        Text(
+            text = stringResource(R.string.home_album_photo_count, album.photoCount),
+            color = Color(0xFF9FB2D1),
+            fontFamily = AppFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+    }
+}
+
+@Composable
+private fun AiAlbumListCard(
+    album: AiClassifyVirtualAlbum,
+    onClick: () -> Unit,
+) {
+    AlbumListCardFrame(onClick = onClick) { coverModifier ->
+        Box(
+            modifier = coverModifier.background(Color(0xFF102A46)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (album.coverPath != null) {
+                VaultProgressiveImage(
+                    path = album.coverPath,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    thumbnailMaxPx = 480,
+                )
+            } else {
+                Icon(
+                    painter = painterResource(R.drawable.ic_ai_sparkles),
+                    contentDescription = null,
+                    tint = Color(0xFF8EC5FF),
+                    modifier = Modifier.size(31.dp),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(9.dp)
+                    .size(24.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xCC0A1828)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_ai_sparkles),
+                    contentDescription = null,
+                    tint = Color(0xFF8EC5FF),
+                    modifier = Modifier.size(13.dp),
+                )
+            }
+        }
+        Text(
+            text = stringResource(album.titleRes),
             color = UiColors.Home.title,
             fontFamily = AppFontFamily,
             fontSize = 15.sp,

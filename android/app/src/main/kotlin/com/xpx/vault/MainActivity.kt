@@ -40,6 +40,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.xpx.vault.ai.core.ClassifyCategory
 import com.xpx.vault.ui.AlbumScreen
 import com.xpx.vault.ui.AlbumListScreen
 import com.xpx.vault.ui.BackupRestoreScreen
@@ -303,6 +304,9 @@ class MainActivity : FragmentActivity() {
                                 },
                                 onOpenAlbum = { albumName ->
                                     navController.navigate("album/${Uri.encode(albumName)}") { launchSingleTop = true }
+                                },
+                                onOpenAiClassifyAlbum = { category ->
+                                    navController.navigate("$ROUTE_AI_CLASSIFY/${category.name}") { launchSingleTop = true }
                                 },
                                 onOpenPhotoViewer = { path ->
                                     navController.navigate(viewerRouteForPath(path)) { launchSingleTop = true }
@@ -605,6 +609,27 @@ class MainActivity : FragmentActivity() {
                                 },
                             )
                         }
+                        composable(
+                            route = "$ROUTE_AI_CLASSIFY/{category}",
+                            arguments = listOf(navArgument("category") { defaultValue = "" }),
+                        ) { entry ->
+                            val category = entry.arguments?.getString("category")
+                                ?.let { runCatching { ClassifyCategory.valueOf(it) }.getOrNull() }
+                            AiClassifyScreen(
+                                initialCategory = category,
+                                onBack = { navController.popBackStack() },
+                                onOpenPhoto = { path ->
+                                    navController.navigate(viewerRouteForPath(path)) {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onPaywallRequired = {
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
+                                    ) { launchSingleTop = true }
+                                },
+                            )
+                        }
                         composable(ROUTE_AI_PRIVACY) {
                             AiFeaturePlaceholderScreen(
                                 title = stringResource(R.string.privacy_redact_title),
@@ -637,6 +662,9 @@ class MainActivity : FragmentActivity() {
                             AlbumListScreen(
                                 onOpenAlbum = { albumName ->
                                     navController.navigate("album/${Uri.encode(albumName)}") { launchSingleTop = true }
+                                },
+                                onOpenAiClassifyAlbum = { category ->
+                                    navController.navigate("$ROUTE_AI_CLASSIFY/${category.name}") { launchSingleTop = true }
                                 },
                                 onBack = { navController.popBackStack() },
                             )

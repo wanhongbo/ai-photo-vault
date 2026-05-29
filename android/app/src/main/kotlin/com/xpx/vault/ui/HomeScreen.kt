@@ -68,8 +68,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
+import com.xpx.vault.ai.core.ClassifyCategory
 import com.xpx.vault.findAppLockManager
 import com.xpx.vault.launchExternalSystemUi
+import com.xpx.vault.ui.ai.AiClassifyVirtualAlbum
+import com.xpx.vault.ui.ai.loadAiClassifyVirtualAlbums
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppInputDialog
@@ -102,6 +105,7 @@ fun HomeScreen(
     showBottomNav: Boolean = true,
     onOpenSearch: () -> Unit = {},
     onOpenAlbum: (String) -> Unit = {},
+    onOpenAiClassifyAlbum: (ClassifyCategory) -> Unit = {},
     onOpenPhotoViewer: (String) -> Unit = {},
     onOpenAlbumList: () -> Unit = {},
     onOpenRecentList: () -> Unit = {},
@@ -121,6 +125,7 @@ fun HomeScreen(
     var newAlbumName by remember { mutableStateOf("") }
     val cachedSnapshot = remember { VaultStore.peekCachedSnapshot() }
     var albums by remember { mutableStateOf(cachedSnapshot?.albums.orEmpty()) }
+    var aiAlbums by remember { mutableStateOf<List<AiClassifyVirtualAlbum>>(emptyList()) }
     var recentPhotos by remember { mutableStateOf(cachedSnapshot?.recentPhotos.orEmpty()) }
     var totalCount by remember { mutableStateOf(cachedSnapshot?.totalCount ?: 0) }
     var imageCount by remember { mutableStateOf(cachedSnapshot?.imageCount ?: 0) }
@@ -140,7 +145,9 @@ fun HomeScreen(
 
     suspend fun refreshVault() {
         val snapshot = VaultStore.loadSnapshot(context, recentLimit = 60)
+        val latestAiAlbums = loadAiClassifyVirtualAlbums(context)
         if (albums != snapshot.albums) albums = snapshot.albums
+        if (aiAlbums != latestAiAlbums) aiAlbums = latestAiAlbums
         if (recentPhotos != snapshot.recentPhotos) recentPhotos = snapshot.recentPhotos
         if (totalCount != snapshot.totalCount) totalCount = snapshot.totalCount
         if (imageCount != snapshot.imageCount) imageCount = snapshot.imageCount
@@ -413,7 +420,9 @@ fun HomeScreen(
                     item {
                         AlbumsSection(
                             albums = albums,
+                            aiAlbums = aiAlbums,
                             onOpenAlbum = onOpenAlbum,
+                            onOpenAiClassifyAlbum = onOpenAiClassifyAlbum,
                             onCreateAlbum = { creatingAlbum = true },
                         )
                     }
@@ -889,12 +898,15 @@ private fun homeCardBrush(): Brush =
 @Composable
 private fun AlbumsSection(
     albums: List<VaultAlbum>,
+    aiAlbums: List<AiClassifyVirtualAlbum>,
     onOpenAlbum: (String) -> Unit,
+    onOpenAiClassifyAlbum: (ClassifyCategory) -> Unit,
     onCreateAlbum: () -> Unit,
 ) {
-    val albumItems = remember(albums) {
+    val albumItems = remember(albums, aiAlbums) {
         buildList<VaultHomeAlbumTile> {
             albums.forEach { add(VaultHomeAlbumTile.Album(it)) }
+            aiAlbums.forEach { add(VaultHomeAlbumTile.AiAlbum(it)) }
             add(VaultHomeAlbumTile.Create)
         }
     }
@@ -928,6 +940,13 @@ private fun AlbumsSection(
                         is VaultHomeAlbumTile.Album -> AlbumCard(
                             album = item.album,
                             onClick = { onOpenAlbum(item.album.name) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                        )
+                        is VaultHomeAlbumTile.AiAlbum -> AiAlbumCard(
+                            album = item.album,
+                            onClick = { onOpenAiClassifyAlbum(item.album.category) },
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
@@ -1010,6 +1029,74 @@ private fun AlbumCard(
 }
 
 @Composable
+private fun AiAlbumCard(
+    album: AiClassifyVirtualAlbum,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interaction = rememberFeedbackInteractionSource()
+    Column(
+        modifier = modifier
+            .pressFeedback(interaction)
+            .throttledClickable(interactionSource = interaction, indication = null, onClick = onClick),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(142.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF102A46)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (album.coverPath != null) {
+                VaultProgressiveImage(
+                    path = album.coverPath,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    thumbnailMaxPx = 420,
+                    showVideoIndicator = true,
+                )
+            } else {
+                Icon(
+                    painter = painterResource(R.drawable.ic_ai_sparkles),
+                    contentDescription = null,
+                    tint = Color(0xFF8EC5FF),
+                    modifier = Modifier.size(34.dp),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(10.dp)
+                    .size(26.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xCC0A1828)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_ai_sparkles),
+                    contentDescription = null,
+                    tint = Color(0xFF8EC5FF),
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
+        Text(
+            text = stringResource(album.titleRes),
+            color = Color(0xFFF4F8FF),
+            fontFamily = AppFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.ExtraBold,
+            maxLines = 1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(34.dp)
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+        )
+    }
+}
+
+@Composable
 private fun CreateAlbumCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -1041,6 +1128,7 @@ private fun CreateAlbumCard(
 
 private sealed interface VaultHomeAlbumTile {
     data class Album(val album: VaultAlbum) : VaultHomeAlbumTile
+    data class AiAlbum(val album: AiClassifyVirtualAlbum) : VaultHomeAlbumTile
     data object Create : VaultHomeAlbumTile
 }
 
