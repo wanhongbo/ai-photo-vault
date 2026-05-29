@@ -321,17 +321,23 @@ fun HomeScreen(
             .background(
                 Brush.verticalGradient(
                     colorStops = arrayOf(
-                        0.00f to Color(0xFF0F2944),
-                        0.42f to Color(0xFF071A2C),
-                        1.00f to Color(0xFF02060C),
+                        0.00f to Color(0xFF0E233A),
+                        0.24f to Color(0xFF0B1D31),
+                        0.54f to Color(0xFF071423),
+                        1.00f to Color(0xFF05080D),
                     ),
                 ),
             )
             .drawBehind {
                 drawCircle(
-                    color = Color(0x33123A5E),
-                    radius = size.width * 0.82f,
-                    center = Offset(size.width * 0.55f, size.height * 0.58f),
+                    color = Color(0x2E123A5E),
+                    radius = size.width * 0.58f,
+                    center = Offset(size.width * 0.55f, size.height * 0.49f),
+                )
+                drawCircle(
+                    color = Color(0x1F0B2740),
+                    radius = size.width * 0.38f,
+                    center = Offset(size.width * 0.55f, size.height * 0.49f),
                 )
             },
     ) {
