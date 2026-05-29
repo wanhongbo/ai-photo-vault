@@ -987,10 +987,10 @@ private fun AlbumCard(
                 )
             } else {
                 Icon(
-                    painter = painterResource(R.drawable.ic_home_nav_album),
+                    painter = painterResource(R.drawable.ic_album_empty_placeholder),
                     contentDescription = null,
                     tint = Color(0x8AAFC4E2),
-                    modifier = Modifier.size(34.dp),
+                    modifier = Modifier.size(38.dp),
                 )
             }
         }

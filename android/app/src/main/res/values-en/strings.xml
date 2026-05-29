@@ -499,6 +499,10 @@
     <string name="album_action_select">Select</string>
     <string name="album_action_more">More</string>
     <string name="album_action_add">Add photos</string>
+    <string name="album_menu_bulk_export">Bulk Export</string>
+    <string name="album_menu_delete_album">Delete Album</string>
+    <string name="album_delete_title">Delete Album</string>
+    <string name="album_delete_message">Media in this album will be moved to Trash and can be restored within 30 days.</string>
     <string name="camera_view_last_media">View last capture</string>
     <string name="album_action_camera_roll">Export to Camera Roll</string>
     <string name="settings_item_bulk_export">Bulk export to Camera Roll</string>

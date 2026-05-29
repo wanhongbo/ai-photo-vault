@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -93,6 +95,8 @@ fun AlbumScreen(
     // Selection mode state
     var selectionMode by remember(albumName) { mutableStateOf(false) }
     var selected by remember(albumName) { mutableStateOf(setOf<String>()) }
+    var moreMenuOpen by remember(albumName) { mutableStateOf(false) }
+    var showDeleteAlbumDialog by remember(albumName) { mutableStateOf(false) }
 
     fun exitSelection() {
         selectionMode = false
@@ -126,7 +130,13 @@ fun AlbumScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    BackHandler(enabled = selectionMode) { exitSelection() }
+    BackHandler(enabled = showDeleteAlbumDialog || moreMenuOpen || selectionMode) {
+        when {
+            showDeleteAlbumDialog -> showDeleteAlbumDialog = false
+            moreMenuOpen -> moreMenuOpen = false
+            selectionMode -> exitSelection()
+        }
+    }
 
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 30),
@@ -172,95 +182,135 @@ fun AlbumScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(UiColors.Home.bgBottom)
-            .safeDrawingPadding()
-            .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp),
+            .background(UiColors.Home.bgBottom),
     ) {
-        AlbumTopBar(
-            title = if (selectionMode) stringResource(R.string.album_select_mode_title, selected.size) else albumName,
-            selectionMode = selectionMode,
-            allSelected = selectionMode && selected.size == photos.size && photos.isNotEmpty(),
-            onBack = { if (selectionMode) exitSelection() else onBack() },
-            onToggleSelection = {
-                if (!selectionMode) {
-                    selectionMode = true
-                } else {
-                    exitSelection()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp),
+        ) {
+            AlbumTopBar(
+                title = if (selectionMode) stringResource(R.string.album_select_mode_title, selected.size) else albumName,
+                selectionMode = selectionMode,
+                allSelected = selectionMode && selected.size == photos.size && photos.isNotEmpty(),
+                onBack = { if (selectionMode) exitSelection() else onBack() },
+                onMoreClick = { moreMenuOpen = !moreMenuOpen },
+                onToggleSelectAll = {
+                    selected = if (selected.size == photos.size) emptySet() else photos.map { it.path }.toSet()
+                },
+            )
+            if (!loaded) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = stringResource(R.string.common_loading), color = UiColors.Home.subtitle)
                 }
-            },
-            onToggleSelectAll = {
-                selected = if (selected.size == photos.size) emptySet() else photos.map { it.path }.toSet()
-            },
-        )
-        if (!loaded) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = stringResource(R.string.common_loading), color = UiColors.Home.subtitle)
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 22.dp)
+                        .height(if (photos.isEmpty()) 135.dp else 337.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(UiColors.Home.sectionBg)
+                        .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(18.dp))
+                        .padding(16.dp),
+                ) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        if (!selectionMode) {
+                            item {
+                                AlbumImportGridItem(onClick = triggerImport)
+                            }
+                        }
+                        items(photos, key = { it.path }) { photo ->
+                            AlbumGridItem(
+                                photo = photo,
+                                selectionMode = selectionMode,
+                                selected = selected.contains(photo.path),
+                                onClick = {
+                                    if (selectionMode) toggleSelected(photo.path) else onOpenPhoto(photo.path)
+                                },
+                                onLongPress = {
+                                    if (!selectionMode) {
+                                        selectionMode = true
+                                        selected = setOf(photo.path)
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+                if (selectionMode) {
+                    AlbumSelectionBottomBar(
+                        selectedCount = selected.size,
+                        onShare = { /* TODO: share selected */ },
+                        onExport = {
+                            if (selected.isNotEmpty()) {
+                                val isPremium = com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
+                                ExportRuntimeState.enqueue(selected.toList(), skipWatermark = isPremium)
+                                onOpenExportProgress()
+                                // Exit selection so returning to album is clean.
+                                exitSelection()
+                            }
+                        },
+                        onDelete = {
+                            val toDelete = selected.toList()
+                            scope.launch {
+                                toDelete.forEach { VaultStore.deletePhoto(context, it) }
+                                exitSelection()
+                                reload()
+                            }
+                        },
+                    )
+                }
             }
-        } else {
+        }
+        if (moreMenuOpen) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 22.dp)
-                    .height(if (photos.isEmpty()) 135.dp else 337.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(UiColors.Home.sectionBg)
-                    .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(18.dp))
-                    .padding(16.dp),
-            ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    if (!selectionMode) {
-                        item {
-                            AlbumImportGridItem(onClick = triggerImport)
-                        }
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { moreMenuOpen = false },
+            )
+            AlbumMoreActionsPopover(
+                modifier = Modifier
+                    .safeDrawingPadding()
+                    .align(Alignment.TopEnd)
+                    .padding(top = 79.dp, end = 16.dp),
+                onBulkExport = {
+                    moreMenuOpen = false
+                    val albumPaths = photos.map { it.path }
+                    if (albumPaths.isNotEmpty()) {
+                        val isPremium = com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
+                        ExportRuntimeState.enqueue(albumPaths, skipWatermark = isPremium)
+                        onOpenExportProgress()
                     }
-                    items(photos, key = { it.path }) { photo ->
-                        AlbumGridItem(
-                            photo = photo,
-                            selectionMode = selectionMode,
-                            selected = selected.contains(photo.path),
-                            onClick = {
-                                if (selectionMode) toggleSelected(photo.path) else onOpenPhoto(photo.path)
-                            },
-                            onLongPress = {
-                                if (!selectionMode) {
-                                    selectionMode = true
-                                    selected = setOf(photo.path)
-                                }
-                            },
-                        )
+                },
+                onDeleteAlbum = {
+                    moreMenuOpen = false
+                    showDeleteAlbumDialog = true
+                },
+            )
+        }
+        if (showDeleteAlbumDialog) {
+            DeleteAlbumDialog(
+                onDismiss = { showDeleteAlbumDialog = false },
+                onDelete = {
+                    showDeleteAlbumDialog = false
+                    scope.launch {
+                        VaultStore.deleteAlbum(context, albumName)
+                        onBack()
                     }
-                }
-            }
-            if (selectionMode) {
-                AlbumSelectionBottomBar(
-                    selectedCount = selected.size,
-                    onShare = { /* TODO: share selected */ },
-                    onExport = {
-                        if (selected.isNotEmpty()) {
-                            val isPremium = com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
-                            ExportRuntimeState.enqueue(selected.toList(), skipWatermark = isPremium)
-                            onOpenExportProgress()
-                            // Exit selection so returning to album is clean.
-                            exitSelection()
-                        }
-                    },
-                    onDelete = {
-                        val toDelete = selected.toList()
-                        scope.launch {
-                            toDelete.forEach { VaultStore.deletePhoto(context, it) }
-                            exitSelection()
-                            reload()
-                        }
-                    },
-                )
-            }
+                },
+            )
         }
     }
 }
@@ -289,10 +339,10 @@ private fun AlbumImportGridItem(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_home_action_add),
+            painter = painterResource(R.drawable.ic_album_import_plus),
             contentDescription = stringResource(R.string.album_action_add),
             tint = Color(0xFF9FB2D1),
-            modifier = Modifier.size(29.dp),
+            modifier = Modifier.size(30.dp),
         )
     }
 }
@@ -303,7 +353,7 @@ private fun AlbumTopBar(
     selectionMode: Boolean,
     allSelected: Boolean,
     onBack: () -> Unit,
-    onToggleSelection: () -> Unit,
+    onMoreClick: () -> Unit,
     onToggleSelectAll: () -> Unit,
 ) {
     Box(
@@ -359,7 +409,7 @@ private fun AlbumTopBar(
                     .clip(RoundedCornerShape(14.dp))
                     .background(UiColors.Home.sectionBg)
                     .border(1.dp, UiColors.Home.navBarStroke, RoundedCornerShape(14.dp))
-                    .throttledClickable(onClick = onToggleSelection),
+                    .throttledClickable(onClick = onMoreClick),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
@@ -371,6 +421,167 @@ private fun AlbumTopBar(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun AlbumMoreActionsPopover(
+    modifier: Modifier = Modifier,
+    onBulkExport: () -> Unit,
+    onDeleteAlbum: () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .width(204.dp)
+            .shadow(26.dp, RoundedCornerShape(16.dp), clip = false)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF101722))
+            .border(1.dp, Color(0xFF2A3B52), RoundedCornerShape(16.dp))
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        AlbumMoreMenuItem(
+            iconRes = R.drawable.ic_album_menu_download,
+            label = stringResource(R.string.album_menu_bulk_export),
+            tint = UiColors.Home.title,
+            onClick = onBulkExport,
+        )
+        AlbumMoreMenuItem(
+            iconRes = R.drawable.ic_album_menu_trash,
+            label = stringResource(R.string.album_menu_delete_album),
+            tint = Color(0xFFFF4372),
+            onClick = onDeleteAlbum,
+        )
+    }
+}
+
+@Composable
+private fun AlbumMoreMenuItem(
+    iconRes: Int,
+    label: String,
+    tint: Color,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .throttledClickable(onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = label,
+            color = tint,
+            fontFamily = AppFontFamily,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@Composable
+private fun DeleteAlbumDialog(
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xB8000000))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onDismiss,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .width(329.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(Color(0xFF101722))
+                .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(22.dp))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { }
+                .padding(start = 24.dp, top = 22.dp, end = 24.dp, bottom = 22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.album_delete_title),
+                color = UiColors.Home.title,
+                fontFamily = AppFontFamily,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.ExtraBold,
+            )
+            Text(
+                text = stringResource(R.string.album_delete_message),
+                color = UiColors.Home.emptyBody,
+                fontFamily = AppFontFamily,
+                fontSize = 14.sp,
+                lineHeight = 19.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                DeleteAlbumDialogButton(
+                    label = stringResource(R.string.common_cancel),
+                    fill = Color(0xFF182131),
+                    textColor = UiColors.Home.title,
+                    modifier = Modifier.weight(1f),
+                    onClick = onDismiss,
+                )
+                DeleteAlbumDialogButton(
+                    label = stringResource(R.string.photo_viewer_delete),
+                    fill = Color(0xFF3A1622),
+                    textColor = Color(0xFFFF4372),
+                    modifier = Modifier.weight(1f),
+                    onClick = onDelete,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DeleteAlbumDialogButton(
+    label: String,
+    fill: Color,
+    textColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(16.dp))
+            .background(fill)
+            .throttledClickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = textColor,
+            fontFamily = AppFontFamily,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 

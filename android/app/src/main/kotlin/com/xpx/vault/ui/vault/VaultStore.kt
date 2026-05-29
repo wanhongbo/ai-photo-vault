@@ -123,6 +123,27 @@ object VaultStore {
         safe
     }
 
+    suspend fun deleteAlbum(context: Context, albumName: String): Int = withContext(Dispatchers.IO) {
+        ensureInit(context)
+        val safe = sanitizeAlbumName(albumName)
+        val albumDir = File(rootDir(context), safe)
+        if (!albumDir.exists() || !albumDir.isDirectory) return@withContext 0
+        val paths = albumDir.listFiles()
+            ?.filter { it.isFile }
+            ?.map { it.absolutePath }
+            .orEmpty()
+        var moved = 0
+        for (path in paths) {
+            if (deletePhoto(context, path)) moved++
+        }
+        if (safe != DEFAULT_ALBUM_NAME && albumDir.listFiles()?.isEmpty() != false) {
+            albumDir.delete()
+        }
+        invalidateCaches()
+        syncQuotaUsage(context)
+        moved
+    }
+
     suspend fun listAlbums(context: Context): List<VaultAlbum> = withContext(Dispatchers.IO) {
         ensureInit(context)
         listAlbumsInternal(context)

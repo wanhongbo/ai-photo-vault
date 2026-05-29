@@ -256,10 +256,10 @@ private fun AlbumListCard(
                 )
             } else {
                 Icon(
-                    painter = painterResource(R.drawable.ic_home_nav_album),
+                    painter = painterResource(R.drawable.ic_album_empty_placeholder),
                     contentDescription = null,
                     tint = Color(0xFF9FB2D1),
-                    modifier = Modifier.size(25.dp),
+                    modifier = Modifier.size(31.dp),
                 )
             }
         }
