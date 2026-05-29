@@ -348,7 +348,6 @@ fun HomeScreen(
         ) {
             VaultHeroCard(
                 totalCount = totalCount,
-                onSearch = onOpenSearch,
                 onImport = triggerImportFromLibrary,
             )
             if (selectedTab == HomeTab.VAULT && !hasPin && !isVaultEmpty) {
@@ -770,10 +769,8 @@ private fun HomePinSetupBanner(
 @Composable
 private fun VaultHeroCard(
     totalCount: Int,
-    onSearch: () -> Unit,
     onImport: () -> Unit,
 ) {
-    val interaction = rememberFeedbackInteractionSource()
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -789,9 +786,7 @@ private fun VaultHeroCard(
                     ),
                 ),
             )
-            .border(1.dp, Color(0xFF274260), RoundedCornerShape(28.dp))
-            .pressFeedback(interaction)
-            .throttledClickable(interactionSource = interaction, indication = null, onClick = onSearch),
+            .border(1.dp, Color(0xFF274260), RoundedCornerShape(28.dp)),
     ) {
         Column(
             modifier = Modifier
