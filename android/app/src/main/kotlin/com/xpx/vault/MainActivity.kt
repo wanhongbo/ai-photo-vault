@@ -114,9 +114,6 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
-        if (!hasFocus && shouldShowTaskSnapshotLockCover()) {
-            showTaskSnapshotLockCover()
-        }
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && !appLockManager.isUnlockRequired()) {
             hideTaskSnapshotLockCover()
