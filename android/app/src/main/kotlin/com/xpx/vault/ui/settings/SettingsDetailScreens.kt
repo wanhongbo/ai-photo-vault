@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xpx.vault.BuildConfig
 import com.xpx.vault.LanguageManager
 import com.xpx.vault.R
+import com.xpx.vault.startExternalActivityForAppLock
 import com.xpx.vault.ui.backup.AutoBackupScheduler
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
@@ -174,7 +175,7 @@ fun SettingsSubscriptionScreen(
                     val intent = Intent(Intent.ACTION_VIEW).apply {
                         data = Uri.parse("https://play.google.com/store/account/subscriptions")
                     }
-                    context.startActivity(intent)
+                    context.startExternalActivityForAppLock(intent, "manage subscriptions")
                 },
                 modifier = Modifier.fillMaxWidth(),
             )

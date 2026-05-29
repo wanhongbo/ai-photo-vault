@@ -73,6 +73,7 @@ import com.xpx.vault.launchExternalSystemUi
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppInputDialog
+import com.xpx.vault.ui.components.TaskSnapshotFocusGuard
 import com.xpx.vault.ui.components.VaultProgressiveImage
 import com.xpx.vault.ui.feedback.pressFeedback
 import com.xpx.vault.ui.feedback.rememberFeedbackInteractionSource
@@ -491,6 +492,7 @@ private fun ImportOriginalsDecisionDialog(
     onDismiss: () -> Unit,
 ) {
     if (!show) return
+    TaskSnapshotFocusGuard("import originals decision dialog")
 
     Dialog(
         onDismissRequest = onDismiss,

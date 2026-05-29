@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.R
+import com.xpx.vault.startExternalActivityForAppLock
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppTopBar
@@ -91,7 +92,10 @@ fun ExportResultScreen(onDone: () -> Unit) {
             text = stringResource(R.string.export_result_open_gallery),
             onClick = {
                 try {
-                    context.startActivity(buildOpenGalleryIntent())
+                    context.startExternalActivityForAppLock(
+                        buildOpenGalleryIntent(),
+                        "open gallery",
+                    )
                 } catch (_: ActivityNotFoundException) {
                     Toast.makeText(
                         context,

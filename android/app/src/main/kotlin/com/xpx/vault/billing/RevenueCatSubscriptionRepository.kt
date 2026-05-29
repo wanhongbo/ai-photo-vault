@@ -18,6 +18,7 @@ import com.xpx.vault.domain.billing.PaywallPackageOffer
 import com.xpx.vault.domain.billing.PaywallPlanKind
 import com.xpx.vault.domain.billing.PurchaseActivityHost
 import com.xpx.vault.domain.repo.SubscriptionRepository
+import com.xpx.vault.findAppLockManager
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -155,29 +156,38 @@ class RevenueCatSubscriptionRepository @Inject constructor(
             cont.resume(Result.failure(IllegalStateException("Unknown package $packageIdentifier")))
             return@suspendCancellableCoroutine
         }
-        Purchases.sharedInstance.purchase(
-            PurchaseParams.Builder(activity, pkg).build(),
-            object : PurchaseCallback {
-                override fun onCompleted(
-                    storeTransaction: StoreTransaction,
-                    customerInfo: CustomerInfo,
-                ) {
-                    applyCustomerInfo(customerInfo)
-                    cont.resume(Result.success(Unit))
-                }
-
-                override fun onError(
-                    error: PurchasesError,
-                    userCancelled: Boolean,
-                ) {
-                    if (userCancelled) {
-                        cont.resume(Result.failure(PurchaseCancelledException()))
-                    } else {
-                        cont.resume(Result.failure(Exception(error.message)))
+        val appLockManager = context.findAppLockManager()
+        appLockManager?.beginExternalSystemUi("revenuecat purchase")
+        try {
+            Purchases.sharedInstance.purchase(
+                PurchaseParams.Builder(activity, pkg).build(),
+                object : PurchaseCallback {
+                    override fun onCompleted(
+                        storeTransaction: StoreTransaction,
+                        customerInfo: CustomerInfo,
+                    ) {
+                        appLockManager?.endExternalSystemUi("revenuecat purchase completed")
+                        applyCustomerInfo(customerInfo)
+                        cont.resume(Result.success(Unit))
                     }
-                }
-            },
-        )
+
+                    override fun onError(
+                        error: PurchasesError,
+                        userCancelled: Boolean,
+                    ) {
+                        appLockManager?.endExternalSystemUi("revenuecat purchase error")
+                        if (userCancelled) {
+                            cont.resume(Result.failure(PurchaseCancelledException()))
+                        } else {
+                            cont.resume(Result.failure(Exception(error.message)))
+                        }
+                    }
+                },
+            )
+        } catch (throwable: Throwable) {
+            appLockManager?.endExternalSystemUi("revenuecat purchase failed")
+            cont.resume(Result.failure(throwable))
+        }
     }
 
     private fun applyCustomerInfo(info: CustomerInfo) {

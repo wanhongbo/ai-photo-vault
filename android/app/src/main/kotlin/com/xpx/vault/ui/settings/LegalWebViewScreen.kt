@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import com.xpx.vault.R
+import com.xpx.vault.startExternalActivityForAppLock
 import com.xpx.vault.ui.components.AppTopBar
 import com.xpx.vault.ui.theme.UiColors
 
@@ -98,7 +99,7 @@ private class LegalWebViewClient : WebViewClient() {
                     android.content.Intent.ACTION_VIEW,
                     android.net.Uri.parse(url),
                 )
-                ctx.startActivity(intent)
+                ctx.startExternalActivityForAppLock(intent, "legal external link")
             }
             return true
         }

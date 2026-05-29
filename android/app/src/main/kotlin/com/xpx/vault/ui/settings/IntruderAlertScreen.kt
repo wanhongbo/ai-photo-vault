@@ -49,6 +49,7 @@ import androidx.core.content.ContextCompat
 import com.xpx.vault.R
 import com.xpx.vault.findAppLockManager
 import com.xpx.vault.launchExternalSystemUi
+import com.xpx.vault.startExternalActivityForAppLock
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppButtonVariant
 import com.xpx.vault.ui.components.AppDialog
@@ -147,7 +148,7 @@ fun IntruderAlertScreen(onBack: () -> Unit) {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                 data = Uri.fromParts("package", context.packageName, null)
                             }
-                            context.startActivity(intent)
+                            context.startExternalActivityForAppLock(intent, "app settings")
                         },
                         modifier = Modifier.fillMaxWidth(),
                     )

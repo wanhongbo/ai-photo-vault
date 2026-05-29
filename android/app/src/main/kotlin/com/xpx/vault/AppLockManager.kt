@@ -1,6 +1,7 @@
 package com.xpx.vault
 
 import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -164,6 +165,17 @@ class AppLockManager @Inject constructor(
 
 fun Context.findAppLockManager(): AppLockManager? =
     (applicationContext as? LumaApp)?.appLockManager
+
+fun Context.startExternalActivityForAppLock(intent: Intent, reason: String) {
+    val appLockManager = findAppLockManager()
+    appLockManager?.beginExternalSystemUi(reason)
+    try {
+        startActivity(intent)
+    } catch (throwable: Throwable) {
+        appLockManager?.endExternalSystemUi("$reason failed")
+        throw throwable
+    }
+}
 
 inline fun AppLockManager.launchExternalSystemUi(reason: String, launch: () -> Unit) {
     beginExternalSystemUi(reason)

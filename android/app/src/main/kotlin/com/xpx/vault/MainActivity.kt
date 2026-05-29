@@ -532,14 +532,14 @@ class MainActivity : FragmentActivity() {
                                         putExtra(Intent.EXTRA_SUBJECT, "LumaNox Support")
                                     }
                                     try {
-                                        startActivity(intent)
+                                        startExternalActivityForAppLock(intent, "support email")
                                     } catch (_: Exception) {
                                         // 没有邮件客户端时回退到浏览器
                                         val fallback = Intent(
                                             Intent.ACTION_VIEW,
                                             Uri.parse("https://xipengxin.com"),
                                         )
-                                        startActivity(fallback)
+                                        startExternalActivityForAppLock(fallback, "support website")
                                     }
                                 },
                             )
