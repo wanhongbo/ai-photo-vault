@@ -114,7 +114,10 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
-        if (!hasFocus && shouldShowTaskSnapshotLockCover()) {
+        if (!hasFocus &&
+            !appLockManager.shouldIgnoreWindowFocusSnapshotCover() &&
+            shouldShowTaskSnapshotLockCover()
+        ) {
             showTaskSnapshotLockCover()
         }
         super.onWindowFocusChanged(hasFocus)
@@ -135,6 +138,11 @@ class MainActivity : FragmentActivity() {
             showTaskSnapshotLockCover()
         }
         super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        appLockManager.clearExternalSystemUi("activity resumed")
     }
 
     override fun onDestroy() {

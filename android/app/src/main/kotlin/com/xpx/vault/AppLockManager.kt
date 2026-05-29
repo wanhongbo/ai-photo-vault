@@ -45,6 +45,9 @@ class AppLockManager @Inject constructor(
     @Volatile
     private var externalSystemUiDepth: Int = 0
 
+    @Volatile
+    private var appTransientWindowDepth: Int = 0
+
     fun start() {
         if (started) return
         started = true
@@ -102,6 +105,10 @@ class AppLockManager @Inject constructor(
         return pinConfigured == true && externalSystemUiDepth <= 0
     }
 
+    fun shouldIgnoreWindowFocusSnapshotCover(): Boolean {
+        return externalSystemUiDepth > 0 || appTransientWindowDepth > 0
+    }
+
     fun isUnlockRequired(): Boolean = _requireUnlock.value
 
     fun beginExternalSystemUi(reason: String) {
@@ -112,6 +119,22 @@ class AppLockManager @Inject constructor(
     fun endExternalSystemUi(reason: String) {
         externalSystemUiDepth = (externalSystemUiDepth - 1).coerceAtLeast(0)
         AppLogger.d(TAG, "external system ui ended: $reason depth=$externalSystemUiDepth")
+    }
+
+    fun clearExternalSystemUi(reason: String) {
+        if (externalSystemUiDepth <= 0) return
+        AppLogger.d(TAG, "external system ui cleared: $reason depth=$externalSystemUiDepth")
+        externalSystemUiDepth = 0
+    }
+
+    fun beginAppTransientWindow(reason: String) {
+        appTransientWindowDepth += 1
+        AppLogger.d(TAG, "app transient window started: $reason depth=$appTransientWindowDepth")
+    }
+
+    fun endAppTransientWindow(reason: String) {
+        appTransientWindowDepth = (appTransientWindowDepth - 1).coerceAtLeast(0)
+        AppLogger.d(TAG, "app transient window ended: $reason depth=$appTransientWindowDepth")
     }
 
     override fun onStop(owner: LifecycleOwner) {

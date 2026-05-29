@@ -64,6 +64,7 @@ fun PinInputDialog(
     onDismiss: () -> Unit,
 ) {
     if (!show) return
+    TaskSnapshotFocusGuard("pin input dialog")
 
     var pin by remember(show) { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }

@@ -73,6 +73,7 @@ fun AppInputDialog(
     keyboardType: KeyboardType = KeyboardType.Text,
 ) {
     if (!show) return
+    TaskSnapshotFocusGuard("app input dialog")
 
     val focusRequester = remember { FocusRequester() }
 

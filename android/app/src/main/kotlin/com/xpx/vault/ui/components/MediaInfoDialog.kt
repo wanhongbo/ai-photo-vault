@@ -36,6 +36,8 @@ fun MediaInfoDialog(
     onDismiss: () -> Unit,
 ) {
     if (!show) return
+    TaskSnapshotFocusGuard("media info dialog")
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color.Transparent,

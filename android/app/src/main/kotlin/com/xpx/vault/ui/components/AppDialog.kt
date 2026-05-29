@@ -44,6 +44,7 @@ fun AppDialog(
     confirmVariant: AppButtonVariant = AppButtonVariant.PRIMARY,
 ) {
     if (!show) return
+    TaskSnapshotFocusGuard("app dialog")
 
     AlertDialog(
         onDismissRequest = { onDismiss?.invoke() },

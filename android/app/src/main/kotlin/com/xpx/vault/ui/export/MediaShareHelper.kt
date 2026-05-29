@@ -13,6 +13,7 @@ import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import com.xpx.vault.R
 import com.xpx.vault.data.crypto.VaultCipher
+import com.xpx.vault.findAppLockManager
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -95,10 +96,13 @@ object MediaShareHelper {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+        val appLockManager = context.findAppLockManager()
+        appLockManager?.beginExternalSystemUi("media share chooser")
         return try {
             context.startActivity(chooser)
             prepared
         } catch (t: Throwable) {
+            appLockManager?.endExternalSystemUi("media share chooser failed")
             ShareOutcome.Failure(t.message ?: "no_share_app")
         }
     }
