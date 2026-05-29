@@ -843,28 +843,16 @@ private fun VaultHeroCard(
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 17.dp, end = 27.dp)
-                .size(82.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            Color(0x334A9EFF),
-                            Color(0x140D2238),
-                            Color(0x000D2238),
-                        ),
-                    ),
-                )
+                .padding(top = 2.dp, end = 12.dp)
+                .size(112.dp)
                 .throttledClickable(onClick = onImport),
             contentAlignment = Alignment.Center,
         ) {
             Image(
-                painter = painterResource(R.mipmap.ic_launcher_v2),
+                painter = painterResource(R.drawable.app_logo_hero),
                 contentDescription = stringResource(R.string.home_vault_empty_action),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
