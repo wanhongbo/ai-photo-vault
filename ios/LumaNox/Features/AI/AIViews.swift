@@ -1,23 +1,9 @@
-import PhotosUI
 import SwiftUI
 import UIKit
-
-private enum AIPreImportCheckState: Equatable {
-    case idle
-    case checking(Int)
-    case result(selected: Int, flagged: Int)
-    case imported(String)
-    case failed
-}
 
 struct AIHomeView: View {
     @EnvironmentObject private var router: AppRouter
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
-    @State private var preImportPickerItems: [PhotosPickerItem] = []
-    @State private var preImportCheckState: AIPreImportCheckState = .idle
-    @State private var preImportCheckTask: Task<Void, Never>?
-    @State private var isPreImportImporting = false
-    @State private var suppressPreImportSelectionChange = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -36,7 +22,6 @@ struct AIHomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     aiScanSummaryCard
-                    preImportCheckCard
                     HStack {
                         Text(L10n.tr("ai_tools_title"))
                             .font(LNTypography.titleLarge())
@@ -56,30 +41,15 @@ struct AIHomeView: View {
         .task {
             aiService.refreshSummary()
         }
-        .onChange(of: preImportPickerItems) { _ in
-            if suppressPreImportSelectionChange {
-                suppressPreImportSelectionChange = false
-                return
-            }
-            runPreImportCheck()
-        }
-        .onDisappear {
-            preImportCheckTask?.cancel()
-        }
         .accessibilityIdentifier("ai_home_view")
     }
 
     private var bottomTabScrollInset: CGFloat {
-        LNSpacing.homeNavBarHeight + 24
+        28
     }
 
     private var aiScanSummaryCard: some View {
         VStack(alignment: .leading, spacing: 13) {
-            HStack(spacing: 8) {
-                AIScopeChip(title: L10n.tr("ai_vault_scan_scope_vault"), tint: LNColor.brandBlue)
-                AIScopeChip(title: L10n.tr("ai_vault_scan_scope_no_permission"), tint: LNColor.success)
-            }
-
             HStack(spacing: 12) {
                 iconWell(systemName: summaryIcon, foreground: summaryAccent, background: summaryIconBackground, size: 44)
                 VStack(alignment: .leading, spacing: 4) {
@@ -145,190 +115,11 @@ struct AIHomeView: View {
         }
         .padding(LNSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minHeight: 166, alignment: .topLeading)
         .background(LNColor.sectionBg)
         .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
         .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(Color(hex: 0x244869), lineWidth: 1))
         .accessibilityIdentifier("ai_scan_summary_card")
-    }
-
-    private var preImportCheckCard: some View {
-        VStack(alignment: .leading, spacing: preImportCardIsExpanded ? 12 : 0) {
-            HStack(spacing: 12) {
-                iconWell(systemName: "checkmark.shield", foreground: LNColor.success, background: Color(hex: 0x0E2B26), size: 40)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.tr("ai_preimport_title"))
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(LNColor.title)
-                        .lineLimit(1)
-                    Text(preImportSupportText)
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(LNColor.subtitle)
-                        .lineLimit(2)
-                }
-                Spacer(minLength: 10)
-                preImportPickerButton(isCompact: true)
-            }
-
-            if preImportCardIsExpanded {
-                if let statusText = preImportStatusText {
-                    HStack(alignment: .top, spacing: 8) {
-                        if case .checking = preImportCheckState {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(LNColor.brandBlue)
-                        }
-                        Text(statusText)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(preImportStatusColor)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-
-                if preImportCanImport {
-                    HStack(spacing: 12) {
-                        preImportPickerButton(isCompact: false)
-
-                        Button {
-                            importPreImportSelection()
-                        } label: {
-                            AIPreImportButtonLabel(
-                                title: L10n.tr("ai_preimport_import_action"),
-                                foreground: Color(hex: 0xB7C6DD),
-                                background: Color(hex: 0x122033),
-                                stroke: LNColor.stroke
-                            )
-                        }
-                        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
-                        .disabled(isPreImportBusy)
-                    }
-                }
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(LNColor.sectionBg)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: 0x21483D), lineWidth: 1))
-        .accessibilityIdentifier("ai_preimport_check_card")
-    }
-
-    private var preImportCardIsExpanded: Bool {
-        preImportCheckState != .idle
-    }
-
-    private var preImportSupportText: String {
-        preImportCardIsExpanded ? L10n.tr("ai_preimport_scope_inline") : L10n.tr("ai_preimport_subtitle_compact")
-    }
-
-    private func preImportPickerButton(isCompact: Bool) -> some View {
-        PhotosPicker(
-            selection: $preImportPickerItems,
-            maxSelectionCount: 12,
-            matching: .images
-        ) {
-            AIPreImportButtonLabel(
-                title: isCompact ? L10n.tr("ai_preimport_pick_short") : L10n.tr("ai_preimport_action"),
-                foreground: isCompact ? Color(hex: 0x7DBBFF) : .white,
-                background: isCompact ? Color(hex: 0x122033) : LNColor.brandBlue,
-                stroke: isCompact ? Color(hex: 0x244869) : nil,
-                width: isCompact ? 74 : nil
-            )
-        }
-        .appLockSystemInteraction()
-        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
-        .disabled(isPreImportBusy)
-        .accessibilityIdentifier("ai_preimport_picker_button")
-    }
-
-    private var preImportStatusText: String? {
-        switch preImportCheckState {
-        case .idle:
-            return nil
-        case .checking(let count):
-            return L10n.tr("ai_preimport_checking_fmt", count)
-        case .result(let selected, let flagged):
-            if flagged > 0 {
-                return L10n.tr("ai_preimport_result_risk_fmt", flagged, selected)
-            }
-            return L10n.tr("ai_preimport_result_clear_fmt", selected)
-        case .imported(let message):
-            return message
-        case .failed:
-            return L10n.tr("ai_preimport_failed")
-        }
-    }
-
-    private var preImportStatusColor: Color {
-        switch preImportCheckState {
-        case .result(_, let flagged) where flagged > 0:
-            return LNColor.cleanupOrange
-        case .failed:
-            return LNColor.error
-        default:
-            return LNColor.subtitle
-        }
-    }
-
-    private var preImportCanImport: Bool {
-        if case .result = preImportCheckState {
-            return !preImportPickerItems.isEmpty
-        }
-        return false
-    }
-
-    private var isPreImportBusy: Bool {
-        if case .checking = preImportCheckState { return true }
-        return isPreImportImporting
-    }
-
-    private func runPreImportCheck() {
-        preImportCheckTask?.cancel()
-        let items = preImportPickerItems
-        guard !items.isEmpty else {
-            preImportCheckState = .idle
-            return
-        }
-
-        preImportCheckState = .checking(items.count)
-        preImportCheckTask = Task {
-            var flagged = 0
-            var checked = 0
-            for item in items.prefix(12) {
-                if Task.isCancelled { return }
-                guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
-                checked += 1
-                let regionCount = await PrivacyRedactionService.shared.detectRegionCount(imageData: data)
-                if regionCount > 0 {
-                    flagged += 1
-                }
-            }
-            if Task.isCancelled { return }
-            await MainActor.run {
-                preImportCheckState = checked == 0 ? .failed : .result(selected: checked, flagged: flagged)
-            }
-        }
-    }
-
-    private func importPreImportSelection() {
-        guard preImportCanImport else { return }
-        guard router.guardProFeature(.vaultImport) else { return }
-        let items = preImportPickerItems
-        isPreImportImporting = true
-        Task {
-            let vaultStore = VaultStore.shared
-            vaultStore.beginImportBatch()
-            let summary = await PhotosPickerVaultImporter.importItems(items, into: vaultDefaultAlbumName, vaultStore: vaultStore)
-            vaultStore.endImportBatch()
-            await vaultStore.finalizeImportBatch(summary)
-            await MainActor.run {
-                preImportCheckState = .imported(VaultImportFeedback.inlineMessage(for: summary))
-                isPreImportImporting = false
-                suppressPreImportSelectionChange = true
-                preImportPickerItems = []
-                aiService.refreshSummary()
-            }
-        }
     }
 
     private var aiToolList: some View {
@@ -356,7 +147,8 @@ struct AIHomeView: View {
                     Text(tool.subtitle)
                         .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(LNColor.subtitle)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
                 Text(tool.status)
@@ -404,11 +196,7 @@ struct AIHomeView: View {
 
     private var summaryBadge: String {
         if aiService.progress.running { return L10n.tr("ai_summary_scanning_badge") }
-        if aiService.summary.totalCount == 0 { return L10n.tr("ai_summary_empty_badge") }
-        if aiService.summary.sensitiveCount > 0 { return L10n.tr("ai_suggest_badge_sensitive") }
-        if aiService.summary.cleanupCount > 0 { return L10n.tr("ai_summary_cleanup_badge") }
-        if aiService.summary.hasUnscanned { return L10n.tr("ai_summary_unscanned_badge") }
-        return L10n.tr("ai_summary_all_clear_badge")
+        return L10n.tr("ai_summary_label")
     }
 
     private var summaryTitle: String {
@@ -423,12 +211,12 @@ struct AIHomeView: View {
     private var summaryDescription: String {
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_summary_empty_desc") }
         if aiService.progress.running { return L10n.tr("ai_vault_scan_scanning_desc") }
-        return L10n.tr("ai_vault_scan_live_desc")
+        return L10n.tr("ai_summary_desc")
     }
 
     private var primarySummaryAction: String {
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_action_open_vault") }
-        if aiService.summary.sensitiveCount > 0 { return L10n.tr("ai_action_review_risks") }
+        if aiService.summary.sensitiveCount > 0 { return L10n.tr("ai_summary_review_now") }
         if aiService.summary.cleanupCount > 0 { return L10n.tr("ai_action_review_cleanup") }
         return aiService.summary.hasUnscanned ? L10n.tr("ai_action_scan_vault") : L10n.tr("ai_action_rescan")
     }
@@ -439,7 +227,7 @@ struct AIHomeView: View {
 
     private var secondarySummaryActionTitle: String {
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_action_private_camera") }
-        if aiService.summary.sensitiveCount > 0 || aiService.summary.cleanupCount > 0 { return L10n.tr("ai_action_rescan") }
+        if aiService.summary.sensitiveCount > 0 || aiService.summary.cleanupCount > 0 { return L10n.tr("ai_summary_later") }
         if aiService.summary.categoryCounts.isEmpty { return L10n.tr("ai_action_view_tools") }
         return L10n.tr("ai_action_view_categories")
     }
@@ -470,29 +258,21 @@ struct AIHomeView: View {
             return
         }
         if aiService.summary.sensitiveCount > 0 || aiService.summary.cleanupCount > 0 {
-            startScan()
             return
         }
         router.pushAI(.aiClassify)
     }
 
     private var summaryAccent: Color {
-        if aiService.summary.sensitiveCount > 0 { return Color(hex: 0xB7C6DD) }
-        if aiService.summary.cleanupCount > 0 { return LNColor.cleanupOrange }
-        if !aiService.summary.hasUnscanned && aiService.summary.totalCount > 0 { return LNColor.success }
-        return LNColor.brandBlue
+        Color(hex: 0xB7D7FF)
     }
 
     private var summaryIconBackground: Color {
-        if aiService.summary.sensitiveCount > 0 { return Color(hex: 0x18283D) }
-        return summaryAccent.opacity(0.20)
+        Color(hex: 0x18283D)
     }
 
     private var summaryIcon: String {
-        if aiService.summary.sensitiveCount > 0 { return "eye.slash" }
-        if aiService.summary.cleanupCount > 0 { return "rectangle.on.rectangle" }
-        if !aiService.summary.hasUnscanned && aiService.summary.totalCount > 0 { return "checkmark.shield" }
-        return "sparkles"
+        "sparkles"
     }
 
     private var aiToolRows: [AIToolRowModel] {
@@ -500,7 +280,7 @@ struct AIHomeView: View {
             AIToolRowModel(
                 title: L10n.tr("ai_feat_blur"),
                 subtitle: L10n.tr("ai_tool_blur_desc"),
-                status: aiService.summary.sensitiveCount > 0 ? "\(aiService.summary.sensitiveCount)" : L10n.tr("ai_tool_status_pick"),
+                status: L10n.tr("ai_tool_status_open"),
                 systemImage: "eye.slash",
                 foreground: LNColor.brandBlue,
                 background: LNColor.brandBlue.opacity(0.20),
@@ -512,7 +292,7 @@ struct AIHomeView: View {
             AIToolRowModel(
                 title: L10n.tr("ai_feat_classify"),
                 subtitle: L10n.tr("ai_tool_classify_desc"),
-                status: aiService.summary.categoryCounts.isEmpty ? L10n.tr("ai_tool_status_scan") : L10n.tr("ai_tool_status_live"),
+                status: L10n.tr("ai_tool_status_ready"),
                 systemImage: "square.stack.3d.up",
                 foreground: Color(hex: 0x7DBBFF),
                 background: Color(hex: 0x18283D),
@@ -524,7 +304,7 @@ struct AIHomeView: View {
             AIToolRowModel(
                 title: L10n.tr("ai_tool_dedup_title"),
                 subtitle: L10n.tr("ai_tool_dedup_desc"),
-                status: aiService.summary.cleanupCount > 0 ? "\(aiService.summary.cleanupCount)" : L10n.tr("ai_tool_status_live"),
+                status: L10n.tr("ai_tool_status_ready"),
                 systemImage: "rectangle.on.rectangle",
                 foreground: LNColor.success,
                 background: LNColor.success.opacity(0.20),
@@ -580,51 +360,6 @@ private struct AISummaryActionButton: View {
         }
         .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
         .disabled(!enabled)
-    }
-}
-
-private struct AIScopeChip: View {
-    let title: String
-    let tint: Color
-
-    var body: some View {
-        Text(title)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(tint)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-            .padding(.horizontal, 10)
-            .frame(height: 28)
-            .background(tint.opacity(0.16))
-            .clipShape(Capsule())
-            .accessibilityIdentifier("ai_vault_scan_scope_chip")
-    }
-}
-
-private struct AIPreImportButtonLabel: View {
-    let title: String
-    let foreground: Color
-    let background: Color
-    var stroke: Color?
-    var width: CGFloat? = nil
-
-    var body: some View {
-        Text(title)
-            .font(.system(size: 13, weight: .bold))
-            .foregroundStyle(foreground)
-            .lineLimit(1)
-            .minimumScaleFactor(0.82)
-            .frame(maxWidth: .infinity)
-            .frame(width: width)
-            .frame(height: 40)
-            .background(background)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay {
-                if let stroke {
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(stroke, lineWidth: 1)
-                }
-            }
     }
 }
 
