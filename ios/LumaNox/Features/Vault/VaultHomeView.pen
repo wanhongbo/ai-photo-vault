@@ -480,20 +480,20 @@
             {
               "type": "frame",
               "id": "vault_home_hero_chips",
-              "x": 20,
-              "y": 119,
-              "width": 268,
-              "height": 26,
+              "x": 11,
+              "y": 111,
+              "width": 340,
+              "height": 30,
               "fill": "#00000000",
               "gap": 8,
               "children": [
                 {
                   "type": "frame",
                   "id": "vault_home_chip_offline_short",
-                  "width": 68,
+                  "width": 84,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
@@ -505,8 +505,8 @@
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_offline_short_icon",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "wifi-off",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -517,7 +517,7 @@
                       "fill": "#AFC4E2",
                       "content": "Offline",
                       "fontFamily": "Inter",
-                      "fontSize": 9,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]
@@ -525,10 +525,10 @@
                 {
                   "type": "frame",
                   "id": "vault_home_chip_encrypted_short",
-                  "width": 80,
+                  "width": 104,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
@@ -540,8 +540,8 @@
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_encrypted_short_icon",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "lock-keyhole",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -552,7 +552,7 @@
                       "fill": "#AFC4E2",
                       "content": "Encrypted",
                       "fontFamily": "Inter",
-                      "fontSize": 9,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]
@@ -560,10 +560,10 @@
                 {
                   "type": "frame",
                   "id": "vault_home_chip_ai_short",
-                  "width": 104,
+                  "width": 136,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
@@ -575,8 +575,8 @@
                     {
                       "type": "icon_font",
                       "id": "vault_home_chip_ai_short_icon",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "sparkles",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -587,7 +587,7 @@
                       "fill": "#AFC4E2",
                       "content": "Local AI Models",
                       "fontFamily": "Inter",
-                      "fontSize": 8,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]
@@ -1404,11 +1404,11 @@
             {
               "type": "frame",
               "id": "S5lTu",
-              "x": 20,
-              "y": 119,
+              "x": 47,
+              "y": 111,
               "name": "Privacy chips",
               "width": 268,
-              "height": 26,
+              "height": 30,
               "fill": "#00000000",
               "gap": 8,
               "children": [
@@ -2143,20 +2143,20 @@
             {
               "type": "frame",
               "id": "XW9Xf",
-              "x": 20,
-              "y": 119,
-              "width": 268,
-              "height": 26,
+              "x": 11,
+              "y": 111,
+              "width": 340,
+              "height": 30,
               "fill": "#00000000",
               "gap": 8,
               "children": [
                 {
                   "type": "frame",
                   "id": "y4egW8",
-                  "width": 68,
+                  "width": 84,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
@@ -2168,8 +2168,8 @@
                     {
                       "type": "icon_font",
                       "id": "M8JaI",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "wifi-off",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -2180,7 +2180,7 @@
                       "fill": "#AFC4E2",
                       "content": "Offline",
                       "fontFamily": "Inter",
-                      "fontSize": 9,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]
@@ -2188,10 +2188,10 @@
                 {
                   "type": "frame",
                   "id": "vDm1f",
-                  "width": 80,
+                  "width": 104,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
@@ -2203,8 +2203,8 @@
                     {
                       "type": "icon_font",
                       "id": "cpGVX",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "lock-keyhole",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -2215,7 +2215,7 @@
                       "fill": "#AFC4E2",
                       "content": "Encrypted",
                       "fontFamily": "Inter",
-                      "fontSize": 9,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]
@@ -2223,10 +2223,10 @@
                 {
                   "type": "frame",
                   "id": "V5Zm7",
-                  "width": 104,
+                  "width": 136,
                   "height": "fill_container",
                   "fill": "#FFFFFF08",
-                  "cornerRadius": 13,
+                  "cornerRadius": 15,
                   "stroke": {
                     "thickness": 1,
                     "fill": "#FFFFFF10"
@@ -2238,8 +2238,8 @@
                     {
                       "type": "icon_font",
                       "id": "Z1VaPs",
-                      "width": 10,
-                      "height": 10,
+                      "width": 12,
+                      "height": 12,
                       "iconFontName": "sparkles",
                       "iconFontFamily": "lucide",
                       "fill": "#8EA2C0"
@@ -2250,7 +2250,7 @@
                       "fill": "#AFC4E2",
                       "content": "Local AI Models",
                       "fontFamily": "Inter",
-                      "fontSize": 8,
+                      "fontSize": 12,
                       "fontWeight": "500"
                     }
                   ]

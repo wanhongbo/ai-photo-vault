@@ -180,10 +180,10 @@ struct VaultHomeView: View {
                 HomeHeroBadge(
                     icon: "sparkles",
                     title: L10n.tr("home_hero_badge_ai_local"),
-                    width: 128
+                    width: 136
                 )
             }
-            .padding(.leading, 20)
+            .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, 111)
 
             HStack {
