@@ -162,7 +162,7 @@
 "ai_summary_all_clear_title" = "当前扫描未发现风险";
 "ai_summary_empty_desc" = "导入照片或视频后，AI 工具会读取加密保险箱内容。";
 "ai_summary_live_desc" = "Vision、画质和重复检测只在本机运行，并写回保险箱 metadata。";
-"ai_summary_location_desc" = "部分照片包含隐藏 GPS 位置数据，分享前建议生成安全 JPEG 副本。";
+"ai_summary_location_desc" = "部分照片包含隐藏 GPS 或设备元数据，分享前建议生成安全 JPEG 副本。";
 "ai_stat_scanned" = "已扫";
 "ai_stat_sensitive" = "敏感";
 "ai_stat_location" = "位置";
@@ -229,6 +229,13 @@
 "ai_tag_contact" = "联系方式";
 "ai_tag_screenshot" = "截图";
 "ai_tag_location" = "位置";
+"ai_tag_metadata_rich" = "元数据";
+"ai_tag_camera_info" = "设备信息";
+"ai_tag_capture_time" = "拍摄时间";
+"ai_tag_email" = "邮箱";
+"ai_tag_phone" = "手机号";
+"ai_tag_chat" = "聊天";
+"ai_tag_receipt" = "票据";
 "ai_tag_video" = "视频";
 "privacy_redact_subtitle" = "自动识别敏感区域，也可手动框选";
 "privacy_redact_drag_hint" = "拖动框选敏感区域";
@@ -263,8 +270,8 @@
 "privacy_redact_save_success" = "已保存脱敏副本，遮盖 %d 个区域。";
 "privacy_redact_save_duplicate" = "相同的脱敏副本已存在。";
 "privacy_redact_save_failed" = "无法保存脱敏副本。";
-"privacy_redact_location_safe_copy_success" = "已保存不含位置数据的 JPEG 副本。";
-"privacy_redact_location_safe_copy_failed" = "无法生成位置安全副本。";
+"privacy_redact_location_safe_copy_success" = "已保存不含敏感元数据的 JPEG 副本。";
+"privacy_redact_location_safe_copy_failed" = "无法生成元数据安全副本。";
 "privacy_redact_select_first" = "请先选择一张保险箱图片。";
 "privacy_redact_unsupported" = "暂不支持此媒体类型打码。";
 "privacy_redact_video_hint" = "暂不支持视频打码，请从保险箱选择图片。";

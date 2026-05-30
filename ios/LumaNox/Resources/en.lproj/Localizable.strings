@@ -162,7 +162,7 @@
 "ai_summary_all_clear_title" = "Vault scan is clear";
 "ai_summary_empty_desc" = "AI tools use encrypted vault media after you import photos or videos.";
 "ai_summary_live_desc" = "Vision, quality, and duplicate checks run locally and update vault metadata.";
-"ai_summary_location_desc" = "Some photos include hidden GPS metadata. Create safe JPEG copies before sharing.";
+"ai_summary_location_desc" = "Some photos include hidden GPS or device metadata. Create safe JPEG copies before sharing.";
 "ai_stat_scanned" = "Scanned";
 "ai_stat_sensitive" = "Sensitive";
 "ai_stat_location" = "Location";
@@ -229,6 +229,13 @@
 "ai_tag_contact" = "Contact";
 "ai_tag_screenshot" = "Screenshot";
 "ai_tag_location" = "Location";
+"ai_tag_metadata_rich" = "Metadata";
+"ai_tag_camera_info" = "Camera";
+"ai_tag_capture_time" = "Time";
+"ai_tag_email" = "Email";
+"ai_tag_phone" = "Phone";
+"ai_tag_chat" = "Chat";
+"ai_tag_receipt" = "Receipt";
 "ai_tag_video" = "Video";
 "privacy_redact_subtitle" = "Auto-detect sensitive areas, or draw your own";
 "privacy_redact_drag_hint" = "Drag to select a sensitive area";
@@ -263,8 +270,8 @@
 "privacy_redact_save_success" = "Saved a redacted copy with %d masked regions.";
 "privacy_redact_save_duplicate" = "A matching redacted copy already exists.";
 "privacy_redact_save_failed" = "Could not save the redacted copy.";
-"privacy_redact_location_safe_copy_success" = "Saved a JPEG copy without location metadata.";
-"privacy_redact_location_safe_copy_failed" = "Could not create a location-safe copy.";
+"privacy_redact_location_safe_copy_success" = "Saved a JPEG copy without sensitive metadata.";
+"privacy_redact_location_safe_copy_failed" = "Could not create a metadata-safe copy.";
 "privacy_redact_select_first" = "Select a vault image first.";
 "privacy_redact_unsupported" = "This media type cannot be redacted yet.";
 "privacy_redact_video_hint" = "Video redaction is not available yet. Choose an image from the vault.";

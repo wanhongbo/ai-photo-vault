@@ -4,7 +4,7 @@
     {
       "type": "frame",
       "id": "screen_ai_home_location_risk",
-      "name": "AIHomeView - location metadata risk",
+      "name": "AIHomeView - privacy metadata risk",
       "layout": "none",
       "x": 0,
       "y": 0,
@@ -79,7 +79,7 @@
         {
           "type": "frame",
           "id": "ai_home_summary_card_location",
-          "name": "Summary card - GPS metadata risk count",
+          "name": "Summary card - hidden metadata risk count",
           "layout": "vertical",
           "gap": 13,
           "x": 16,
@@ -158,7 +158,7 @@
             {
               "type": "text",
               "id": "ai_home_summary_location_desc",
-              "content": "Some photos include hidden GPS metadata. Create safe JPEG copies before sharing.",
+              "content": "Some photos include hidden metadata. Create safe JPEG copies before sharing.",
               "fontFamily": "Inter",
               "fontSize": 13,
               "fontWeight": "400",
@@ -308,7 +308,7 @@
                 {
                   "type": "text",
                   "id": "ai_home_tool_location_desc",
-                  "content": "Review faces, text, codes, and GPS metadata",
+                  "content": "Review faces, text, codes, and hidden metadata",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "400",

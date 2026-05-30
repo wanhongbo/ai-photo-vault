@@ -50,7 +50,21 @@ enum VaultAITag {
     static let contact = "contact"
     static let screenshot = "screenshot"
     static let location = "location"
+    static let metadataRich = "metadata_rich"
+    static let cameraInfo = "camera_info"
+    static let captureTime = "capture_time"
+    static let email = "email"
+    static let phone = "phone"
+    static let chat = "chat"
+    static let receipt = "receipt"
     static let video = "video"
+
+    static let metadataPrivacyTags: Set<String> = [
+        location,
+        metadataRich,
+        cameraInfo,
+        captureTime,
+    ]
 }
 
 func vaultAINowMs() -> Int64 {
@@ -60,7 +74,7 @@ func vaultAINowMs() -> Int64 {
 @MainActor
 final class VaultAIAnalysisService: ObservableObject {
     static let shared = VaultAIAnalysisService()
-    nonisolated static let currentAnalyzerVersion = 5
+    nonisolated static let currentAnalyzerVersion = 7
 
     @Published private(set) var records: [VaultMediaRecord] = []
     @Published private(set) var sensitiveRecords: [VaultMediaRecord] = []
@@ -561,9 +575,7 @@ enum VaultAIAnalyzer {
             if isLikelyScreenshot(record: record, image: image, visionTags: tags) {
                 tags.insert(VaultAITag.screenshot)
             }
-            if metadataSignals.hasGPSLocation {
-                tags.insert(VaultAITag.location)
-            }
+            metadataSignals.tags.forEach { tags.insert($0) }
 
             let category = hints.category ?? VaultAICategoryMapper.pickCategory(
                 labels: vision.labels,
@@ -799,7 +811,7 @@ enum VaultAIAnalyzer {
     }
 
     private struct MetadataSignals {
-        let hasGPSLocation: Bool
+        let tags: Set<String>
         let sensitiveScore: Double
     }
 
@@ -811,7 +823,11 @@ enum VaultAIAnalyzer {
         textRequest.recognitionLevel = .accurate
         textRequest.usesLanguageCorrection = false
         textRequest.recognitionLanguages = ["zh-Hans", "en-US"]
-        textRequest.customWords = ["身份证", "证件号码", "银行卡", "护照", "PASSPORT", "ID CARD", "BANK", "QR"]
+        textRequest.customWords = [
+            "身份证", "证件号码", "银行卡", "护照", "发票", "收据", "订单", "微信",
+            "PASSPORT", "ID CARD", "BANK", "QR", "EMAIL", "PHONE", "INVOICE", "RECEIPT", "ORDER",
+            "WHATSAPP", "TELEGRAM", "MESSAGE"
+        ]
         textRequest.minimumTextHeight = 0.01
         let classifyRequest = VNClassifyImageRequest()
 
@@ -863,6 +879,22 @@ enum VaultAIAnalyzer {
             tags.insert(VaultAITag.bankCard)
             score = max(score, 0.80)
         }
+        if containsEmailText(recognizedText) {
+            tags.formUnion([VaultAITag.email, VaultAITag.contact])
+            score = max(score, 0.68)
+        }
+        if containsPhoneText(recognizedText) {
+            tags.formUnion([VaultAITag.phone, VaultAITag.contact])
+            score = max(score, 0.68)
+        }
+        if containsChatText(recognizedText) {
+            tags.insert(VaultAITag.chat)
+            score = max(score, 0.62)
+        }
+        if containsReceiptText(recognizedText) {
+            tags.formUnion([VaultAITag.receipt, VaultAITag.text])
+            score = max(score, 0.56)
+        }
         if containsContactText(recognizedText) {
             tags.insert(VaultAITag.contact)
             score = max(score, 0.62)
@@ -882,18 +914,46 @@ enum VaultAIAnalyzer {
 
     private static func analyzeMetadata(imageData: Data) -> MetadataSignals {
         guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
-              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-              let gps = properties[kCGImagePropertyGPSDictionary] as? [CFString: Any] else {
-            return MetadataSignals(hasGPSLocation: false, sensitiveScore: 0)
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else {
+            return MetadataSignals(tags: [], sensitiveScore: 0)
         }
-        let hasLatitude = gps[kCGImagePropertyGPSLatitude] != nil
-        let hasLongitude = gps[kCGImagePropertyGPSLongitude] != nil
-        let hasVersion = gps[kCGImagePropertyGPSVersion] != nil
-        let hasGPS = (hasLatitude && hasLongitude) || hasVersion
-        return MetadataSignals(
-            hasGPSLocation: hasGPS,
-            sensitiveScore: hasGPS ? 0.58 : 0
-        )
+        var tags = Set<String>()
+        var score: Double = 0
+
+        let gps = properties[kCGImagePropertyGPSDictionary] as? [CFString: Any]
+        let hasLatitude = gps?[kCGImagePropertyGPSLatitude] != nil
+        let hasLongitude = gps?[kCGImagePropertyGPSLongitude] != nil
+        let hasVersion = gps?[kCGImagePropertyGPSVersion] != nil
+        if (hasLatitude && hasLongitude) || hasVersion {
+            tags.insert(VaultAITag.location)
+            score = max(score, 0.58)
+        }
+
+        let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any]
+        let tiff = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any]
+        let hasCameraInfo = hasMetadataValue(tiff, kCGImagePropertyTIFFMake)
+            || hasMetadataValue(tiff, kCGImagePropertyTIFFModel)
+            || hasMetadataValue(exif, kCGImagePropertyExifLensModel)
+            || hasMetadataValue(exif, kCGImagePropertyExifBodySerialNumber)
+            || hasMetadataValue(exif, kCGImagePropertyExifLensSerialNumber)
+        if hasCameraInfo {
+            tags.insert(VaultAITag.cameraInfo)
+            score = max(score, 0.46)
+        }
+
+        let hasCaptureTime = hasMetadataValue(exif, kCGImagePropertyExifDateTimeOriginal)
+            || hasMetadataValue(exif, kCGImagePropertyExifDateTimeDigitized)
+            || hasMetadataValue(tiff, kCGImagePropertyTIFFDateTime)
+        if hasCaptureTime {
+            tags.insert(VaultAITag.captureTime)
+            score = max(score, 0.46)
+        }
+
+        if !tags.isEmpty {
+            tags.insert(VaultAITag.metadataRich)
+            score = max(score, 0.45)
+        }
+        return MetadataSignals(tags: tags, sensitiveScore: score)
     }
 
     private static func analyzeQuality(cgImage: CGImage) -> QualityResult {
@@ -980,14 +1040,38 @@ enum VaultAIAnalyzer {
         }
         if name.contains("receipt")
             || name.contains("invoice")
-            || name.contains("document")
-            || name.contains("paper")
-            || name.contains("scan")
+            || name.contains("order")
+            || name.contains("bill")
+            || name.contains("statement")
+            || name.contains("收据")
+            || name.contains("订单")
+            || name.contains("账单")
             || name.contains("合同")
             || name.contains("票据")
             || name.contains("发票") {
+            tags.formUnion([VaultAITag.text, VaultAITag.receipt])
+            sensitiveScore = max(sensitiveScore, 0.56)
+            category = VaultAICategory.documents
+        }
+        if name.contains("document")
+            || name.contains("paper")
+            || name.contains("scan")
+            || name.contains("文档")
+            || name.contains("文件")
+            || name.contains("扫描") {
             tags.insert(VaultAITag.text)
             category = VaultAICategory.documents
+        }
+        if name.contains("chat")
+            || name.contains("message")
+            || name.contains("wechat")
+            || name.contains("whatsapp")
+            || name.contains("telegram")
+            || name.contains("聊天")
+            || name.contains("微信") {
+            tags.formUnion([VaultAITag.chat, VaultAITag.screenshot])
+            sensitiveScore = max(sensitiveScore, 0.62)
+            category = VaultAICategory.screenshots
         }
 
         return MetadataHints(sensitiveScore: sensitiveScore, category: category, tags: tags)
@@ -1181,8 +1265,37 @@ enum VaultAIAnalyzer {
     }
 
     private static func containsContactText(_ text: String) -> Bool {
+        containsPhoneText(text) || containsEmailText(text)
+    }
+
+    private static func containsEmailText(_ text: String) -> Bool {
+        matches(text, pattern: #"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}"#, options: [.caseInsensitive])
+    }
+
+    private static func containsPhoneText(_ text: String) -> Bool {
         matches(text, pattern: #"\b1[3-9]\d{9}\b"#)
-            || matches(text, pattern: #"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}"#, options: [.caseInsensitive])
+            || matches(text, pattern: #"\+\d[\d\s().-]{7,14}\d"#)
+            || matches(text, pattern: #"\b(?:\(\d{3}\)|\d{3})[-.\s]\d{3}[-.\s]\d{4}\b"#)
+    }
+
+    private static func containsChatText(_ text: String) -> Bool {
+        let lowered = text.lowercased()
+        let keywords = [
+            "微信", "朋友圈", "聊天", "已读", "语音通话",
+            "whatsapp", "telegram", "imessage", "messenger", "message", "typing", "online"
+        ]
+        return keywords.contains { lowered.localizedCaseInsensitiveContains($0) }
+    }
+
+    private static func containsReceiptText(_ text: String) -> Bool {
+        let lowered = text.lowercased()
+        let hasReceiptKeyword = [
+            "receipt", "invoice", "order", "payment", "subtotal", "total", "tax",
+            "收据", "发票", "票据", "订单", "合计", "小计", "付款", "支付"
+        ].contains { lowered.localizedCaseInsensitiveContains($0) }
+        let hasAmount = matches(text, pattern: #"[$¥￥]\s?\d+(?:[.,]\d{1,2})?"#)
+            || matches(text, pattern: #"\b\d+[.,]\d{2}\b"#)
+        return hasReceiptKeyword && hasAmount
     }
 
     private static func containsBarcodeText(_ text: String) -> Bool {
@@ -1196,6 +1309,14 @@ enum VaultAIAnalyzer {
         guard let regex = try? NSRegularExpression(pattern: pattern, options: options) else { return false }
         let range = NSRange(text.startIndex..<text.endIndex, in: text)
         return regex.firstMatch(in: text, range: range) != nil
+    }
+
+    private static func hasMetadataValue(_ dictionary: [CFString: Any]?, _ key: CFString) -> Bool {
+        guard let value = dictionary?[key] else { return false }
+        if let string = value as? String {
+            return !string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return true
     }
 
     private static func grayscalePixels(cgImage: CGImage, width: Int, height: Int) -> [UInt8]? {

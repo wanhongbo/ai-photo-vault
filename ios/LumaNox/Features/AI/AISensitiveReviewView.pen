@@ -975,7 +975,7 @@
     {
       "type": "frame",
       "id": "screen_ai_sensitive_location_risk",
-      "name": "AISensitiveReviewView - GPS location metadata risk",
+      "name": "AISensitiveReviewView - hidden metadata risks",
       "layout": "none",
       "x": 420,
       "y": 0,
@@ -1130,7 +1130,7 @@
                     {
                       "type": "text",
                       "id": "location_sensitive_gps_count",
-                      "content": "2 photos include hidden location data.",
+                      "content": "2 photos include hidden metadata.",
                       "fontFamily": "Inter",
                       "fontSize": 12,
                       "fontWeight": "700",
@@ -1278,7 +1278,7 @@
                         {
                           "type": "text",
                           "id": "location_sensitive_hit",
-                          "content": "Location",
+                          "content": "Metadata",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "800",
@@ -1289,7 +1289,7 @@
                     {
                       "type": "text",
                       "id": "location_sensitive_copy",
-                      "content": "Sharing the original may reveal where this photo was taken.",
+                      "content": "Sharing the original may reveal location, device, or capture time.",
                       "fontFamily": "Inter",
                       "fontSize": 12,
                       "fontWeight": "400",

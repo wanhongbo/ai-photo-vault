@@ -2094,8 +2094,8 @@ private struct AISensitiveCandidateRow: View {
     let onIgnore: () -> Void
     let isSafeCopyBusy: Bool
 
-    private var isLocationRisk: Bool {
-        record.ai.tags.contains(VaultAITag.location)
+    private var isMetadataRisk: Bool {
+        !Set(record.ai.tags).isDisjoint(with: VaultAITag.metadataPrivacyTags)
     }
 
     var body: some View {
@@ -2112,17 +2112,17 @@ private struct AISensitiveCandidateRow: View {
             .accessibilityLabel(mediaItem(record).fileName)
 
             VStack(alignment: .trailing, spacing: 8) {
-                Button(action: isLocationRisk ? onSafeCopy : onRedact) {
+                Button(action: isMetadataRisk ? onSafeCopy : onRedact) {
                     HStack(spacing: 5) {
                         if isSafeCopyBusy {
                             ProgressView()
                                 .tint(Color(hex: 0xDCEBFF))
                                 .scaleEffect(0.72)
                         } else {
-                            Image(systemName: isLocationRisk ? "location.slash" : "wand.and.stars")
+                            Image(systemName: metadataRiskIcon)
                                 .font(.system(size: 12, weight: .bold))
                         }
-                        Text(isLocationRisk ? L10n.tr("ai_sensitive_safe_copy_action") : L10n.tr("ai_sensitive_redact_action"))
+                        Text(isMetadataRisk ? L10n.tr("ai_sensitive_safe_copy_action") : L10n.tr("ai_sensitive_redact_action"))
                             .font(.system(size: 12, weight: .bold))
                             .lineLimit(1)
                             .minimumScaleFactor(0.78)
@@ -2214,9 +2214,15 @@ private struct AISensitiveCandidateRow: View {
     private func riskBadgeIcon(_ record: VaultMediaRecord) -> String {
         let score = record.ai.sensitiveScore ?? 0
         if record.ai.tags.contains(VaultAITag.location) { return "location" }
+        if !Set(record.ai.tags).isDisjoint(with: VaultAITag.metadataPrivacyTags) { return "info.circle" }
         if score >= 0.78 { return "exclamationmark.octagon" }
         if score >= 0.58 { return "viewfinder" }
         return "text.bubble"
+    }
+
+    private var metadataRiskIcon: String {
+        guard isMetadataRisk else { return "wand.and.stars" }
+        return record.ai.tags.contains(VaultAITag.location) ? "location.slash" : "doc.on.doc"
     }
 }
 
@@ -2331,6 +2337,13 @@ private func sensitiveHitTags(_ record: VaultMediaRecord) -> [String] {
         VaultAITag.idCard,
         VaultAITag.bankCard,
         VaultAITag.location,
+        VaultAITag.metadataRich,
+        VaultAITag.cameraInfo,
+        VaultAITag.captureTime,
+        VaultAITag.email,
+        VaultAITag.phone,
+        VaultAITag.receipt,
+        VaultAITag.chat,
         VaultAITag.barcode,
         VaultAITag.face,
         VaultAITag.contact,
