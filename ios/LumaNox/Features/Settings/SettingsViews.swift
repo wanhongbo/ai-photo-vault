@@ -598,21 +598,25 @@ struct ImportOriginalsPreferenceView: View {
                 }
             }
 
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "lock.shield")
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "info.circle")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(LNColor.brandBlue)
+                    .frame(width: 32, height: 32)
+                    .background(LNColor.brandBlue.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.brandBlue.opacity(0.22), lineWidth: 1))
                 Text(L10n.tr("import_originals_settings_safety_note"))
                     .font(LNTypography.labelMedium())
                     .foregroundStyle(LNColor.subtitle)
                     .lineSpacing(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 12)
             .padding(.vertical, 12)
-            .background(LNColor.sectionBg.opacity(0.8))
+            .background(LNColor.brandBlue.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.stroke, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(LNColor.brandBlue.opacity(0.28), lineWidth: 1))
         }
         .accessibilityIdentifier("import_originals_preference_view")
     }
