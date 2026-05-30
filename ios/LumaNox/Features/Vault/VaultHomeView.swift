@@ -184,7 +184,7 @@ struct VaultHomeView: View {
                 )
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.top, 111)
+            .padding(.top, 115)
 
             HStack {
                 Spacer()
