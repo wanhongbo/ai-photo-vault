@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import ImageIO
 import UIKit
 import Vision
 
@@ -8,6 +9,7 @@ struct VaultAISummary: Equatable {
     var scannedCount: Int = 0
     var sensitiveCount: Int = 0
     var cleanupCount: Int = 0
+    var locationRiskCount: Int = 0
     var categoryCounts: [String: Int] = [:]
 
     var hasUnscanned: Bool {
@@ -47,6 +49,7 @@ enum VaultAITag {
     static let bankCard = "bank_card"
     static let contact = "contact"
     static let screenshot = "screenshot"
+    static let location = "location"
     static let video = "video"
 }
 
@@ -57,7 +60,7 @@ func vaultAINowMs() -> Int64 {
 @MainActor
 final class VaultAIAnalysisService: ObservableObject {
     static let shared = VaultAIAnalysisService()
-    nonisolated static let currentAnalyzerVersion = 4
+    nonisolated static let currentAnalyzerVersion = 5
 
     @Published private(set) var records: [VaultMediaRecord] = []
     @Published private(set) var sensitiveRecords: [VaultMediaRecord] = []
@@ -219,11 +222,13 @@ final class VaultAIAnalysisService: ObservableObject {
         var scanned = 0
         var sensitive = 0
         var cleanup = 0
+        var location = 0
 
         for record in records {
             if record.ai.scannedAtMs != nil { scanned += 1 }
             if isSensitive(record) { sensitive += 1 }
             if isCleanable(record) { cleanup += 1 }
+            if record.ai.tags.contains(VaultAITag.location) { location += 1 }
             if let category = record.ai.category {
                 categoryCounts[category, default: 0] += 1
             }
@@ -234,6 +239,7 @@ final class VaultAIAnalysisService: ObservableObject {
             scannedCount: scanned,
             sensitiveCount: sensitive,
             cleanupCount: cleanup,
+            locationRiskCount: location,
             categoryCounts: categoryCounts
         )
     }
@@ -536,6 +542,7 @@ enum VaultAIAnalyzer {
             let visualStats = analyzeVisualStats(cgImage: cgImage)
             let vision = analyzeVision(cgImage: cgImage, record: record)
             let hints = metadataHints(for: record)
+            let metadataSignals = analyzeMetadata(imageData: data)
             var tags = Set(vision.tags)
             hints.tags.forEach { tags.insert($0) }
             var cleanupScore: Double = 0
@@ -553,6 +560,9 @@ enum VaultAIAnalyzer {
             }
             if isLikelyScreenshot(record: record, image: image, visionTags: tags) {
                 tags.insert(VaultAITag.screenshot)
+            }
+            if metadataSignals.hasGPSLocation {
+                tags.insert(VaultAITag.location)
             }
 
             let category = hints.category ?? VaultAICategoryMapper.pickCategory(
@@ -577,6 +587,7 @@ enum VaultAIAnalyzer {
                 sensitiveScore: max(
                     vision.sensitiveScore,
                     hints.sensitiveScore,
+                    metadataSignals.sensitiveScore,
                     subjectKind == .people ? 0.55 : 0
                 ),
                 cleanupScore: cleanupScore,
@@ -787,6 +798,11 @@ enum VaultAIAnalyzer {
         let tags: Set<String>
     }
 
+    private struct MetadataSignals {
+        let hasGPSLocation: Bool
+        let sensitiveScore: Double
+    }
+
     private static func analyzeVision(cgImage: CGImage, record: VaultMediaRecord) -> VisionResult {
         let humanRequest = VNDetectHumanRectanglesRequest()
         let faceRequest = VNDetectFaceRectanglesRequest()
@@ -861,6 +877,22 @@ enum VaultAIAnalyzer {
             tags: Array(tags),
             hasProminentFace: hasProminentFace,
             hasProminentHuman: hasProminentHuman
+        )
+    }
+
+    private static func analyzeMetadata(imageData: Data) -> MetadataSignals {
+        guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let gps = properties[kCGImagePropertyGPSDictionary] as? [CFString: Any] else {
+            return MetadataSignals(hasGPSLocation: false, sensitiveScore: 0)
+        }
+        let hasLatitude = gps[kCGImagePropertyGPSLatitude] != nil
+        let hasLongitude = gps[kCGImagePropertyGPSLongitude] != nil
+        let hasVersion = gps[kCGImagePropertyGPSVersion] != nil
+        let hasGPS = (hasLatitude && hasLongitude) || hasVersion
+        return MetadataSignals(
+            hasGPSLocation: hasGPS,
+            sensitiveScore: hasGPS ? 0.58 : 0
         )
     }
 

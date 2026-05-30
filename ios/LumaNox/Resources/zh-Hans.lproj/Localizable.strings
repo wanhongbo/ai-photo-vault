@@ -156,13 +156,16 @@
 "ai_summary_scanning_title" = "正在分析保险箱媒体";
 "ai_summary_empty_title" = "导入媒体后开始";
 "ai_summary_sensitive_title_fmt" = "%d 项敏感内容需要检查";
+"ai_summary_location_title_fmt" = "%d 张照片包含位置数据";
 "ai_summary_cleanup_title_fmt" = "%d 项可以清理";
 "ai_summary_unscanned_title" = "运行一次本地扫描";
 "ai_summary_all_clear_title" = "当前扫描未发现风险";
 "ai_summary_empty_desc" = "导入照片或视频后，AI 工具会读取加密保险箱内容。";
 "ai_summary_live_desc" = "Vision、画质和重复检测只在本机运行，并写回保险箱 metadata。";
+"ai_summary_location_desc" = "部分照片包含隐藏 GPS 位置数据，分享前建议生成安全 JPEG 副本。";
 "ai_stat_scanned" = "已扫";
 "ai_stat_sensitive" = "敏感";
+"ai_stat_location" = "位置";
 "ai_stat_cleanup" = "清理";
 "ai_cleanup_confirm_message" = "将清理 %d 张模糊/重复照片";
 "ai_cleanup_confirm_clean" = "确认清理";
@@ -183,6 +186,7 @@
 "ai_sensitive_count_may_contain_fmt" = "%d 项可能包含敏感信息";
 "ai_sensitive_live_desc" = "人脸、文字、证件、银行卡和二维码只在此设备本地检查。";
 "ai_sensitive_review_blur_desc" = "检查敏感媒体，并可逐项进入隐私打码。";
+"ai_sensitive_location_count_fmt" = "%d 张照片包含隐藏位置数据。";
 "ai_sensitive_empty_title" = "未发现敏感内容";
 "ai_sensitive_empty_desc" = "导入新媒体后可重新扫描。";
 "ai_sensitive_candidates" = "敏感候选";
@@ -194,6 +198,7 @@
 "ai_sensitive_queue_sort" = "按风险排序";
 "ai_sensitive_preview_hint" = "点击缩略图预览原图";
 "ai_sensitive_redact_action" = "打码";
+"ai_sensitive_safe_copy_action" = "安全副本";
 "ai_sensitive_ignore_action" = "忽略";
 "ai_classify_summary_fmt" = "%d 个分类";
 "ai_classify_live_desc" = "分类使用本地 Vision 标签和 metadata，不上传媒体。";
@@ -223,6 +228,7 @@
 "ai_tag_bank_card" = "银行卡";
 "ai_tag_contact" = "联系方式";
 "ai_tag_screenshot" = "截图";
+"ai_tag_location" = "位置";
 "ai_tag_video" = "视频";
 "privacy_redact_subtitle" = "自动识别敏感区域，也可手动框选";
 "privacy_redact_drag_hint" = "拖动框选敏感区域";
@@ -257,6 +263,8 @@
 "privacy_redact_save_success" = "已保存脱敏副本，遮盖 %d 个区域。";
 "privacy_redact_save_duplicate" = "相同的脱敏副本已存在。";
 "privacy_redact_save_failed" = "无法保存脱敏副本。";
+"privacy_redact_location_safe_copy_success" = "已保存不含位置数据的 JPEG 副本。";
+"privacy_redact_location_safe_copy_failed" = "无法生成位置安全副本。";
 "privacy_redact_select_first" = "请先选择一张保险箱图片。";
 "privacy_redact_unsupported" = "暂不支持此媒体类型打码。";
 "privacy_redact_video_hint" = "暂不支持视频打码，请从保险箱选择图片。";

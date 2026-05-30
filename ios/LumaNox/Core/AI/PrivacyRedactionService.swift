@@ -141,6 +141,48 @@ final class PrivacyRedactionService: ObservableObject {
         }
     }
 
+    func saveMetadataSafeCopy(path: String) async -> Bool {
+        guard !path.isEmpty else {
+            lastMessage = L10n.tr("privacy_redact_select_first")
+            lastIsError = true
+            return false
+        }
+
+        isSaving = true
+        defer { isSaving = false }
+
+        let albumName = metadataStore.mediaRecord(forPath: path)?.albumName ?? vaultDefaultAlbumName
+        do {
+            let output = try await PrivacyRedactor.renderMetadataSafeJPEG(path: path)
+            let result = await vaultStore.importPlainData(
+                output.data,
+                fileExtension: "jpg",
+                albumName: albumName,
+                originalFileName: output.fileName
+            )
+            await vaultStore.loadSnapshot()
+
+            switch result {
+            case .added:
+                lastMessage = L10n.tr("privacy_redact_location_safe_copy_success")
+                lastIsError = false
+                return true
+            case .duplicate:
+                lastMessage = L10n.tr("privacy_redact_save_duplicate")
+                lastIsError = false
+                return true
+            case .failed:
+                lastMessage = L10n.tr("privacy_redact_location_safe_copy_failed")
+                lastIsError = true
+                return false
+            }
+        } catch {
+            lastMessage = error.localizedDescription
+            lastIsError = true
+            return false
+        }
+    }
+
     func exportToSystemPhotos(path: String, regions: [PrivacyRedactionRegion]) async -> Bool {
         guard let tempURL = await makeRedactedTemporaryFile(path: path, regions: regions, scene: .export) else { return false }
         defer { tempManager.removeItem(tempURL) }
@@ -237,6 +279,26 @@ private enum PrivacyRedactor {
             fileName: rendered.fileName,
             regionCount: rendered.regionCount
         )
+    }
+
+    static func renderMetadataSafeJPEG(path: String) async throws -> Output {
+        try await Task.detached(priority: .utility) {
+            let encryptedURL = URL(fileURLWithPath: path)
+            let data = try VaultCipher.shared.decryptFile(at: encryptedURL)
+            guard let image = UIImage(data: data),
+                  let sourceImage = normalizedImage(from: image) else {
+                throw RedactionError.unsupportedMedia
+            }
+            guard let jpeg = VaultImageJPEGEncoder.opaqueJPEGData(from: sourceImage, compressionQuality: 0.92) else {
+                throw RedactionError.renderFailed
+            }
+            let base = encryptedURL.deletingPathExtension().lastPathComponent
+            return Output(
+                data: jpeg,
+                fileName: "\(base)_no_location.jpg",
+                regionCount: 0
+            )
+        }.value
     }
 
     static func renderRedactedPreviewImage(path: String, regions: [PrivacyRedactionRegion]) async throws -> UIImage {

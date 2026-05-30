@@ -70,6 +70,8 @@ struct AIHomeView: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
 
+            aiSummaryStats
+
             if aiService.progress.running {
                 ProgressView(value: aiService.progress.fraction)
                     .tint(LNColor.brandBlue)
@@ -115,7 +117,7 @@ struct AIHomeView: View {
         }
         .padding(LNSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(minHeight: 166, alignment: .topLeading)
+        .frame(minHeight: 216, alignment: .topLeading)
         .background(LNColor.sectionBg)
         .clipShape(RoundedRectangle(cornerRadius: LNRadius.homeCard))
         .overlay(RoundedRectangle(cornerRadius: LNRadius.homeCard).stroke(Color(hex: 0x244869), lineWidth: 1))
@@ -202,6 +204,9 @@ struct AIHomeView: View {
     private var summaryTitle: String {
         if aiService.progress.running { return L10n.tr("ai_summary_scanning_title") }
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_summary_empty_title") }
+        if aiService.summary.locationRiskCount > 0, aiService.summary.locationRiskCount == aiService.summary.sensitiveCount {
+            return L10n.tr("ai_summary_location_title_fmt", aiService.summary.locationRiskCount)
+        }
         if aiService.summary.sensitiveCount > 0 { return L10n.tr("ai_summary_sensitive_title_fmt", aiService.summary.sensitiveCount) }
         if aiService.summary.cleanupCount > 0 { return L10n.tr("ai_summary_cleanup_title_fmt", aiService.summary.cleanupCount) }
         if aiService.summary.hasUnscanned { return L10n.tr("ai_summary_unscanned_title") }
@@ -211,6 +216,7 @@ struct AIHomeView: View {
     private var summaryDescription: String {
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_summary_empty_desc") }
         if aiService.progress.running { return L10n.tr("ai_vault_scan_scanning_desc") }
+        if aiService.summary.locationRiskCount > 0 { return L10n.tr("ai_summary_location_desc") }
         return L10n.tr("ai_summary_desc")
     }
 
@@ -273,6 +279,16 @@ struct AIHomeView: View {
 
     private var summaryIcon: String {
         "sparkles"
+    }
+
+    private var aiSummaryStats: some View {
+        HStack(spacing: 8) {
+            AISummaryStatChip(value: "\(aiService.summary.scannedCount)", label: L10n.tr("ai_stat_scanned"))
+            AISummaryStatChip(value: "\(aiService.summary.sensitiveCount)", label: L10n.tr("ai_stat_sensitive"))
+            AISummaryStatChip(value: "\(aiService.summary.locationRiskCount)", label: L10n.tr("ai_stat_location"))
+            AISummaryStatChip(value: "\(aiService.summary.cleanupCount)", label: L10n.tr("ai_stat_cleanup"))
+        }
+        .accessibilityIdentifier("ai_summary_location_stats")
     }
 
     private var aiToolRows: [AIToolRowModel] {
@@ -360,6 +376,31 @@ private struct AISummaryActionButton: View {
         }
         .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
         .disabled(!enabled)
+    }
+}
+
+private struct AISummaryStatChip: View {
+    let value: String
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(LNColor.title)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(LNColor.subtitle)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 44)
+        .background(Color(hex: 0x122033))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
     }
 }
 
@@ -503,6 +544,13 @@ struct AISensitiveReviewView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
+    @ObservedObject private var redactionService = PrivacyRedactionService.shared
+    @State private var safeCopyRecordID: String?
+    @State private var toastMessage: String?
+
+    private var locationRiskCount: Int {
+        aiService.sensitiveRecords.filter { $0.ai.tags.contains(VaultAITag.location) }.count
+    }
 
     var body: some View {
         VaultListScreenChrome(title: L10n.tr("ai_sensitive_files_title"), onBack: { dismiss() }) { availableWidth in
@@ -512,6 +560,7 @@ struct AISensitiveReviewView: View {
             LazyVStack(spacing: 16) {
                 AISensitiveReviewHeaderCard(
                     count: records.count,
+                    locationCount: locationRiskCount,
                     loading: aiService.progress.running,
                     onScan: { Task { await aiService.scanVault() } }
                 )
@@ -532,9 +581,11 @@ struct AISensitiveReviewView: View {
                         onRedact: { record in
                             router.pushAI(.privacyRedact(path: mediaItem(record).path))
                         },
+                        onSafeCopy: saveLocationSafeCopy,
                         onIgnore: { record in
                             aiService.ignoreSensitiveCandidate(recordID: record.id)
-                        }
+                        },
+                        safeCopyRecordID: safeCopyRecordID
                     )
                     .accessibilityIdentifier("ai_sensitive_candidates_list")
                 }
@@ -544,6 +595,15 @@ struct AISensitiveReviewView: View {
             .padding(.bottom, 44)
         }
         .task { aiService.refreshSummary() }
+        .overlay(alignment: .top) {
+            if let toastMessage {
+                PrivacyRedactToast(message: toastMessage)
+                    .padding(.top, 82)
+                    .padding(.horizontal, 24)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: toastMessage)
         .accessibilityIdentifier("ai_sensitive_review_view")
     }
 
@@ -554,10 +614,36 @@ struct AISensitiveReviewView: View {
             router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .aiSensitive))
         }
     }
+
+    private func saveLocationSafeCopy(_ record: VaultMediaRecord) {
+        guard safeCopyRecordID == nil else { return }
+        safeCopyRecordID = record.id
+        Task {
+            _ = await redactionService.saveMetadataSafeCopy(path: mediaItem(record).path)
+            await MainActor.run {
+                safeCopyRecordID = nil
+                if let message = redactionService.lastMessage {
+                    showToast(message)
+                }
+                aiService.refreshSummary()
+            }
+        }
+    }
+
+    private func showToast(_ message: String) {
+        toastMessage = message
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_200_000_000)
+            if toastMessage == message {
+                toastMessage = nil
+            }
+        }
+    }
 }
 
 private struct AISensitiveReviewHeaderCard: View {
     let count: Int
+    let locationCount: Int
     let loading: Bool
     let onScan: () -> Void
 
@@ -581,6 +667,12 @@ private struct AISensitiveReviewHeaderCard: View {
                         .font(.system(size: 13, weight: .regular))
                         .foregroundStyle(LNColor.subtitle)
                         .fixedSize(horizontal: false, vertical: true)
+                    if locationCount > 0 {
+                        Text(L10n.tr("ai_sensitive_location_count_fmt", locationCount))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(LNColor.amberWarning)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
 
@@ -1921,7 +2013,9 @@ private struct AISensitiveCandidateListPanel: View {
     let width: CGFloat
     let onOpen: (VaultMediaRecord) -> Void
     let onRedact: (VaultMediaRecord) -> Void
+    let onSafeCopy: (VaultMediaRecord) -> Void
     let onIgnore: (VaultMediaRecord) -> Void
+    let safeCopyRecordID: String?
 
     var body: some View {
         LazyVStack(spacing: 0) {
@@ -1959,7 +2053,9 @@ private struct AISensitiveCandidateListPanel: View {
                     record: record,
                     onOpen: { onOpen(record) },
                     onRedact: { onRedact(record) },
-                    onIgnore: { onIgnore(record) }
+                    onSafeCopy: { onSafeCopy(record) },
+                    onIgnore: { onIgnore(record) },
+                    isSafeCopyBusy: safeCopyRecordID == record.id
                 )
 
                 if record.id != records.last?.id {
@@ -1984,7 +2080,13 @@ private struct AISensitiveCandidateRow: View {
     let record: VaultMediaRecord
     let onOpen: () -> Void
     let onRedact: () -> Void
+    let onSafeCopy: () -> Void
     let onIgnore: () -> Void
+    let isSafeCopyBusy: Bool
+
+    private var isLocationRisk: Bool {
+        record.ai.tags.contains(VaultAITag.location)
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -2000,22 +2102,29 @@ private struct AISensitiveCandidateRow: View {
             .accessibilityLabel(mediaItem(record).fileName)
 
             VStack(alignment: .trailing, spacing: 8) {
-                Button(action: onRedact) {
+                Button(action: isLocationRisk ? onSafeCopy : onRedact) {
                     HStack(spacing: 5) {
-                        Image(systemName: "wand.and.stars")
-                            .font(.system(size: 12, weight: .bold))
-                        Text(L10n.tr("ai_sensitive_redact_action"))
+                        if isSafeCopyBusy {
+                            ProgressView()
+                                .tint(Color(hex: 0xDCEBFF))
+                                .scaleEffect(0.72)
+                        } else {
+                            Image(systemName: isLocationRisk ? "location.slash" : "wand.and.stars")
+                                .font(.system(size: 12, weight: .bold))
+                        }
+                        Text(isLocationRisk ? L10n.tr("ai_sensitive_safe_copy_action") : L10n.tr("ai_sensitive_redact_action"))
                             .font(.system(size: 12, weight: .bold))
                             .lineLimit(1)
                             .minimumScaleFactor(0.78)
                     }
                     .foregroundStyle(Color(hex: 0xDCEBFF))
-                    .frame(width: 74, height: 38)
+                    .frame(width: 86, height: 38)
                     .background(Color(hex: 0x142741))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: 0x2A5B8C), lineWidth: 1))
                 }
                 .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
+                .disabled(isSafeCopyBusy)
 
                 Button(action: onIgnore) {
                     HStack(spacing: 5) {
@@ -2094,6 +2203,7 @@ private struct AISensitiveCandidateRow: View {
 
     private func riskBadgeIcon(_ record: VaultMediaRecord) -> String {
         let score = record.ai.sensitiveScore ?? 0
+        if record.ai.tags.contains(VaultAITag.location) { return "location" }
         if score >= 0.78 { return "exclamationmark.octagon" }
         if score >= 0.58 { return "viewfinder" }
         return "text.bubble"
@@ -2210,6 +2320,7 @@ private func sensitiveHitTags(_ record: VaultMediaRecord) -> [String] {
     let priority = [
         VaultAITag.idCard,
         VaultAITag.bankCard,
+        VaultAITag.location,
         VaultAITag.barcode,
         VaultAITag.face,
         VaultAITag.contact,
