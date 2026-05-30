@@ -80,19 +80,15 @@ final class BackupRestoreSafetyTests: XCTestCase {
         let writer = BackupPackageV1.newBodyWriter(output: bodyStream, backupKey: material.key)
 
         writer.beginAsset(
-            relativePath: "\(vaultDefaultAlbumName)/asset_missing.jpeg",
-            sha256Hex: sha256Hex(Data([1])),
-            sizeBytes: 1
+            relativePath: "\(vaultDefaultAlbumName)/asset_missing.jpeg"
         )
         XCTAssertTrue(writer.cancelAssetIfNoFramesWritten())
 
         writer.beginAsset(
-            relativePath: "\(vaultDefaultAlbumName)/asset_valid.jpeg",
-            sha256Hex: sha256Hex(Data([2])),
-            sizeBytes: 1
+            relativePath: "\(vaultDefaultAlbumName)/asset_valid.jpeg"
         )
         try writer.writeChunk(Data([2]))
-        _ = try writer.endAsset()
+        _ = try writer.endAsset(sha256Hex: sha256Hex(Data([2])), sizeBytes: 1)
         bodyStream.close()
 
         XCTAssertEqual(writer.snapshot().map(\.relativePath), ["\(vaultDefaultAlbumName)/asset_valid.jpeg"])
@@ -182,12 +178,10 @@ final class BackupRestoreSafetyTests: XCTestCase {
         bodyStream.open()
         let writer = BackupPackageV1.newBodyWriter(output: bodyStream, backupKey: material.key)
         writer.beginAsset(
-            relativePath: relativePath,
-            sha256Hex: advertisedSha256Hex,
-            sizeBytes: Int64(plain.count)
+            relativePath: relativePath
         )
         try writer.writeChunk(plain)
-        _ = try writer.endAsset()
+        _ = try writer.endAsset(sha256Hex: advertisedSha256Hex, sizeBytes: Int64(plain.count))
         bodyStream.close()
 
         FileManager.default.createFile(atPath: packageFile.path, contents: nil)

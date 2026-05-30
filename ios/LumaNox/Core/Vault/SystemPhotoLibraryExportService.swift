@@ -1,5 +1,7 @@
 import Foundation
 import Photos
+import UIKit
+import UniformTypeIdentifiers
 
 enum SystemPhotoLibraryExportError: LocalizedError {
     case authorizationDenied
@@ -25,7 +27,7 @@ final class SystemPhotoLibraryExportService {
 
     private init() {}
 
-    func export(fileURL: URL) async throws {
+    func export(fileURL: URL, skipWatermark: Bool = false) async throws {
         let readWriteStatus = await requestPhotoReadWriteAuthorization()
         let addOnlyStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
         guard readWriteStatus == .authorized ||
@@ -35,12 +37,19 @@ final class SystemPhotoLibraryExportService {
             throw SystemPhotoLibraryExportError.authorizationDenied
         }
 
+        let exportURL = watermarkedURLIfNeeded(fileURL, skipWatermark: skipWatermark)
+        defer {
+            if exportURL != fileURL {
+                try? FileManager.default.removeItem(at: exportURL)
+            }
+        }
+
         do {
-            try await exportToAlbum(fileURL: fileURL)
+            try await exportToAlbum(fileURL: exportURL)
         } catch SystemPhotoLibraryExportError.unsupportedMedia {
             throw SystemPhotoLibraryExportError.unsupportedMedia
         } catch {
-            try await exportToPhotoLibrary(fileURL: fileURL)
+            try await exportToPhotoLibrary(fileURL: exportURL)
         }
     }
 
@@ -136,8 +145,117 @@ final class SystemPhotoLibraryExportService {
         return PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: fileURL)
     }
 
+    private func watermarkedURLIfNeeded(_ fileURL: URL, skipWatermark: Bool) -> URL {
+        guard !skipWatermark else { return fileURL }
+        return (try? ImageWatermarkService.makeWatermarkedJPEGIfPossible(from: fileURL)) ?? fileURL
+    }
+
     private func isVideoURL(_ url: URL) -> Bool {
         let ext = url.pathExtension.lowercased()
         return ["mov", "mp4", "m4v", "avi", "hevc"].contains(ext)
+    }
+}
+
+enum ImageWatermarkService {
+    private static let watermarkText = "LumaNox"
+    private static let excludedExtensions: Set<String> = ["gif", "svg"]
+
+    static func makeWatermarkedJPEGIfPossible(from sourceURL: URL) throws -> URL? {
+        guard shouldWatermarkImage(at: sourceURL) else { return nil }
+
+        let outputURL = try uniqueWatermarkURL(for: sourceURL)
+        try renderWatermarkedJPEG(from: sourceURL, to: outputURL)
+        return outputURL
+    }
+
+    static func shouldWatermarkImage(at url: URL) -> Bool {
+        let ext = url.pathExtension.lowercased()
+        guard !ext.isEmpty, !excludedExtensions.contains(ext) else { return false }
+
+        if let type = UTType(filenameExtension: ext) {
+            return type.conforms(to: .image) && !type.conforms(to: .movie)
+        }
+
+        return ["jpg", "jpeg", "png", "heic", "heif", "tif", "tiff", "webp", "bmp"].contains(ext)
+    }
+
+    private static func renderWatermarkedJPEG(from sourceURL: URL, to outputURL: URL) throws {
+        guard let sourceImage = UIImage(contentsOfFile: sourceURL.path) else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+
+        let pixelSize = imagePixelSize(sourceImage)
+        guard pixelSize.width >= 4, pixelSize.height >= 4 else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+
+        let renderer = UIGraphicsImageRenderer(size: pixelSize, format: format)
+        let watermarked = renderer.image { context in
+            sourceImage.draw(in: CGRect(origin: .zero, size: pixelSize))
+            drawWatermark(in: context.cgContext, imageSize: pixelSize)
+        }
+
+        guard let data = watermarked.jpegData(compressionQuality: 0.92) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+
+        try data.write(to: outputURL, options: .atomic)
+    }
+
+    private static func drawWatermark(in context: CGContext, imageSize: CGSize) {
+        let width = imageSize.width
+        let height = imageSize.height
+        let fontSize = min(75, max(57, width * 0.037))
+        let font = UIFont.systemFont(ofSize: fontSize, weight: .regular)
+        let textColor = UIColor(red: 225 / 255, green: 232 / 255, blue: 245 / 255, alpha: 52 / 255)
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(32 / 255)
+        shadow.shadowOffset = CGSize(width: 0, height: 1.8)
+        shadow.shadowBlurRadius = 3.6
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: textColor,
+            .shadow: shadow
+        ]
+        let attributed = NSAttributedString(string: watermarkText, attributes: attributes)
+        let textSize = attributed.size()
+        let padX = max(21, width * 0.02)
+        let padY = max(21, height * 0.016)
+        let origin = CGPoint(
+            x: max(0, width - padX - textSize.width),
+            y: max(0, height - padY - textSize.height)
+        )
+
+        UIGraphicsPushContext(context)
+        attributed.draw(at: origin)
+        UIGraphicsPopContext()
+    }
+
+    private static func imagePixelSize(_ image: UIImage) -> CGSize {
+        if let cgImage = image.cgImage {
+            return CGSize(width: cgImage.width, height: cgImage.height)
+        }
+        return CGSize(width: image.size.width * image.scale, height: image.size.height * image.scale)
+    }
+
+    private static func uniqueWatermarkURL(for sourceURL: URL) throws -> URL {
+        let directory = sourceURL.deletingLastPathComponent()
+        let base = sourceURL.deletingPathExtension().lastPathComponent
+        let sanitizedBase = base.isEmpty ? UUID().uuidString : base
+
+        for index in 0...999 {
+            let suffix = index == 0 ? "_wm" : "_wm_\(index)"
+            let candidate = directory.appendingPathComponent("\(sanitizedBase)\(suffix).jpg")
+            if !FileManager.default.fileExists(atPath: candidate.path) {
+                return candidate
+            }
+        }
+
+        throw CocoaError(.fileWriteFileExists)
     }
 }

@@ -41,6 +41,7 @@ final class MediaExportService: @unchecked Sendable {
 
     func export(
         records: [VaultMediaRecord],
+        skipWatermark: Bool = false,
         progress: @escaping LongRunningTaskProgressHandler
     ) async -> MediaExportBatchResult {
         guard !records.isEmpty else { return .empty }
@@ -102,7 +103,7 @@ final class MediaExportService: @unchecked Sendable {
                 let outputURL = try uniqueOutputURL(directory: outputDirectory, fileName: displayName)
                 try decrypt(recordAt: sourceURL, to: outputURL)
                 try Task.checkCancellation()
-                try await SystemPhotoLibraryExportService.shared.export(fileURL: outputURL)
+                try await SystemPhotoLibraryExportService.shared.export(fileURL: outputURL, skipWatermark: skipWatermark)
                 exported.append(outputURL)
             } catch {
                 failures.append(failure(for: record, error: error))

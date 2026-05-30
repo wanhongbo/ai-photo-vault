@@ -750,9 +750,10 @@ struct PhotoViewerView: View {
         guard !isPreparingShare else { return }
         isPreparingShare = true
         let pathToShare = currentPath
+        let skipWatermark = SubscriptionService.shared.isPremium
         Task {
             do {
-                let url = try await makeShareURL(for: pathToShare)
+                let url = try await makeShareURL(for: pathToShare, skipWatermark: skipWatermark)
                 await MainActor.run {
                     shareURL = url
                     shareSheetLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
@@ -776,6 +777,7 @@ struct PhotoViewerView: View {
         guard !isExportingSystem else { return }
         isExportingSystem = true
         let pathToExport = currentPath
+        let skipWatermark = SubscriptionService.shared.isPremium
         Task {
             var tempURL: URL?
             defer {
@@ -785,9 +787,12 @@ struct PhotoViewerView: View {
             }
 
             do {
-                let url = try await makeShareURL(for: pathToExport)
+                let url = try await makeShareURL(for: pathToExport, skipWatermark: true)
                 tempURL = url
-                try await SystemPhotoLibraryExportService.shared.export(fileURL: url)
+                try await SystemPhotoLibraryExportService.shared.export(
+                    fileURL: url,
+                    skipWatermark: skipWatermark
+                )
                 await MainActor.run {
                     exportAlertMessage = L10n.tr("photo_viewer_export_success")
                     showExportAlert = true
@@ -809,15 +814,21 @@ struct PhotoViewerView: View {
         }
     }
 
-    private func makeShareURL(for path: String) async throws -> URL {
+    private func makeShareURL(for path: String, skipWatermark: Bool) async throws -> URL {
         try await Task.detached(priority: .userInitiated) {
             let sourceURL = URL(fileURLWithPath: path)
             let name = sourceURL.lastPathComponent.isEmpty ? "LumaNox.jpg" : sourceURL.lastPathComponent
-            return try PlaintextTempFileManager.shared.decryptVaultFileToTemporary(
+            let tempURL = try PlaintextTempFileManager.shared.decryptVaultFileToTemporary(
                 sourceURL: sourceURL,
                 scene: .share,
                 preferredName: name
             )
+            guard !skipWatermark,
+                  let watermarkedURL = try? ImageWatermarkService.makeWatermarkedJPEGIfPossible(from: tempURL) else {
+                return tempURL
+            }
+            PlaintextTempFileManager.shared.removeItem(tempURL)
+            return watermarkedURL
         }.value
     }
 

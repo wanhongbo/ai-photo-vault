@@ -1310,8 +1310,13 @@ struct PrivacyRedactView: View {
     private func exportRedactedToSystemPhotos() {
         guard !isExportingSystem else { return }
         isExportingSystem = true
+        let skipWatermark = SubscriptionService.shared.isPremium
         Task {
-            _ = await redactionService.exportToSystemPhotos(path: activePath, regions: saveRegions)
+            _ = await redactionService.exportToSystemPhotos(
+                path: activePath,
+                regions: saveRegions,
+                skipWatermark: skipWatermark
+            )
             await MainActor.run {
                 isExportingSystem = false
                 showRedactionServiceMessage()
@@ -1322,8 +1327,13 @@ struct PrivacyRedactView: View {
     private func prepareRedactedShare() {
         guard !isPreparingShare else { return }
         isPreparingShare = true
+        let skipWatermark = SubscriptionService.shared.isPremium
         Task {
-            let url = await redactionService.makeRedactedShareURL(path: activePath, regions: saveRegions)
+            let url = await redactionService.makeRedactedShareURL(
+                path: activePath,
+                regions: saveRegions,
+                skipWatermark: skipWatermark
+            )
             await MainActor.run {
                 isPreparingShare = false
                 if let url {

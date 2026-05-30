@@ -4,17 +4,20 @@ import SwiftUI
 enum ExportRuntimeState {
     static var sourceAlbumName: String?
     static var pendingRecords: [VaultMediaRecord] = []
+    static var skipWatermark = false
     static var lastResult: MediaExportBatchResult?
 
     static func prepareSource(albumName: String?) {
         sourceAlbumName = albumName
         pendingRecords = []
+        skipWatermark = false
         cleanupResultFiles()
         lastResult = nil
     }
 
-    static func enqueue(records: [VaultMediaRecord]) {
+    static func enqueue(records: [VaultMediaRecord], skipWatermark: Bool = false) {
         pendingRecords = records
+        self.skipWatermark = skipWatermark
         cleanupResultFiles()
         lastResult = nil
     }
@@ -30,6 +33,7 @@ enum ExportRuntimeState {
     static func reset() {
         sourceAlbumName = nil
         pendingRecords = []
+        skipWatermark = false
         cleanupResultFiles()
         lastResult = nil
     }
@@ -110,7 +114,7 @@ struct BulkExportView: View {
                 enabled: !selectedIds.isEmpty
             ) {
                 let selected = records.filter { selectedIds.contains($0.id) }
-                ExportRuntimeState.enqueue(records: selected)
+                ExportRuntimeState.enqueue(records: selected, skipWatermark: SubscriptionService.shared.isPremium)
                 router.pushInCurrentTab(.exportProgress)
             }
             .frame(width: contentWidth)
@@ -279,7 +283,10 @@ struct ExportProgressView: View {
             cancellable: true
         )
         exportTask = Task {
-            let result = await MediaExportService.shared.export(records: records) { next in
+            let result = await MediaExportService.shared.export(
+                records: records,
+                skipWatermark: ExportRuntimeState.skipWatermark
+            ) { next in
                 progress = next
             }
             guard !Task.isCancelled, !didCancel, !result.cancelled else { return }

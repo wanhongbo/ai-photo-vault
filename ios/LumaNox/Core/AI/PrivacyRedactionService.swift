@@ -183,12 +183,16 @@ final class PrivacyRedactionService: ObservableObject {
         }
     }
 
-    func exportToSystemPhotos(path: String, regions: [PrivacyRedactionRegion]) async -> Bool {
+    func exportToSystemPhotos(
+        path: String,
+        regions: [PrivacyRedactionRegion],
+        skipWatermark: Bool = false
+    ) async -> Bool {
         guard let tempURL = await makeRedactedTemporaryFile(path: path, regions: regions, scene: .export) else { return false }
         defer { tempManager.removeItem(tempURL) }
 
         do {
-            try await SystemPhotoLibraryExportService.shared.export(fileURL: tempURL)
+            try await SystemPhotoLibraryExportService.shared.export(fileURL: tempURL, skipWatermark: skipWatermark)
             lastMessage = L10n.tr("privacy_redact_export_success")
             lastIsError = false
             return true
@@ -203,8 +207,18 @@ final class PrivacyRedactionService: ObservableObject {
         }
     }
 
-    func makeRedactedShareURL(path: String, regions: [PrivacyRedactionRegion]) async -> URL? {
-        await makeRedactedTemporaryFile(path: path, regions: regions, scene: .share)
+    func makeRedactedShareURL(
+        path: String,
+        regions: [PrivacyRedactionRegion],
+        skipWatermark: Bool = false
+    ) async -> URL? {
+        guard let tempURL = await makeRedactedTemporaryFile(path: path, regions: regions, scene: .share) else { return nil }
+        guard !skipWatermark,
+              let watermarkedURL = try? ImageWatermarkService.makeWatermarkedJPEGIfPossible(from: tempURL) else {
+            return tempURL
+        }
+        tempManager.removeItem(tempURL)
+        return watermarkedURL
     }
 
     func renderPreviewImage(path: String, regions: [PrivacyRedactionRegion]) async -> UIImage? {

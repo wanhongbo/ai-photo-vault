@@ -1,5 +1,6 @@
 import Foundation
 @testable import LumaNox
+import UIKit
 import XCTest
 
 final class VaultCipherV2Tests: XCTestCase {
@@ -74,5 +75,39 @@ final class VaultCipherV2Tests: XCTestCase {
             data.append(UInt8((index * 31 + 17) % 251))
         }
         return data
+    }
+}
+
+final class ImageWatermarkServiceTests: XCTestCase {
+    func testCreatesWatermarkedJPEGForRasterImage() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let sourceURL = directory.appendingPathComponent("sample.png")
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 480, height: 320)).image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 480, height: 320))
+        }
+        try XCTUnwrap(image.pngData()).write(to: sourceURL)
+
+        let outputURL = try XCTUnwrap(ImageWatermarkService.makeWatermarkedJPEGIfPossible(from: sourceURL))
+        XCTAssertEqual(outputURL.pathExtension, "jpg")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: outputURL.path))
+        XCTAssertNotNil(UIImage(contentsOfFile: outputURL.path))
+    }
+
+    func testSkipsAnimatedGifWatermark() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let sourceURL = directory.appendingPathComponent("sample.gif")
+        try Data([0x47, 0x49, 0x46, 0x38]).write(to: sourceURL)
+
+        let outputURL = try ImageWatermarkService.makeWatermarkedJPEGIfPossible(from: sourceURL)
+        XCTAssertNil(outputURL)
     }
 }
