@@ -28,6 +28,17 @@ final class SubscriptionService: ObservableObject {
     var isSdkConfigured: Bool { BillingBootstrap.isConfigured }
 
     func refreshCatalog() async {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-uiTestPaywall"),
+           !BillingBootstrap.isConfigured {
+            offeringsState = .ready(
+                packages: Self.debugPreviewPackages,
+                defaultSelectedIndex: 1,
+                isPremium: isPremium
+            )
+            return
+        }
+        #endif
         guard BillingBootstrap.isConfigured else {
             offeringsState = .error(Self.errorCodeRcKeyMissing)
             return
@@ -171,6 +182,37 @@ final class SubscriptionService: ObservableObject {
         default: return .other
         }
     }
+
+    #if DEBUG
+    private static var debugPreviewPackages: [PaywallPackageOffer] {
+        [
+        PaywallPackageOffer(
+            kind: .monthly,
+            packageIdentifier: "debug_monthly",
+            title: L10n.tr("paywall_preview_monthly"),
+            description: L10n.tr("paywall_preview_description"),
+            pricePrimary: "$4.99",
+            priceSecondary: nil,
+            periodShortLabel: nil,
+            showBestValueBadge: false,
+            freeTrialLabel: nil,
+            savingsPercent: nil
+        ),
+        PaywallPackageOffer(
+            kind: .annual,
+            packageIdentifier: "debug_annual",
+            title: L10n.tr("paywall_preview_annual"),
+            description: L10n.tr("paywall_preview_description"),
+            pricePrimary: "$29.99",
+            priceSecondary: nil,
+            periodShortLabel: nil,
+            showBestValueBadge: true,
+            freeTrialLabel: nil,
+            savingsPercent: 50
+        )
+        ]
+    }
+    #endif
 
 }
 

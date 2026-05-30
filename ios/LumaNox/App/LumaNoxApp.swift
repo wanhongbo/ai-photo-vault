@@ -104,6 +104,12 @@ struct RootView: View {
     #if DEBUG
     private func applyDebugLaunchRouteIfNeeded() {
         guard AppDebugPolicy.skipsPinGate else { return }
+        if ProcessInfo.processInfo.arguments.contains("-uiTestPaywall"),
+           router.presentedRoute == nil {
+            router.phase = .main
+            router.presentedRoute = .paywall(dismissable: true, source: PaywallSource.manual)
+            return
+        }
         guard ProcessInfo.processInfo.arguments.contains("-uiTestPrivacyRedact"),
               router.aiPath.isEmpty else { return }
         router.phase = .main

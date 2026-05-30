@@ -31,6 +31,7 @@ final class PaywallViewModel: ObservableObject {
 
     func purchaseSelected() async {
         guard case .ready(let packages, _, _) = offeringsState else { return }
+        guard !packages.isEmpty else { return }
         let idx = min(max(selectedIndex, 0), max(packages.count - 1, 0))
         let pkg = packages[idx]
         purchasing = true

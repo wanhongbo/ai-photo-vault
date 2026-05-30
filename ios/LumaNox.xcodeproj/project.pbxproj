@@ -86,6 +86,7 @@
 		6EC7870A56FEE386F2E854F9 /* AIClassificationRuleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F750D28346CAB57E2755170B /* AIClassificationRuleTests.swift */; };
 		6ED84B872EAE1F6E6DECE280 /* VaultFileHasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C5CCDED95D15E599EE79B1 /* VaultFileHasher.swift */; };
 		72E1C705EF5A964F9E32C6AF /* VaultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC69DE179BB30C69A3742C /* VaultStore.swift */; };
+		76A7B9D11323028649C10630 /* PaywallView.pen in Resources */ = {isa = PBXBuildFile; fileRef = DBE5168D3FE700148C13D8FB /* PaywallView.pen */; };
 		782B97ECE55A70B2FA3E6608 /* AlbumListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */; };
 		7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */; };
 		7DDF6F0954B25AA09F7577B4 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F121E8D7BA0C5DAC6610309 /* WebKit.framework */; };
@@ -339,6 +340,7 @@
 		DA23EEFE7CB8F5D3B0A673D7 /* FirstLaunchRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchRouter.swift; sourceTree = "<group>"; };
 		DA6D80E8EF90C3A5A0326DF4 /* VaultMetadataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultMetadataStore.swift; sourceTree = "<group>"; };
 		DA8EFDB435B5DE29A788A662 /* PaywallAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallAnalytics.swift; sourceTree = "<group>"; };
+		DBE5168D3FE700148C13D8FB /* PaywallView.pen */ = {isa = PBXFileReference; path = PaywallView.pen; sourceTree = "<group>"; };
 		DC0EF53851E2A97335530387 /* NetworkAIDatasetPhotoLibrarySeedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkAIDatasetPhotoLibrarySeedTests.swift; sourceTree = "<group>"; };
 		DC4DB07AF115C84357EA6639 /* ImportOriginalsDecisionSheet.pen */ = {isa = PBXFileReference; path = ImportOriginalsDecisionSheet.pen; sourceTree = "<group>"; };
 		DD549E477191C93BEDB3AEB8 /* BackupRestoreView.pen */ = {isa = PBXFileReference; path = BackupRestoreView.pen; sourceTree = "<group>"; };
@@ -452,6 +454,7 @@
 		129439679361CA7BBD19C8C6 /* Paywall */ = {
 			isa = PBXGroup;
 			children = (
+				DBE5168D3FE700148C13D8FB /* PaywallView.pen */,
 				63EDEEE53B1D9BE4F3642CCA /* PaywallView.swift */,
 				53E9255003D4588EA511C8F6 /* PaywallViewModel.swift */,
 			);
@@ -961,6 +964,7 @@
 				AF0575152ACF854909FEB280 /* LumaNoxStyleGuide.md in Resources */,
 				BE094B5F4A4227D4324EAA22 /* LumaNoxStyleGuide.pen in Resources */,
 				E8658E1F4A813F2983F533D8 /* MainTabView.pen in Resources */,
+				76A7B9D11323028649C10630 /* PaywallView.pen in Resources */,
 				27A063DD7AD399ABA10FDE6E /* PhotoViewerView.pen in Resources */,
 				486B75BFD5833E43971EAA68 /* PrivacyRedactView.pen in Resources */,
 				A57E22A24F0CED238A1FFDD4 /* PrivacyRiskScanView.pen in Resources */,

@@ -1,0 +1,228 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "name": "PaywallView",
+      "layout": "vertical",
+      "width": 393,
+      "height": 852,
+      "clip": true,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "rotation": 180,
+        "colors": [
+          { "color": "#070A10", "position": 0 },
+          { "color": "#000000", "position": 1 }
+        ]
+      },
+      "padding": [54, 22, 0, 22],
+      "gap": 18,
+      "children": [
+        {
+          "type": "frame",
+          "name": "Header",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": 44,
+          "justifyContent": "flex-end",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "name": "Close Button",
+              "width": 44,
+              "height": 44,
+              "fill": "#1A2230",
+              "stroke": "#2E3A4D",
+              "strokeWidth": 1,
+              "cornerRadius": 22,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "x", "width": 20, "height": 20, "fill": "#8A94A8" }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Hero",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 10,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "name": "Crown Ring",
+              "width": 64,
+              "height": 64,
+              "cornerRadius": 32,
+              "stroke": "#E8C547",
+              "strokeWidth": 2,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "crown", "width": 30, "height": 30, "fill": "#FFE08A" }
+              ]
+            },
+            { "type": "text", "content": "LumaNox Pro", "fontFamily": "Inter", "fontSize": 26, "fontWeight": "700", "fill": "#F5F8FF", "textAlignHorizontal": "center", "width": "fill_container" },
+            { "type": "text", "content": "Unlock all privacy features", "fontFamily": "Inter", "fontSize": 14, "fill": "#8A94A8", "textAlignHorizontal": "center", "width": "fill_container", "textGrowth": "fixed-width" }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Trigger Context",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 10,
+          "fill": "#10141D",
+          "stroke": "#2A3140",
+          "strokeWidth": 1,
+          "cornerRadius": 16,
+          "padding": [12, 12, 12, 12],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "name": "Context Icon",
+              "width": 32,
+              "height": 32,
+              "fill": "#1A2A40",
+              "cornerRadius": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "lock-keyhole", "width": 17, "height": 17, "fill": "#4A9EFF" }
+              ]
+            },
+            { "type": "text", "content": "You reached a free plan limit. Upgrade to continue this task.", "fontFamily": "Inter", "fontSize": 13, "fill": "#8A94A8", "width": "fill_container", "textGrowth": "fixed-width" }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Annual Tier Selected",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 12,
+          "fill": "#10141D",
+          "stroke": "#4A9EFF",
+          "strokeWidth": 2,
+          "cornerRadius": 18,
+          "padding": [14, 16, 14, 16],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "name": "Tier Copy",
+              "layout": "vertical",
+              "width": "fill_container",
+              "height": "fit_content",
+              "gap": 5,
+              "children": [
+                { "type": "text", "content": "Annual Pro", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "600", "fill": "#F5F8FF", "width": "fill_container" },
+                { "type": "frame", "name": "Best Value Badge", "width": "fit_content", "height": 22, "fill": "#2563EB", "cornerRadius": 11, "padding": [4, 8, 4, 8], "children": [{ "type": "text", "content": "BEST VALUE -50%", "fontFamily": "Inter", "fontSize": 10, "fontWeight": "700", "fill": "#FFFFFF" }] },
+                { "type": "text", "content": "Full vault privacy suite", "fontFamily": "Inter", "fontSize": 12, "fill": "#7E8AA0", "width": "fill_container" }
+              ]
+            },
+            {
+              "type": "frame",
+              "name": "Tier Price",
+              "layout": "vertical",
+              "width": 104,
+              "height": "fit_content",
+              "gap": 2,
+              "alignItems": "flex-end",
+              "children": [
+                { "type": "text", "content": "$29.99", "fontFamily": "Inter", "fontSize": 20, "fontWeight": "700", "fill": "#4A9EFF", "textAlignHorizontal": "right", "width": 104 },
+                { "type": "text", "content": "per year", "fontFamily": "Inter", "fontSize": 11, "fill": "#7E8AA0", "textAlignHorizontal": "right", "width": 104 }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Monthly Tier",
+          "layout": "horizontal",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 12,
+          "fill": "#10141D",
+          "stroke": "#2A3140",
+          "strokeWidth": 1,
+          "cornerRadius": 18,
+          "padding": [14, 16, 14, 16],
+          "alignItems": "center",
+          "children": [
+            { "type": "text", "content": "Monthly Pro", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "600", "fill": "#F5F8FF", "width": "fill_container" },
+            { "type": "text", "content": "$4.99\nper month", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "700", "fill": "#F5F8FF", "textAlignHorizontal": "right", "width": 104 }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Feature List",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 12,
+          "children": [
+            { "type": "text", "content": "✓  Unlimited private photo storage", "fontFamily": "Inter", "fontSize": 14, "fill": "#F5F8FF", "width": "fill_container" },
+            { "type": "text", "content": "✓  No watermarks on shared photos", "fontFamily": "Inter", "fontSize": 14, "fill": "#F5F8FF", "width": "fill_container" },
+            { "type": "text", "content": "✓  AI privacy scan & cleanup", "fontFamily": "Inter", "fontSize": 14, "fill": "#F5F8FF", "width": "fill_container" },
+            { "type": "text", "content": "✓  Local encrypted backup & restore", "fontFamily": "Inter", "fontSize": 14, "fill": "#F5F8FF", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Comparison Table",
+          "layout": "vertical",
+          "width": "fill_container",
+          "height": "fit_content",
+          "gap": 8,
+          "fill": "#10141D",
+          "cornerRadius": 12,
+          "padding": [12, 12, 12, 12],
+          "children": [
+            { "type": "text", "content": "                  Free        LumaNox Pro", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "600", "fill": "#7E8AA0", "width": "fill_container" },
+            { "type": "text", "content": "Private Storage    50              ∞", "fontFamily": "Inter", "fontSize": 13, "fill": "#F5F8FF", "width": "fill_container" },
+            { "type": "text", "content": "AI Features        10/mo           ∞", "fontFamily": "Inter", "fontSize": 13, "fill": "#F5F8FF", "width": "fill_container" },
+            { "type": "text", "content": "Encrypted Backup   1               ∞", "fontFamily": "Inter", "fontSize": 13, "fill": "#F5F8FF", "width": "fill_container" },
+            { "type": "text", "content": "Watermark-free     —               ✓", "fontFamily": "Inter", "fontSize": 13, "fill": "#F5F8FF", "width": "fill_container" }
+          ]
+        },
+        {
+          "type": "frame",
+          "name": "Sticky Purchase Bar",
+          "layout": "vertical",
+          "width": 393,
+          "height": 190,
+          "gap": 8,
+          "fill": "#000000",
+          "padding": [24, 22, 8, 22],
+          "children": [
+            {
+              "type": "frame",
+              "name": "Continue Button",
+              "width": "fill_container",
+              "height": 54,
+              "fill": "#4A9EFF",
+              "cornerRadius": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                { "type": "text", "content": "Continue", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#FFFFFF" }
+              ]
+            },
+            { "type": "text", "content": "Restore purchases", "fontFamily": "Inter", "fontSize": 14, "fill": "#8A94A8", "textAlignHorizontal": "center", "width": "fill_container" },
+            { "type": "text", "content": "Cancel anytime · GDPR compliant · No account required", "fontFamily": "Inter", "fontSize": 11, "fill": "#5C6578", "textAlignHorizontal": "center", "width": "fill_container", "textGrowth": "fixed-width" }
+          ]
+        }
+      ]
+    }
+  ]
+}
