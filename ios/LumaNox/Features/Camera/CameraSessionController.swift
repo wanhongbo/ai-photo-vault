@@ -227,6 +227,7 @@ final class CameraSessionController: NSObject, ObservableObject {
             return
         }
         let settings = AVCapturePhotoSettings()
+        settings.photoQualityPrioritization = .speed
         let avFlashMode = avCaptureFlashMode(for: flashMode)
         if photoOutput.supportedFlashModes.contains(avFlashMode) {
             settings.flashMode = avFlashMode
@@ -336,6 +337,7 @@ final class CameraSessionController: NSObject, ObservableObject {
             currentAudioInput = nil
 
             photoOutput = AVCapturePhotoOutput()
+            photoOutput.maxPhotoQualityPrioritization = .speed
             if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
             configurePhotoSessionPreset()
             session.commitConfiguration()

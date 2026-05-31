@@ -45,24 +45,16 @@ final class VaultStore: ObservableObject {
             let trash = try trashDirectory()
             vaultDebugLog("loadSnapshot begin root=\(root.path) trash=\(trash.path)")
             let metadata = try metadataStore.reconcile(vaultRoot: root, trashRoot: trash)
-            let albums = makeVaultAlbums(from: metadata)
-            let recent = metadata.recentActive(limit: recentLimit).map { mediaRecordToVaultPhoto($0) }
-            let total = metadata.totalActiveCount
-            let activeMedia = metadata.activeMedia
-            vaultDebugLog("loadSnapshot success total=\(total) albums=\(albums.map { "\($0.name):\($0.photoCount)" }.joined(separator: ",")) recent=\(recent.count)")
-            snapshot = VaultSnapshot(
-                albums: albums,
-                recentPhotos: recent,
-                totalCount: total,
-                imageCount: activeMedia.filter { $0.mediaKind == .image }.count,
-                videoCount: activeMedia.filter { $0.mediaKind == .video }.count
-            )
-            QuotaManager.shared.updateVaultCount(total)
+            applyMetadataSnapshot(metadata, recentLimit: recentLimit)
         } catch {
             vaultDebugLog("loadSnapshot failed error=\(error.localizedDescription)")
             lastImportMessage = error.localizedDescription
             lastImportIsError = true
         }
+    }
+
+    func refreshSnapshotFromMetadata(recentLimit: Int = 60) {
+        applyMetadataSnapshot(metadataStore.load(), recentLimit: recentLimit)
     }
 
     func photos(in albumName: String) -> [VaultPhoto] {
@@ -102,6 +94,22 @@ final class VaultStore: ObservableObject {
         }
         let aiAlbums = makeAIClassificationAlbums(from: metadata.activeMedia)
         return userAlbums + aiAlbums
+    }
+
+    private func applyMetadataSnapshot(_ metadata: VaultMetadataSnapshot, recentLimit: Int) {
+        let albums = makeVaultAlbums(from: metadata)
+        let recent = metadata.recentActive(limit: recentLimit).map { mediaRecordToVaultPhoto($0) }
+        let total = metadata.totalActiveCount
+        let activeMedia = metadata.activeMedia
+        vaultDebugLog("snapshot refresh total=\(total) albums=\(albums.map { "\($0.name):\($0.photoCount)" }.joined(separator: ",")) recent=\(recent.count)")
+        snapshot = VaultSnapshot(
+            albums: albums,
+            recentPhotos: recent,
+            totalCount: total,
+            imageCount: activeMedia.filter { $0.mediaKind == .image }.count,
+            videoCount: activeMedia.filter { $0.mediaKind == .video }.count
+        )
+        QuotaManager.shared.updateVaultCount(total)
     }
 
     private func makeAIClassificationAlbums(from media: [VaultMediaRecord]) -> [VaultAlbum] {

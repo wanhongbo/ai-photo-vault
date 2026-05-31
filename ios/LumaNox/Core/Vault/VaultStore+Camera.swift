@@ -65,8 +65,7 @@ extension VaultStore {
                 encryptedSha256Hex: work.encryptedSha256Hex
             )
             PlaintextTempFileManager.shared.removeItem(tempURL)
-            invalidateCache()
-            await loadSnapshot()
+            refreshSnapshotFromMetadata()
             return work.encryptedPath
         } catch {
             PlaintextTempFileManager.shared.removeItem(tempURL)
