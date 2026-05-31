@@ -640,16 +640,27 @@
     <string name="ai_sensitive_review_title">Sensitive Review</string>
     <string name="ai_sensitive_review_pending_count">%1$d pending review</string>
     <string name="ai_sensitive_review_hit_desc">Matched ID/bank card/phone/QR code/face etc.</string>
+    <string name="ai_sensitive_review_location_count">%1$d photos include hidden location data</string>
     <string name="ai_sensitive_review_scanning">Scanning…</string>
     <string name="ai_sensitive_review_empty_scanning">Scanning…</string>
     <string name="ai_sensitive_review_empty_none">No pending items</string>
     <string name="ai_sensitive_review_scan_hint">Tap "Rescan" above to let AI identify ID cards, bank cards, QR codes and other sensitive content.</string>
+    <string name="ai_sensitive_safe_copy">Safe copy</string>
+    <string name="ai_sensitive_safe_copy_saved">Saved a JPEG copy without sensitive metadata</string>
+    <string name="ai_sensitive_safe_copy_failed">Could not create a metadata-safe copy</string>
     <string name="ai_sensitive_kind_id_card">ID Card</string>
     <string name="ai_sensitive_kind_bank_card">Bank Card</string>
     <string name="ai_sensitive_kind_phone">Phone</string>
+    <string name="ai_sensitive_kind_email">Email</string>
     <string name="ai_sensitive_kind_qr_code">QR Code</string>
     <string name="ai_sensitive_kind_face">Face</string>
     <string name="ai_sensitive_kind_chat">Chat</string>
+    <string name="ai_sensitive_kind_receipt">Receipt</string>
+    <string name="ai_sensitive_kind_location">Location</string>
+    <string name="ai_sensitive_kind_metadata">Metadata</string>
+    <string name="ai_sensitive_kind_camera">Camera</string>
+    <string name="ai_sensitive_kind_time">Time</string>
+    <string name="ai_suggest_location_secondary">%1$d photos include hidden location data</string>
 
     <!-- ========== Backup & Restore ========== -->
     <string name="backup_restore_pin_title">Enter AI Vault password</string>

@@ -641,16 +641,27 @@
     <string name="ai_sensitive_review_title">敏感审核</string>
     <string name="ai_sensitive_review_pending_count">待审核 %1$d 张</string>
     <string name="ai_sensitive_review_hit_desc">已命中身份证/银行卡/手机号/二维码/人脸 等</string>
+    <string name="ai_sensitive_review_location_count">%1$d 张照片包含隐藏位置数据</string>
     <string name="ai_sensitive_review_scanning">正在扫描…</string>
     <string name="ai_sensitive_review_empty_scanning">扫描中…</string>
     <string name="ai_sensitive_review_empty_none">暂无待审核项</string>
     <string name="ai_sensitive_review_scan_hint">点击上方「重新扫描」，AI 将识别身份证、银行卡、二维码等敏感内容。</string>
+    <string name="ai_sensitive_safe_copy">安全副本</string>
+    <string name="ai_sensitive_safe_copy_saved">已生成不含敏感元数据的 JPEG 副本</string>
+    <string name="ai_sensitive_safe_copy_failed">无法生成元数据安全副本</string>
     <string name="ai_sensitive_kind_id_card">身份证</string>
     <string name="ai_sensitive_kind_bank_card">银行卡</string>
     <string name="ai_sensitive_kind_phone">手机号</string>
+    <string name="ai_sensitive_kind_email">邮箱</string>
     <string name="ai_sensitive_kind_qr_code">二维码</string>
     <string name="ai_sensitive_kind_face">人脸</string>
     <string name="ai_sensitive_kind_chat">聊天</string>
+    <string name="ai_sensitive_kind_receipt">票据</string>
+    <string name="ai_sensitive_kind_location">位置</string>
+    <string name="ai_sensitive_kind_metadata">元数据</string>
+    <string name="ai_sensitive_kind_camera">设备信息</string>
+    <string name="ai_sensitive_kind_time">拍摄时间</string>
+    <string name="ai_suggest_location_secondary">%1$d 张照片包含隐藏位置数据</string>
 
     <!-- ========== 备份恢复 ========== -->
     <string name="backup_restore_pin_title">输入 AI Vault 密码</string>
