@@ -482,6 +482,16 @@
     <string name="paywall_compare_ai">AI Features</string>
     <string name="paywall_compare_backup">Encrypted Backup</string>
     <string name="paywall_compare_watermark">Export without watermark</string>
+    <string name="paywall_source_onboarding">Start with Premium, or keep exploring your encrypted vault.</string>
+    <string name="paywall_source_import_value">Your items are safely encrypted on this device. Premium unlocks more private storage and protection tools.</string>
+    <string name="paywall_source_vault_near_limit">Your free private storage is almost full. Upgrade to keep importing encrypted items.</string>
+    <string name="paywall_source_backup_success">Backup is complete. Premium keeps more local encrypted copies available.</string>
+    <string name="paywall_source_ai_near_limit">Your monthly local AI runs are almost used. Upgrade to keep cleaning, classifying, and reviewing sensitive items.</string>
+    <string name="paywall_source_quota_vault">Your free vault is full. Upgrade to keep importing encrypted items.</string>
+    <string name="paywall_source_quota_backup">Your free backup export is used. Upgrade to keep protected copies current.</string>
+    <string name="paywall_source_quota_ai">Your monthly AI limit is reached. Upgrade to continue local analysis.</string>
+    <string name="paywall_source_pro_export">Watermark-free export is included with LumaNox Pro.</string>
+    <string name="paywall_source_manual">Compare plans and unlock every premium privacy tool.</string>
     <string name="paywall_not_configured">No RevenueCat key found. Set revenuecat.apiKey.android in android/local.properties and rebuild, or inject BuildConfig.REVENUECAT_API_KEY in CI.</string>
     <string name="paywall_retry">Retry</string>
     <string name="paywall_error_generic">Could not load membership plans</string>

@@ -94,10 +94,16 @@ class MainActivity : FragmentActivity() {
     lateinit var aiLocalScanUseCase: com.xpx.vault.ai.AiLocalScanUseCase
 
     @Inject
-    lateinit var onboardingPaywallManager: com.xpx.vault.billing.OnboardingPaywallManager
+    lateinit var paywallPromptManager: com.xpx.vault.billing.PaywallPromptManager
 
     @Inject
     lateinit var paywallGatekeeper: com.xpx.vault.billing.PaywallGatekeeper
+
+    @Inject
+    lateinit var quotaManager: com.xpx.vault.domain.quota.QuotaManager
+
+    @Inject
+    lateinit var subscriptionRepository: com.xpx.vault.domain.repo.SubscriptionRepository
 
     private var taskSnapshotLockCover: View? = null
     private var currentRouteForSnapshot: String? = null
@@ -173,19 +179,6 @@ class MainActivity : FragmentActivity() {
                     LaunchedEffect(requireUnlock) {
                         if (!requireUnlock) {
                             aiLocalScanUseCase.requestScan()
-                            // 首启软墙：让用户先进入保险箱主页，延迟 5s 再弹出可跳过的 Paywall。
-                            // 注：delay 期间若 requireUnlock 重新变为 true（重新加锁），
-                            // LaunchedEffect 会取消当前协程，因此不会错误地在锁屏上弹出。
-                            if (onboardingPaywallManager.shouldShow()) {
-                                kotlinx.coroutines.delay(5_000L)
-                                // 二次确认：协程恢复时仍未被加锁，且仍未展示过
-                                if (!requireUnlock && onboardingPaywallManager.shouldShow()) {
-                                    onboardingPaywallManager.markSeen()
-                                    navController.navigate(
-                                        "$ROUTE_PAYWALL?dismissable=true&source=onboarding",
-                                    ) { launchSingleTop = true }
-                                }
-                            }
                         }
                     }
 
@@ -341,18 +334,35 @@ class MainActivity : FragmentActivity() {
                                             "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
                                         ) { launchSingleTop = true }
                                     } else {
-                                        val route = when (key) {
-                                            AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> ROUTE_AI_CLASSIFY
-                                            AiFeatureKey.PRIVACY -> ROUTE_RECENT_LIST
-                                            AiFeatureKey.ENCRYPT -> ROUTE_AI_SENSITIVE
-                                            AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> ROUTE_AI_CLEANUP
+                                        val softReason = paywallPromptManager.shouldPromptBeforeAiFeature(
+                                            aiMonthlyCount = quotaManager.currentAiMonthlyUsage(),
+                                            isPremium = subscriptionRepository.isPremium.value,
+                                        )
+                                        if (softReason != null) {
+                                            paywallPromptManager.markShown(softReason)
+                                            navController.navigate(
+                                                "$ROUTE_PAYWALL?dismissable=true&source=${softReason.source}",
+                                            ) { launchSingleTop = true }
+                                        } else {
+                                            val route = when (key) {
+                                                AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> ROUTE_AI_CLASSIFY
+                                                AiFeatureKey.PRIVACY -> ROUTE_RECENT_LIST
+                                                AiFeatureKey.ENCRYPT -> ROUTE_AI_SENSITIVE
+                                                AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> ROUTE_AI_CLEANUP
+                                            }
+                                            navController.navigate(route) { launchSingleTop = true }
                                         }
-                                        navController.navigate(route) { launchSingleTop = true }
                                     }
                                 },
                                 onPaywallRequired = {
                                     navController.navigate(
                                         "$ROUTE_PAYWALL?dismissable=false&source=quota_vault",
+                                    ) { launchSingleTop = true }
+                                },
+                                onSoftPaywallRequested = { reason ->
+                                    paywallPromptManager.markShown(reason)
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=true&source=${reason.source}",
                                     ) { launchSingleTop = true }
                                 },
                             )
@@ -406,6 +416,12 @@ class MainActivity : FragmentActivity() {
                         composable(ROUTE_BACKUP_RESULT) {
                             BackupResultScreen(
                                 onDone = { navController.popBackStack() },
+                                onSoftPaywallRequested = { reason ->
+                                    paywallPromptManager.markShown(reason)
+                                    navController.navigate(
+                                        "$ROUTE_PAYWALL?dismissable=true&source=${reason.source}",
+                                    ) { launchSingleTop = true }
+                                },
                             )
                         }
                         composable(ROUTE_RESTORE_RESULT) {

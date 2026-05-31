@@ -73,6 +73,27 @@ object PaywallAnalyticsProvider {
 }
 
 /**
+ * 为 Composable 层提供 [PaywallPromptManager] 访问。
+ */
+object PaywallPromptManagerProvider {
+
+    @EntryPoint
+    @InstallIn(SingletonComponent::class)
+    interface PromptEntryPoint {
+        fun paywallPromptManager(): PaywallPromptManager
+    }
+
+    fun get(context: Context): PaywallPromptManager? =
+        runCatching {
+            val ep = EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                PromptEntryPoint::class.java,
+            )
+            ep.paywallPromptManager()
+        }.getOrNull()
+}
+
+/**
  * 为非-ViewModel / object 层（如 VaultStore）提供 [AiAnalysisRepository] 访问。
  * 主要用于在删除 vault 照片同时同步清理 AI 分析表（phash/quality/tag/sensitive），
  * 避免 AI tab 卡片统计还挂着已删照片的孤儿记录。

@@ -194,6 +194,7 @@ fun PaywallScreen(
             }
             Spacer(Modifier.height(8.dp))
             PaywallHero(isPremium = isPremium)
+            PaywallSourceMessage(source = source)
             Spacer(Modifier.height(22.dp))
 
             when (val s = offerings) {
@@ -312,6 +313,34 @@ private fun PaywallHero(isPremium: Boolean) {
         )
     }
 }
+
+@Composable
+private fun PaywallSourceMessage(source: String) {
+    Text(
+        text = stringResource(paywallSourceMessageRes(source)),
+        color = UiColors.Paywall.tierMeta,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 12.dp),
+    )
+}
+
+private fun paywallSourceMessageRes(source: String): Int =
+    when (source) {
+        "import_value" -> R.string.paywall_source_import_value
+        "vault_near_limit" -> R.string.paywall_source_vault_near_limit
+        "backup_success" -> R.string.paywall_source_backup_success
+        "ai_near_limit" -> R.string.paywall_source_ai_near_limit
+        "quota_vault" -> R.string.paywall_source_quota_vault
+        "quota_backup" -> R.string.paywall_source_quota_backup
+        "quota_ai" -> R.string.paywall_source_quota_ai
+        "pro_only_export" -> R.string.paywall_source_pro_export
+        "onboarding" -> R.string.paywall_source_onboarding
+        else -> R.string.paywall_source_manual
+    }
 
 @Composable
 private fun BoxScope.PaywallStickyPurchaseBar(

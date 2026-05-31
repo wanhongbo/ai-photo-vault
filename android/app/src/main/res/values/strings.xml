@@ -483,6 +483,16 @@
     <string name="paywall_compare_ai">AI 功能</string>
     <string name="paywall_compare_backup">加密备份</string>
     <string name="paywall_compare_watermark">无水印导出</string>
+    <string name="paywall_source_onboarding">先了解 Premium，或继续探索你的加密保险箱。</string>
+    <string name="paywall_source_import_value">已安全导入到本机加密保险箱。Premium 可解锁更多私密存储和保护工具。</string>
+    <string name="paywall_source_vault_near_limit">免费私密存储即将用完。升级后可继续导入更多加密项目。</string>
+    <string name="paywall_source_backup_success">备份已完成。Premium 可持续保留更多本地加密副本。</string>
+    <string name="paywall_source_ai_near_limit">本月 AI 本地分析次数即将用完。升级后可继续清理、分类和检查敏感内容。</string>
+    <string name="paywall_source_quota_vault">免费版保险箱已满。升级后可继续导入加密项目。</string>
+    <string name="paywall_source_quota_backup">免费备份导出次数已用完。升级后可持续保留加密副本。</string>
+    <string name="paywall_source_quota_ai">本月 AI 次数已用完。升级后可继续本地分析。</string>
+    <string name="paywall_source_pro_export">无水印导出是 LumaNox Pro 权益。</string>
+    <string name="paywall_source_manual">比较方案并解锁全部高级隐私工具。</string>
     <string name="paywall_not_configured">未检测到 RevenueCat Key。请在 android/local.properties 中设置 revenuecat.apiKey.android=… 后重新编译，或由 CI 注入 BuildConfig.REVENUECAT_API_KEY。</string>
     <string name="paywall_retry">重试</string>
     <string name="paywall_error_generic">无法加载会员方案</string>

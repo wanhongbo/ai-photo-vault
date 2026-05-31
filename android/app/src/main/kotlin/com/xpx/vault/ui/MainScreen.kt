@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
+import com.xpx.vault.billing.SoftPaywallReason
 import com.xpx.vault.ai.core.ClassifyCategory
 
 /**
@@ -43,6 +44,7 @@ fun MainScreen(
     onOpenSettingsHub: (SettingsHubDestination) -> Unit,
     onOpenAiFeature: (AiFeatureKey) -> Unit,
     onPaywallRequired: () -> Unit = {},
+    onSoftPaywallRequested: (SoftPaywallReason) -> Unit = {},
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(HomeTab.VAULT) }
     val onSelectTab: (HomeTab) -> Unit = { tab ->
@@ -67,6 +69,7 @@ fun MainScreen(
             onOpenAlbumList = onOpenAlbumList,
             onOpenRecentList = onOpenRecentList,
             onPaywallRequired = onPaywallRequired,
+            onSoftPaywallRequested = onSoftPaywallRequested,
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(if (selectedTab == HomeTab.VAULT) 1f else 0f)

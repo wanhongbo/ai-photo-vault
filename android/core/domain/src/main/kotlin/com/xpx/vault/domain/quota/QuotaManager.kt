@@ -22,6 +22,12 @@ interface QuotaManager {
     /** 保险箱存储是否已满（免费额度耗尽且非 Premium）。 */
     fun isVaultFull(): Boolean
 
+    /** 当月 AI 使用次数是否接近免费额度。 */
+    fun isAiNearLimit(): Boolean
+
+    /** 当前当月 AI 使用次数快照。 */
+    fun currentAiMonthlyUsage(): Int
+
     /** 备份次数是否用尽。 */
     fun isBackupExhausted(): Boolean
 

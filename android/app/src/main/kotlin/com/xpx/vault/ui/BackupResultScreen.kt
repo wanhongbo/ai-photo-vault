@@ -14,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -21,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.xpx.vault.R
+import com.xpx.vault.billing.SoftPaywallReason
 import com.xpx.vault.ui.backup.BackupRuntimeState
 import com.xpx.vault.ui.components.AppButton
 import com.xpx.vault.ui.components.AppTopBar
@@ -28,12 +31,27 @@ import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 import com.xpx.vault.ui.theme.UiTextSize
+import kotlinx.coroutines.delay
 
 @Composable
-fun BackupResultScreen(onDone: () -> Unit) {
+fun BackupResultScreen(
+    onDone: () -> Unit,
+    onSoftPaywallRequested: (SoftPaywallReason) -> Unit = {},
+) {
+    val context = LocalContext.current
     val result = BackupRuntimeState.lastBackupResult
     val fileLabel = result?.outputPath?.substringAfterLast('/') ?: stringResource(R.string.backup_result_file)
     val sizeLabel = result?.outputSizeBytes?.let { formatSize(it) } ?: stringResource(R.string.backup_result_size)
+    LaunchedEffect(result?.backupId) {
+        if (result == null) return@LaunchedEffect
+        delay(700L)
+        val promptManager = com.xpx.vault.billing.PaywallPromptManagerProvider.get(context)
+        val isPremium = com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
+        val reason = promptManager?.shouldPromptAfterBackupSuccess(isPremium)
+        if (reason != null) {
+            onSoftPaywallRequested(reason)
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -138,4 +156,3 @@ private fun BackupMetaRow(label: String, value: String) {
         )
     }
 }
-

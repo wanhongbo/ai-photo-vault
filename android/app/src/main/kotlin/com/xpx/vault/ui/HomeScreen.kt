@@ -69,6 +69,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.xpx.vault.R
 import com.xpx.vault.ai.core.ClassifyCategory
+import com.xpx.vault.billing.SoftPaywallReason
 import com.xpx.vault.findAppLockManager
 import com.xpx.vault.launchExternalSystemUi
 import com.xpx.vault.ui.ai.AiClassifyVirtualAlbum
@@ -110,6 +111,7 @@ fun HomeScreen(
     onOpenAlbumList: () -> Unit = {},
     onOpenRecentList: () -> Unit = {},
     onPaywallRequired: () -> Unit = {},
+    onSoftPaywallRequested: (SoftPaywallReason) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val pinStatusVm: PinSetupStatusViewModel = hiltViewModel()
@@ -275,6 +277,14 @@ fun HomeScreen(
                 )
             }
             importing = false
+            if (added > 0 && originalsAction != ImportOriginalsAction.DELETE_ORIGINALS) {
+                val promptManager = com.xpx.vault.billing.PaywallPromptManagerProvider.get(context)
+                val isPremium = com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
+                val reason = promptManager?.shouldPromptAfterVaultImport(totalCount, isPremium)
+                if (reason != null) {
+                    onSoftPaywallRequested(reason)
+                }
+            }
             if (originalsAction == ImportOriginalsAction.DELETE_ORIGINALS && deleteCandidates.isNotEmpty()) {
                 requestDeleteOriginals(deleteCandidates)
             }
@@ -311,6 +321,15 @@ fun HomeScreen(
                 if (gate is com.xpx.vault.billing.GateResult.HardWall) {
                     onPaywallRequired()
                 } else {
+                    val promptManager = com.xpx.vault.billing.PaywallPromptManagerProvider.get(context)
+                    val isPremium = com.xpx.vault.billing.SubscriptionRepoProvider.get(context)?.isPremium?.value ?: false
+                    val nearLimitReason = promptManager
+                        ?.shouldPromptAfterVaultImport(totalCount, isPremium)
+                        ?.takeIf { it == SoftPaywallReason.VAULT_NEAR_LIMIT }
+                    if (nearLimitReason != null) {
+                        onSoftPaywallRequested(nearLimitReason)
+                        return@launch
+                    }
                     launchSystemUi("home photo picker") {
                         pickerLauncher.launch(
                             PickVisualMediaRequest.Builder()

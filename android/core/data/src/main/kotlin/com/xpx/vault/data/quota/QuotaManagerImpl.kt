@@ -70,6 +70,14 @@ class QuotaManagerImpl @Inject constructor(
         return _vaultCount.value >= FreeQuota.MAX_VAULT_ITEMS
     }
 
+    override fun isAiNearLimit(): Boolean {
+        if (subscriptionRepository.isPremium.value) return false
+        return _aiMonthlyCount.value >= AI_NEAR_LIMIT_COUNT &&
+            _aiMonthlyCount.value < FreeQuota.MAX_AI_MONTHLY
+    }
+
+    override fun currentAiMonthlyUsage(): Int = _aiMonthlyCount.value
+
     override fun isBackupExhausted(): Boolean {
         if (subscriptionRepository.isPremium.value) return false
         return _backupCount.value >= FreeQuota.MAX_BACKUP_COUNT
@@ -127,6 +135,10 @@ class QuotaManagerImpl @Inject constructor(
     }
 
     // ---- Internal ----
+
+    companion object {
+        private const val AI_NEAR_LIMIT_COUNT = 7
+    }
 
     private suspend fun refreshBackupCount() {
         _backupCount.value = backupRecordDao.count()
