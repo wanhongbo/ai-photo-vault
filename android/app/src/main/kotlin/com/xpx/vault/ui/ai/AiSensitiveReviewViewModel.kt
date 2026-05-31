@@ -23,6 +23,8 @@ import kotlinx.coroutines.withContext
 data class AiSensitiveUiState(
     val pending: List<AiSensitiveRecord> = emptyList(),
     val scanning: Boolean = false,
+    val locationRiskCount: Int = 0,
+    val safeCopyPhotoId: Long? = null,
     /** photoId → 对应 Vault 图片绝对路径的映射，供宫格缩略图渲染与点击跳转使用。 */
     val pathByPhotoId: Map<Long, String> = emptyMap(),
 )
@@ -36,6 +38,7 @@ class AiSensitiveReviewViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val pathMap = MutableStateFlow<Map<Long, String>>(emptyMap())
+    private val safeCopyPhotoId = MutableStateFlow<Long?>(null)
 
     init {
         refreshPathMap()
@@ -45,10 +48,17 @@ class AiSensitiveReviewViewModel @Inject constructor(
         repository.observePendingSensitive(),
         scanUseCase.progress,
         pathMap,
-    ) { pending, progress, map ->
+        safeCopyPhotoId,
+    ) { pending, progress, map, savingPhotoId ->
         AiSensitiveUiState(
             pending = pending,
             scanning = progress.running,
+            locationRiskCount = pending
+                .filter { isLocationRiskKind(it.kind) }
+                .map { it.photoId }
+                .distinct()
+                .size,
+            safeCopyPhotoId = savingPhotoId,
             pathByPhotoId = map,
         )
     }.stateIn(
@@ -60,8 +70,21 @@ class AiSensitiveReviewViewModel @Inject constructor(
     fun startScan() {
         viewModelScope.launch {
             quotaManager.incrementAiUsage()
-            scanUseCase.run()
+            scanUseCase.run(force = true)
             refreshPathMap()
+        }
+    }
+
+    fun saveMetadataSafeCopy(photoId: Long, path: String, onResult: (Boolean) -> Unit) {
+        if (safeCopyPhotoId.value != null) return
+        safeCopyPhotoId.value = photoId
+        viewModelScope.launch {
+            val saved = withContext(Dispatchers.IO) {
+                VaultStore.importMetadataSafeJpegCopy(app, path)
+            }
+            safeCopyPhotoId.value = null
+            if (saved != null) refreshPathMap()
+            onResult(saved != null)
         }
     }
 

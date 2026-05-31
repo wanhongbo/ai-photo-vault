@@ -298,6 +298,15 @@ private fun SensitiveSuggestCard(
             title = stringResource(R.string.ai_suggest_sensitive_title, state.count),
         )
         SuggestDesc(text = stringResource(R.string.ai_suggest_sensitive_desc))
+        if (state.locationRiskCount > 0) {
+            Text(
+                text = stringResource(R.string.ai_suggest_location_secondary, state.locationRiskCount),
+                color = UiColors.Ai.cleanupBadgeText,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(vertical = 2.dp),
+            )
+        }
         if (state.cleanupCount > 0) {
             val interaction = rememberFeedbackInteractionSource()
             Text(

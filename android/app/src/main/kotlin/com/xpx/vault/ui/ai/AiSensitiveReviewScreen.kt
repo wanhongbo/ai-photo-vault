@@ -1,6 +1,7 @@
 package com.xpx.vault.ui.ai
 
 import android.content.res.Resources
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -64,6 +65,8 @@ fun AiSensitiveReviewScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val safeCopySuccess = stringResource(R.string.ai_sensitive_safe_copy_saved)
+    val safeCopyFailed = stringResource(R.string.ai_sensitive_safe_copy_failed)
     val requireAiAccess: (() -> Unit) -> Unit = { action ->
         val gatekeeper = com.xpx.vault.billing.PaywallGatekeeperProvider.get(context)
         val gate = gatekeeper?.checkAccess(com.xpx.vault.domain.quota.ProFeature.AI_SENSITIVE)
@@ -82,6 +85,7 @@ fun AiSensitiveReviewScreen(
                     photoId = photoId,
                     path = state.pathByPhotoId[photoId],
                     kinds = records.map { it.kind }.distinct(),
+                    hasMetadataRisk = records.any { isMetadataRiskKind(it.kind) },
                 )
             }
             .sortedByDescending { it.photoId }
@@ -96,6 +100,7 @@ fun AiSensitiveReviewScreen(
         AppTopBar(title = stringResource(R.string.ai_sensitive_review_title), onBack = onBack)
         SensitiveSummary(
             photoCount = cells.size,
+            locationRiskCount = state.locationRiskCount,
             scanning = state.scanning,
             onScan = { requireAiAccess { viewModel.startScan() } },
         )
@@ -115,6 +120,20 @@ fun AiSensitiveReviewScreen(
                     SensitiveGridCell(
                         cell = cell,
                         onClick = cell.path?.let { p -> { onOpenPhoto(p) } },
+                        safeCopyBusy = state.safeCopyPhotoId == cell.photoId,
+                        onSafeCopy = if (cell.hasMetadataRisk && cell.path != null) {
+                            {
+                                viewModel.saveMetadataSafeCopy(cell.photoId, cell.path) { ok ->
+                                    Toast.makeText(
+                                        context,
+                                        if (ok) safeCopySuccess else safeCopyFailed,
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                            }
+                        } else {
+                            null
+                        },
                     )
                 }
             }
@@ -127,10 +146,11 @@ private data class SensitiveGridItem(
     val photoId: Long,
     val path: String?,
     val kinds: List<String>,
+    val hasMetadataRisk: Boolean,
 )
 
 @Composable
-private fun SensitiveSummary(photoCount: Int, scanning: Boolean, onScan: () -> Unit) {
+private fun SensitiveSummary(photoCount: Int, locationRiskCount: Int, scanning: Boolean, onScan: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,6 +184,14 @@ private fun SensitiveSummary(photoCount: Int, scanning: Boolean, onScan: () -> U
                     color = Color(0xFF8A8A90),
                     fontSize = 12.sp,
                 )
+                if (locationRiskCount > 0) {
+                    Text(
+                        text = stringResource(R.string.ai_sensitive_review_location_count, locationRiskCount),
+                        color = Color(0xFFFFCC4D),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
         val interaction = rememberFeedbackInteractionSource()
@@ -199,6 +227,8 @@ private fun SensitiveSummary(photoCount: Int, scanning: Boolean, onScan: () -> U
 private fun SensitiveGridCell(
     cell: SensitiveGridItem,
     onClick: (() -> Unit)?,
+    safeCopyBusy: Boolean,
+    onSafeCopy: (() -> Unit)?,
 ) {
     val resources = LocalContext.current.resources
     val interaction = rememberFeedbackInteractionSource()
@@ -267,6 +297,31 @@ private fun SensitiveGridCell(
                 )
             }
         }
+        if (onSafeCopy != null) {
+            val safeCopyInteraction = rememberFeedbackInteractionSource()
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (safeCopyBusy) Color(0xAA4D5565) else Color(0xDD1B365C))
+                    .pressFeedback(safeCopyInteraction)
+                    .throttledClickable(
+                        interactionSource = safeCopyInteraction,
+                        indication = null,
+                        enabled = !safeCopyBusy,
+                        onClick = onSafeCopy,
+                    )
+                    .padding(horizontal = 7.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    text = if (safeCopyBusy) stringResource(R.string.common_loading) else stringResource(R.string.ai_sensitive_safe_copy),
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
     }
 }
 
@@ -297,8 +352,14 @@ private fun kindLabel(resources: Resources, kind: String): String = when (kind) 
     "ID_CARD" -> resources.getString(R.string.ai_sensitive_kind_id_card)
     "BANK_CARD" -> resources.getString(R.string.ai_sensitive_kind_bank_card)
     "PHONE_NUMBER" -> resources.getString(R.string.ai_sensitive_kind_phone)
+    "EMAIL" -> resources.getString(R.string.ai_sensitive_kind_email)
     "QR_CODE" -> resources.getString(R.string.ai_sensitive_kind_qr_code)
     "FACE_CLEAR" -> resources.getString(R.string.ai_sensitive_kind_face)
     "PRIVATE_CHAT" -> resources.getString(R.string.ai_sensitive_kind_chat)
+    "RECEIPT" -> resources.getString(R.string.ai_sensitive_kind_receipt)
+    "LOCATION_METADATA" -> resources.getString(R.string.ai_sensitive_kind_location)
+    "METADATA_RICH" -> resources.getString(R.string.ai_sensitive_kind_metadata)
+    "CAMERA_INFO" -> resources.getString(R.string.ai_sensitive_kind_camera)
+    "CAPTURE_TIME" -> resources.getString(R.string.ai_sensitive_kind_time)
     else -> kind
 }

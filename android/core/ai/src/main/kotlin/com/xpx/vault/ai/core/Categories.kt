@@ -21,7 +21,13 @@ enum class SensitiveKind {
     ID_CARD,       // 身份证 / 护照
     BANK_CARD,     // 银行卡
     PHONE_NUMBER,  // 手机号
+    EMAIL,         // 邮箱地址
     QR_CODE,       // 二维码 / 条码
     FACE_CLEAR,    // 清晰人脸（用于"面部信息暴露"提示）
     PRIVATE_CHAT,  // 聊天隐私截图（多关键词命中）
+    RECEIPT,       // 票据 / 订单 / 支付凭证
+    LOCATION_METADATA, // EXIF GPS 位置数据
+    METADATA_RICH, // 图片包含可识别隐藏元数据
+    CAMERA_INFO,   // EXIF 设备 / 镜头信息
+    CAPTURE_TIME,  // EXIF 拍摄时间
 }

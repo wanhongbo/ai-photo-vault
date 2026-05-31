@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xpx.vault.ai.AiLocalScanUseCase
 import com.xpx.vault.ai.AiScanProgress
+import com.xpx.vault.ai.core.SensitiveKind
+import com.xpx.vault.domain.model.AiSensitiveRecord
 import com.xpx.vault.domain.repo.AiAnalysisRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -30,13 +32,13 @@ class AiHomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<AiHomeUiState> = combine(
-        repo.observePendingSensitiveCount(),
+        repo.observePendingSensitive(),
         repo.observeBlurry().map { it.size },
         repo.observeDuplicates().map { it.size },
         scanUseCase.progress,
         snoozePrefs.versionFlow,
-    ) { pending, blurry, duplicate, progress, _ ->
-        derive(pending, blurry, duplicate, progress)
+    ) { pendingSensitive, blurry, duplicate, progress, _ ->
+        derive(pendingSensitive, blurry, duplicate, progress)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -75,18 +77,28 @@ class AiHomeViewModel @Inject constructor(
     }
 
     private fun derive(
-        pendingSensitive: Int,
+        pendingSensitive: List<AiSensitiveRecord>,
         blurry: Int,
         duplicate: Int,
         progress: AiScanProgress,
     ): AiHomeUiState {
         val cleanup = blurry + duplicate
+        val pendingSensitiveCount = pendingSensitive.map { it.photoId }.distinct().size
+        val locationRiskCount = pendingSensitive
+            .filter { it.kind == SensitiveKind.LOCATION_METADATA.name }
+            .map { it.photoId }
+            .distinct()
+            .size
         val hasEverScanned = snoozePrefs.hasEverScanned()
         val suggestion: AiSuggestion = when {
             progress.running ->
                 AiSuggestion.Scanning(done = progress.done, total = progress.total)
-            pendingSensitive > 0 && !snoozePrefs.isSnoozed(AiSuggestSnoozePrefs.Kind.SENSITIVE) ->
-                AiSuggestion.Sensitive(count = pendingSensitive, cleanupCount = cleanup)
+            pendingSensitiveCount > 0 && !snoozePrefs.isSnoozed(AiSuggestSnoozePrefs.Kind.SENSITIVE) ->
+                AiSuggestion.Sensitive(
+                    count = pendingSensitiveCount,
+                    locationRiskCount = locationRiskCount,
+                    cleanupCount = cleanup,
+                )
             cleanup > 0 && !snoozePrefs.isSnoozed(AiSuggestSnoozePrefs.Kind.CLEANUP) ->
                 AiSuggestion.Cleanup(count = cleanup)
             hasEverScanned -> AiSuggestion.AllClear
@@ -94,7 +106,8 @@ class AiHomeViewModel @Inject constructor(
         }
         return AiHomeUiState(
             suggestion = suggestion,
-            pendingSensitive = pendingSensitive,
+            pendingSensitive = pendingSensitiveCount,
+            locationRiskCount = locationRiskCount,
             blurryCount = blurry,
             duplicateCount = duplicate,
         )
@@ -104,6 +117,7 @@ class AiHomeViewModel @Inject constructor(
 data class AiHomeUiState(
     val suggestion: AiSuggestion = AiSuggestion.Idle,
     val pendingSensitive: Int = 0,
+    val locationRiskCount: Int = 0,
     val blurryCount: Int = 0,
     val duplicateCount: Int = 0,
 ) {

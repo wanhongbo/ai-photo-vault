@@ -14,8 +14,10 @@ import com.xpx.vault.ai.core.SensitiveKind
  *    · 美国 SSN：\d{3}-\d{2}-\d{4}
  *  - BANK_CARD：文本去掉空格/短横线后 13~19 位数字且通过 Luhn 校验（覆盖 Visa/MC/Amex/Diners 等）。
  *  - PHONE_NUMBER：中国大陆 1 开头 11 位；美加 NANP 格式；E.164 国际号。
+ *  - EMAIL：常见邮箱地址。
  *  - QR_CODE：barcode 命中任意条（由上层传入，不在此处做正则）。
  *  - PRIVATE_CHAT：聊天截图关键词 ≥2 条（WeChat/微信/聊天/朋友圈/Chat/对话 等）。
+ *  - RECEIPT：票据/订单关键词 + 金额样式同时命中。
  */
 object SensitiveRegexMatcher {
 
@@ -31,6 +33,8 @@ object SensitiveRegexMatcher {
     )
     // E.164 国际号：+国家码(1-3)+正文(总长 8-15 数字)。仅限 '+' 开头以降低误伤。
     private val PHONE_E164_REGEX = Regex("""(?<!\d)\+\d{7,15}(?!\d)""")
+    private val EMAIL_REGEX = Regex("""[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}""", RegexOption.IGNORE_CASE)
+    private val AMOUNT_REGEX = Regex("""(?:[$¥￥]\s?\d+(?:[.,]\d{1,2})?|\b\d+[.,]\d{2}\b)""")
     // 银行卡候选：放宽到 13~19 位以覆盖 Amex(15)/Diners(14)/老 Visa(13)；Luhn 再校验。
     private val BANK_CANDIDATE_REGEX = Regex("""(?<!\d)(\d{13,19})(?!\d)""")
     // 护照号：1~2 位大写字母 + 7~8 位数字，前后不能紧跟其他字母数字（避免变名、产品型号误伤）。
@@ -58,8 +62,10 @@ object SensitiveRegexMatcher {
             if (detectPassport(ocrText)) result += SensitiveKind.ID_CARD
             if (detectMrzLine(ocrText)) result += SensitiveKind.ID_CARD
             if (detectPhone(ocrText)) result += SensitiveKind.PHONE_NUMBER
+            if (detectEmail(ocrText)) result += SensitiveKind.EMAIL
             if (detectBankCard(ocrText)) result += SensitiveKind.BANK_CARD
             if (detectPrivateChat(ocrText)) result += SensitiveKind.PRIVATE_CHAT
+            if (detectReceipt(ocrText)) result += SensitiveKind.RECEIPT
         }
         return result
     }
@@ -79,6 +85,9 @@ object SensitiveRegexMatcher {
         return false
     }
 
+    private fun detectEmail(text: String): Boolean =
+        EMAIL_REGEX.containsMatchIn(text)
+
     private fun detectPassport(text: String): Boolean {
         // 先去掉空白再匹配，OCR 有时会在字母数字间插入空格（如 "EM 62713 64"）。
         val compact = text.replace(Regex("""[\s\u3000]"""), "")
@@ -97,6 +106,11 @@ object SensitiveRegexMatcher {
         return hitCount >= 2
     }
 
+    private fun detectReceipt(text: String): Boolean {
+        val hasKeyword = RECEIPT_KEYWORDS.any { kw -> text.contains(kw, ignoreCase = true) }
+        return hasKeyword && AMOUNT_REGEX.containsMatchIn(text)
+    }
+
     private fun luhnValid(digits: String): Boolean {
         var sum = 0
         var alt = false
@@ -111,4 +125,9 @@ object SensitiveRegexMatcher {
         }
         return sum % 10 == 0
     }
+
+    private val RECEIPT_KEYWORDS = listOf(
+        "receipt", "invoice", "order", "payment", "subtotal", "total", "tax",
+        "收据", "发票", "票据", "订单", "合计", "小计", "付款", "支付",
+    )
 }

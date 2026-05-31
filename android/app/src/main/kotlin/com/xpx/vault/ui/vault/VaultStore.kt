@@ -2,7 +2,10 @@ package com.xpx.vault.ui.vault
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
+import android.media.ExifInterface
 import android.webkit.MimeTypeMap
 import com.xpx.vault.ai.util.PhotoIdentity
 import com.xpx.vault.billing.AiAnalysisRepoProvider
@@ -11,6 +14,8 @@ import com.xpx.vault.billing.SubscriptionRepoProvider
 import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.AppLogger
 import com.xpx.vault.domain.quota.FreeQuota
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
@@ -217,6 +222,48 @@ object VaultStore {
                 bos.toByteArray()
             }
             java.io.ByteArrayInputStream(bytes).use { plain ->
+                VaultCipher.get(context).encryptFile(plain, finalFile)
+            }
+            invalidateCaches()
+            syncQuotaUsage(context)
+            finalFile.absolutePath
+        }.getOrElse {
+            if (finalFile.exists()) finalFile.delete()
+            null
+        }
+    }
+
+    /**
+     * 生成一张重新编码的 JPEG 副本，丢弃原图 EXIF/GPS/设备等 metadata 后再加密写回 Vault。
+     */
+    suspend fun importMetadataSafeJpegCopy(
+        context: Context,
+        sourcePath: String,
+        quality: Int = 95,
+    ): String? = withContext(Dispatchers.IO) {
+        ensureInit(context)
+        if (!canAddNewItemInternal(context)) return@withContext null
+        val source = File(sourcePath)
+        if (!source.exists() || !source.isFile) return@withContext null
+        val albumName = source.parentFile?.name?.ifBlank { DEFAULT_ALBUM_NAME } ?: DEFAULT_ALBUM_NAME
+        val album = File(rootDir(context), sanitizeAlbumName(albumName)).apply { mkdirs() }
+        val safeBase = source.nameWithoutExtension
+            .filter { it.isLetterOrDigit() || it == '_' || it == '-' }
+            .ifBlank { "metadata_safe" }
+            .takeLast(24)
+        val finalFile = File(album, "safe_${safeBase}_${System.currentTimeMillis()}.jpg")
+
+        runCatching {
+            val bytes = VaultCipher.get(context).decryptToByteArray(source)
+            val raw = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return@withContext null
+            val bitmap = rotateForExif(raw, readExifRotationDegrees(bytes))
+            val jpeg = ByteArrayOutputStream().use { output ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, output)
+                output.toByteArray()
+            }
+            if (bitmap !== raw && !bitmap.isRecycled) bitmap.recycle()
+            if (!raw.isRecycled) raw.recycle()
+            ByteArrayInputStream(jpeg).use { plain ->
                 VaultCipher.get(context).encryptFile(plain, finalFile)
             }
             invalidateCaches()
@@ -547,6 +594,26 @@ object VaultStore {
     private fun sanitizeAlbumName(raw: String): String {
         val trimmed = raw.trim().ifBlank { DEFAULT_ALBUM_NAME }
         return trimmed.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(40)
+    }
+
+    private fun readExifRotationDegrees(bytes: ByteArray): Int = runCatching {
+        val exif = ExifInterface(ByteArrayInputStream(bytes))
+        when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270
+            else -> 0
+        }
+    }.getOrDefault(0)
+
+    private fun rotateForExif(src: Bitmap, degrees: Int): Bitmap {
+        if (degrees % 360 == 0) return src
+        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+        return try {
+            Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
+        } catch (_: OutOfMemoryError) {
+            src
+        }
     }
 
     private fun resolveExtension(context: Context, uri: Uri): String {

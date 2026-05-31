@@ -22,9 +22,10 @@ sealed class AiSuggestion {
 
     /**
      * 检测到敏感内容待处理。
+     * [locationRiskCount] 表示其中包含 EXIF GPS 位置风险的照片数。
      * [cleanupCount] 若 > 0，卡片会在描述尾部追加"另有 X 张可清理"的副行入口。
      */
-    data class Sensitive(val count: Int, val cleanupCount: Int) : AiSuggestion()
+    data class Sensitive(val count: Int, val locationRiskCount: Int, val cleanupCount: Int) : AiSuggestion()
 
     /** 可清理内容（模糊 + 重复）。 */
     data class Cleanup(val count: Int) : AiSuggestion()

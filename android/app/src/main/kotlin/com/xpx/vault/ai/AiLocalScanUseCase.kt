@@ -2,14 +2,17 @@ package com.xpx.vault.ai
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.media.ExifInterface
 import com.xpx.vault.AppLogger
 import com.xpx.vault.ai.algo.DuplicateClusterer
 import com.xpx.vault.ai.core.AiAnalysisResult
 import com.xpx.vault.ai.core.AiEngine
 import com.xpx.vault.ai.core.AiFeatureRegistry
+import com.xpx.vault.ai.core.AiSensitiveHit
 import com.xpx.vault.ai.core.AiTag as CoreAiTag
 import com.xpx.vault.ai.core.ClassifyCategory
 import com.xpx.vault.ai.core.ImageAnalyzer
+import com.xpx.vault.ai.core.SensitiveKind
 import com.xpx.vault.ai.util.PhotoIdentity
 import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.domain.model.AiPerceptualHash
@@ -21,6 +24,7 @@ import com.xpx.vault.ui.components.VaultThumbnailCache
 import com.xpx.vault.ui.vault.VaultStore
 import com.xpx.vault.ui.vault.isVaultImage
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.ByteArrayInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -194,6 +198,12 @@ class AiLocalScanUseCase @Inject constructor(
         if (readyAnalyzers.isEmpty()) return
         val photoId = PhotoIdentity.fromPath(photo.path)
         var merged = analyzeAll(readyAnalyzers, photoId, bitmap)
+        val metadataSensitive = analyzeMetadataSensitive(photo.path)
+        if (metadataSensitive.isNotEmpty()) {
+            merged = merged.copy(
+                sensitive = (merged.sensitive + metadataSensitive).distinctBy { it.kind },
+            )
+        }
         val isScreenshot = isScreenshotByDimensions(decoded.originalWidth, decoded.originalHeight) ||
             merged.tags.any { it.category == ClassifyCategory.SCREENSHOT }
         merged = if (isScreenshot) {
@@ -343,6 +353,40 @@ class AiLocalScanUseCase @Inject constructor(
         matchPortrait || matchLandscape
     }
 
+    private suspend fun analyzeMetadataSensitive(path: String): List<AiSensitiveHit> = withContext(Dispatchers.IO) {
+        val bytes = runCatching { VaultCipher.get(appContext).decryptToByteArray(java.io.File(path)) }
+            .getOrNull() ?: return@withContext emptyList()
+        val exif = runCatching { ExifInterface(ByteArrayInputStream(bytes)) }
+            .getOrNull() ?: return@withContext emptyList()
+        val hits = linkedMapOf<SensitiveKind, Float>()
+
+        val hasLatitude = exif.hasValue(ExifInterface.TAG_GPS_LATITUDE)
+        val hasLongitude = exif.hasValue(ExifInterface.TAG_GPS_LONGITUDE)
+        val hasGpsVersion = exif.hasValue(ExifInterface.TAG_GPS_VERSION_ID)
+        if ((hasLatitude && hasLongitude) || hasGpsVersion) {
+            hits[SensitiveKind.LOCATION_METADATA] = 0.58f
+        }
+
+        val hasCameraInfo = exif.hasValue(ExifInterface.TAG_MAKE) ||
+            exif.hasValue(ExifInterface.TAG_MODEL)
+        if (hasCameraInfo) {
+            hits[SensitiveKind.CAMERA_INFO] = 0.46f
+        }
+
+        val hasCaptureTime = exif.hasValue(ExifInterface.TAG_DATETIME_ORIGINAL) ||
+            exif.hasValue(ExifInterface.TAG_DATETIME)
+        if (hasCaptureTime) {
+            hits[SensitiveKind.CAPTURE_TIME] = 0.46f
+        }
+
+        if (hits.isNotEmpty()) {
+            hits[SensitiveKind.METADATA_RICH] = 0.45f
+        }
+        hits.map { (kind, confidence) ->
+            AiSensitiveHit(kind = kind, confidence = confidence)
+        }
+    }
+
     /**
      * 为一张照片挑选代表分类。
      *
@@ -369,6 +413,9 @@ class AiLocalScanUseCase @Inject constructor(
         val base = kotlin.math.max(a, b)
         return base > 0 && diff.toFloat() / base <= tolerance
     }
+
+    private fun ExifInterface.hasValue(tag: String): Boolean =
+        !getAttribute(tag).isNullOrBlank()
 
     private suspend fun markDuplicates(hashes: List<AiPerceptualHash>) {
         val clusters = DuplicateClusterer.cluster(hashes)
