@@ -187,6 +187,11 @@ struct AIHomeView: View {
             router.pushAI(route)
             return
         }
+        if let reason = PaywallPromptManager.promptBeforeAiFeature(aiMonthlyCount: QuotaManager.shared.aiMonthlyCount) {
+            PaywallPromptManager.markShown(reason)
+            router.present(.paywall(dismissable: true, source: reason.source))
+            return
+        }
         guard router.guardProFeature(proFeature) else { return }
         QuotaManager.shared.incrementAiUsage()
         router.pushAI(route)

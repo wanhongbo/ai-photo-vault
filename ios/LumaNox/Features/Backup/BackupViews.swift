@@ -278,6 +278,10 @@ struct BackupResultView: View {
             case .success:
                 cleanupExport()
                 saved = true
+                if let reason = PaywallPromptManager.promptAfterBackupSuccess() {
+                    PaywallPromptManager.markShown(reason)
+                    router.present(.paywall(dismissable: true, source: reason.source))
+                }
             case .failure(let error):
                 errorMessage = error.localizedDescription
             }

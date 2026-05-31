@@ -497,6 +497,10 @@
 "paywall_close_cd" = "关闭";
 "paywall_savings_fmt" = "比月付省 %d%%";
 "paywall_source_onboarding" = "先了解 Premium，或继续探索你的加密保险箱。";
+"paywall_source_import_value" = "已安全导入到本机加密保险箱。Premium 可解锁更多私密存储和保护工具。";
+"paywall_source_vault_near_limit" = "免费私密存储即将用完。升级后可继续导入更多加密项目。";
+"paywall_source_backup_success" = "备份已完成。Premium 可持续保留更多本地加密副本。";
+"paywall_source_ai_near_limit" = "本月 AI 本地分析次数即将用完。升级后可继续清理、分类和检查敏感内容。";
 "paywall_source_quota_vault" = "免费版保险箱已满。升级后可继续导入加密项目。";
 "paywall_source_quota_backup" = "免费备份导出次数已用完。升级后可持续保留加密副本。";
 "paywall_source_quota_ai" = "本月 AI 次数已用完。升级后可继续本地分析。";

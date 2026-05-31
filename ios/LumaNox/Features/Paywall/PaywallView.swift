@@ -412,6 +412,14 @@ struct PaywallView: View {
         switch viewModel.source {
         case PaywallSource.onboarding:
             return L10n.tr("paywall_source_onboarding")
+        case PaywallSource.importValue:
+            return L10n.tr("paywall_source_import_value")
+        case PaywallSource.vaultNearLimit:
+            return L10n.tr("paywall_source_vault_near_limit")
+        case PaywallSource.backupSuccess:
+            return L10n.tr("paywall_source_backup_success")
+        case PaywallSource.aiNearLimit:
+            return L10n.tr("paywall_source_ai_near_limit")
         case PaywallSource.quotaVault:
             return L10n.tr("paywall_source_quota_vault")
         case PaywallSource.quotaBackup:

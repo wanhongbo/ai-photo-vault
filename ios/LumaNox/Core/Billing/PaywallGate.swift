@@ -36,6 +36,10 @@ enum FreeQuota {
 enum PaywallSource {
     static let onboarding = "onboarding"
     static let manual = "manual"
+    static let importValue = "import_value"
+    static let vaultNearLimit = "vault_near_limit"
+    static let backupSuccess = "backup_success"
+    static let aiNearLimit = "ai_near_limit"
     static let quotaVault = "quota_vault"
     static let quotaBackup = "quota_backup"
     static let quotaAI = "quota_ai"

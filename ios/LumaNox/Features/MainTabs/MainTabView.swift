@@ -41,7 +41,6 @@ struct MainTabView: View {
             prewarmCameraIfPossible()
         }
         .onAppear {
-            scheduleOnboardingPaywallIfNeeded()
             applyDebugStartRouteIfNeeded()
             prewarmCameraIfPossible()
         }
@@ -109,23 +108,6 @@ struct MainTabView: View {
               router.presentedRoute != .privateCamera
         else { return }
         privateCameraViewModel.prepareForFastStart()
-    }
-
-    /// 首启软墙：进入主页 5s 后展示可关闭 Paywall（对齐 Android MainActivity）。
-    private func scheduleOnboardingPaywallIfNeeded() {
-        #if DEBUG
-        return
-        #endif
-        guard BillingBootstrap.isConfigured else { return }
-        guard OnboardingPaywallManager.shouldShow else { return }
-        Task {
-            try? await Task.sleep(nanoseconds: 5_000_000_000)
-            guard OnboardingPaywallManager.shouldShow else { return }
-            await MainActor.run {
-                OnboardingPaywallManager.markSeen()
-                router.present(.paywall(dismissable: true, source: PaywallSource.onboarding))
-            }
-        }
     }
 
     private func applyDebugStartRouteIfNeeded() {

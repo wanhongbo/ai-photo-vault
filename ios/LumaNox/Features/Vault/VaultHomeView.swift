@@ -71,6 +71,11 @@ struct VaultHomeView: View {
         .onReceive(viewModel.$importToast.compactMap { $0 }) { toast in
             showImportToast(toast)
         }
+        .onReceive(viewModel.$softPaywallReason.compactMap { $0 }) { reason in
+            viewModel.softPaywallReason = nil
+            PaywallPromptManager.markShown(reason)
+            router.present(.paywall(dismissable: true, source: reason.source))
+        }
         .overlay {
             if viewModel.showCreateAlbum {
                 LNInputDialog(

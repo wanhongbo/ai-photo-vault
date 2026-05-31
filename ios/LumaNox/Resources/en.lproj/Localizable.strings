@@ -497,6 +497,10 @@
 "paywall_close_cd" = "Close";
 "paywall_savings_fmt" = "Save %d%% vs monthly";
 "paywall_source_onboarding" = "Start with Premium, or keep exploring your encrypted vault.";
+"paywall_source_import_value" = "Your items are safely encrypted on this device. Premium unlocks more private storage and protection tools.";
+"paywall_source_vault_near_limit" = "Your free private storage is almost full. Upgrade to keep importing encrypted items.";
+"paywall_source_backup_success" = "Backup is complete. Premium keeps more local encrypted copies available.";
+"paywall_source_ai_near_limit" = "Your monthly local AI runs are almost used. Upgrade to keep cleaning, classifying, and reviewing sensitive items.";
 "paywall_source_quota_vault" = "Your free vault is full. Upgrade to keep importing encrypted items.";
 "paywall_source_quota_backup" = "Your free backup export is used. Upgrade to keep protected copies current.";
 "paywall_source_quota_ai" = "Your monthly AI limit is reached. Upgrade to continue local analysis.";

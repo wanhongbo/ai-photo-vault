@@ -17,6 +17,7 @@ final class VaultHomeViewModel: ObservableObject {
     @Published var rememberImportOriginalsChoice = false
     @Published var originalsActionDialogMessage: String?
     @Published var importToast: VaultHomeImportToast?
+    @Published var softPaywallReason: SoftPaywallReason?
     @Published private(set) var snapshot: VaultSnapshot?
     @Published private(set) var isLoadingSnapshot = false
     @Published private(set) var hasPinConfigured = AppDebugPolicy.skipsPinGate || SecuritySettingsStore.shared.hasPinConfigured
@@ -174,6 +175,9 @@ final class VaultHomeViewModel: ObservableObject {
             )
         }
         snapshot = vaultStore.snapshot
+        if summary.added > 0 && originalsAction != .deleteOriginals {
+            softPaywallReason = PaywallPromptManager.promptAfterVaultImport(currentVaultCount: totalCount)
+        }
     }
 
     func createAlbum(router: AppRouter) {
