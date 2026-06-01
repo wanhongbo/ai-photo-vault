@@ -99,7 +99,7 @@ final class PrivateCameraViewModel: ObservableObject {
                     self?.isCapturing = false
                     switch result {
                     case .success(let url):
-                        await self?.saveToVault(tempURL: url, isVideo: false, successKey: "camera_photo_saved")
+                        await self?.saveToVault(tempURL: url, isVideo: false, successKey: nil)
                     case .failure:
                         self?.message = L10n.tr("camera_capture_failed")
                     }
@@ -230,12 +230,12 @@ final class PrivateCameraViewModel: ObservableObject {
         recordingTimerTask = nil
     }
 
-    private func saveToVault(tempURL: URL, isVideo: Bool, successKey: String) async {
+    private func saveToVault(tempURL: URL, isVideo: Bool, successKey: String?) async {
         isSaving = true
         defer { isSaving = false }
         if let path = await VaultStore.shared.finalizeCameraCapture(tempURL: tempURL) {
             lastCapture = LastCameraCapture(path: path, isVideo: isVideo)
-            message = L10n.tr(successKey)
+            message = successKey.map { L10n.tr($0) }
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         } else {
             message = L10n.tr("camera_video_import_failed")
