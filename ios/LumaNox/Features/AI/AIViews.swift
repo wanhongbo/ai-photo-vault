@@ -4,6 +4,7 @@ import UIKit
 struct AIHomeView: View {
     @EnvironmentObject private var router: AppRouter
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
+    @State private var summarySnoozeVersion = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -100,6 +101,7 @@ struct AIHomeView: View {
                         background: LNColor.brandBlue,
                         fontWeight: .bold,
                         enabled: primarySummaryEnabled,
+                        accessibilityIdentifier: "ai_summary_primary_action",
                         action: performPrimarySummaryAction
                     )
 
@@ -110,6 +112,7 @@ struct AIHomeView: View {
                         stroke: LNColor.stroke,
                         fontWeight: .semibold,
                         enabled: secondarySummaryEnabled,
+                        accessibilityIdentifier: "ai_summary_secondary_action",
                         action: performSecondarySummaryAction
                     )
                 }
@@ -198,6 +201,8 @@ struct AIHomeView: View {
     }
 
     private func startScan() {
+        AISummarySnoozeStore.clearAll()
+        summarySnoozeVersion += 1
         Task { await aiService.scanVault() }
     }
 
@@ -209,11 +214,11 @@ struct AIHomeView: View {
     private var summaryTitle: String {
         if aiService.progress.running { return L10n.tr("ai_summary_scanning_title") }
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_summary_empty_title") }
-        if aiService.summary.locationRiskCount > 0, aiService.summary.locationRiskCount == aiService.summary.sensitiveCount {
+        if showsSensitiveSuggestion, aiService.summary.locationRiskCount > 0, aiService.summary.locationRiskCount == aiService.summary.sensitiveCount {
             return L10n.tr("ai_summary_location_title_fmt", aiService.summary.locationRiskCount)
         }
-        if aiService.summary.sensitiveCount > 0 { return L10n.tr("ai_summary_sensitive_title_fmt", aiService.summary.sensitiveCount) }
-        if aiService.summary.cleanupCount > 0 { return L10n.tr("ai_summary_cleanup_title_fmt", aiService.summary.cleanupCount) }
+        if showsSensitiveSuggestion { return L10n.tr("ai_summary_sensitive_title_fmt", aiService.summary.sensitiveCount) }
+        if showsCleanupSuggestion { return L10n.tr("ai_summary_cleanup_title_fmt", aiService.summary.cleanupCount) }
         if aiService.summary.hasUnscanned { return L10n.tr("ai_summary_unscanned_title") }
         return L10n.tr("ai_summary_all_clear_title")
     }
@@ -221,14 +226,14 @@ struct AIHomeView: View {
     private var summaryDescription: String {
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_summary_empty_desc") }
         if aiService.progress.running { return L10n.tr("ai_vault_scan_scanning_desc") }
-        if aiService.summary.locationRiskCount > 0 { return L10n.tr("ai_summary_location_desc") }
+        if showsSensitiveSuggestion, aiService.summary.locationRiskCount > 0 { return L10n.tr("ai_summary_location_desc") }
         return L10n.tr("ai_summary_desc")
     }
 
     private var primarySummaryAction: String {
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_action_open_vault") }
-        if aiService.summary.sensitiveCount > 0 { return L10n.tr("ai_summary_review_now") }
-        if aiService.summary.cleanupCount > 0 { return L10n.tr("ai_action_review_cleanup") }
+        if showsSensitiveSuggestion { return L10n.tr("ai_summary_review_now") }
+        if showsCleanupSuggestion { return L10n.tr("ai_action_review_cleanup") }
         return aiService.summary.hasUnscanned ? L10n.tr("ai_action_scan_vault") : L10n.tr("ai_action_rescan")
     }
 
@@ -238,7 +243,7 @@ struct AIHomeView: View {
 
     private var secondarySummaryActionTitle: String {
         if aiService.summary.totalCount == 0 { return L10n.tr("ai_action_private_camera") }
-        if aiService.summary.sensitiveCount > 0 || aiService.summary.cleanupCount > 0 { return L10n.tr("ai_summary_later") }
+        if showsSensitiveSuggestion || showsCleanupSuggestion { return L10n.tr("ai_summary_later") }
         if aiService.summary.categoryCounts.isEmpty { return L10n.tr("ai_action_view_tools") }
         return L10n.tr("ai_action_view_categories")
     }
@@ -252,11 +257,11 @@ struct AIHomeView: View {
             router.selectedTab = .vault
             return
         }
-        if aiService.summary.sensitiveCount > 0 {
+        if showsSensitiveSuggestion {
             openAIFeature(.aiSensitive, proFeature: .aiPrivacy, router: router)
             return
         }
-        if aiService.summary.cleanupCount > 0 {
+        if showsCleanupSuggestion {
             openAIFeature(.aiCleanup, proFeature: .aiCleanup, router: router)
             return
         }
@@ -268,10 +273,27 @@ struct AIHomeView: View {
             router.openPrivateCamera()
             return
         }
-        if aiService.summary.sensitiveCount > 0 || aiService.summary.cleanupCount > 0 {
+        if showsSensitiveSuggestion {
+            AISummarySnoozeStore.snooze(.sensitive)
+            summarySnoozeVersion += 1
+            return
+        }
+        if showsCleanupSuggestion {
+            AISummarySnoozeStore.snooze(.cleanup)
+            summarySnoozeVersion += 1
             return
         }
         router.pushAI(.aiClassify)
+    }
+
+    private var showsSensitiveSuggestion: Bool {
+        _ = summarySnoozeVersion
+        return aiService.summary.sensitiveCount > 0 && !AISummarySnoozeStore.isSnoozed(.sensitive)
+    }
+
+    private var showsCleanupSuggestion: Bool {
+        _ = summarySnoozeVersion
+        return aiService.summary.cleanupCount > 0 && !AISummarySnoozeStore.isSnoozed(.cleanup)
     }
 
     private var summaryAccent: Color {
@@ -352,6 +374,38 @@ private struct AIToolRowModel: Identifiable {
     let accessibilityIdentifier: String
 }
 
+private enum AISummarySnoozeKind: String {
+    case sensitive
+    case cleanup
+}
+
+private enum AISummarySnoozeStore {
+    private static let sensitiveUntilKey = "ai_summary_sensitive_snooze_until_ms"
+    private static let cleanupUntilKey = "ai_summary_cleanup_snooze_until_ms"
+    private static let defaultDurationMs: Int64 = 7 * 24 * 60 * 60 * 1000
+
+    static func isSnoozed(_ kind: AISummarySnoozeKind, nowMs: Int64 = VaultAIAnalysisService.nowMs()) -> Bool {
+        let until = Int64(UserDefaults.standard.double(forKey: key(for: kind)))
+        return nowMs < until
+    }
+
+    static func snooze(_ kind: AISummarySnoozeKind, durationMs: Int64 = defaultDurationMs) {
+        UserDefaults.standard.set(Double(VaultAIAnalysisService.nowMs() + durationMs), forKey: key(for: kind))
+    }
+
+    static func clearAll() {
+        UserDefaults.standard.removeObject(forKey: sensitiveUntilKey)
+        UserDefaults.standard.removeObject(forKey: cleanupUntilKey)
+    }
+
+    private static func key(for kind: AISummarySnoozeKind) -> String {
+        switch kind {
+        case .sensitive: sensitiveUntilKey
+        case .cleanup: cleanupUntilKey
+        }
+    }
+}
+
 private struct AISummaryActionButton: View {
     let title: String
     let foreground: Color
@@ -359,6 +413,7 @@ private struct AISummaryActionButton: View {
     var stroke: Color?
     let fontWeight: Font.Weight
     var enabled = true
+    var accessibilityIdentifier: String?
     let action: () -> Void
 
     var body: some View {
@@ -381,6 +436,7 @@ private struct AISummaryActionButton: View {
         }
         .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
         .disabled(!enabled)
+        .accessibilityIdentifier(accessibilityIdentifier ?? "ai_summary_action_\(title)")
     }
 }
 
