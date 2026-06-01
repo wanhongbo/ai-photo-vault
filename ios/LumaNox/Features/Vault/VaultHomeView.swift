@@ -203,7 +203,7 @@ struct VaultHomeView: View {
             .padding(.trailing, 12)
 
         }
-        .frame(height: 163)
+        .frame(height: VaultHomeLayout.heroHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
         .homeGlassCard(cornerRadius: 28)
         .shadow(color: .black.opacity(0.40), radius: 30, x: 0, y: 18)
@@ -431,6 +431,7 @@ struct VaultHomeView: View {
 
 private enum VaultHomeLayout {
     static let topContentSafePadding: CGFloat = 32
+    static let heroHeight: CGFloat = 185
 }
 
 private struct VaultHomeImportToastView: View {
