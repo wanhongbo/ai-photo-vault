@@ -1023,7 +1023,6 @@ private struct PhotoViewerActionDock: View {
                             title: L10n.tr("photo_viewer_remove_location"),
                             systemImage: isRemovingLocation ? "hourglass" : "location.slash",
                             foreground: LNColor.brandBlue,
-                            background: LNColor.brandBlue.opacity(0.10),
                             action: onRemoveLocation
                         )
                     }
@@ -1031,7 +1030,6 @@ private struct PhotoViewerActionDock: View {
                         title: L10n.tr("photo_viewer_redact"),
                         systemImage: "eye.slash",
                         foreground: LNColor.amberWarning,
-                        background: LNColor.amberWarning.opacity(0.10),
                         action: onRedact
                     )
                     PhotoViewerDockButton(
