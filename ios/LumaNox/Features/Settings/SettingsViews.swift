@@ -151,7 +151,7 @@ private struct SettingsSubscriptionIcon: View {
     let size: CGFloat
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
+        ZStack(alignment: .topTrailing) {
             RoundedRectangle(cornerRadius: size * 0.23)
                 .fill(backgroundGradient)
                 .overlay(
@@ -161,18 +161,18 @@ private struct SettingsSubscriptionIcon: View {
                 .shadow(color: shadowColor, radius: size * 0.22, x: 0, y: size * 0.10)
 
             Image(systemName: "crown.fill")
-                .font(.system(size: size * 0.42, weight: .bold))
+                .font(.system(size: size * 0.38, weight: .bold))
                 .foregroundStyle(primaryIconColor)
-                .offset(y: -1)
+                .offset(y: size * 0.04)
 
             Image(systemName: isPremium ? "checkmark.seal.fill" : "sparkles")
-                .font(.system(size: size * 0.22, weight: .bold))
+                .font(.system(size: size * 0.15, weight: .bold))
                 .foregroundStyle(LNColor.paywallGold)
-                .frame(width: size * 0.34, height: size * 0.34)
+                .frame(width: size * 0.28, height: size * 0.28)
                 .background(badgeBackground)
                 .clipShape(Circle())
                 .overlay(Circle().stroke(Color.white.opacity(isPremium ? 0.20 : 0.28), lineWidth: 1))
-                .offset(x: size * 0.06, y: size * 0.06)
+                .offset(x: size * 0.05, y: -size * 0.05)
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)

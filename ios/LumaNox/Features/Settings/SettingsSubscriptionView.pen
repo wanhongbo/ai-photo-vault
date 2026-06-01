@@ -67,8 +67,8 @@
               "cornerRadius": 14,
               "layout": "none",
               "children": [
-                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "crown", "width": 22, "height": 22, "fill": "#071423", "x": 13, "y": 11 },
-                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "sparkles", "width": 13, "height": 13, "fill": "#E8C547", "x": 32, "y": 32 }
+                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "crown", "width": 18, "height": 18, "fill": "#071423", "x": 15, "y": 15 },
+                { "type": "icon_font", "iconFontFamily": "lucide", "iconFontName": "sparkles", "width": 10, "height": 10, "fill": "#E8C547", "x": 35, "y": 3 }
               ]
             },
             {
