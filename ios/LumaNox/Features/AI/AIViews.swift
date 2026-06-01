@@ -2061,7 +2061,7 @@ private struct AISensitiveCandidateRow: View {
             .buttonStyle(.lnPressable(scale: 0.985, pressedOpacity: 0.82))
             .accessibilityLabel(mediaItem(record).fileName)
 
-            VStack(alignment: .trailing, spacing: 8) {
+            VStack(alignment: .center, spacing: 8) {
                 Button(action: onOpen) {
                     HStack(spacing: 5) {
                         Image(systemName: "slider.horizontal.3")
@@ -2089,13 +2089,14 @@ private struct AISensitiveCandidateRow: View {
                             .minimumScaleFactor(0.78)
                     }
                     .foregroundStyle(Color(hex: 0xB7C6DD))
-                    .frame(width: 74, height: 34)
+                    .frame(width: 86, height: 34)
                     .background(Color(hex: 0x122033))
                     .clipShape(RoundedRectangle(cornerRadius: 11))
                     .overlay(RoundedRectangle(cornerRadius: 11).stroke(LNColor.stroke, lineWidth: 1))
                 }
                 .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
             }
+            .frame(width: 86)
         }
         .padding(.horizontal, 14)
         .frame(height: 124)

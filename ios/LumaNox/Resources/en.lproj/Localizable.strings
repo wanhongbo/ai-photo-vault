@@ -286,7 +286,7 @@
 "photo_viewer_title" = "Photo";
 "photo_viewer_counter" = "%d / %d";
 "photo_viewer_share" = "Share";
-"photo_viewer_remove_location" = "Remove Location";
+"photo_viewer_remove_location" = "Location";
 "photo_viewer_redact" = "Redact";
 "photo_viewer_export_system" = "Export";
 "photo_viewer_delete" = "Delete";
