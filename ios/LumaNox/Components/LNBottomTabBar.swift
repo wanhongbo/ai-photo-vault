@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct LNBottomTabBar: View {
     @Binding var selected: MainTab
@@ -9,7 +10,8 @@ struct LNBottomTabBar: View {
     private let itemHeight: CGFloat = 72
     private let iconBoxSize = CGSize(width: 30, height: 28)
     private let labelHeight: CGFloat = 17
-    @State private var didBeginCameraPress = false
+    @State private var didBeginTabPress = false
+    @State private var pressedTab: MainTab?
 
     var body: some View {
         HStack(spacing: itemSpacing) {
@@ -32,7 +34,7 @@ struct LNBottomTabBar: View {
 
     @ViewBuilder
     private func tabButton(_ tab: MainTab) -> some View {
-        let isSelected = selected == tab
+        let isSelected = selected == tab || pressedTab == tab
         Button {
             if tab == .camera {
                 onCameraTap()
@@ -64,21 +66,26 @@ struct LNBottomTabBar: View {
             )
         }
         .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
-        .simultaneousGesture(cameraPressGesture(for: tab))
+        .simultaneousGesture(tabPressGesture(for: tab))
         .accessibilityIdentifier("ln_tab_\(tab.rawValue)")
     }
 
-    private func cameraPressGesture(for tab: MainTab) -> some Gesture {
+    private func tabPressGesture(for tab: MainTab) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { _ in
-                guard tab == .camera, !didBeginCameraPress else { return }
-                didBeginCameraPress = true
-                onCameraPressBegan()
+                guard !didBeginTabPress else { return }
+                didBeginTabPress = true
+                pressedTab = tab
+                UISelectionFeedbackGenerator().selectionChanged()
+                if tab == .camera {
+                    onCameraPressBegan()
+                } else {
+                    selected = tab
+                }
             }
             .onEnded { _ in
-                if tab == .camera {
-                    didBeginCameraPress = false
-                }
+                didBeginTabPress = false
+                pressedTab = nil
             }
     }
 
