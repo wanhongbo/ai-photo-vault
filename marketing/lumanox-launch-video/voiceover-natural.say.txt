@@ -1,0 +1,20 @@
+[[rate 151]]
+LumaNox is a private photo and video vault for people who want their sensitive media to stay local.
+[[slnc 450]]
+Open the vault, import only what needs protection, and keep it behind encrypted storage, PIN unlock, and biometrics.
+[[slnc 520]]
+The AI assistant runs on your device.
+[[slnc 180]]
+It can help review sensitive items, find private details, classify media, and spot cleanup candidates.
+[[slnc 520]]
+The private camera saves straight into the vault.
+[[slnc 180]]
+So new photos and videos do not have to pass through your normal camera roll.
+[[slnc 520]]
+Settings are built around control: subscription, security, backup, storage, language, and support are all easy to find.
+[[slnc 500]]
+No ads. No vault media cloud upload.
+[[slnc 240]]
+Just your private media, under your control.
+[[slnc 420]]
+Try LumaNox on Google Play.

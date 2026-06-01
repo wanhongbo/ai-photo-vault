@@ -1,13 +1,13 @@
-LumaNox is a private photo and video vault for Android, built for moments when your camera roll gets sensitive.
+LumaNox is a private photo and video vault for people who want their sensitive media to stay local.
 
-Import selected media into an encrypted local vault, protected by a six digit PIN, biometric unlock, and automatic lock when the app leaves the foreground.
+Open the vault, import only what needs protection, and keep it behind encrypted storage, PIN unlock, and biometrics.
 
-Then use local AI tools to review sensitive content: IDs, cards, QR codes, faces, chat screenshots, and text-heavy images, without turning your vault into a cloud workflow.
+The AI assistant runs on your device. It can help review sensitive items, find private details, classify media, and spot cleanup candidates.
 
-Before sharing, redact with mosaic, blur, black bars, white bars, oval blur, or manual regions.
+The private camera saves straight into the vault, so new photos and videos do not have to pass through your normal camera roll.
 
-LumaNox also helps classify media, spot blurry photos and near duplicates, and create encrypted backups you can restore with your PIN.
+Settings are built around control: subscription, security, backup, storage, language, and support are all easy to find.
 
-No ads. No vault media cloud upload. Just private media, under your control.
+No ads. No vault media cloud upload. Just your private media, under your control.
 
 Try LumaNox on Google Play.

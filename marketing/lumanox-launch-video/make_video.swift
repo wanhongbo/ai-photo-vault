@@ -42,14 +42,10 @@ func image(_ name: String) -> NSImage {
 }
 
 let screenshots: [String: NSImage] = [
-    "vault": image("01_encrypted_vault.png"),
-    "lock": image("02_pin_biometric_unlock.png"),
-    "backup": image("03_backup_restore.png"),
-    "redact": image("04_privacy_redaction.png"),
-    "sensitive": image("05_ai_sensitive_review.png"),
-    "cleanup": image("06_smart_cleanup.png"),
-    "camera": image("07_private_camera.png"),
-    "offline": image("08_offline_privacy.png")
+    "vault": image("latest-tabs/vault.png"),
+    "ai": image("latest-tabs/ai.png"),
+    "camera": image("latest-tabs/camera.png"),
+    "settings": image("latest-tabs/settings.png")
 ]
 
 struct Scene {
@@ -64,75 +60,57 @@ struct Scene {
 
 let scenes = [
     Scene(
-        duration: 6.2,
-        eyebrow: "PRIVATE PHOTO VAULT FOR ANDROID",
-        title: "LumaNox",
-        subtitle: "Encrypted local storage plus AI privacy tools for sensitive photos and videos.",
-        bullets: ["AES-256-class vault", "PIN + biometric unlock", "No vault media cloud upload"],
-        images: ["vault", "sensitive", "redact"],
-        cta: nil
-    ),
-    Scene(
         duration: 6.4,
-        eyebrow: "THE PROBLEM",
-        title: "Your camera roll can hold more than memories.",
-        subtitle: "IDs, cards, chats, QR codes, private videos, and screenshots deserve a safer boundary.",
-        bullets: ["Import only what needs a vault", "Keep sensitive media out of casual browsing"],
-        images: ["offline", "camera"],
-        cta: nil
-    ),
-    Scene(
-        duration: 6.8,
-        eyebrow: "VAULT",
-        title: "Encrypted media stays local.",
-        subtitle: "LumaNox is built around a clear line: selected media goes into a private vault on your device.",
-        bullets: ["PIN and biometric unlock", "Automatic lock when the app leaves foreground", "Ad-free private space"],
-        images: ["vault", "lock"],
-        cta: nil
-    ),
-    Scene(
-        duration: 6.8,
-        eyebrow: "LOCAL AI REVIEW",
-        title: "Find sensitive content before it surprises you.",
-        subtitle: "Review likely IDs, bank cards, QR codes, faces, chat screenshots, and text-heavy images.",
-        bullets: ["AI remains advisory", "You decide what to ignore, redact, or keep"],
-        images: ["sensitive"],
-        cta: nil
-    ),
-    Scene(
-        duration: 6.8,
-        eyebrow: "PRIVACY REDACTION",
-        title: "Redact first. Share deliberately.",
-        subtitle: "Apply mosaic, blur, black bars, white bars, oval blur, or manual regions before exporting a copy.",
-        bullets: ["Save back to the vault", "Export only when you choose"],
-        images: ["redact"],
-        cta: nil
-    ),
-    Scene(
-        duration: 6.8,
-        eyebrow: "CLEANUP + CLASSIFY",
-        title: "Organize without uploading the vault.",
-        subtitle: "Spot blurry photos, near duplicates, screenshots, documents, portraits, scenery, and more.",
-        bullets: ["Review cleanup suggestions", "Smart categories for faster browsing"],
-        images: ["cleanup", "offline"],
+        eyebrow: "PRIVATE PHOTO + VIDEO VAULT",
+        title: "LumaNox",
+        subtitle: "A calmer place for sensitive media, with local encryption and on-device privacy tools.",
+        bullets: ["Offline vault", "Local AI", "Encrypted backup"],
+        images: ["vault", "ai", "camera"],
         cta: nil
     ),
     Scene(
         duration: 6.6,
-        eyebrow: "RECOVERY",
-        title: "Encrypted backup and restore.",
-        subtitle: "Create manual or automatic encrypted backups and restore with the PIN that protected the backup.",
-        bullets: ["No account photo sync", "Backup packages stay encrypted", "Explicit export warnings"],
-        images: ["backup"],
+        eyebrow: "VAULT",
+        title: "Import only what needs protection.",
+        subtitle: "Browse albums inside a local AES-256 vault, with clear offline and encrypted status.",
+        bullets: ["Real albums", "Private thumbnails", "No cloud media sync"],
+        images: ["vault"],
+        cta: nil
+    ),
+    Scene(
+        duration: 6.7,
+        eyebrow: "AI ASSISTANT",
+        title: "Private scans stay on this device.",
+        subtitle: "Review sensitive items, hidden metadata, categories, and cleanup candidates without uploading the vault.",
+        bullets: ["Sensitive review", "Classify", "Deduplicate"],
+        images: ["ai"],
+        cta: nil
+    ),
+    Scene(
+        duration: 6.5,
+        eyebrow: "PRIVATE CAMERA",
+        title: "Capture straight into the vault.",
+        subtitle: "Take photos or videos from inside LumaNox, with camera controls made for private capture.",
+        bullets: ["Photo + video", "Flash, timer, grid", "Vault-first capture"],
+        images: ["camera"],
+        cta: nil
+    ),
+    Scene(
+        duration: 6.6,
+        eyebrow: "CONTROL",
+        title: "Security, backup, storage, and support in one place.",
+        subtitle: "Manage subscription, PIN, backup and restore, export, trash, language, and legal pages from Settings.",
+        bullets: ["Security & Privacy", "Backup & Sync", "Data & Storage"],
+        images: ["settings"],
         cta: nil
     ),
     Scene(
         duration: 6.4,
         eyebrow: "PRIVACY PROMISE",
-        title: "No ads. No media cloud upload. Your vault, your control.",
-        subtitle: "Try LumaNox on Google Play and help shape a calmer, more private photo workflow.",
+        title: "No ads. No vault media cloud upload. Your vault, your control.",
+        subtitle: "A private photo workflow that keeps the important boundary obvious.",
         bullets: ["Android available now", "iOS version planned next"],
-        images: ["vault", "redact"],
+        images: ["vault", "ai", "settings"],
         cta: "Get it on Google Play"
     )
 ]
@@ -241,7 +219,7 @@ func drawScene(_ ctx: CGContext, scene: Scene, index: Int, localT: Double) {
     case 1:
         drawPhone(ctx, img: imgs[0], rect: CGRect(x: 1218, y: 125 + bob, width: 432, height: 768), rotation: -0.015)
         fillRound(ctx, CGRect(x: 1112, y: 782, width: 520, height: 108), 28, color("#0C1523", 0.86), stroke: color("#223247"))
-        drawText(index == 3 ? "Sensitive review stays on-device." : index == 4 ? "Redaction happens before export." : "Backups are encrypted packages.", in: CGRect(x: 1148, y: 814, width: 448, height: 42), size: 28, weight: .semibold, color: color("#EAF1FF"), align: .center)
+        drawText(index == 1 ? "A real local vault." : index == 2 ? "On-device privacy review." : index == 3 ? "Capture privately." : "Settings stay clear.", in: CGRect(x: 1148, y: 814, width: 448, height: 42), size: 28, weight: .semibold, color: color("#EAF1FF"), align: .center)
     case 2:
         drawPhone(ctx, img: imgs[0], rect: CGRect(x: 1065, y: 185 + bob, width: 360, height: 640), rotation: -0.055, alpha: 0.98)
         drawPhone(ctx, img: imgs[1], rect: CGRect(x: 1386, y: 122 - bob, width: 390, height: 694), rotation: 0.055)
