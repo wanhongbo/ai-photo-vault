@@ -9,6 +9,7 @@ struct MainTabView: View {
     @ObservedObject var privateCameraViewModel: PrivateCameraViewModel
     @State private var didApplyDebugStartRoute = false
     @State private var isKeyboardVisible = false
+    @State private var cameraPreparationTask: Task<Void, Never>?
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -19,7 +20,7 @@ struct MainTabView: View {
                 LNBottomTabBar(
                     selected: $router.selectedTab,
                     onCameraPressBegan: {
-                        privateCameraViewModel.startForPresentation()
+                        router.openPrivateCamera()
                     },
                     onCameraTap: {
                         router.openPrivateCamera()
@@ -41,14 +42,23 @@ struct MainTabView: View {
         }
         .onChange(of: router.presentedRoute) { route in
             guard route == nil else { return }
-            prewarmCameraIfPossible()
+            scheduleCameraPreparationIfPossible()
         }
         .onChange(of: router.phase) { _ in
-            prewarmCameraIfPossible()
+            scheduleCameraPreparationIfPossible()
+        }
+        .onChange(of: router.selectedTab) { _ in
+            scheduleCameraPreparationIfPossible()
+        }
+        .onChange(of: router.vaultPath.count) { _ in
+            scheduleCameraPreparationIfPossible()
         }
         .onAppear {
             applyDebugStartRouteIfNeeded()
-            prewarmCameraIfPossible()
+            scheduleCameraPreparationIfPossible()
+        }
+        .onDisappear {
+            cancelCameraPreparation()
         }
         .accessibilityIdentifier("main_tab_view")
     }
@@ -98,8 +108,9 @@ struct MainTabView: View {
     private func handleScenePhase(_ phase: ScenePhase) {
         switch phase {
         case .active:
-            prewarmCameraIfPossible()
+            scheduleCameraPreparationIfPossible()
         case .inactive, .background:
+            cancelCameraPreparation()
             if router.presentedRoute != .privateCamera {
                 privateCameraViewModel.controller.stop(discardPendingRecording: true)
             }
@@ -108,12 +119,29 @@ struct MainTabView: View {
         }
     }
 
-    private func prewarmCameraIfPossible() {
+    private var shouldPrepareCameraOnVaultHome: Bool {
         guard scenePhase == .active,
               router.phase == .main,
-              router.presentedRoute != .privateCamera
-        else { return }
-        privateCameraViewModel.prepareForFastStart()
+              router.presentedRoute != .privateCamera,
+              router.selectedTab == .vault,
+              router.vaultPath.count == 0
+        else { return false }
+        return true
+    }
+
+    private func scheduleCameraPreparationIfPossible() {
+        cancelCameraPreparation()
+        guard shouldPrepareCameraOnVaultHome else { return }
+        cameraPreparationTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard !Task.isCancelled, shouldPrepareCameraOnVaultHome else { return }
+            privateCameraViewModel.prepareSessionForVaultHome()
+        }
+    }
+
+    private func cancelCameraPreparation() {
+        cameraPreparationTask?.cancel()
+        cameraPreparationTask = nil
     }
 
     private func applyDebugStartRouteIfNeeded() {

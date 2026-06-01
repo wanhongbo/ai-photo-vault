@@ -47,7 +47,7 @@ final class PrivateCameraViewModel: ObservableObject {
         controller.configure()
     }
 
-    func prepareForFastStart() {
+    func prepareSessionForVaultHome() {
         controller.prepareForFastStart()
     }
 

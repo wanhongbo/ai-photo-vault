@@ -313,6 +313,9 @@ final class CameraSessionController: NSObject, ObservableObject {
         sessionQueue.async { [weak self] in
             guard let self else { return }
             if reuseConfiguredSession, hasConfiguredSession {
+                if !startAfterConfigure, session.isRunning {
+                    session.stopRunning()
+                }
                 if startAfterConfigure, !session.isRunning {
                     session.startRunning()
                     scheduleDeferredCaptureOutputPreparation()
