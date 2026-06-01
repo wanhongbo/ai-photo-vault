@@ -76,6 +76,10 @@ struct VaultHomeView: View {
             PaywallPromptManager.markShown(reason)
             router.present(.paywall(dismissable: true, source: reason.source))
         }
+        .onReceive(viewModel.$hardPaywallSource.compactMap { $0 }) { source in
+            viewModel.hardPaywallSource = nil
+            router.present(.paywall(dismissable: false, source: source))
+        }
         .overlay {
             if viewModel.showCreateAlbum {
                 LNInputDialog(

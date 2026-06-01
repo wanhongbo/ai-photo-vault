@@ -545,6 +545,9 @@ struct AlbumView: View {
             vaultStore.endImportBatch()
             await vaultStore.finalizeImportBatch(summary)
             duplicateImportDialogMessage = VaultImportFeedback.duplicateDialogMessage(for: summary)
+            if summary.quotaExceeded {
+                router.present(.paywall(dismissable: false, source: PaywallSource.quotaVault))
+            }
         }
     }
 

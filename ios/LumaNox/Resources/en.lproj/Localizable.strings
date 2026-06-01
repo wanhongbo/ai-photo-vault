@@ -538,7 +538,7 @@
 "settings_subscription_status_premium_desc" = "All Premium privacy, AI, export, and backup features are available on this device.";
 "settings_subscription_quota_title" = "Free plan quotas";
 "settings_subscription_quota_vault" = "Vault storage";
-"settings_subscription_quota_vault_desc" = "Free plan supports up to 100 encrypted vault items.";
+"settings_subscription_quota_vault_desc" = "Free plan supports up to 50 encrypted vault items.";
 "settings_subscription_quota_backup" = "Backup exports";
 "settings_subscription_quota_backup_desc" = "Free plan includes 1 encrypted backup export.";
 "settings_subscription_quota_ai" = "AI scans";

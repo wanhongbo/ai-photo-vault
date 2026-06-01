@@ -18,6 +18,7 @@ final class VaultHomeViewModel: ObservableObject {
     @Published var originalsActionDialogMessage: String?
     @Published var importToast: VaultHomeImportToast?
     @Published var softPaywallReason: SoftPaywallReason?
+    @Published var hardPaywallSource: String?
     @Published private(set) var snapshot: VaultSnapshot?
     @Published private(set) var isLoadingSnapshot = false
     @Published private(set) var hasPinConfigured = AppDebugPolicy.skipsPinGate || SecuritySettingsStore.shared.hasPinConfigured
@@ -175,7 +176,9 @@ final class VaultHomeViewModel: ObservableObject {
             )
         }
         snapshot = vaultStore.snapshot
-        if summary.added > 0 && originalsAction != .deleteOriginals {
+        if summary.quotaExceeded {
+            hardPaywallSource = PaywallSource.quotaVault
+        } else if summary.added > 0 && originalsAction != .deleteOriginals {
             softPaywallReason = PaywallPromptManager.promptAfterVaultImport(currentVaultCount: totalCount)
         }
     }
@@ -267,10 +270,18 @@ enum PhotosPickerVaultImporter {
         vaultStore: VaultStore
     ) async -> VaultImportSummary {
         var summary = VaultImportSummary()
+        let isPremium = SubscriptionService.shared.isPremium
+        var importedCount = vaultStore.snapshot?.totalCount ?? vaultStore.storageSummary().activeCount
         for item in items {
+            if !isPremium, importedCount >= FreeQuota.maxVaultItems {
+                summary.quotaExceeded = true
+                break
+            }
             switch await importItem(item, into: albumName, vaultStore: vaultStore) {
             case .added:
                 summary.added += 1
+                importedCount += 1
+                QuotaManager.shared.updateVaultCount(importedCount)
                 if let identifier = item.itemIdentifier {
                     summary.importedPhotoLibraryAssetIdentifiers.append(identifier)
                 }
