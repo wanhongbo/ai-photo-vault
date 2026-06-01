@@ -18,6 +18,13 @@ final class QuotaManager {
         vaultCount = count
     }
 
+    @discardableResult
+    func refreshVaultCount(_ count: Int? = nil) -> Int {
+        let currentCount = count ?? VaultMetadataStore.shared.storageSummary().activeCount
+        updateVaultCount(currentCount)
+        return currentCount
+    }
+
     var backupCount: Int {
         defaults.integer(forKey: backupCountKey)
     }
@@ -44,9 +51,9 @@ final class QuotaManager {
         defaults.set(aiMonthlyCount + 1, forKey: aiCountKey)
     }
 
-    func isVaultFull(isPremium: Bool) -> Bool {
+    func isVaultFull(isPremium: Bool, currentCount: Int? = nil) -> Bool {
         if isPremium { return false }
-        return vaultCount >= FreeQuota.maxVaultItems
+        return refreshVaultCount(currentCount) >= FreeQuota.maxVaultItems
     }
 
     func isBackupExhausted(isPremium: Bool) -> Bool {

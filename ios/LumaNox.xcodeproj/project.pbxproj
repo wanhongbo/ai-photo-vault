@@ -87,6 +87,7 @@
 		6ED84B872EAE1F6E6DECE280 /* VaultFileHasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C5CCDED95D15E599EE79B1 /* VaultFileHasher.swift */; };
 		72E1C705EF5A964F9E32C6AF /* VaultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC69DE179BB30C69A3742C /* VaultStore.swift */; };
 		76A7B9D11323028649C10630 /* PaywallView.pen in Resources */ = {isa = PBXBuildFile; fileRef = DBE5168D3FE700148C13D8FB /* PaywallView.pen */; };
+		771BF6C2F887ECC4D7F07FB4 /* QuotaManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87CDA86F9F82E6EC517E464D /* QuotaManagerTests.swift */; };
 		782B97ECE55A70B2FA3E6608 /* AlbumListView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 24EA5D0F42DD0CE25D20C8D0 /* AlbumListView.pen */; };
 		7D7B31592960DBC24ACA1663 /* RestoreProgressView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 153F0CD4E7915DC87AD7F5F3 /* RestoreProgressView.pen */; };
 		7DDF6F0954B25AA09F7577B4 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F121E8D7BA0C5DAC6610309 /* WebKit.framework */; };
@@ -282,6 +283,7 @@
 		85EAB2D89D8473CB2D20EBDE /* VaultHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultHomeViewModel.swift; sourceTree = "<group>"; };
 		8795E254736CA97482F2576B /* VaultStore+Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VaultStore+Camera.swift"; sourceTree = "<group>"; };
 		87C23ADE74A9807AC907076E /* BackupProgressView.pen */ = {isa = PBXFileReference; path = BackupProgressView.pen; sourceTree = "<group>"; };
+		87CDA86F9F82E6EC517E464D /* QuotaManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotaManagerTests.swift; sourceTree = "<group>"; };
 		87F131249226B498888052AA /* VaultCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultCipher.swift; sourceTree = "<group>"; };
 		884A370DC3AD53F835557043 /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		8932B0647C7C07972387DFF3 /* AutoBackupScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoBackupScheduler.swift; sourceTree = "<group>"; };
@@ -630,6 +632,7 @@
 				0BF1855A4D106CFD1B09EDDE /* AIRecognitionFixtureImportTests.swift */,
 				A4795CC4121A5CD764367E9C /* BackupRestoreSafetyTests.swift */,
 				DC0EF53851E2A97335530387 /* NetworkAIDatasetPhotoLibrarySeedTests.swift */,
+				87CDA86F9F82E6EC517E464D /* QuotaManagerTests.swift */,
 				266B639224CC819B5C54174E /* RealWorldAIRecognitionDatasetTests.swift */,
 				ABA098E95640BF4765E38462 /* VaultCipherV2Tests.swift */,
 			);
@@ -1018,6 +1021,7 @@
 				A3762BBED3A87C11CCBFB2DA /* AIRecognitionFixtureImportTests.swift in Sources */,
 				943FF4F952D9F7447D96A474 /* BackupRestoreSafetyTests.swift in Sources */,
 				145BFCE7920D6960BA3AACF9 /* NetworkAIDatasetPhotoLibrarySeedTests.swift in Sources */,
+				771BF6C2F887ECC4D7F07FB4 /* QuotaManagerTests.swift in Sources */,
 				3C533D1937B2DC69F9BC5ABA /* RealWorldAIRecognitionDatasetTests.swift in Sources */,
 				84441A178A24A141295D4C56 /* VaultCipherV2Tests.swift in Sources */,
 			);
