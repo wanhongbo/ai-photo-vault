@@ -72,6 +72,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     private var discardRecordingOnStop = false
     private var discardPhotoOnStop = false
     private var hasConfiguredSession = false
+    private var hasConfiguredPhotoOutput = false
     private var hasConfiguredMovieOutput = false
     private var isRequestingVideoAccess = false
 
@@ -218,33 +219,41 @@ final class CameraSessionController: NSObject, ObservableObject {
     }
 
     func capturePhoto(completion: @escaping (Result<URL, Error>) -> Void) {
-        do {
-            pendingPhotoURL = try VaultStore.shared.reserveCameraTempFile(extension: "jpg")
-            captureCompletion = completion
-            discardPhotoOnStop = false
-        } catch {
-            completion(.failure(error))
-            return
-        }
-        let settings = AVCapturePhotoSettings()
-        settings.photoQualityPrioritization = .speed
-        let avFlashMode = avCaptureFlashMode(for: flashMode)
-        if photoOutput.supportedFlashModes.contains(avFlashMode) {
-            settings.flashMode = avFlashMode
-        }
-        guard let connection = photoOutput.connection(with: .video),
-              connection.isEnabled,
-              connection.isActive
-        else {
-            if let pendingPhotoURL {
-                PlaintextTempFileManager.shared.removeItem(pendingPhotoURL)
-                self.pendingPhotoURL = nil
+        preparePhotoOutput { [weak self] ready in
+            Task { @MainActor in
+                guard let self, ready else {
+                    completion(.failure(CameraError.noData))
+                    return
+                }
+                do {
+                    self.pendingPhotoURL = try VaultStore.shared.reserveCameraTempFile(extension: "jpg")
+                    self.captureCompletion = completion
+                    self.discardPhotoOnStop = false
+                } catch {
+                    completion(.failure(error))
+                    return
+                }
+                let settings = AVCapturePhotoSettings()
+                settings.photoQualityPrioritization = .speed
+                let avFlashMode = self.avCaptureFlashMode(for: self.flashMode)
+                if self.photoOutput.supportedFlashModes.contains(avFlashMode) {
+                    settings.flashMode = avFlashMode
+                }
+                guard let connection = self.photoOutput.connection(with: .video),
+                      connection.isEnabled,
+                      connection.isActive
+                else {
+                    if let pendingPhotoURL = self.pendingPhotoURL {
+                        PlaintextTempFileManager.shared.removeItem(pendingPhotoURL)
+                        self.pendingPhotoURL = nil
+                    }
+                    self.captureCompletion = nil
+                    completion(.failure(CameraError.noData))
+                    return
+                }
+                self.photoOutput.capturePhoto(with: settings, delegate: self)
             }
-            captureCompletion = nil
-            completion(.failure(CameraError.noData))
-            return
         }
-        photoOutput.capturePhoto(with: settings, delegate: self)
     }
 
     func startRecording(
@@ -306,6 +315,9 @@ final class CameraSessionController: NSObject, ObservableObject {
             if reuseConfiguredSession, hasConfiguredSession {
                 if startAfterConfigure, !session.isRunning {
                     session.startRunning()
+                    scheduleDeferredCaptureOutputPreparation()
+                } else if startAfterConfigure, session.isRunning {
+                    scheduleDeferredCaptureOutputPreparation()
                 }
                 Task { @MainActor in
                     self.isRunning = self.session.isRunning
@@ -316,6 +328,7 @@ final class CameraSessionController: NSObject, ObservableObject {
             session.beginConfiguration()
             session.inputs.forEach { self.session.removeInput($0) }
             session.outputs.forEach { self.session.removeOutput($0) }
+            hasConfiguredPhotoOutput = false
             hasConfiguredMovieOutput = false
 
             let requestedDevice = Self.preferredDevice(position: position) ?? Self.preferredDevice(position: .back) ?? Self.preferredDevice(position: .front)
@@ -336,15 +349,15 @@ final class CameraSessionController: NSObject, ObservableObject {
             }
             currentAudioInput = nil
 
-            photoOutput = AVCapturePhotoOutput()
-            photoOutput.maxPhotoQualityPrioritization = .speed
-            if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
-            configurePhotoSessionPreset()
+            configurePreviewSessionPreset()
             session.commitConfiguration()
             hasConfiguredSession = true
 
             if startAfterConfigure, !session.isRunning {
                 session.startRunning()
+                scheduleDeferredCaptureOutputPreparation()
+            } else if session.isRunning {
+                scheduleDeferredCaptureOutputPreparation()
             }
 
             let nextCapabilities = Self.capabilities(for: device)
@@ -367,6 +380,12 @@ final class CameraSessionController: NSObject, ObservableObject {
         }
     }
 
+    private func configurePreviewSessionPreset() {
+        if session.canSetSessionPreset(.high) {
+            session.sessionPreset = .high
+        }
+    }
+
     private func configurePhotoSessionPreset() {
         if session.canSetSessionPreset(.photo) {
             session.sessionPreset = .photo
@@ -382,6 +401,44 @@ final class CameraSessionController: NSObject, ObservableObject {
         } else if session.canSetSessionPreset(.high) {
             session.sessionPreset = .high
         }
+    }
+
+    private func scheduleDeferredCaptureOutputPreparation() {
+        sessionQueue.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            guard let self, self.session.isRunning else { return }
+            self.preparePhotoOutputLocked { _ in }
+        }
+    }
+
+    private func preparePhotoOutput(completion: @escaping (Bool) -> Void) {
+        sessionQueue.async { [weak self] in
+            self?.preparePhotoOutputLocked(completion: completion)
+        }
+    }
+
+    private func preparePhotoOutputLocked(completion: @escaping (Bool) -> Void) {
+        guard currentDevice != nil else {
+            DispatchQueue.main.async { completion(false) }
+            return
+        }
+        if hasConfiguredPhotoOutput {
+            DispatchQueue.main.async { completion(true) }
+            return
+        }
+
+        var isReady = true
+        session.beginConfiguration()
+        photoOutput = AVCapturePhotoOutput()
+        photoOutput.maxPhotoQualityPrioritization = .speed
+        if session.canAddOutput(photoOutput) {
+            session.addOutput(photoOutput)
+            hasConfiguredPhotoOutput = true
+            configurePhotoSessionPreset()
+        } else {
+            isReady = false
+        }
+        session.commitConfiguration()
+        DispatchQueue.main.async { completion(isReady) }
     }
 
     private func prepareRecordingOutputs(completion: @escaping (Bool) -> Void) {
