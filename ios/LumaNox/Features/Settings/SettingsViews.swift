@@ -59,12 +59,7 @@ struct SettingsHomeView: View {
     private var subscriptionCard: some View {
         Button { router.pushSettings(.settingsSubscription) } label: {
             HStack(spacing: 16) {
-                Image(systemName: subscription.isPremium ? "crown.fill" : "diamond.fill")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(subscription.isPremium ? Color.white : Color.black)
-                    .frame(width: 72, height: 72)
-                    .background(subscription.isPremium ? LNColor.paywallGold : LNColor.brandBlue)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                SettingsSubscriptionIcon(isPremium: subscription.isPremium, size: 72)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(subscription.isPremium ? L10n.tr("settings_l1_subscription_premium_title") : L10n.settingsSubscription)
                         .font(LNTypography.titleLarge())
@@ -151,6 +146,70 @@ struct SettingsHomeView: View {
     }
 }
 
+private struct SettingsSubscriptionIcon: View {
+    let isPremium: Bool
+    let size: CGFloat
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            RoundedRectangle(cornerRadius: size * 0.23)
+                .fill(backgroundGradient)
+                .overlay(
+                    RoundedRectangle(cornerRadius: size * 0.23)
+                        .stroke(borderColor, lineWidth: 1)
+                )
+                .shadow(color: shadowColor, radius: size * 0.22, x: 0, y: size * 0.10)
+
+            Image(systemName: "crown.fill")
+                .font(.system(size: size * 0.42, weight: .bold))
+                .foregroundStyle(primaryIconColor)
+                .offset(y: -1)
+
+            Image(systemName: isPremium ? "checkmark.seal.fill" : "sparkles")
+                .font(.system(size: size * 0.22, weight: .bold))
+                .foregroundStyle(LNColor.paywallGold)
+                .frame(width: size * 0.34, height: size * 0.34)
+                .background(badgeBackground)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white.opacity(isPremium ? 0.20 : 0.28), lineWidth: 1))
+                .offset(x: size * 0.06, y: size * 0.06)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+
+    private var backgroundGradient: LinearGradient {
+        if isPremium {
+            return LinearGradient(
+                colors: [Color(hex: 0xFFE08A), LNColor.paywallGold, Color(hex: 0xA66B19)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+        return LinearGradient(
+            colors: [Color(hex: 0x63B3FF), LNColor.brandBlue, Color(hex: 0x1C4E8E)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var borderColor: Color {
+        isPremium ? Color.white.opacity(0.28) : Color(hex: 0xA8D4FF).opacity(0.34)
+    }
+
+    private var shadowColor: Color {
+        (isPremium ? LNColor.paywallGold : LNColor.brandBlue).opacity(0.22)
+    }
+
+    private var primaryIconColor: Color {
+        isPremium ? Color(hex: 0x1B1304) : Color(hex: 0x071423)
+    }
+
+    private var badgeBackground: Color {
+        isPremium ? Color(hex: 0x1B1304).opacity(0.88) : Color(hex: 0x071423).opacity(0.86)
+    }
+}
+
 struct SettingsSubscriptionView: View {
     @EnvironmentObject private var router: AppRouter
     @EnvironmentObject private var subscription: SubscriptionService
@@ -205,12 +264,7 @@ struct SettingsSubscriptionView: View {
 
     private var subscriptionStatusCard: some View {
         HStack(alignment: .top, spacing: 14) {
-            Image(systemName: subscription.isPremium ? "crown.fill" : "person.crop.circle.badge.exclamationmark")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(subscription.isPremium ? Color.black : LNColor.title)
-                .frame(width: 48, height: 48)
-                .background(subscription.isPremium ? LNColor.paywallGold : LNColor.brandBlue.opacity(0.2))
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+            SettingsSubscriptionIcon(isPremium: subscription.isPremium, size: 48)
             VStack(alignment: .leading, spacing: 6) {
                 Text(subscription.isPremium ? L10n.tr("settings_subscription_status_premium") : L10n.tr("settings_subscription_status_free"))
                     .font(LNTypography.titleLarge())
