@@ -140,15 +140,6 @@ struct PrivateCameraView: View {
 
                 Spacer()
 
-                if let statusText = viewModel.statusText {
-                    CameraStatusPill(
-                        text: statusText,
-                        isVideoMode: viewModel.captureMode == .video,
-                        isBusy: viewModel.isBusy
-                    )
-                    .padding(.bottom, 12)
-                }
-
                 if viewModel.controller.isRecording {
                     RecordingBadge(text: viewModel.recordingDurationText)
                         .padding(.bottom, 10)
@@ -576,43 +567,6 @@ private struct ZoomRail: View {
 
     private func clampedPreset(_ preset: CGFloat) -> CGFloat {
         min(max(preset, minZoom), maxZoom)
-    }
-}
-
-private struct CameraStatusPill: View {
-    let text: String
-    let isVideoMode: Bool
-    let isBusy: Bool
-
-    var body: some View {
-        HStack(spacing: 8) {
-            if isBusy {
-                ProgressView()
-                    .controlSize(.small)
-                    .tint(LNColor.title)
-            } else {
-                Circle()
-                    .fill(LNColor.brandBlue)
-                    .frame(width: 8, height: 8)
-            }
-            Text(text)
-                .font(LNTypography.labelMedium().weight(.bold))
-                .foregroundStyle(LNColor.title)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 14)
-        .frame(height: 36)
-        .background(statusBackground)
-        .clipShape(Capsule())
-        .overlay(Capsule().stroke(statusStroke, lineWidth: 1))
-    }
-
-    private var statusBackground: Color {
-        Color.black.opacity(0.52)
-    }
-
-    private var statusStroke: Color {
-        LNColor.brandBlue.opacity(0.38)
     }
 }
 

@@ -9,8 +9,6 @@ struct LastCameraCapture: Equatable {
 
 @MainActor
 final class PrivateCameraViewModel: ObservableObject {
-    @Published var message: String?
-    @Published var transientStatus: String?
     @Published var isSaving = false
     @Published var isCapturing = false
     @Published var shutterFeedback = false
@@ -30,19 +28,9 @@ final class PrivateCameraViewModel: ObservableObject {
     private var focusClearTask: Task<Void, Never>?
     private var recordingTimerTask: Task<Void, Never>?
     private var shutterFeedbackTask: Task<Void, Never>?
-    private var statusClearTask: Task<Void, Never>?
 
     var isBusy: Bool {
         isSaving || isCapturing || countdownRemaining != nil
-    }
-
-    var statusText: String? {
-        if let transientStatus { return transientStatus }
-        if isSaving { return L10n.tr("camera_saving_to_vault") }
-        if isCapturing { return captureMode == .video ? L10n.tr("camera_preparing_video") : L10n.tr("camera_capturing_photo") }
-        if let message { return message }
-        if captureMode == .video && !controller.isRecording { return L10n.tr("camera_video_mode_hint") }
-        return nil
     }
 
     init() {
@@ -68,7 +56,6 @@ final class PrivateCameraViewModel: ObservableObject {
         focusClearTask?.cancel()
         recordingTimerTask?.cancel()
         shutterFeedbackTask?.cancel()
-        statusClearTask?.cancel()
         controller.stop()
     }
 
@@ -99,9 +86,9 @@ final class PrivateCameraViewModel: ObservableObject {
                     self?.isCapturing = false
                     switch result {
                     case .success(let url):
-                        await self?.saveToVault(tempURL: url, isVideo: false, successKey: nil)
+                        await self?.saveToVault(tempURL: url, isVideo: false)
                     case .failure:
-                        self?.message = L10n.tr("camera_capture_failed")
+                        UINotificationFeedbackGenerator().notificationOccurred(.error)
                     }
                 }
             }
@@ -119,9 +106,6 @@ final class PrivateCameraViewModel: ObservableObject {
                 onStarted: { [weak self] in
                     guard let self else { return }
                     isCapturing = false
-                    if controller.microphoneDenied {
-                        message = L10n.tr("camera_microphone_denied")
-                    }
                     startRecordingTimer()
                 },
                 completion: { [weak self] result in
@@ -129,9 +113,9 @@ final class PrivateCameraViewModel: ObservableObject {
                         self?.stopRecordingTimer()
                         switch result {
                         case .success(let url):
-                            await self?.saveToVault(tempURL: url, isVideo: true, successKey: "camera_video_saved")
+                            await self?.saveToVault(tempURL: url, isVideo: true)
                         case .failure:
-                            self?.message = L10n.tr("camera_video_import_failed")
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
                         }
                     }
                 }
@@ -149,7 +133,6 @@ final class PrivateCameraViewModel: ObservableObject {
         if mode == .video {
             controller.prepareForVideoMode()
         }
-        showTransientStatus(mode == .video ? L10n.tr("camera_video_mode_hint") : L10n.tr("camera_photo_mode_hint"))
     }
 
     func flipCamera() {
@@ -175,7 +158,6 @@ final class PrivateCameraViewModel: ObservableObject {
     func setZoom(_ value: CGFloat) {
         controller.setZoomFactor(value)
         UISelectionFeedbackGenerator().selectionChanged()
-        showTransientStatus(L10n.tr("camera_zoom_status", Self.formatZoom(value)))
     }
 
     func setExposure(_ value: Float) {
@@ -230,15 +212,13 @@ final class PrivateCameraViewModel: ObservableObject {
         recordingTimerTask = nil
     }
 
-    private func saveToVault(tempURL: URL, isVideo: Bool, successKey: String?) async {
+    private func saveToVault(tempURL: URL, isVideo: Bool) async {
         isSaving = true
         defer { isSaving = false }
         if let path = await VaultStore.shared.finalizeCameraCapture(tempURL: tempURL) {
             lastCapture = LastCameraCapture(path: path, isVideo: isVideo)
-            message = successKey.map { L10n.tr($0) }
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         } else {
-            message = L10n.tr("camera_video_import_failed")
             UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
     }
@@ -256,27 +236,9 @@ final class PrivateCameraViewModel: ObservableObject {
         }
     }
 
-    private func showTransientStatus(_ text: String) {
-        transientStatus = text
-        statusClearTask?.cancel()
-        statusClearTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 1_000_000_000)
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                self?.transientStatus = nil
-            }
-        }
-    }
-
     private static func formatDuration(_ seconds: Int) -> String {
         let minutes = seconds / 60
         let remainder = seconds % 60
         return String(format: "%02d:%02d", minutes, remainder)
-    }
-
-    private static func formatZoom(_ value: CGFloat) -> String {
-        if abs(value - 1) < 0.05 { return "1x" }
-        if value < 1 { return String(format: "%.1fx", value) }
-        return String(format: "%.0fx", value)
     }
 }
