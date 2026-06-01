@@ -334,6 +334,22 @@
                 },
                 {
                   "type": "frame",
+                  "id": "remove_location_action",
+                  "layout": "vertical",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "cornerRadius": 21,
+                  "fill": "#4A9EFF18",
+                  "gap": 5,
+                  "alignItems": "center",
+                  "justifyContent": "center",
+                  "children": [
+                    { "type": "icon_font", "id": "remove_location_icon", "iconFontFamily": "lucide", "iconFontName": "map-pin-off", "fill": "#4A9EFF", "width": 21, "height": 21 },
+                    { "type": "text", "id": "remove_location_text", "content": "Remove Location", "fontFamily": "Inter", "fontSize": 10, "fontWeight": "600", "letterSpacing": 0, "fill": "#4A9EFF" }
+                  ]
+                },
+                {
+                  "type": "frame",
                   "id": "eVxFg",
                   "layout": "vertical",
                   "width": "fill_container",

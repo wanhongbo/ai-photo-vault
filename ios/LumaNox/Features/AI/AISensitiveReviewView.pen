@@ -153,7 +153,7 @@
                     {
                       "type": "text",
                       "id": "desc_ai_sensitive_review",
-                      "content": "检查命中类型，逐项预览、打码或忽略。所有识别都只在本机完成。",
+                      "content": "检查命中类型，逐项预览、处理或忽略。所有识别都只在本机完成。",
                       "fontFamily": "Inter",
                       "fill": "#8EA2C0",
                       "fontSize": 13,
@@ -459,7 +459,7 @@
                         {
                           "type": "text",
                           "id": "sensitive_row_high_redact_text",
-                          "content": "打码",
+                          "content": "处理",
                           "fontFamily": "Inter",
                           "fill": "#DCEBFF",
                           "fontSize": 12,
@@ -686,7 +686,7 @@
                         {
                           "type": "text",
                           "id": "sensitive_row_medium_redact_text",
-                          "content": "打码",
+                          "content": "处理",
                           "fontFamily": "Inter",
                           "fill": "#DCEBFF",
                           "fontSize": 12,
@@ -913,7 +913,7 @@
                         {
                           "type": "text",
                           "id": "sensitive_row_low_redact_text",
-                          "content": "打码",
+                          "content": "处理",
                           "fontFamily": "Inter",
                           "fill": "#DCEBFF",
                           "fontSize": 12,
@@ -1118,7 +1118,7 @@
                     {
                       "type": "text",
                       "id": "location_sensitive_desc",
-                      "content": "Review sensitive media and open Privacy Blur for each one.",
+                      "content": "Review sensitive media, then process each item from the preview.",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "400",
@@ -1334,7 +1334,7 @@
                         {
                           "type": "text",
                           "id": "location_sensitive_safe_copy_text",
-                          "content": "Safe copy",
+                          "content": "Process",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "800",

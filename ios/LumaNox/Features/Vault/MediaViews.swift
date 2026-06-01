@@ -607,6 +607,8 @@ struct PhotoViewerView: View {
     @EnvironmentObject private var router: AppRouter
     @EnvironmentObject private var vaultStore: VaultStore
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var aiService = VaultAIAnalysisService.shared
+    @ObservedObject private var redactionService = PrivacyRedactionService.shared
     let path: String
     var isTrash: Bool = false
     var source: PhotoViewerSource = .recent
@@ -624,6 +626,7 @@ struct PhotoViewerView: View {
     @State private var showShareFailure = false
     @State private var exportAlertMessage: String?
     @State private var showExportAlert = false
+    @State private var isRemovingLocation = false
 
     init(
         path: String,
@@ -670,7 +673,10 @@ struct PhotoViewerView: View {
                         bottomInset: proxy.safeAreaInsets.bottom,
                         isPreparingShare: isPreparingShare,
                         isExportingSystem: isExportingSystem,
+                        isRemovingLocation: isRemovingLocation,
+                        showsRemoveLocation: currentHasLocationRisk,
                         onShare: prepareShare,
+                        onRemoveLocation: removeLocationMetadata,
                         onRedact: { router.pushInCurrentTab(.privacyRedact(path: currentPath)) },
                         onExportSystem: exportToSystemPhotos,
                         onDelete: { showDelete = true }
@@ -710,6 +716,13 @@ struct PhotoViewerView: View {
             Button(L10n.commonOk, role: .cancel) {}
         }
         .edgeSwipeBack { dismiss() }
+    }
+
+    private var currentHasLocationRisk: Bool {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return aiService.records.contains { record in
+            record.absoluteURL(documentsDirectory: documents).path == currentPath && record.ai.tags.contains(VaultAITag.location)
+        }
     }
 
     private func restoreFromTrash() async {
@@ -810,6 +823,21 @@ struct PhotoViewerView: View {
                     showExportAlert = true
                     isExportingSystem = false
                 }
+            }
+        }
+    }
+
+    private func removeLocationMetadata() {
+        guard !isRemovingLocation else { return }
+        isRemovingLocation = true
+        let pathToClean = currentPath
+        Task {
+            _ = await redactionService.saveMetadataSafeCopy(path: pathToClean)
+            await MainActor.run {
+                exportAlertMessage = redactionService.lastMessage
+                showExportAlert = redactionService.lastMessage != nil
+                isRemovingLocation = false
+                aiService.refreshSummary()
             }
         }
     }
@@ -966,7 +994,10 @@ private struct PhotoViewerActionDock: View {
     let bottomInset: CGFloat
     let isPreparingShare: Bool
     let isExportingSystem: Bool
+    let isRemovingLocation: Bool
+    let showsRemoveLocation: Bool
     let onShare: () -> Void
+    let onRemoveLocation: () -> Void
     let onRedact: () -> Void
     let onExportSystem: () -> Void
     let onDelete: () -> Void
@@ -987,6 +1018,15 @@ private struct PhotoViewerActionDock: View {
                         foreground: LNColor.title,
                         action: onShare
                     )
+                    if showsRemoveLocation {
+                        PhotoViewerDockButton(
+                            title: L10n.tr("photo_viewer_remove_location"),
+                            systemImage: isRemovingLocation ? "hourglass" : "location.slash",
+                            foreground: LNColor.brandBlue,
+                            background: LNColor.brandBlue.opacity(0.10),
+                            action: onRemoveLocation
+                        )
+                    }
                     PhotoViewerDockButton(
                         title: L10n.tr("photo_viewer_redact"),
                         systemImage: "eye.slash",

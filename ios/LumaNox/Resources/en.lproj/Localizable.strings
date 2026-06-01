@@ -185,7 +185,7 @@
 "ai_sensitive_count_fmt" = "%d sensitive items";
 "ai_sensitive_count_may_contain_fmt" = "%d items may contain sensitive info";
 "ai_sensitive_live_desc" = "Faces, text, IDs, bank cards, and barcodes are reviewed locally on this device.";
-"ai_sensitive_review_blur_desc" = "Review sensitive media and open Privacy Blur for each one.";
+"ai_sensitive_review_blur_desc" = "Review sensitive media, then process each item from the preview.";
 "ai_sensitive_location_count_fmt" = "%d photos include hidden location data.";
 "ai_sensitive_empty_title" = "No sensitive items found";
 "ai_sensitive_empty_desc" = "Run a scan again after importing new media.";
@@ -197,6 +197,7 @@
 "ai_sensitive_queue_title" = "Review queue";
 "ai_sensitive_queue_sort" = "Sorted by risk";
 "ai_sensitive_preview_hint" = "Tap thumbnail to preview";
+"ai_sensitive_process_action" = "Process";
 "ai_sensitive_redact_action" = "Redact";
 "ai_sensitive_safe_copy_action" = "Safe copy";
 "ai_sensitive_ignore_action" = "Ignore";
@@ -285,6 +286,7 @@
 "photo_viewer_title" = "Photo";
 "photo_viewer_counter" = "%d / %d";
 "photo_viewer_share" = "Share";
+"photo_viewer_remove_location" = "Remove Location";
 "photo_viewer_redact" = "Redact";
 "photo_viewer_export_system" = "Export";
 "photo_viewer_delete" = "Delete";

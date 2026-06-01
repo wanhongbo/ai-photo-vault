@@ -185,7 +185,7 @@
 "ai_sensitive_count_fmt" = "%d 项敏感内容";
 "ai_sensitive_count_may_contain_fmt" = "%d 项可能包含敏感信息";
 "ai_sensitive_live_desc" = "人脸、文字、证件、银行卡和二维码只在此设备本地检查。";
-"ai_sensitive_review_blur_desc" = "检查敏感媒体，并可逐项进入隐私打码。";
+"ai_sensitive_review_blur_desc" = "检查敏感媒体，并从预览页统一处理。";
 "ai_sensitive_location_count_fmt" = "%d 张照片包含隐藏位置数据。";
 "ai_sensitive_empty_title" = "未发现敏感内容";
 "ai_sensitive_empty_desc" = "导入新媒体后可重新扫描。";
@@ -197,6 +197,7 @@
 "ai_sensitive_queue_title" = "审核队列";
 "ai_sensitive_queue_sort" = "按风险排序";
 "ai_sensitive_preview_hint" = "点击缩略图预览原图";
+"ai_sensitive_process_action" = "处理";
 "ai_sensitive_redact_action" = "打码";
 "ai_sensitive_safe_copy_action" = "安全副本";
 "ai_sensitive_ignore_action" = "忽略";
@@ -285,6 +286,7 @@
 "photo_viewer_title" = "查看照片";
 "photo_viewer_counter" = "%d / %d";
 "photo_viewer_share" = "分享";
+"photo_viewer_remove_location" = "去除位置";
 "photo_viewer_redact" = "打码";
 "photo_viewer_export_system" = "导出";
 "photo_viewer_delete" = "删除";

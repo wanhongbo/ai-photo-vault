@@ -549,9 +549,6 @@ struct AISensitiveReviewView: View {
     @EnvironmentObject private var router: AppRouter
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var aiService = VaultAIAnalysisService.shared
-    @ObservedObject private var redactionService = PrivacyRedactionService.shared
-    @State private var safeCopyRecordID: String?
-    @State private var toastMessage: String?
 
     private var locationRiskCount: Int {
         aiService.sensitiveRecords.filter { $0.ai.tags.contains(VaultAITag.location) }.count
@@ -583,14 +580,9 @@ struct AISensitiveReviewView: View {
                         records: records,
                         width: cardWidth,
                         onOpen: { open(mediaItem($0)) },
-                        onRedact: { record in
-                            router.pushAI(.privacyRedact(path: mediaItem(record).path))
-                        },
-                        onSafeCopy: saveLocationSafeCopy,
                         onIgnore: { record in
                             aiService.ignoreSensitiveCandidate(recordID: record.id)
-                        },
-                        safeCopyRecordID: safeCopyRecordID
+                        }
                     )
                     .accessibilityIdentifier("ai_sensitive_candidates_list")
                 }
@@ -600,15 +592,6 @@ struct AISensitiveReviewView: View {
             .padding(.bottom, 44)
         }
         .task { aiService.refreshSummary() }
-        .overlay(alignment: .top) {
-            if let toastMessage {
-                PrivacyRedactToast(message: toastMessage)
-                    .padding(.top, 82)
-                    .padding(.horizontal, 24)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: toastMessage)
         .accessibilityIdentifier("ai_sensitive_review_view")
     }
 
@@ -617,31 +600,6 @@ struct AISensitiveReviewView: View {
             router.pushAI(.videoPlayer(path: item.path, isTrash: false, source: .aiSensitive))
         } else {
             router.pushAI(.photoViewer(path: item.path, isTrash: false, source: .aiSensitive))
-        }
-    }
-
-    private func saveLocationSafeCopy(_ record: VaultMediaRecord) {
-        guard safeCopyRecordID == nil else { return }
-        safeCopyRecordID = record.id
-        Task {
-            _ = await redactionService.saveMetadataSafeCopy(path: mediaItem(record).path)
-            await MainActor.run {
-                safeCopyRecordID = nil
-                if let message = redactionService.lastMessage {
-                    showToast(message)
-                }
-                aiService.refreshSummary()
-            }
-        }
-    }
-
-    private func showToast(_ message: String) {
-        toastMessage = message
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_200_000_000)
-            if toastMessage == message {
-                toastMessage = nil
-            }
         }
     }
 }
@@ -2027,10 +1985,7 @@ private struct AISensitiveCandidateListPanel: View {
     let records: [VaultMediaRecord]
     let width: CGFloat
     let onOpen: (VaultMediaRecord) -> Void
-    let onRedact: (VaultMediaRecord) -> Void
-    let onSafeCopy: (VaultMediaRecord) -> Void
     let onIgnore: (VaultMediaRecord) -> Void
-    let safeCopyRecordID: String?
 
     var body: some View {
         LazyVStack(spacing: 0) {
@@ -2067,10 +2022,7 @@ private struct AISensitiveCandidateListPanel: View {
                 AISensitiveCandidateRow(
                     record: record,
                     onOpen: { onOpen(record) },
-                    onRedact: { onRedact(record) },
-                    onSafeCopy: { onSafeCopy(record) },
-                    onIgnore: { onIgnore(record) },
-                    isSafeCopyBusy: safeCopyRecordID == record.id
+                    onIgnore: { onIgnore(record) }
                 )
 
                 if record.id != records.last?.id {
@@ -2094,14 +2046,7 @@ private struct AISensitiveCandidateListPanel: View {
 private struct AISensitiveCandidateRow: View {
     let record: VaultMediaRecord
     let onOpen: () -> Void
-    let onRedact: () -> Void
-    let onSafeCopy: () -> Void
     let onIgnore: () -> Void
-    let isSafeCopyBusy: Bool
-
-    private var isMetadataRisk: Bool {
-        !Set(record.ai.tags).isDisjoint(with: VaultAITag.metadataPrivacyTags)
-    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -2117,17 +2062,11 @@ private struct AISensitiveCandidateRow: View {
             .accessibilityLabel(mediaItem(record).fileName)
 
             VStack(alignment: .trailing, spacing: 8) {
-                Button(action: isMetadataRisk ? onSafeCopy : onRedact) {
+                Button(action: onOpen) {
                     HStack(spacing: 5) {
-                        if isSafeCopyBusy {
-                            ProgressView()
-                                .tint(Color(hex: 0xDCEBFF))
-                                .scaleEffect(0.72)
-                        } else {
-                            Image(systemName: metadataRiskIcon)
-                                .font(.system(size: 12, weight: .bold))
-                        }
-                        Text(isMetadataRisk ? L10n.tr("ai_sensitive_safe_copy_action") : L10n.tr("ai_sensitive_redact_action"))
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 12, weight: .bold))
+                        Text(L10n.tr("ai_sensitive_process_action"))
                             .font(.system(size: 12, weight: .bold))
                             .lineLimit(1)
                             .minimumScaleFactor(0.78)
@@ -2139,7 +2078,6 @@ private struct AISensitiveCandidateRow: View {
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: 0x2A5B8C), lineWidth: 1))
                 }
                 .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
-                .disabled(isSafeCopyBusy)
 
                 Button(action: onIgnore) {
                     HStack(spacing: 5) {
@@ -2223,11 +2161,6 @@ private struct AISensitiveCandidateRow: View {
         if score >= 0.78 { return "exclamationmark.octagon" }
         if score >= 0.58 { return "viewfinder" }
         return "text.bubble"
-    }
-
-    private var metadataRiskIcon: String {
-        guard isMetadataRisk else { return "wand.and.stars" }
-        return record.ai.tags.contains(VaultAITag.location) ? "location.slash" : "doc.on.doc"
     }
 }
 
