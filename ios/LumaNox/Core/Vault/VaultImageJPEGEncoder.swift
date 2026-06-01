@@ -1,6 +1,19 @@
 import UIKit
 
 enum VaultImageJPEGEncoder {
+    static func metadataStrippedJPEGData(
+        from rawData: Data,
+        compressionQuality: CGFloat,
+        backgroundColor: UIColor = .black
+    ) -> Data? {
+        guard let image = UIImage(data: rawData) else { return nil }
+        return opaqueJPEGData(
+            from: image,
+            compressionQuality: compressionQuality,
+            backgroundColor: backgroundColor
+        )
+    }
+
     static func opaqueJPEGData(
         from image: UIImage,
         compressionQuality: CGFloat,

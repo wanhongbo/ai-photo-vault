@@ -602,9 +602,10 @@ extension CameraSessionController: AVCapturePhotoCaptureDelegate {
 
             cameraPhotoProcessingQueue.async { [weak self] in
                 let result: Result<URL, Error>
-                if let data = photo.fileDataRepresentation() {
+                if let data = photo.fileDataRepresentation(),
+                   let strippedData = VaultImageJPEGEncoder.metadataStrippedJPEGData(from: data, compressionQuality: 0.95) {
                     do {
-                        try data.write(to: url, options: .atomic)
+                        try strippedData.write(to: url, options: .atomic)
                         result = .success(url)
                     } catch {
                         PlaintextTempFileManager.shared.removeItem(url)
