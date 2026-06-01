@@ -151,7 +151,7 @@ private struct SettingsSubscriptionIcon: View {
     let size: CGFloat
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             RoundedRectangle(cornerRadius: size * 0.23)
                 .fill(backgroundGradient)
                 .overlay(
@@ -164,7 +164,8 @@ private struct SettingsSubscriptionIcon: View {
                 .font(.system(size: size * 0.38, weight: .bold))
                 .foregroundStyle(primaryIconColor)
                 .offset(y: size * 0.04)
-
+        }
+        .overlay(alignment: .topTrailing) {
             Image(systemName: isPremium ? "checkmark.seal.fill" : "sparkles")
                 .font(.system(size: size * 0.15, weight: .bold))
                 .foregroundStyle(LNColor.paywallGold)
