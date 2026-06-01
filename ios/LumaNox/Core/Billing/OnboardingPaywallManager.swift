@@ -33,7 +33,7 @@ enum PaywallPromptManager {
     private static let maxLifetimeSoftPrompts = 2
     private static let cooldown: TimeInterval = 7 * 24 * 60 * 60
     private static let vaultValueMinItems = 5
-    private static let vaultNearLimitItems = 40
+    private static let vaultNearLimitItems = FreeQuota.maxVaultItems * 4 / 5
     private static let aiNearLimitCount = 7
 
     static func promptAfterVaultImport(currentVaultCount: Int) -> SoftPaywallReason? {

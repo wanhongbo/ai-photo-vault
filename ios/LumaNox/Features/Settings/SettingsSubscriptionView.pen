@@ -108,9 +108,9 @@
               "cornerRadius": 12,
               "padding": [12, 12, 12, 12],
               "children": [
-                { "type": "text", "content": "Vault storage 0/50", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "600", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" },
+                { "type": "text", "content": "Vault storage 0/100", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "600", "fill": "#EAF1FF", "width": "fill_container", "textGrowth": "fixed-width" },
                 { "type": "rectangle", "name": "Progress Track", "width": "fill_container", "height": 5, "fill": "#223247", "cornerRadius": 3 },
-                { "type": "text", "content": "Free plan supports up to 50 encrypted vault items.", "fontFamily": "Inter", "fontSize": 12, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }
+                { "type": "text", "content": "Free plan supports up to 100 encrypted vault items.", "fontFamily": "Inter", "fontSize": 12, "fill": "#8EA2C0", "width": "fill_container", "textGrowth": "fixed-width" }
               ]
             },
             {
