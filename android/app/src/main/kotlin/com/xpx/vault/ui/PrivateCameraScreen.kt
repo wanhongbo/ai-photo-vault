@@ -115,6 +115,8 @@ import com.xpx.vault.ui.theme.UiTextSize
 import com.xpx.vault.ui.vault.DEFAULT_ALBUM_NAME
 import com.xpx.vault.ui.vault.VaultStore
 import java.io.File
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.math.roundToInt
@@ -212,6 +214,16 @@ fun PrivateCameraScreen(
     var showSettingsPanel by remember { mutableStateOf(false) }
     var videoResolution by remember { mutableStateOf("FHD") }
     var videoFps by remember { mutableStateOf("30") }
+    val cameraCaptureExecutor = remember {
+        Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "private-camera-capture").apply {
+                priority = Thread.NORM_PRIORITY - 1
+            }
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose { cameraCaptureExecutor.shutdown() }
+    }
 
     val shutterSound = remember { MediaActionSound() }
     DisposableEffect(Unit) {
@@ -308,7 +320,7 @@ fun PrivateCameraScreen(
         }
     }
 
-    LaunchedEffect(hasCameraPermission, previewViewRef, lensFacing, flashMode, lifecycleOwner, rebindTick) {
+    LaunchedEffect(hasCameraPermission, previewViewRef, lensFacing, flashMode, captureMode, lifecycleOwner, rebindTick) {
         val previewView = previewViewRef ?: return@LaunchedEffect
         if (!hasCameraPermission) return@LaunchedEffect
         bindStartMs = System.currentTimeMillis()
@@ -324,6 +336,8 @@ fun PrivateCameraScreen(
             previewView = previewView,
             lensFacing = lensFacing,
             flashMode = flashMode,
+            captureMode = captureMode,
+            imageCaptureExecutor = cameraCaptureExecutor,
             onReady = { capture, video, camera, flashAvailable, minZoom, maxZoom, minExposure, maxExposure ->
                 imageCapture = capture
                 videoCapture = video
@@ -409,7 +423,7 @@ fun PrivateCameraScreen(
                 AndroidView(modifier = Modifier.fillMaxSize(), factory = { viewContext ->
                     PreviewView(viewContext).apply {
                         scaleType = PreviewView.ScaleType.FILL_CENTER
-                        implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                        implementationMode = PreviewView.ImplementationMode.PERFORMANCE
                         previewViewRef = this
                     }
                 })
@@ -565,46 +579,61 @@ fun PrivateCameraScreen(
                         }
                         val capture = imageCapture ?: return@ShutterButton
                         message = null
+                        capturing = true
                         scope.launch {
                             captureAttempts += 1
                             val captureStart = System.currentTimeMillis()
+                            var captureCompleted = false
                             Log.i(CAMERA_DIAG_TAG, "event=capture_start attempt=$captureAttempts")
-                            if (timerSeconds > 0) {
-                                for (second in timerSeconds downTo 1) {
-                                    countdownRemaining = second
-                                    delay(1000)
+                            try {
+                                if (timerSeconds > 0) {
+                                    for (second in timerSeconds downTo 1) {
+                                        countdownRemaining = second
+                                        delay(1000)
+                                    }
+                                    countdownRemaining = null
                                 }
-                                countdownRemaining = null
-                            }
-                            shutterSound.play(MediaActionSound.SHUTTER_CLICK)
-                            shutterOverlay = true
-                            delay(90)
-                            shutterOverlay = false
-                            capturing = true
-                            val result = captureToTempFile(context, capture)
-                            capturing = false
-                            val elapsed = System.currentTimeMillis() - captureStart
-                            peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
-                            if (result.path != null) {
-                                captureSuccessCount += 1
-                                val vaultPath = savePendingToVault(context, result.path)
-                                if (vaultPath != null) {
-                                    lastMediaPath = vaultPath
-                                    message = context.getString(R.string.camera_photo_saved)
-                                    // 拍照入库后触发一次增量 AI 扫描。
-                                    com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
-                                } else if (!VaultStore.canAddNewItem(context)) {
-                                    onPaywallRequired()
+                                shutterSound.play(MediaActionSound.SHUTTER_CLICK)
+                                shutterOverlay = true
+                                launch {
+                                    delay(90)
+                                    shutterOverlay = false
+                                }
+                                val result = captureToTempFile(context, capture, cameraCaptureExecutor)
+                                captureCompleted = true
+                                capturing = false
+                                val elapsed = System.currentTimeMillis() - captureStart
+                                peakMemoryMb = updatePeakMemoryMb(peakMemoryMb)
+                                if (result.path != null) {
+                                    captureSuccessCount += 1
+                                    val saveStart = System.currentTimeMillis()
+                                    val vaultPath = savePendingToVault(context, result.path)
+                                    val saveElapsed = System.currentTimeMillis() - saveStart
+                                    if (vaultPath != null) {
+                                        lastMediaPath = vaultPath
+                                        message = context.getString(R.string.camera_photo_saved)
+                                        // 拍照入库后触发一次增量 AI 扫描。
+                                        com.xpx.vault.ai.AiScanEntryPoint.from(context).requestScan()
+                                    } else if (!VaultStore.canAddNewItem(context)) {
+                                        onPaywallRequired()
+                                    } else {
+                                        message = context.getString(R.string.camera_save_failed_storage)
+                                    }
+                                    Log.i(
+                                        CAMERA_DIAG_TAG,
+                                        "event=capture_success elapsed_ms=$elapsed save_ms=$saveElapsed success=$captureSuccessCount fail=$captureFailureCount peak_mem_mb=$peakMemoryMb",
+                                    )
                                 } else {
-                                    message = context.getString(R.string.camera_save_failed_storage)
+                                    captureFailureCount += 1
+                                    val failRate = (captureFailureCount * 100f / captureAttempts).roundToInt()
+                                    val code = result.errorCode ?: CaptureErrorCode.UNKNOWN
+                                    message = captureErrorMessage(context, code)
+                                    Log.e(CAMERA_DIAG_TAG, "event=capture_failed code=$code elapsed_ms=$elapsed fail_rate_pct=$failRate success=$captureSuccessCount fail=$captureFailureCount")
                                 }
-                                Log.i(CAMERA_DIAG_TAG, "event=capture_success elapsed_ms=$elapsed success=$captureSuccessCount fail=$captureFailureCount peak_mem_mb=$peakMemoryMb")
-                            } else {
-                                captureFailureCount += 1
-                                val failRate = (captureFailureCount * 100f / captureAttempts).roundToInt()
-                                val code = result.errorCode ?: CaptureErrorCode.UNKNOWN
-                                message = captureErrorMessage(context, code)
-                                Log.e(CAMERA_DIAG_TAG, "event=capture_failed code=$code elapsed_ms=$elapsed fail_rate_pct=$failRate success=$captureSuccessCount fail=$captureFailureCount")
+                            } finally {
+                                if (!captureCompleted) capturing = false
+                                countdownRemaining = null
+                                shutterOverlay = false
                             }
                         }
                     })
@@ -648,7 +677,7 @@ fun PrivateCameraScreen(
                             val selected = captureMode == mode
                             Box(
                                 Modifier
-                                    .clickable { captureMode = mode }
+                                    .clickable(enabled = !capturing && !isRecording) { captureMode = mode }
                                     .background(if (selected) Color(0xFF4A9EFF) else Color.Transparent, RoundedCornerShape(14.dp))
                                     .padding(horizontal = 14.dp, vertical = 6.dp),
                                 contentAlignment = Alignment.Center,
@@ -676,7 +705,9 @@ private fun bindCameraUseCases(
     previewView: PreviewView,
     lensFacing: Int,
     flashMode: FlashUiMode,
-    onReady: (ImageCapture, VideoCapture<Recorder>, Camera, Boolean, Float, Float, Int, Int) -> Unit,
+    captureMode: CameraCaptureMode,
+    imageCaptureExecutor: Executor,
+    onReady: (ImageCapture, VideoCapture<Recorder>?, Camera, Boolean, Float, Float, Int, Int) -> Unit,
     onFallbackLens: (Int) -> Unit,
     onBindFailed: (Throwable) -> Unit,
 ) {
@@ -687,6 +718,7 @@ private fun bindCameraUseCases(
                 val provider = providerFuture.get()
                 val imageCapture = ImageCapture.Builder()
                     .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .setIoExecutor(imageCaptureExecutor)
                     .setFlashMode(
                         when (flashMode) {
                             FlashUiMode.OFF -> ImageCapture.FLASH_MODE_OFF
@@ -696,25 +728,28 @@ private fun bindCameraUseCases(
                     )
                     .setTargetRotation(context.display?.rotation ?: Surface.ROTATION_0)
                     .build()
-                val recorder = Recorder.Builder()
-                    .setQualitySelector(
-                        QualitySelector.from(
-                            Quality.HD,
-                            FallbackStrategy.lowerQualityOrHigherThan(Quality.SD),
-                        ),
-                    )
-                    .build()
-                val videoCapture = VideoCapture.withOutput(recorder)
+                val videoCapture = if (captureMode == CameraCaptureMode.VIDEO) {
+                    val recorder = Recorder.Builder()
+                        .setQualitySelector(
+                            QualitySelector.from(
+                                Quality.HD,
+                                FallbackStrategy.lowerQualityOrHigherThan(Quality.SD),
+                            ),
+                        )
+                        .build()
+                    VideoCapture.withOutput(recorder)
+                } else {
+                    null
+                }
                 fun bindWithLens(targetLens: Int): Camera {
                     val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
                     provider.unbindAll()
-                    return provider.bindToLifecycle(
-                        lifecycleOwner,
-                        CameraSelector.Builder().requireLensFacing(targetLens).build(),
-                        preview,
-                        imageCapture,
-                        videoCapture,
-                    )
+                    val selector = CameraSelector.Builder().requireLensFacing(targetLens).build()
+                    return if (videoCapture != null) {
+                        provider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture, videoCapture)
+                    } else {
+                        provider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture)
+                    }
                 }
                 var usedLens = lensFacing
                 val camera = runCatching { bindWithLens(lensFacing) }.getOrElse {
@@ -748,11 +783,15 @@ private fun bindCameraUseCases(
 private suspend fun captureToTempFile(
     context: Context,
     imageCapture: ImageCapture,
+    imageCaptureExecutor: Executor,
 ): CaptureTempResult = withContext(Dispatchers.IO) {
     val tempFile = File(context.cacheDir, "pv_capture_${System.currentTimeMillis()}.jpg")
     val shotResult = withTimeoutOrNull(10_000) {
-        suspendImageCaptureToFile(context, imageCapture, tempFile)
-    } ?: return@withContext CaptureTempResult(errorCode = CaptureErrorCode.TIMEOUT)
+        suspendImageCaptureToFile(imageCapture, tempFile, imageCaptureExecutor)
+    } ?: run {
+        tempFile.delete()
+        return@withContext CaptureTempResult(errorCode = CaptureErrorCode.TIMEOUT)
+    }
     if (shotResult.success) {
         CaptureTempResult(path = tempFile.absolutePath)
     } else {
@@ -824,14 +863,18 @@ private suspend fun decodePreviewBitmap(
 }
 
 private suspend fun suspendImageCaptureToFile(
-    context: Context,
     imageCapture: ImageCapture,
     target: File,
+    imageCaptureExecutor: Executor,
 ): CaptureShotResult = suspendCancellableCoroutine { continuation ->
     imageCapture.takePicture(
-        ContextCompat.getMainExecutor(context),
+        imageCaptureExecutor,
         object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
+                if (!continuation.isActive) {
+                    image.close()
+                    return
+                }
                 val rotationDegrees = image.imageInfo.rotationDegrees
                 val buffer = image.planes[0].buffer
                 val bytes = ByteArray(buffer.remaining()).also { buffer.get(it) }
@@ -862,6 +905,9 @@ private suspend fun suspendImageCaptureToFile(
             }
         },
     )
+    continuation.invokeOnCancellation {
+        target.delete()
+    }
 }
 
 @Composable
