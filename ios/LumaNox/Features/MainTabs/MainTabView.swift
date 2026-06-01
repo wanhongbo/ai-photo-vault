@@ -16,9 +16,15 @@ struct MainTabView: View {
                 .padding(.bottom, bottomTabReservedHeight)
 
             if shouldShowBottomTabBar {
-                LNBottomTabBar(selected: $router.selectedTab, onCameraTap: {
-                    router.openPrivateCamera()
-                })
+                LNBottomTabBar(
+                    selected: $router.selectedTab,
+                    onCameraPressBegan: {
+                        privateCameraViewModel.startForPresentation()
+                    },
+                    onCameraTap: {
+                        router.openPrivateCamera()
+                    }
+                )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }

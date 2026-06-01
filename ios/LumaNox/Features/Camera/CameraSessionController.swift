@@ -101,7 +101,7 @@ final class CameraSessionController: NSObject, ObservableObject {
 
     func prepareForFastStart() {
         guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { return }
-        reconfigure(position: currentPosition, startAfterConfigure: false, reuseConfiguredSession: !hasConfiguredMovieOutput)
+        reconfigure(position: currentPosition, startAfterConfigure: false, reuseConfiguredSession: true)
     }
 
     func prepareForVideoMode() {

@@ -2,12 +2,14 @@ import SwiftUI
 
 struct LNBottomTabBar: View {
     @Binding var selected: MainTab
+    let onCameraPressBegan: () -> Void
     let onCameraTap: () -> Void
 
     private let itemSpacing: CGFloat = 6
     private let itemHeight: CGFloat = 72
     private let iconBoxSize = CGSize(width: 30, height: 28)
     private let labelHeight: CGFloat = 17
+    @State private var didBeginCameraPress = false
 
     var body: some View {
         HStack(spacing: itemSpacing) {
@@ -62,7 +64,22 @@ struct LNBottomTabBar: View {
             )
         }
         .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
+        .simultaneousGesture(cameraPressGesture(for: tab))
         .accessibilityIdentifier("ln_tab_\(tab.rawValue)")
+    }
+
+    private func cameraPressGesture(for tab: MainTab) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { _ in
+                guard tab == .camera, !didBeginCameraPress else { return }
+                didBeginCameraPress = true
+                onCameraPressBegan()
+            }
+            .onEnded { _ in
+                if tab == .camera {
+                    didBeginCameraPress = false
+                }
+            }
     }
 
     private func iconSize(for tab: MainTab) -> CGFloat {
