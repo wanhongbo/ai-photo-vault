@@ -4,6 +4,7 @@
 # Local tooling venv (e.g. marketing asset scripts)
 .venv-screens/
 .tmp/
+marketing/lumanox-launch-video/output/
 
 # Android / Gradle
 **/.gradle/
