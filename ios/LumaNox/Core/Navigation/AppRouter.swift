@@ -31,6 +31,7 @@ final class AppRouter: ObservableObject {
     }
 
     func openPrivateCamera() {
+        guard presentedRoute != .privateCamera else { return }
         preparePrivateCameraForPresentation?()
         presentedRoute = .privateCamera
     }

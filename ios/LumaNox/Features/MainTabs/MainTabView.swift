@@ -21,9 +21,6 @@ struct MainTabView: View {
                     selected: $router.selectedTab,
                     onCameraPressBegan: {
                         router.openPrivateCamera()
-                    },
-                    onCameraTap: {
-                        router.openPrivateCamera()
                     }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))

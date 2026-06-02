@@ -4,7 +4,6 @@ import UIKit
 struct LNBottomTabBar: View {
     @Binding var selected: MainTab
     let onCameraPressBegan: () -> Void
-    let onCameraTap: () -> Void
 
     private let itemSpacing: CGFloat = 6
     private let itemHeight: CGFloat = 72
@@ -12,6 +11,8 @@ struct LNBottomTabBar: View {
     private let labelHeight: CGFloat = 17
     @State private var didBeginTabPress = false
     @State private var pressedTab: MainTab?
+    @State private var pressResetTask: Task<Void, Never>?
+    @State private var cameraOpenTask: Task<Void, Never>?
 
     var body: some View {
         HStack(spacing: itemSpacing) {
@@ -30,6 +31,12 @@ struct LNBottomTabBar: View {
         .padding(.horizontal, LNSpacing.screenHorizontal)
         .padding(.bottom, 8)
         .accessibilityIdentifier("ln_bottom_tab_bar")
+        .onDisappear {
+            pressResetTask?.cancel()
+            pressResetTask = nil
+            cameraOpenTask?.cancel()
+            cameraOpenTask = nil
+        }
     }
 
     @ViewBuilder
@@ -38,8 +45,8 @@ struct LNBottomTabBar: View {
         let isSelected = activeTab == tab
         Button {
             if tab == .camera {
-                resetPressState()
-                onCameraTap()
+                guard pressedTab != .camera else { return }
+                beginPress(for: tab, opensCamera: true)
             } else {
                 selected = tab
             }
@@ -76,22 +83,53 @@ struct LNBottomTabBar: View {
         DragGesture(minimumDistance: 0)
             .onChanged { _ in
                 guard !didBeginTabPress else { return }
-                didBeginTabPress = true
-                pressedTab = tab
-                UISelectionFeedbackGenerator().selectionChanged()
-                if tab == .camera {
-                    resetPressState()
-                    onCameraPressBegan()
-                } else {
-                    selected = tab
-                }
+                beginPress(for: tab, opensCamera: tab == .camera)
             }
             .onEnded { _ in
-                resetPressState()
+                if tab == .camera {
+                    schedulePressReset(after: 180_000_000)
+                } else {
+                    resetPressState()
+                }
             }
     }
 
+    private func beginPress(for tab: MainTab, opensCamera: Bool) {
+        didBeginTabPress = true
+        pressedTab = tab
+        schedulePressReset(after: tab == .camera ? 420_000_000 : 350_000_000)
+        UISelectionFeedbackGenerator().selectionChanged()
+        if opensCamera {
+            requestCameraOpen()
+        } else {
+            selected = tab
+        }
+    }
+
+    private func requestCameraOpen() {
+        guard cameraOpenTask == nil else { return }
+        cameraOpenTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 35_000_000)
+            guard !Task.isCancelled else { return }
+            onCameraPressBegan()
+            try? await Task.sleep(nanoseconds: 320_000_000)
+            guard !Task.isCancelled else { return }
+            cameraOpenTask = nil
+        }
+    }
+
+    private func schedulePressReset(after nanoseconds: UInt64) {
+        pressResetTask?.cancel()
+        pressResetTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            guard !Task.isCancelled else { return }
+            resetPressState()
+        }
+    }
+
     private func resetPressState() {
+        pressResetTask?.cancel()
+        pressResetTask = nil
         didBeginTabPress = false
         pressedTab = nil
     }
