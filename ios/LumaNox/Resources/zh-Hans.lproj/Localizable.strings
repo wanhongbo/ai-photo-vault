@@ -11,7 +11,7 @@
 "home_title" = "我的保险库";
 "home_nav_vault" = "保险箱";
 "home_nav_camera" = "相机";
-"home_nav_ai" = "AI";
+"home_nav_ai" = "Spark";
 "home_nav_settings" = "设置";
 "home_vault_empty_title" = "保险箱暂无项目";
 "home_vault_empty_desc" = "你收藏到保险箱的内容会显示在这里，并受到锁屏保护。";
@@ -83,7 +83,7 @@
 "private_camera_title" = "私密相机";
 "private_camera_placeholder" = "相机预览";
 
-"ai_title" = "AI 助手";
+"ai_title" = "Spark";
 "ai_home_subtitle" = "本地扫描只在此设备完成";
 "ai_features_title" = "功能";
 "ai_tools_title" = "工具";

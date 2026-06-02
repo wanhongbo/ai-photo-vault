@@ -11,7 +11,7 @@
 "home_title" = "My Vault";
 "home_nav_vault" = "Vault";
 "home_nav_camera" = "Camera";
-"home_nav_ai" = "AI";
+"home_nav_ai" = "Spark";
 "home_nav_settings" = "Settings";
 "home_vault_empty_title" = "Vault is empty";
 "home_vault_empty_desc" = "Imported photos and videos appear here, protected by your lock screen.";
@@ -83,7 +83,7 @@
 "private_camera_title" = "Private Camera";
 "private_camera_placeholder" = "Camera preview";
 
-"ai_title" = "AI Assistant";
+"ai_title" = "Spark";
 "ai_home_subtitle" = "Private scans stay on this device";
 "ai_features_title" = "Features";
 "ai_tools_title" = "Tools";
