@@ -20,7 +20,7 @@
     <string name="home_ai_empty_title">AI tools are not enabled yet</string>
     <string name="home_ai_empty_desc">Smart classification, search, and privacy management suggestions will be available here.</string>
     <string name="home_ai_empty_action">Open AI</string>
-    <string name="ai_title">AI Assistant</string>
+    <string name="ai_title">Spark</string>
     <string name="ai_home_subtitle">Private scans stay on this device</string>
     <string name="ai_subtitle">2026-04-23  Smart engine ready</string>
     <string name="ai_suggest_badge">AI Suggestion</string>
@@ -61,7 +61,7 @@
     <string name="ai_scan_progress_fmt">%1$d of %2$d scanned</string>
     <string name="ai_scan_incremental_hint">Already scanned and unchanged vault media is reused. Stop anytime; completed results stay local.</string>
     <string name="ai_scan_cancelling">Stopping after the current item and saving completed local results.</string>
-    <string name="ai_vault_scan_scanning_desc">Analyzing locally. Media is never uploaded.</string>
+    <string name="ai_vault_scan_scanning_desc">Analyzing decrypted thumbnails locally. File names and OCR text are not shown or uploaded.</string>
     <string name="ai_features_title">Features</string>
     <string name="ai_features_count">6 features</string>
     <string name="ai_features_count_fmt">%1$d features</string>
@@ -84,7 +84,7 @@
     <string name="ai_summary_all_clear_title">Vault scan is clear</string>
     <string name="ai_summary_empty_desc">AI tools use encrypted vault media after you import photos or videos.</string>
     <string name="ai_summary_desc">Check possible faces, IDs, and private details before sharing from the vault.</string>
-    <string name="ai_summary_live_desc">Quality, duplicate, and sensitive checks run locally and update local AI results.</string>
+    <string name="ai_summary_live_desc">Vision, quality, and duplicate checks run locally and update vault metadata.</string>
     <string name="ai_summary_location_desc">Some photos include hidden GPS or device metadata. Create safe JPEG copies before sharing.</string>
     <string name="ai_stat_scanned">Scanned</string>
     <string name="ai_stat_sensitive">Sensitive</string>
@@ -113,7 +113,7 @@
     <string name="home_settings_empty_action">View security policy</string>
     <string name="home_nav_vault">Vault</string>
     <string name="home_nav_camera">Camera</string>
-    <string name="home_nav_ai">AI</string>
+    <string name="home_nav_ai">Spark</string>
     <string name="home_nav_settings">Settings</string>
     <string name="home_permission_title">Allow gallery access</string>
     <string name="home_permission_desc">To import and encrypt your photos and videos, grant media read permission. Data is processed locally only.</string>
