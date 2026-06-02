@@ -91,6 +91,7 @@ fun MainScreen(
             selectedTab = selectedTab,
             showBottomNav = selectedTab == HomeTab.AI,
             onOpenFeature = onOpenAiFeature,
+            onOpenPrivateCamera = onOpenPrivateCamera,
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(if (selectedTab == HomeTab.AI) 1f else 0f)

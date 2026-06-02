@@ -33,14 +33,14 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 
@@ -51,6 +51,7 @@ data class AiScanProgress(
     val running: Boolean = false,
     val total: Int = 0,
     val done: Int = 0,
+    val cancelling: Boolean = false,
 ) {
     val fraction: Float get() = if (total == 0) 0f else done.toFloat() / total
 }
@@ -80,6 +81,7 @@ class AiLocalScanUseCase @Inject constructor(
     private val _progress = MutableStateFlow(AiScanProgress())
     val progress: StateFlow<AiScanProgress> = _progress.asStateFlow()
     private val mutex = Mutex()
+    @Volatile private var cancelRequested = false
 
     /** 供自动触发场景（解锁后、导入后、拍照后）在后台 launch 扫描。 */
     // 使用 IO 调度器：扫描的主要成本是解密 / 磁盘 IO / ML Kit inference（内部自管线程），
@@ -101,8 +103,16 @@ class AiLocalScanUseCase @Inject constructor(
     fun requestScan(force: Boolean = false) {
         // 同步置 running=true，让 ViewModel combine 立即派生 Scanning 状态，
         // 避免 clearSnoozes 触发 versionFlow 时产生中间态闪烁。
+        cancelRequested = false
         _progress.value = AiScanProgress(running = true, total = 0, done = 0)
         appScope.launch { run(force) }
+    }
+
+    fun cancelScan() {
+        if (_progress.value.running) {
+            cancelRequested = true
+            _progress.value = _progress.value.copy(cancelling = true)
+        }
     }
 
     fun launch(scope: CoroutineScope) {
@@ -151,13 +161,24 @@ class AiLocalScanUseCase @Inject constructor(
         coroutineScope {
             photos.map { photo ->
                 async {
+                    if (cancelRequested || !currentCoroutineContext().isActive) return@async
+                    var processed = false
                     semaphore.withPermit {
+                        if (cancelRequested || !currentCoroutineContext().isActive) return@withPermit
                         processOnePhoto(photo, readyAnalyzers, recordedHashes)
+                        processed = true
                     }
+                    if (!processed) return@async
                     val n = doneCounter.incrementAndGet()
                     _progress.value = _progress.value.copy(done = n)
                 }
             }.awaitAll()
+        }
+
+        if (cancelRequested) {
+            cancelRequested = false
+            _progress.value = _progress.value.copy(running = false)
+            return
         }
 
         // 重复聚类：把所有 phash 跑一遍聚类，把非代表张标 is_duplicate=true。

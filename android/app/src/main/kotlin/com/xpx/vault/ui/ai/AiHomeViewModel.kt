@@ -7,8 +7,13 @@ import com.xpx.vault.ai.AiScanProgress
 import com.xpx.vault.ai.core.SensitiveKind
 import com.xpx.vault.domain.model.AiSensitiveRecord
 import com.xpx.vault.domain.repo.AiAnalysisRepository
+import com.xpx.vault.ui.vault.VaultStore
+import com.xpx.vault.ui.vault.isVaultImage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -26,19 +31,21 @@ import kotlinx.coroutines.launch
  */
 @HiltViewModel
 class AiHomeViewModel @Inject constructor(
-    repo: AiAnalysisRepository,
+    @ApplicationContext private val app: Context,
+    private val repo: AiAnalysisRepository,
     private val scanUseCase: AiLocalScanUseCase,
     private val snoozePrefs: AiSuggestSnoozePrefs,
 ) : ViewModel() {
+    private val vaultStats = MutableStateFlow(AiVaultStats())
 
     val uiState: StateFlow<AiHomeUiState> = combine(
         repo.observePendingSensitive(),
         repo.observeBlurry().map { it.size },
         repo.observeDuplicates().map { it.size },
         scanUseCase.progress,
-        snoozePrefs.versionFlow,
-    ) { pendingSensitive, blurry, duplicate, progress, _ ->
-        derive(pendingSensitive, blurry, duplicate, progress)
+        combine(vaultStats, snoozePrefs.versionFlow) { stats, _ -> stats },
+    ) { pendingSensitive, blurry, duplicate, progress, stats ->
+        derive(pendingSensitive, blurry, duplicate, progress, stats)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -46,17 +53,14 @@ class AiHomeViewModel @Inject constructor(
     )
 
     init {
-        // 从未扫过时自动启动扫描：Idle → Scanning 的过渡由真实进度驱动，用户无需手动点击。
-        // requestScan 内部由 mutex 保护，即使 MainActivity 解锁后也触发过，这里重复调用也是幂等。
-        if (!snoozePrefs.hasEverScanned()) {
-            scanUseCase.requestScan()
-        }
+        refreshVaultStats()
         // 监听扫描从 running 切回空闲，记录首次扫描完成时间戳，后续即可进入 AllClear 态。
         viewModelScope.launch {
             var prevRunning = false
             scanUseCase.progress.collect { p ->
                 if (prevRunning && !p.running) {
                     snoozePrefs.markScanCompleted()
+                    refreshVaultStats()
                 }
                 prevRunning = p.running
             }
@@ -71,6 +75,16 @@ class AiHomeViewModel @Inject constructor(
         scanUseCase.requestScan(force = true)
     }
 
+    fun onStartScan() {
+        snoozePrefs.clearAllSnoozes()
+        refreshVaultStats()
+        scanUseCase.requestScan()
+    }
+
+    fun onCancelScan() {
+        scanUseCase.cancelScan()
+    }
+
     /** 用户点击「忽略 7 天」，下次派生时该类型会被跳过。 */
     fun onSnooze(kind: AiSuggestSnoozePrefs.Kind) {
         snoozePrefs.snooze(kind)
@@ -81,6 +95,7 @@ class AiHomeViewModel @Inject constructor(
         blurry: Int,
         duplicate: Int,
         progress: AiScanProgress,
+        stats: AiVaultStats,
     ): AiHomeUiState {
         val cleanup = blurry + duplicate
         val pendingSensitiveCount = pendingSensitive.map { it.photoId }.distinct().size
@@ -92,7 +107,9 @@ class AiHomeViewModel @Inject constructor(
         val hasEverScanned = snoozePrefs.hasEverScanned()
         val suggestion: AiSuggestion = when {
             progress.running ->
-                AiSuggestion.Scanning(done = progress.done, total = progress.total)
+                AiSuggestion.Scanning(done = progress.done, total = progress.total, cancelling = progress.cancelling)
+            stats.totalCount == 0 ->
+                AiSuggestion.Empty
             pendingSensitiveCount > 0 && !snoozePrefs.isSnoozed(AiSuggestSnoozePrefs.Kind.SENSITIVE) ->
                 AiSuggestion.Sensitive(
                     count = pendingSensitiveCount,
@@ -101,21 +118,47 @@ class AiHomeViewModel @Inject constructor(
                 )
             cleanup > 0 && !snoozePrefs.isSnoozed(AiSuggestSnoozePrefs.Kind.CLEANUP) ->
                 AiSuggestion.Cleanup(count = cleanup)
-            hasEverScanned -> AiSuggestion.AllClear
+            hasEverScanned && stats.scannedCount >= stats.imageCount -> AiSuggestion.AllClear
             else -> AiSuggestion.Idle
         }
         return AiHomeUiState(
             suggestion = suggestion,
+            totalCount = stats.totalCount,
+            scannedCount = stats.scannedCount,
+            imageCount = stats.imageCount,
             pendingSensitive = pendingSensitiveCount,
             locationRiskCount = locationRiskCount,
             blurryCount = blurry,
             duplicateCount = duplicate,
         )
     }
+
+    private fun refreshVaultStats() {
+        viewModelScope.launch {
+            val snapshot = runCatching { VaultStore.loadSnapshot(app) }.getOrNull()
+            val photos = runCatching { VaultStore.listRecentPhotos(app, limit = Int.MAX_VALUE) }.getOrDefault(emptyList())
+            val imageCount = photos.count { isVaultImage(it.path) }
+            val scannedCount = runCatching { repo.listAllScannedPhotoIds().size }.getOrDefault(0)
+            vaultStats.value = AiVaultStats(
+                totalCount = snapshot?.totalCount ?: photos.size,
+                imageCount = imageCount,
+                scannedCount = scannedCount.coerceAtMost(imageCount),
+            )
+        }
+    }
 }
+
+private data class AiVaultStats(
+    val totalCount: Int = 0,
+    val imageCount: Int = 0,
+    val scannedCount: Int = 0,
+)
 
 data class AiHomeUiState(
     val suggestion: AiSuggestion = AiSuggestion.Idle,
+    val totalCount: Int = 0,
+    val scannedCount: Int = 0,
+    val imageCount: Int = 0,
     val pendingSensitive: Int = 0,
     val locationRiskCount: Int = 0,
     val blurryCount: Int = 0,

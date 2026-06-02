@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -24,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.xpx.vault.R
@@ -34,49 +34,33 @@ import com.xpx.vault.ui.theme.UiColors
 import com.xpx.vault.ui.theme.UiRadius
 import com.xpx.vault.ui.theme.UiSize
 
-/**
- * AI Tab 顶部「建议卡片」主入口。根据 [uiState.suggestion] 分发到对应的子 composable。
- *
- * @param onOpenFeature 跳转到指定 AI 功能页（由上层把 [AiFeatureKey] 映射成路由）。
- *                      注意：为避免与 [AiHomeScreen] 形成循环依赖，这里用 String key。
- * @param onRescan      用户点击 AllClear 的"重新扫描"或 Idle 的"开始扫描"。
- * @param onSnooze      用户点击副按钮"忽略 7 天"。
- */
 @Composable
 fun AiSuggestCard(
     uiState: AiHomeUiState,
+    onOpenVault: () -> Unit,
+    onOpenPrivateCamera: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenDedup: () -> Unit,
+    onOpenClassify: () -> Unit,
+    onStartScan: () -> Unit,
     onRescan: () -> Unit,
+    onCancelScan: () -> Unit,
     onSnooze: (AiSuggestSnoozePrefs.Kind) -> Unit,
 ) {
-    when (val s = uiState.suggestion) {
-        is AiSuggestion.Scanning -> ScanningSuggestCard(s)
-        is AiSuggestion.Sensitive -> SensitiveSuggestCard(
-            state = s,
-            onExec = onOpenPrivacy,
-            onViewCleanup = onOpenDedup,
-            onSnooze = { onSnooze(AiSuggestSnoozePrefs.Kind.SENSITIVE) },
-        )
-        is AiSuggestion.Cleanup -> CleanupSuggestCard(
-            state = s,
-            onExec = onOpenDedup,
-            onSnooze = { onSnooze(AiSuggestSnoozePrefs.Kind.CLEANUP) },
-        )
-        AiSuggestion.AllClear -> AllClearSuggestCard(onRescan = onRescan)
-        AiSuggestion.Idle -> IdleSuggestCard(onStartScan = onRescan)
-    }
-}
+    val suggestion = uiState.suggestion
+    val model = rememberSummaryModel(
+        uiState = uiState,
+        suggestion = suggestion,
+        onOpenVault = onOpenVault,
+        onOpenPrivateCamera = onOpenPrivateCamera,
+        onOpenPrivacy = onOpenPrivacy,
+        onOpenDedup = onOpenDedup,
+        onOpenClassify = onOpenClassify,
+        onStartScan = onStartScan,
+        onRescan = onRescan,
+        onSnooze = onSnooze,
+    )
 
-// ============================================================================
-// 公共组件
-// ============================================================================
-
-/** 卡片外壳：圆角 + sectionBg + border，与 App 其他卡片保持一致。 */
-@Composable
-private fun SuggestCardContainer(
-    content: @Composable () -> Unit,
-) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -84,21 +68,52 @@ private fun SuggestCardContainer(
             .background(UiColors.Home.sectionBg)
             .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(UiRadius.homeCard))
             .padding(UiSize.homeCardPadding),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) { content() }
+        verticalArrangement = Arrangement.spacedBy(13.dp),
+    ) {
+        SummaryHeader(model)
+        Text(
+            text = stringResource(model.descriptionRes),
+            color = UiColors.Home.subtitle,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        SummaryStats(uiState)
+        if (suggestion is AiSuggestion.Scanning) {
+            ScanningProgress(
+                state = suggestion,
+                onCancelScan = onCancelScan,
+            )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SummaryActionButton(
+                    text = stringResource(model.primaryRes),
+                    containerColor = UiColors.Ai.execBtnBg,
+                    textColor = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                    onClick = model.primaryAction,
+                )
+                SummaryActionButton(
+                    text = stringResource(model.secondaryRes),
+                    containerColor = Color(0xFF122033),
+                    textColor = Color(0xFFB7C6DD),
+                    strokeColor = UiColors.Home.emptyCardStroke,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                    onClick = model.secondaryAction,
+                )
+            }
+        }
+    }
 }
 
-/** 卡片头部：左侧图标 + 右侧 badge + 标题。 */
 @Composable
-private fun SuggestHeader(
-    iconRes: Int,
-    iconTint: Color,
-    iconBg: Color,
-    badgeText: String,
-    badgeBg: Color,
-    badgeTextColor: Color,
-    title: String,
-) {
+private fun SummaryHeader(model: SummaryModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -106,334 +121,255 @@ private fun SuggestHeader(
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(iconBg),
+                .clip(RoundedCornerShape(13.dp))
+                .background(Color(0xFF18283D)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(iconRes),
+                painter = painterResource(R.drawable.ic_ai_sparkles),
                 contentDescription = null,
-                tint = iconTint,
+                tint = Color(0xFFB7D7FF),
                 modifier = Modifier.size(22.dp),
             )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(badgeBg)
-                    .padding(horizontal = 8.dp, vertical = 3.dp),
-            ) {
-                Text(
-                    text = badgeText,
-                    color = badgeTextColor,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp,
-                )
-            }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = title,
-                color = UiColors.Home.title,
-                fontSize = 16.sp,
+                text = stringResource(model.badgeRes),
+                color = Color(0xFFB7D7FF),
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
             )
+            Text(
+                text = if (model.titleArg == null) {
+                    stringResource(model.titleRes)
+                } else {
+                    stringResource(model.titleRes, model.titleArg)
+                },
+                color = UiColors.Home.title,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
 
-/** 主操作按钮（填色实心）。 */
 @Composable
-private fun PrimaryActionButton(
-    text: String,
-    iconRes: Int?,
-    containerColor: Color,
-    textColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    val interaction = rememberFeedbackInteractionSource()
+private fun SummaryStats(uiState: AiHomeUiState) {
     Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SummaryStatChip(uiState.scannedCount, R.string.ai_stat_scanned, Modifier.weight(1f))
+        SummaryStatChip(uiState.pendingSensitive, R.string.ai_stat_sensitive, Modifier.weight(1f))
+        SummaryStatChip(uiState.locationRiskCount, R.string.ai_stat_location, Modifier.weight(1f))
+        SummaryStatChip(uiState.totalCleanup, R.string.ai_stat_cleanup, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun SummaryStatChip(value: Int, labelRes: Int, modifier: Modifier = Modifier) {
+    Column(
         modifier = modifier
             .height(44.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(containerColor)
-            .pressFeedback(interaction)
-            .throttledClickable(
-                interactionSource = interaction,
-                indication = null,
-                onClick = onClick,
-            ),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+            .background(Color(0xFF122033))
+            .border(1.dp, UiColors.Home.emptyCardStroke, RoundedCornerShape(12.dp)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        if (iconRes != null) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = null,
-                tint = textColor,
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-        }
         Text(
-            text = text,
-            color = textColor,
+            text = value.toString(),
+            color = UiColors.Home.title,
             fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+        )
+        Text(
+            text = stringResource(labelRes),
+            color = UiColors.Home.subtitle,
+            fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
         )
     }
 }
 
-/** 次操作按钮（透明描边）。 */
 @Composable
-private fun SecondaryActionButton(
-    text: String,
-    modifier: Modifier = Modifier,
-    containerColor: Color = UiColors.Ai.skipBtnBg,
-    textColor: Color = UiColors.Ai.skipBtnText,
-    strokeColor: Color = UiColors.Ai.skipBtnStroke,
-    onClick: () -> Unit,
+private fun ScanningProgress(
+    state: AiSuggestion.Scanning,
+    onCancelScan: () -> Unit,
 ) {
-    val interaction = rememberFeedbackInteractionSource()
-    Row(
-        modifier = modifier
-            .height(44.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(containerColor)
-            .border(1.dp, strokeColor, RoundedCornerShape(12.dp))
-            .pressFeedback(interaction)
-            .throttledClickable(
-                interactionSource = interaction,
-                indication = null,
-                onClick = onClick,
-            ),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    if (state.total > 0) {
+        LinearProgressIndicator(
+            progress = { state.done.toFloat().div(state.total).coerceIn(0f, 1f) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            color = UiColors.Ai.scanningProgressFill,
+            trackColor = UiColors.Ai.scanningProgressTrack,
+        )
         Text(
-            text = text,
-            color = textColor,
-            fontSize = 14.sp,
+            text = stringResource(R.string.ai_scan_progress_fmt, state.done, state.total),
+            color = UiColors.Home.subtitle,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
         )
+    } else {
+        LinearProgressIndicator(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            color = UiColors.Ai.scanningProgressFill,
+            trackColor = UiColors.Ai.scanningProgressTrack,
+        )
     }
-}
-
-/** 卡片正文段落。 */
-@Composable
-private fun SuggestDesc(text: String) {
     Text(
-        text = text,
-        color = UiColors.Home.emptyBody,
-        fontSize = 14.sp,
-        lineHeight = (14 * 1.55).sp,
+        text = stringResource(if (state.cancelling) R.string.ai_scan_cancelling else R.string.ai_scan_incremental_hint),
+        color = UiColors.Home.subtitle,
+        fontSize = 12.sp,
+        lineHeight = 17.sp,
+    )
+    SummaryActionButton(
+        text = stringResource(R.string.ai_action_pause_scan),
+        containerColor = Color(0xFF122033),
+        textColor = Color(0xFFB7C6DD),
+        strokeColor = UiColors.Home.emptyCardStroke,
+        fontWeight = FontWeight.SemiBold,
+        enabled = !state.cancelling,
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onCancelScan,
     )
 }
 
-// ============================================================================
-// 状态子卡片
-// ============================================================================
-
 @Composable
-private fun ScanningSuggestCard(state: AiSuggestion.Scanning) {
-    SuggestCardContainer {
-        SuggestHeader(
-            iconRes = R.drawable.ic_ai_brain,
-            iconTint = Color.White,
-            iconBg = UiColors.Ai.iconBgWhite,
-            badgeText = stringResource(R.string.ai_suggest_badge_scanning),
-            badgeBg = UiColors.Ai.badgeBg,
-            badgeTextColor = UiColors.Ai.badgeText,
-            title = stringResource(R.string.ai_suggest_scanning_title),
-        )
-        // 进度条：total == 0 时显示不确定状态。
-        if (state.total > 0) {
-            val ratio = (state.done.toFloat() / state.total.toFloat()).coerceIn(0f, 1f)
-            LinearProgressIndicator(
-                progress = { ratio },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = UiColors.Ai.scanningProgressFill,
-                trackColor = UiColors.Ai.scanningProgressTrack,
-            )
-            SuggestDesc(
-                text = stringResource(
-                    R.string.ai_suggest_scanning_desc_progress,
-                    state.done,
-                    state.total,
-                ),
-            )
-        } else {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = UiColors.Ai.scanningProgressFill,
-                trackColor = UiColors.Ai.scanningProgressTrack,
-            )
-            SuggestDesc(text = stringResource(R.string.ai_suggest_scanning_desc_indeterminate))
-        }
-    }
-}
-
-@Composable
-private fun SensitiveSuggestCard(
-    state: AiSuggestion.Sensitive,
-    onExec: () -> Unit,
-    onViewCleanup: () -> Unit,
-    onSnooze: () -> Unit,
+private fun SummaryActionButton(
+    text: String,
+    containerColor: Color,
+    textColor: Color,
+    fontWeight: FontWeight,
+    modifier: Modifier = Modifier,
+    strokeColor: Color? = null,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
 ) {
-    SuggestCardContainer {
-        SuggestHeader(
-            iconRes = R.drawable.ic_ai_eye_off,
-            iconTint = UiColors.Ai.sensitiveBadgeText,
-            iconBg = UiColors.Ai.sensitiveIconBg,
-            badgeText = stringResource(R.string.ai_suggest_badge_alert),
-            badgeBg = UiColors.Ai.sensitiveBadgeBg,
-            badgeTextColor = UiColors.Ai.sensitiveBadgeText,
-            title = stringResource(R.string.ai_suggest_sensitive_title, state.count),
-        )
-        SuggestDesc(text = stringResource(R.string.ai_suggest_sensitive_desc))
-        if (state.locationRiskCount > 0) {
-            Text(
-                text = stringResource(R.string.ai_suggest_location_secondary, state.locationRiskCount),
-                color = UiColors.Ai.cleanupBadgeText,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(vertical = 2.dp),
+    val interaction = rememberFeedbackInteractionSource()
+    Box(
+        modifier = modifier
+            .height(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (enabled) containerColor else containerColor.copy(alpha = 0.55f))
+            .then(
+                if (strokeColor != null) {
+                    Modifier.border(1.dp, strokeColor, RoundedCornerShape(12.dp))
+                } else {
+                    Modifier
+                },
             )
-        }
-        if (state.cleanupCount > 0) {
-            val interaction = rememberFeedbackInteractionSource()
-            Text(
-                text = stringResource(R.string.ai_suggest_sensitive_secondary, state.cleanupCount),
-                color = UiColors.Ai.cleanupBadgeText,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .pressFeedback(interaction)
-                    .throttledClickable(
-                        interactionSource = interaction,
-                        indication = null,
-                        onClick = onViewCleanup,
-                    )
-                    .padding(vertical = 4.dp),
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            PrimaryActionButton(
-                text = stringResource(R.string.ai_action_redact),
-                iconRes = R.drawable.ic_ai_zap,
-                containerColor = UiColors.Ai.sensitiveExecBtnBg,
-                textColor = UiColors.Ai.sensitiveExecBtnText,
-                modifier = Modifier.weight(1f),
-                onClick = onExec,
-            )
-            SecondaryActionButton(
-                text = stringResource(R.string.ai_action_snooze),
-                modifier = Modifier.weight(1f),
-                onClick = onSnooze,
-            )
-        }
-    }
-}
-
-@Composable
-private fun CleanupSuggestCard(
-    state: AiSuggestion.Cleanup,
-    onExec: () -> Unit,
-    onSnooze: () -> Unit,
-) {
-    SuggestCardContainer {
-        SuggestHeader(
-            iconRes = R.drawable.ic_ai_copy,
-            iconTint = UiColors.Ai.cleanupBadgeText,
-            iconBg = UiColors.Ai.cleanupIconBg,
-            badgeText = stringResource(R.string.ai_suggest_badge_cleanup),
-            badgeBg = UiColors.Ai.cleanupBadgeBg,
-            badgeTextColor = UiColors.Ai.cleanupBadgeText,
-            title = stringResource(R.string.ai_suggest_cleanup_title, state.count),
-        )
-        SuggestDesc(text = stringResource(R.string.ai_suggest_cleanup_desc))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            PrimaryActionButton(
-                text = stringResource(R.string.ai_action_cleanup),
-                iconRes = R.drawable.ic_ai_zap,
-                containerColor = UiColors.Ai.cleanupExecBtnBg,
-                textColor = UiColors.Ai.cleanupExecBtnText,
-                modifier = Modifier.weight(1f),
-                onClick = onExec,
-            )
-            SecondaryActionButton(
-                text = stringResource(R.string.ai_action_snooze),
-                modifier = Modifier.weight(1f),
-                onClick = onSnooze,
-            )
-        }
-    }
-}
-
-@Composable
-private fun AllClearSuggestCard(onRescan: () -> Unit) {
-    SuggestCardContainer {
-        SuggestHeader(
-            iconRes = R.drawable.ic_ai_shield,
-            iconTint = UiColors.Ai.allClearBadgeText,
-            iconBg = UiColors.Ai.allClearIconBg,
-            badgeText = stringResource(R.string.ai_suggest_badge_all_clear),
-            badgeBg = UiColors.Ai.allClearBadgeBg,
-            badgeTextColor = UiColors.Ai.allClearBadgeText,
-            title = stringResource(R.string.ai_suggest_all_clear_title),
-        )
-        SuggestDesc(text = stringResource(R.string.ai_suggest_all_clear_desc))
-        PrimaryActionButton(
-            text = stringResource(R.string.ai_action_rescan),
-            iconRes = R.drawable.ic_ai_zap,
-            containerColor = UiColors.Ai.allClearExecBtnBg,
-            textColor = UiColors.Ai.allClearExecBtnText,
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    1.dp,
-                    UiColors.Ai.allClearExecBtnStroke,
-                    RoundedCornerShape(12.dp),
-                ),
-            onClick = onRescan,
+            .pressFeedback(interaction)
+            .throttledClickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = if (enabled) textColor else textColor.copy(alpha = 0.55f),
+            fontSize = 13.sp,
+            fontWeight = fontWeight,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 10.dp),
         )
     }
 }
 
-@Composable
-private fun IdleSuggestCard(onStartScan: () -> Unit) {
-    SuggestCardContainer {
-        SuggestHeader(
-            iconRes = R.drawable.ic_ai_brain,
-            iconTint = Color.White,
-            iconBg = UiColors.Ai.iconBgWhite,
-            badgeText = stringResource(R.string.ai_suggest_badge_idle),
-            badgeBg = UiColors.Ai.badgeBg,
-            badgeTextColor = UiColors.Ai.badgeText,
-            title = stringResource(R.string.ai_suggest_idle_title),
-        )
-        SuggestDesc(text = stringResource(R.string.ai_suggest_idle_desc))
-        PrimaryActionButton(
-            text = stringResource(R.string.ai_action_start_scan),
-            iconRes = R.drawable.ic_ai_zap,
-            containerColor = UiColors.Ai.execBtnBg,
-            textColor = UiColors.Ai.execBtnText,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onStartScan,
+private data class SummaryModel(
+    val badgeRes: Int,
+    val titleRes: Int,
+    val titleArg: Int? = null,
+    val descriptionRes: Int,
+    val primaryRes: Int,
+    val secondaryRes: Int,
+    val primaryAction: () -> Unit,
+    val secondaryAction: () -> Unit,
+)
+
+private fun rememberSummaryModel(
+    uiState: AiHomeUiState,
+    suggestion: AiSuggestion,
+    onOpenVault: () -> Unit,
+    onOpenPrivateCamera: () -> Unit,
+    onOpenPrivacy: () -> Unit,
+    onOpenDedup: () -> Unit,
+    onOpenClassify: () -> Unit,
+    onStartScan: () -> Unit,
+    onRescan: () -> Unit,
+    onSnooze: (AiSuggestSnoozePrefs.Kind) -> Unit,
+): SummaryModel = when (suggestion) {
+    AiSuggestion.Empty -> SummaryModel(
+        badgeRes = R.string.ai_summary_empty_badge,
+        titleRes = R.string.ai_summary_empty_title,
+        descriptionRes = R.string.ai_summary_empty_desc,
+        primaryRes = R.string.ai_action_open_vault,
+        secondaryRes = R.string.ai_action_private_camera,
+        primaryAction = onOpenVault,
+        secondaryAction = onOpenPrivateCamera,
+    )
+    is AiSuggestion.Scanning -> SummaryModel(
+        badgeRes = R.string.ai_summary_scanning_badge,
+        titleRes = R.string.ai_summary_scanning_title,
+        descriptionRes = R.string.ai_vault_scan_scanning_desc,
+        primaryRes = R.string.ai_action_pause_scan,
+        secondaryRes = R.string.ai_action_pause_scan,
+        primaryAction = {},
+        secondaryAction = {},
+    )
+    is AiSuggestion.Sensitive -> {
+        val locationOnly = suggestion.locationRiskCount > 0 && suggestion.locationRiskCount == suggestion.count
+        SummaryModel(
+            badgeRes = R.string.ai_summary_label,
+            titleRes = if (locationOnly) R.string.ai_summary_location_title_fmt else R.string.ai_summary_sensitive_title_fmt,
+            titleArg = if (locationOnly) suggestion.locationRiskCount else suggestion.count,
+            descriptionRes = if (suggestion.locationRiskCount > 0) R.string.ai_summary_location_desc else R.string.ai_summary_desc,
+            primaryRes = R.string.ai_summary_review_now,
+            secondaryRes = R.string.ai_summary_later,
+            primaryAction = onOpenPrivacy,
+            secondaryAction = { onSnooze(AiSuggestSnoozePrefs.Kind.SENSITIVE) },
         )
     }
+    is AiSuggestion.Cleanup -> SummaryModel(
+        badgeRes = R.string.ai_summary_cleanup_badge,
+        titleRes = R.string.ai_summary_cleanup_title_fmt,
+        titleArg = uiState.totalCleanup,
+        descriptionRes = R.string.ai_summary_live_desc,
+        primaryRes = R.string.ai_action_review_cleanup,
+        secondaryRes = R.string.ai_summary_later,
+        primaryAction = onOpenDedup,
+        secondaryAction = { onSnooze(AiSuggestSnoozePrefs.Kind.CLEANUP) },
+    )
+    AiSuggestion.AllClear -> SummaryModel(
+        badgeRes = R.string.ai_summary_all_clear_badge,
+        titleRes = R.string.ai_summary_all_clear_title,
+        descriptionRes = R.string.ai_summary_live_desc,
+        primaryRes = R.string.ai_action_rescan,
+        secondaryRes = R.string.ai_action_view_categories,
+        primaryAction = onRescan,
+        secondaryAction = onOpenClassify,
+    )
+    AiSuggestion.Idle -> SummaryModel(
+        badgeRes = R.string.ai_summary_unscanned_badge,
+        titleRes = R.string.ai_summary_unscanned_title,
+        descriptionRes = R.string.ai_summary_live_desc,
+        primaryRes = R.string.ai_action_scan_vault,
+        secondaryRes = R.string.ai_action_view_categories,
+        primaryAction = onStartScan,
+        secondaryAction = onOpenClassify,
+    )
 }

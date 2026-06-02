@@ -322,35 +322,38 @@ class MainActivity : FragmentActivity() {
                                     navController.navigate(route) { launchSingleTop = true }
                                 },
                                 onOpenAiFeature = { key ->
-                                    val feature = when (key) {
-                                        AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> com.xpx.vault.domain.quota.ProFeature.AI_CLASSIFY
-                                        AiFeatureKey.PRIVACY -> com.xpx.vault.domain.quota.ProFeature.AI_PRIVACY
-                                        AiFeatureKey.ENCRYPT -> com.xpx.vault.domain.quota.ProFeature.AI_SENSITIVE
-                                        AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> com.xpx.vault.domain.quota.ProFeature.AI_CLEANUP
-                                    }
-                                    val gate = paywallGatekeeper.checkAccess(feature)
-                                    if (gate is com.xpx.vault.billing.GateResult.HardWall) {
-                                        navController.navigate(
-                                            "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
-                                        ) { launchSingleTop = true }
+                                    if (key == AiFeatureKey.CLASSIFY) {
+                                        navController.navigate(ROUTE_AI_CLASSIFY) { launchSingleTop = true }
                                     } else {
-                                        val softReason = paywallPromptManager.shouldPromptBeforeAiFeature(
-                                            aiMonthlyCount = quotaManager.currentAiMonthlyUsage(),
-                                            isPremium = subscriptionRepository.isPremium.value,
-                                        )
-                                        if (softReason != null) {
-                                            paywallPromptManager.markShown(softReason)
+                                        val feature = when (key) {
+                                            AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> com.xpx.vault.domain.quota.ProFeature.AI_CLASSIFY
+                                            AiFeatureKey.PRIVACY -> com.xpx.vault.domain.quota.ProFeature.AI_PRIVACY
+                                            AiFeatureKey.ENCRYPT -> com.xpx.vault.domain.quota.ProFeature.AI_SENSITIVE
+                                            AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> com.xpx.vault.domain.quota.ProFeature.AI_CLEANUP
+                                        }
+                                        val gate = paywallGatekeeper.checkAccess(feature)
+                                        if (gate is com.xpx.vault.billing.GateResult.HardWall) {
                                             navController.navigate(
-                                                "$ROUTE_PAYWALL?dismissable=true&source=${softReason.source}",
+                                                "$ROUTE_PAYWALL?dismissable=false&source=quota_ai",
                                             ) { launchSingleTop = true }
                                         } else {
-                                            val route = when (key) {
-                                                AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> ROUTE_AI_CLASSIFY
-                                                AiFeatureKey.PRIVACY -> ROUTE_RECENT_LIST
-                                                AiFeatureKey.ENCRYPT -> ROUTE_AI_SENSITIVE
-                                                AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> ROUTE_AI_CLEANUP
+                                            val softReason = paywallPromptManager.shouldPromptBeforeAiFeature(
+                                                aiMonthlyCount = quotaManager.currentAiMonthlyUsage(),
+                                                isPremium = subscriptionRepository.isPremium.value,
+                                            )
+                                            if (softReason != null) {
+                                                paywallPromptManager.markShown(softReason)
+                                                navController.navigate(
+                                                    "$ROUTE_PAYWALL?dismissable=true&source=${softReason.source}",
+                                                ) { launchSingleTop = true }
+                                            } else {
+                                                val route = when (key) {
+                                                    AiFeatureKey.CLASSIFY, AiFeatureKey.SEARCH -> ROUTE_AI_CLASSIFY
+                                                    AiFeatureKey.PRIVACY, AiFeatureKey.ENCRYPT -> ROUTE_AI_SENSITIVE
+                                                    AiFeatureKey.COMPRESS, AiFeatureKey.DEDUP -> ROUTE_AI_CLEANUP
+                                                }
+                                                navController.navigate(route) { launchSingleTop = true }
                                             }
-                                            navController.navigate(route) { launchSingleTop = true }
                                         }
                                     }
                                 },
