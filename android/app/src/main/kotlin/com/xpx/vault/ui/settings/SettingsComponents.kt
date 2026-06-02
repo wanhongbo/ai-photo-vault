@@ -112,12 +112,6 @@ fun SettingsSwitchRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, color = UiColors.Home.emptyTitle, fontWeight = FontWeight.Medium)
-            Text(
-                text = desc,
-                color = UiColors.Home.emptyBody,
-                fontSize = UiTextSize.settingsRowDesc,
-                modifier = Modifier.padding(top = UiSize.settingsProfileDescTopGap),
-            )
         }
         Switch(checked = checked, onCheckedChange = onChange)
     }
@@ -163,12 +157,6 @@ fun SettingsSimpleRow(model: SettingsRowModel) {
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(text = model.title, color = UiColors.Home.emptyTitle, fontWeight = FontWeight.Medium)
-            Text(
-                text = model.desc,
-                color = UiColors.Home.emptyBody,
-                fontSize = UiTextSize.settingsRowDesc,
-                modifier = Modifier.padding(top = UiSize.settingsProfileDescTopGap),
-            )
         }
         when (model.trailing) {
             SettingsTrailing.CHEVRON -> SettingsListChevronIcon()
