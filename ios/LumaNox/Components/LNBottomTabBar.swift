@@ -34,7 +34,8 @@ struct LNBottomTabBar: View {
 
     @ViewBuilder
     private func tabButton(_ tab: MainTab) -> some View {
-        let isSelected = selected == tab || pressedTab == tab
+        let activeTab = pressedTab ?? selected
+        let isSelected = activeTab == tab
         Button {
             if tab == .camera {
                 onCameraTap()
