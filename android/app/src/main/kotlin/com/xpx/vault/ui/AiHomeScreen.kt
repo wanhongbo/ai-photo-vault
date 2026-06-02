@@ -152,7 +152,7 @@ private fun AiToolRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(86.dp)
+            .height(74.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(UiColors.Home.sectionBg)
             .border(1.dp, tool.strokeColor, RoundedCornerShape(18.dp))
@@ -176,27 +176,15 @@ private fun AiToolRow(
                 modifier = Modifier.size(22.dp),
             )
         }
-        Column(
+        Text(
+            text = stringResource(tool.titleRes),
+            color = UiColors.Home.title,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(
-                text = stringResource(tool.titleRes),
-                color = UiColors.Home.title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = stringResource(tool.subtitleRes),
-                color = UiColors.Home.subtitle,
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        )
         Text(
             text = stringResource(tool.statusRes),
             color = Color(0xFFB7C6DD),
@@ -215,7 +203,6 @@ private fun AiToolRow(
 private data class AiTool(
     val key: AiFeatureKey,
     val titleRes: Int,
-    val subtitleRes: Int,
     val statusRes: Int,
     val iconRes: Int,
     val iconColor: Color,
@@ -227,7 +214,6 @@ private fun aiTools(): List<AiTool> = listOf(
     AiTool(
         key = AiFeatureKey.PRIVACY,
         titleRes = R.string.ai_feat_blur,
-        subtitleRes = R.string.ai_tool_blur_desc,
         statusRes = R.string.ai_tool_status_open,
         iconRes = R.drawable.ic_ai_eye_off,
         iconColor = UiColors.Lock.brandBlue,
@@ -237,7 +223,6 @@ private fun aiTools(): List<AiTool> = listOf(
     AiTool(
         key = AiFeatureKey.CLASSIFY,
         titleRes = R.string.ai_feat_classify,
-        subtitleRes = R.string.ai_tool_classify_desc,
         statusRes = R.string.ai_tool_status_ready,
         iconRes = R.drawable.ic_ai_layers,
         iconColor = Color(0xFF7DBBFF),
@@ -247,7 +232,6 @@ private fun aiTools(): List<AiTool> = listOf(
     AiTool(
         key = AiFeatureKey.DEDUP,
         titleRes = R.string.ai_tool_dedup_title,
-        subtitleRes = R.string.ai_tool_dedup_desc,
         statusRes = R.string.ai_tool_status_ready,
         iconRes = R.drawable.ic_ai_copy,
         iconColor = Color(0xFF5BC0D4),
