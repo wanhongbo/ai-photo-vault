@@ -38,6 +38,7 @@ struct LNBottomTabBar: View {
         let isSelected = activeTab == tab
         Button {
             if tab == .camera {
+                resetPressState()
                 onCameraTap()
             } else {
                 selected = tab
@@ -79,15 +80,20 @@ struct LNBottomTabBar: View {
                 pressedTab = tab
                 UISelectionFeedbackGenerator().selectionChanged()
                 if tab == .camera {
+                    resetPressState()
                     onCameraPressBegan()
                 } else {
                     selected = tab
                 }
             }
             .onEnded { _ in
-                didBeginTabPress = false
-                pressedTab = nil
+                resetPressState()
             }
+    }
+
+    private func resetPressState() {
+        didBeginTabPress = false
+        pressedTab = nil
     }
 
     private func iconSize(for tab: MainTab) -> CGFloat {
