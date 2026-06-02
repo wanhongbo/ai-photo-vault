@@ -400,7 +400,7 @@ fun SettingsDataStorageScreen(
                     ),
                     SettingsRowModel(
                         title = stringResource(R.string.import_originals_settings_title),
-                        desc = stringResource(importOriginalsAction.titleRes),
+                        desc = "",
                         trailing = SettingsTrailing.CHEVRON,
                         onClick = onOpenImportOriginals,
                     ),
@@ -610,7 +610,7 @@ fun SettingsAboutSupportScreen(
                     ),
                     SettingsRowModel(
                         title = stringResource(R.string.settings_about_contact),
-                        desc = stringResource(R.string.settings_about_contact_desc),
+                        desc = "",
                         trailing = SettingsTrailing.CHEVRON,
                         onClick = onContactUs,
                     ),
