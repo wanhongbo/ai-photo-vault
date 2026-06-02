@@ -20,31 +20,26 @@ struct SettingsHomeView: View {
                     backupBanner
                     settingsHubRow(
                         title: L10n.settingsSecurity,
-                        subtitle: L10n.tr("settings_l1_security_sub"),
                         systemImage: "shield",
                         route: .settingsSecurity
                     )
                     settingsHubRow(
                         title: L10n.settingsBackup,
-                        subtitle: L10n.tr("settings_l1_backup_sub"),
                         systemImage: "externaldrive.badge.timemachine",
                         route: .settingsBackupSync
                     )
                     settingsHubRow(
                         title: L10n.settingsData,
-                        subtitle: L10n.tr("settings_l1_data_sub"),
                         systemImage: "internaldrive",
                         route: .settingsDataStorage
                     )
                     settingsHubRow(
                         title: L10n.settingsGeneral,
-                        subtitle: L10n.tr("settings_l1_general_sub"),
                         systemImage: "slider.horizontal.3",
                         route: .settingsGeneral
                     )
                     settingsHubRow(
                         title: L10n.settingsAbout,
-                        subtitle: L10n.tr("settings_l1_about_sub"),
                         systemImage: "questionmark.circle",
                         route: .settingsAbout
                     )
@@ -105,7 +100,7 @@ struct SettingsHomeView: View {
         .lnOutlinedCard(cornerRadius: LNRadius.homeCard)
     }
 
-    private func settingsHubRow(title: String, subtitle: String, systemImage: String, route: AppRoute) -> some View {
+    private func settingsHubRow(title: String, systemImage: String, route: AppRoute) -> some View {
         Button { router.pushSettings(route) } label: {
             HStack(spacing: 12) {
                 Image(systemName: systemImage)
@@ -114,15 +109,11 @@ struct SettingsHomeView: View {
                     .frame(width: 42, height: 42)
                     .background(LNColor.brandBlue.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: LNRadius.topBarButton))
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(LNTypography.titleMedium())
-                        .foregroundStyle(LNColor.title)
-                    Text(subtitle)
-                        .font(LNTypography.labelMedium())
-                        .foregroundStyle(LNColor.subtitle)
-                        .lineLimit(2)
-                }
+                Text(title)
+                    .font(LNTypography.titleMedium())
+                    .foregroundStyle(LNColor.title)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 16, weight: .semibold))

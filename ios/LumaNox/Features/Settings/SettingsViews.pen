@@ -317,17 +317,6 @@
                       "fontSize": 15,
                       "letterSpacing": 0,
                       "fontWeight": "650"
-                    },
-                    {
-                      "type": "text",
-                      "id": "txt_e",
-                      "content": "Unlock, PIN, and privacy options",
-                      "fontFamily": "Inter",
-                      "fill": "#8EA2C0",
-                      "fontSize": 12,
-                      "letterSpacing": 0,
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     }
                   ]
                 },
@@ -400,17 +389,6 @@
                       "fontSize": 15,
                       "letterSpacing": 0,
                       "fontWeight": "650"
-                    },
-                    {
-                      "type": "text",
-                      "id": "txt_l",
-                      "content": "Auto backup and manual restore",
-                      "fontFamily": "Inter",
-                      "fill": "#8EA2C0",
-                      "fontSize": 12,
-                      "letterSpacing": 0,
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     }
                   ]
                 },
@@ -483,17 +461,6 @@
                       "fontSize": 15,
                       "letterSpacing": 0,
                       "fontWeight": "650"
-                    },
-                    {
-                      "type": "text",
-                      "id": "txt_s",
-                      "content": "Usage, export, and trash",
-                      "fontFamily": "Inter",
-                      "fill": "#8EA2C0",
-                      "fontSize": 12,
-                      "letterSpacing": 0,
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     }
                   ]
                 },
@@ -566,17 +533,6 @@
                       "fontSize": 15,
                       "letterSpacing": 0,
                       "fontWeight": "650"
-                    },
-                    {
-                      "type": "text",
-                      "id": "txt_z",
-                      "content": "Language and more",
-                      "fontFamily": "Inter",
-                      "fill": "#8EA2C0",
-                      "fontSize": 12,
-                      "letterSpacing": 0,
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     }
                   ]
                 },
@@ -649,17 +605,6 @@
                       "fontSize": 15,
                       "letterSpacing": 0,
                       "fontWeight": "650"
-                    },
-                    {
-                      "type": "text",
-                      "id": "txt_16",
-                      "content": "Legal, version, and support",
-                      "fontFamily": "Inter",
-                      "fill": "#8EA2C0",
-                      "fontSize": 12,
-                      "letterSpacing": 0,
-                      "textGrowth": "fixed-width",
-                      "width": "fill_container"
                     }
                   ]
                 },
