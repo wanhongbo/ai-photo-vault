@@ -13,7 +13,7 @@
       "padding": [54, 16, 24, 16],
       "gap": 16,
       "children": [
-        { "type": "text", "id": "backup_title", "content": "备份与同步", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
+        { "type": "text", "id": "backup_title", "content": "备份与恢复", "fontFamily": "Inter", "fontSize": 22, "fontWeight": "700", "fill": "#EAF1FF", "textGrowth": "fixed-width", "width": "fill_container" },
         {
           "type": "frame",
           "id": "backup_status_card",

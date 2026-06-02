@@ -525,7 +525,7 @@
 
 "settings_subscription_title" = "Subscription";
 "settings_l1_security" = "Security & Privacy";
-"settings_l1_backup" = "Backup & Sync";
+"settings_l1_backup" = "Backup & Restore";
 "settings_l1_data" = "Data & Storage";
 "settings_l1_general" = "General";
 "settings_l1_about" = "About & Support";

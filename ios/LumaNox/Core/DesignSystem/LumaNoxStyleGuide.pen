@@ -1051,7 +1051,7 @@
                     {
                       "type": "text",
                       "id": "txt_2c",
-                      "content": "Backup & Sync",
+                      "content": "Backup & Restore",
                       "fontFamily": "Inter",
                       "fill": "#EAF1FF",
                       "fontSize": 16,

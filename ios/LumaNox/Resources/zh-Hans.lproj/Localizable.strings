@@ -525,7 +525,7 @@
 
 "settings_subscription_title" = "订阅与配额";
 "settings_l1_security" = "安全与隐私";
-"settings_l1_backup" = "备份与同步";
+"settings_l1_backup" = "备份与恢复";
 "settings_l1_data" = "数据与存储";
 "settings_l1_general" = "通用";
 "settings_l1_about" = "关于与支持";
