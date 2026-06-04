@@ -27,7 +27,7 @@ enum GateResult: Equatable {
 
 /// 免费版配额 — 对齐 Android [FreeQuota]。
 enum FreeQuota {
-    static let maxVaultItems = 100
+    static let maxVaultItems = 50
     static let maxBackupCount = 1
     static let maxAiMonthly = 10
 }

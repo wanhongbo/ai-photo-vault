@@ -541,7 +541,7 @@
 "settings_subscription_status_premium_desc" = "本设备已可使用全部 Premium 隐私、AI、导出和备份能力。";
 "settings_subscription_quota_title" = "免费版额度";
 "settings_subscription_quota_vault" = "保险箱容量";
-"settings_subscription_quota_vault_desc" = "免费版最多支持 100 个加密保险箱项目。";
+"settings_subscription_quota_vault_desc" = "免费版最多支持 50 个加密保险箱项目。";
 "settings_subscription_quota_backup" = "备份导出";
 "settings_subscription_quota_backup_desc" = "免费版包含 1 次加密备份导出。";
 "settings_subscription_quota_ai" = "AI 扫描";
