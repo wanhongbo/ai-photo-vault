@@ -983,6 +983,7 @@ struct PrivacyRedactView: View {
                     mode: redactMode,
                     regions: displayedRegions,
                     selectedManualRegionID: selectedManualRegionID,
+                    onToggleManual: toggleManualRedaction,
                     onDraftChanged: updateDraftRegion,
                     onDraftCommitted: commitDraftRegion
                 )
@@ -1113,27 +1114,27 @@ struct PrivacyRedactView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(LNColor.stroke, lineWidth: 1))
 
             Button {
-                draftRegion = nil
-                if redactMode == .manual {
-                    redactMode = .automatic
-                    selectedManualRegionID = nil
-                } else {
-                    redactMode = .manual
-                    selectedManualRegionID = nil
-                }
+                toggleManualRedaction()
             } label: {
-                Text(modeButtonTitle)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(redactMode == .manual ? Color(hex: 0xD9FFF0) : Color(hex: 0xDCEBFF))
-                    .frame(width: 88, height: 40)
-                    .background(redactMode == .manual ? Color(hex: 0x0F5135) : Color(hex: 0x14233A))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(redactMode == .manual ? LNColor.success : LNColor.brandBlue, lineWidth: 1))
+                HStack(spacing: 6) {
+                    Image(systemName: redactMode == .manual ? "checkmark" : "viewfinder")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text(modeButtonTitle)
+                        .font(.system(size: 12, weight: .bold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                }
+                .foregroundStyle(redactMode == .manual ? Color(hex: 0xD9FFF0) : Color(hex: 0xDCEBFF))
+                .frame(width: 108, height: 40)
+                .background(redactMode == .manual ? Color(hex: 0x0F5135) : Color(hex: 0x14233A))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(redactMode == .manual ? LNColor.success : LNColor.brandBlue, lineWidth: 1))
             }
             .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
             .disabled(!canEditRedaction)
             .opacity(canEditRedaction ? 1 : 0.55)
-            .accessibilityIdentifier("privacy_redact_manual_done")
+            .accessibilityLabel(modeButtonTitle)
+            .accessibilityIdentifier("privacy_redact_manual_toggle")
         }
     }
 
@@ -1221,6 +1222,12 @@ struct PrivacyRedactView: View {
         if !path.isEmpty, detectedRegions.isEmpty {
             showToast(L10n.tr("privacy_redact_no_sensitive_toast"))
         }
+    }
+
+    private func toggleManualRedaction() {
+        draftRegion = nil
+        selectedManualRegionID = nil
+        redactMode = redactMode == .manual ? .automatic : .manual
     }
 
     private func updateDraftRegion(_ normalizedRect: CGRect?) {
@@ -1487,6 +1494,7 @@ private struct PrivacyRedactCanvas: View {
     let mode: PrivacyRedactView.RedactMode
     let regions: [PrivacyRedactionRegion]
     let selectedManualRegionID: UUID?
+    let onToggleManual: () -> Void
     let onDraftChanged: (CGRect?) -> Void
     let onDraftCommitted: (CGRect?) -> Void
 
@@ -1565,6 +1573,31 @@ private struct PrivacyRedactCanvas: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .padding(.leading, 72)
                         .padding(.top, 34)
+
+                    if !isVideo {
+                        Button(action: onToggleManual) {
+                            HStack(spacing: 6) {
+                                Image(systemName: mode == .manual ? "checkmark" : "viewfinder")
+                                    .font(.system(size: 14, weight: .semibold))
+                                Text(mode == .manual ? L10n.tr("privacy_redact_manual_done") : L10n.tr("privacy_redact_enter_manual"))
+                                    .font(.system(size: 12, weight: .bold))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.82)
+                            }
+                            .foregroundStyle(mode == .manual ? Color(hex: 0xD9FFF0) : Color(hex: 0xDCEBFF))
+                            .frame(width: 110, height: 34)
+                            .background(mode == .manual ? Color(hex: 0x0F5135) : Color(hex: 0x14233A))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(mode == .manual ? LNColor.success : LNColor.brandBlue, lineWidth: 1))
+                            .shadow(color: Color.black.opacity(0.20), radius: 10, y: 6)
+                        }
+                        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.84))
+                        .padding(.top, 34)
+                        .padding(.trailing, 34)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .accessibilityLabel(mode == .manual ? L10n.tr("privacy_redact_manual_done") : L10n.tr("privacy_redact_enter_manual"))
+                        .accessibilityIdentifier("privacy_redact_canvas_manual_toggle")
+                    }
                 }
             }
             .contentShape(Rectangle())

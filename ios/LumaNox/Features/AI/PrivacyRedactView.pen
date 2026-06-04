@@ -336,6 +336,44 @@
             },
             {
               "type": "frame",
+              "id": "canvas_manual_toggle",
+              "name": "Manual redaction toggle",
+              "layout": "horizontal",
+              "x": 210,
+              "y": 34,
+              "width": 110,
+              "height": 34,
+              "padding": [0, 12],
+              "gap": 6,
+              "cornerRadius": 12,
+              "fill": "#14233A",
+              "stroke": { "thickness": 1, "fill": "#4A9EFF" },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "canvas_manual_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "scan-line",
+                  "width": 15,
+                  "height": 15,
+                  "fill": "#DCEBFF"
+                },
+                {
+                  "type": "text",
+                  "id": "canvas_manual_text",
+                  "content": "手动框选",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "letterSpacing": 0,
+                  "fontWeight": "700",
+                  "fill": "#DCEBFF"
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "detecting_overlay",
               "layout": "vertical",
               "x": 21,
@@ -432,14 +470,24 @@
               "type": "frame",
               "id": "manual_chip",
               "layout": "horizontal",
-              "width": 88,
+              "width": 108,
               "height": 40,
+              "gap": 6,
               "cornerRadius": 12,
               "fill": "#14233A",
               "stroke": { "thickness": 1, "fill": "#4A9EFF" },
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
+                {
+                  "type": "icon_font",
+                  "id": "manual_chip_icon",
+                  "iconFontFamily": "lucide",
+                  "iconFontName": "scan-line",
+                  "width": 15,
+                  "height": 15,
+                  "fill": "#DCEBFF"
+                },
                 {
                   "type": "text",
                   "id": "manual_chip_text",
