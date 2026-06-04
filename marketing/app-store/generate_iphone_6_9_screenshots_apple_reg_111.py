@@ -222,13 +222,13 @@ def device_frame(screen: Image.Image) -> Image.Image:
 
 SLIDES = [
     ("IMG_7487.PNG.JPG", "01_encrypted_vault.png", "ENCRYPTED VAULT", "Private albums,\nprotected locally", "AES-256 vault storage with offline media and virtual-safe thumbnails.", BLUE),
-    ("IMG_7488.PNG.JPG", "02_local_ai_scan.png", "LOCAL AI SCAN", "Find sensitive items\non device", "Review hidden GPS, device metadata, IDs, and screenshots without upload.", AMBER),
-    ("IMG_7489.PNG.JPG", "03_security_settings.png", "SECURITY SETTINGS", "Control every\nprivacy layer", "Subscription, unlock security, backup, storage, and support in one place.", TEAL),
-    ("IMG_7490.PNG.JPG", "04_private_camera.png", "PRIVATE CAMERA", "Capture straight\ninto the vault", "Private photos and videos stay out of the public photo library.", BLUE),
-    ("IMG_7491.PNG.JPG", "05_pin_biometrics.png", "PIN & BIOMETRICS", "Unlock only\nwhen it is you", "Use a 6-digit PIN and supported biometrics to protect every return.", BLUE),
-    ("IMG_7492.PNG.JPG", "06_sensitive_review_queue.png", "SENSITIVE REVIEW", "Process risky files\none by one", "Sort by risk, inspect candidates, and keep private review fully local.", AMBER),
-    ("IMG_7493.PNG.JPG", "07_privacy_redact.png", "PRIVACY REDACTION", "Mosaic faces\nbefore sharing", "Auto-detect sensitive areas or draw your own redaction regions.", AMBER),
-    ("IMG_7494.PNG.JPG", "08_encrypted_backup.png", "ENCRYPTED BACKUP", "Backups you\ncontrol", "Choose a Files folder and keep encrypted backup.dat ready for restore.", TEAL),
+    ("IMG_7491.PNG.JPG", "02_pin_biometrics.png", "PIN & BIOMETRICS", "Unlock only\nwhen it is you", "Use a 6-digit PIN and supported biometrics to protect every return.", BLUE),
+    ("IMG_7488.PNG.JPG", "03_local_ai_scan.png", "LOCAL AI SCAN", "Find sensitive items\non device", "Review hidden GPS, device metadata, IDs, and screenshots without upload.", AMBER),
+    ("IMG_7493.PNG.JPG", "04_privacy_redact.png", "PRIVACY REDACTION", "Mosaic faces\nbefore sharing", "Auto-detect sensitive areas or draw your own redaction regions.", AMBER),
+    ("IMG_7492.PNG.JPG", "05_sensitive_review_queue.png", "SENSITIVE REVIEW", "Process risky files\none by one", "Sort by risk, inspect candidates, and keep private review fully local.", AMBER),
+    ("IMG_7490.PNG.JPG", "06_private_camera.png", "PRIVATE CAMERA", "Capture straight\ninto the vault", "Private photos and videos stay out of the public photo library.", BLUE),
+    ("IMG_7494.PNG.JPG", "07_encrypted_backup.png", "ENCRYPTED BACKUP", "Backups you\ncontrol", "Choose a Files folder and keep encrypted backup.dat ready for restore.", TEAL),
+    ("IMG_7489.PNG.JPG", "08_security_settings.png", "SECURITY SETTINGS", "Control every\nprivacy layer", "Subscription, unlock security, backup, storage, and support in one place.", TEAL),
 ]
 
 
@@ -261,6 +261,8 @@ def main() -> None:
     if missing:
         raise SystemExit(f"Missing source screenshots: {', '.join(missing)}")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for stale in OUT_DIR.glob("*.png"):
+        stale.unlink()
     for spec in SLIDES:
         out = build_slide(spec)
         path = OUT_DIR / spec[1]

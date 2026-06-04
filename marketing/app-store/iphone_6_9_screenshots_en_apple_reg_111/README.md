@@ -19,13 +19,13 @@ Output size: `1320x2868` PNG, portrait, for the iPhone 6.9-inch App Store screen
 | File | Source screenshot | Focus |
 |---|---|---|
 | `01_encrypted_vault.png` | `IMG_7487.PNG.JPG` | Encrypted vault and albums |
-| `02_local_ai_scan.png` | `IMG_7488.PNG.JPG` | Local AI privacy scan |
-| `03_security_settings.png` | `IMG_7489.PNG.JPG` | Security and settings controls |
-| `04_private_camera.png` | `IMG_7490.PNG.JPG` | Private camera capture |
-| `05_pin_biometrics.png` | `IMG_7491.PNG.JPG` | PIN and biometric unlock |
-| `06_sensitive_review_queue.png` | `IMG_7492.PNG.JPG` | Sensitive review queue |
-| `07_privacy_redact.png` | `IMG_7493.PNG.JPG` | Privacy redaction and mosaic |
-| `08_encrypted_backup.png` | `IMG_7494.PNG.JPG` | Encrypted backup and restore |
+| `02_pin_biometrics.png` | `IMG_7491.PNG.JPG` | PIN and biometric unlock |
+| `03_local_ai_scan.png` | `IMG_7488.PNG.JPG` | Local AI privacy scan |
+| `04_privacy_redact.png` | `IMG_7493.PNG.JPG` | Privacy redaction and mosaic |
+| `05_sensitive_review_queue.png` | `IMG_7492.PNG.JPG` | Sensitive review queue |
+| `06_private_camera.png` | `IMG_7490.PNG.JPG` | Private camera capture |
+| `07_encrypted_backup.png` | `IMG_7494.PNG.JPG` | Encrypted backup and restore |
+| `08_security_settings.png` | `IMG_7489.PNG.JPG` | Security and settings controls |
 
 ## Privacy Edits
 
