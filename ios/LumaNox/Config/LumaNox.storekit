@@ -1,0 +1,117 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "B2C6E9A1",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "49.99",
+      "familyShareable" : true,
+      "internalID" : "B0C5E221",
+      "localizations" : [
+        {
+          "description" : "Lifetime access to the full LumaNox private vault suite.",
+          "displayName" : "LumaNox Pro Lifetime",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "一次性解锁完整 LumaNox 私密保险箱套件。",
+          "displayName" : "LumaNox Pro 永久版",
+          "locale" : "zh_CN"
+        }
+      ],
+      "productID" : "luma_vault_premium_lifetime",
+      "referenceName" : "LumaNox Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_timeRate" : 6
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "A9D17B43",
+      "localizations" : [
+
+      ],
+      "name" : "LumaNox Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "A8103D43",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Full privacy protection for your encrypted vault.",
+              "displayName" : "LumaNox Pro Monthly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "解锁加密保险箱的完整隐私保护能力。",
+              "displayName" : "LumaNox Pro 月度",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "luma_vault_premium_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "LumaNox Pro Monthly",
+          "subscriptionGroupID" : "A9D17B43",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "CB34E5D9",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "A year of full LumaNox Pro privacy protection.",
+              "displayName" : "LumaNox Pro Annual",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "按年解锁完整 LumaNox Pro 隐私保护能力。",
+              "displayName" : "LumaNox Pro 年度",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "luma_vault_premium_annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "LumaNox Pro Annual",
+          "subscriptionGroupID" : "A9D17B43",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

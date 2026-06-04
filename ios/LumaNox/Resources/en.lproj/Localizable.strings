@@ -494,6 +494,9 @@
 "paywall_not_configured" = "No RevenueCat key. Set REVENUECAT_API_KEY in ios/Config/Local.xcconfig and rebuild.";
 "paywall_retry" = "Retry";
 "paywall_error_generic" = "Unable to load subscription plans";
+"paywall_offering_missing" = "No current subscription offering was found. Set an offering as Current in RevenueCat, or create an offering with identifier default.";
+"paywall_offering_empty" = "Subscription products are not available yet. Confirm App Store Connect or the local StoreKit configuration contains luma_vault_premium_monthly, luma_vault_premium_annual, and luma_vault_premium_lifetime, and that they are attached to the RevenueCat Premium entitlement.";
+"paywall_catalog_timeout" = "Subscription plans took too long to load. Check the network and retry; when debugging from Xcode, confirm the Run scheme uses LumaNox.storekit.";
 "paywall_premium_active" = "Premium is active on this device.";
 "paywall_action_upgrade" = "Upgrade now";
 "paywall_close_cd" = "Close";

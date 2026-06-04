@@ -33,6 +33,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xpx.vault
+        TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_KEY_CFBundleDisplayName: LumaNox
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
@@ -68,6 +69,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xpx.vault.tests
+        TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: LumaNox
@@ -79,6 +81,7 @@ schemes:
         LumaNox: all
     run:
       config: Debug
+      storeKitConfiguration: LumaNox/Config/LumaNox.storekit
     test:
       config: Debug
       targets:

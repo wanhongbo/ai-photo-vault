@@ -2,6 +2,7 @@ import Foundation
 import RevenueCat
 
 struct PurchaseCancelledError: Error {}
+private struct CatalogTimeoutError: Error {}
 
 /// RevenueCat 订阅仓库 — 对齐 Android [RevenueCatSubscriptionRepository]。
 @MainActor
@@ -9,6 +10,9 @@ final class SubscriptionService: ObservableObject {
     static let shared = SubscriptionService()
 
     static let errorCodeRcKeyMissing = "RC_KEY_MISSING"
+    static let errorCodeOfferingMissing = "RC_OFFERING_MISSING"
+    static let errorCodeOfferingEmpty = "RC_OFFERING_EMPTY"
+    static let errorCodeCatalogTimeout = "RC_CATALOG_TIMEOUT"
 
     @Published private(set) var offeringsState: PaywallOfferingsState = .loading
     @Published private(set) var isPremium = false
@@ -45,11 +49,13 @@ final class SubscriptionService: ObservableObject {
         }
         offeringsState = .loading
         do {
-            let offerings = try await Purchases.shared.offerings()
-            guard let current = offerings.current else {
-                offeringsState = .error(
-                    "RevenueCat offering `current` is null. Set a current offering in Dashboard."
-                )
+            let offerings = try await Self.fetchOfferingsWithTimeout()
+            guard let current = offerings.current ?? offerings.offering(identifier: LumaNoxBillingIds.offeringDefault) else {
+                offeringsState = .error(Self.errorCodeOfferingMissing)
+                return
+            }
+            guard !current.availablePackages.isEmpty else {
+                offeringsState = .error(Self.errorCodeOfferingEmpty)
                 return
             }
             packageCache.removeAll()
@@ -66,7 +72,7 @@ final class SubscriptionService: ObservableObject {
                 isPremium: isPremium
             )
         } catch {
-            offeringsState = .error(error.localizedDescription)
+            offeringsState = .error(Self.catalogErrorCode(from: error))
         }
     }
 
@@ -172,6 +178,34 @@ final class SubscriptionService: ObservableObject {
             freeTrialLabel: trialLabel,
             savingsPercent: nil
         )
+    }
+
+    private static func catalogErrorCode(from error: Error) -> String {
+        if error is CatalogTimeoutError {
+            return errorCodeCatalogTimeout
+        }
+        let message = error.localizedDescription.lowercased()
+        if message.contains("offering") || message.contains("product") || message.contains("storekit") || message.contains("app store connect") {
+            return errorCodeOfferingEmpty
+        }
+        return error.localizedDescription
+    }
+
+    private static func fetchOfferingsWithTimeout() async throws -> Offerings {
+        try await withThrowingTaskGroup(of: Offerings.self) { group in
+            group.addTask {
+                try await Purchases.shared.offerings()
+            }
+            group.addTask {
+                try await Task.sleep(nanoseconds: 12_000_000_000)
+                throw CatalogTimeoutError()
+            }
+            guard let result = try await group.next() else {
+                throw CatalogTimeoutError()
+            }
+            group.cancelAll()
+            return result
+        }
     }
 
     private func planKind(_ type: PackageType) -> PaywallPlanKind {

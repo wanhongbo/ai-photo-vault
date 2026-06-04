@@ -434,10 +434,18 @@ struct PaywallView: View {
     }
 
     private func displayError(_ message: String?) -> String {
-        if message == SubscriptionService.errorCodeRcKeyMissing {
+        switch message {
+        case SubscriptionService.errorCodeRcKeyMissing:
             return L10n.tr("paywall_not_configured")
+        case SubscriptionService.errorCodeOfferingMissing:
+            return L10n.tr("paywall_offering_missing")
+        case SubscriptionService.errorCodeOfferingEmpty:
+            return L10n.tr("paywall_offering_empty")
+        case SubscriptionService.errorCodeCatalogTimeout:
+            return L10n.tr("paywall_catalog_timeout")
+        default:
+            return message ?? L10n.tr("paywall_error_generic")
         }
-        return message ?? L10n.tr("paywall_error_generic")
     }
 
     private func closePaywall() {
