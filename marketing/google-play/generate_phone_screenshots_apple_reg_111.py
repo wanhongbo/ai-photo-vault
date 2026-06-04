@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 W, H = 1080, 1920
 DEFAULT_SOURCE_DIR = Path("/Users/wanhongbo/workspace/apple-reg/111")
 OUT_DIR = Path(__file__).resolve().parent / "phone_screenshots_en_apple_reg_111"
+AI_THUMBNAIL_SHEET = Path(__file__).resolve().parent / "assets" / "ai_album_thumbnails_sheet.png"
 
 BG_TOP = (5, 8, 13)
 BG_BOTTOM = (11, 19, 36)
@@ -116,11 +117,43 @@ def draw_brand_mark(draw: ImageDraw.ImageDraw, x: int, y: int, accent: tuple[int
 def fit_image(source: Image.Image, size: tuple[int, int]) -> Image.Image:
     w, h = size
     img = source.convert("RGBA")
-    scale = max(w / img.width, h / img.height)
+    scale = min(w / img.width, h / img.height)
     resized = img.resize((int(img.width * scale), int(img.height * scale)), Image.Resampling.LANCZOS)
-    x = max(0, (resized.width - w) // 2)
-    y = max(0, (resized.height - h) // 2)
-    return resized.crop((x, y, x + w, y + h))
+    fitted = Image.new("RGBA", (w, h), DEEP)
+    fitted.alpha_composite(resized, ((w - resized.width) // 2, (h - resized.height) // 2))
+    return fitted
+
+
+def paste_rounded(base: Image.Image, overlay: Image.Image, box: tuple[int, int, int, int], radius: int) -> None:
+    x0, y0, x1, y1 = box
+    resized = overlay.convert("RGBA").resize((x1 - x0, y1 - y0), Image.Resampling.LANCZOS)
+    base.paste(resized, (x0, y0), rounded_mask(resized.size, radius))
+
+
+def ai_album_tiles() -> list[Image.Image]:
+    sheet = Image.open(AI_THUMBNAIL_SHEET).convert("RGBA")
+    tile = min(sheet.width, sheet.height) // 2
+    crops = [
+        (0, 0, tile, tile),
+        (tile, 0, tile * 2, tile),
+        (0, tile, tile, tile * 2),
+        (tile, tile, tile * 2, tile * 2),
+    ]
+    return [sheet.crop(box) for box in crops]
+
+
+def sanitize_capture(screen: Image.Image, source_name: str) -> Image.Image:
+    fixed = screen.convert("RGBA").copy()
+    if source_name == "IMG_7487.PNG.JPG":
+        boxes = [
+            (49, 530, 288, 744),
+            (304, 530, 543, 744),
+            (49, 812, 288, 1026),
+            (304, 812, 543, 1026),
+        ]
+        for tile, box in zip(ai_album_tiles(), boxes, strict=True):
+            paste_rounded(fixed, tile, box, 24)
+    return fixed
 
 
 def phone_frame(screen: Image.Image) -> Image.Image:
@@ -156,7 +189,8 @@ def build_slide(spec: dict[str, object]) -> Image.Image:
     y += 22
     draw_lines(draw, (63, y), wrap_text(draw, str(spec["body"]), F_BODY, 900), F_BODY, MUTED, 9)
 
-    screen = Image.open(spec["source"]).convert("RGBA")  # type: ignore[arg-type]
+    source_path = Path(spec["source"])  # type: ignore[arg-type]
+    screen = sanitize_capture(Image.open(source_path), source_path.name)
     framed = phone_frame(screen)
     img.alpha_composite(framed, ((W - framed.width) // 2, 474))
     return img.convert("RGB")

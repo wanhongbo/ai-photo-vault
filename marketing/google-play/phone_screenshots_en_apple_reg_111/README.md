@@ -23,3 +23,11 @@ Output size: `1080x1920` PNG, portrait.
 | `01_encrypted_vault.png` | `IMG_7487.PNG.JPG` | Encrypted vault |
 | `02_local_ai_privacy_scan.png` | `IMG_7488.PNG.JPG` | Local AI privacy scan |
 | `03_security_and_backup_controls.png` | `IMG_7489.PNG.JPG` | Security and backup controls |
+
+`01_encrypted_vault.png` replaces the album photos from the source screenshot with AI-generated privacy-safe thumbnail art from:
+
+```text
+marketing/google-play/assets/ai_album_thumbnails_sheet.png
+```
+
+The phone screenshot is fitted without vertical cropping so the status bar and in-app copy remain visible.

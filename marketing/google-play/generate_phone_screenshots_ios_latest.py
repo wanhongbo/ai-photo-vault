@@ -133,11 +133,11 @@ def draw_brand_mark(draw: ImageDraw.ImageDraw, x: int, y: int, accent: tuple[int
 def fit_image(source: Image.Image, size: tuple[int, int]) -> Image.Image:
     w, h = size
     img = source.convert("RGBA")
-    scale = max(w / img.width, h / img.height)
+    scale = min(w / img.width, h / img.height)
     resized = img.resize((int(img.width * scale), int(img.height * scale)), Image.Resampling.LANCZOS)
-    x = max(0, (resized.width - w) // 2)
-    y = max(0, (resized.height - h) // 2)
-    return resized.crop((x, y, x + w, y + h))
+    fitted = Image.new("RGBA", (w, h), DEEP)
+    fitted.alpha_composite(resized, ((w - resized.width) // 2, (h - resized.height) // 2))
+    return fitted
 
 
 def phone_frame(screen: Image.Image) -> Image.Image:
@@ -281,17 +281,28 @@ def redaction_screen() -> Image.Image:
     ad = ImageDraw.Draw(art)
     ad.ellipse((420, 580, 508, 668), fill=(252, 164, 48))
     ad.text((394, 692), "Browser", font=F_SMALL, fill=(252, 236, 220))
-    ad.ellipse((442, 416, 506, 480), fill=(238, 255, 245))
-    ad.ellipse((462, 436, 486, 460), fill=TEAL)
-    ad.rounded_rectangle((452, 470, 496, 502), radius=12, fill=(238, 255, 245))
-    ad.text((436, 520), "Location", font=F_SMALL, fill=(255, 255, 255))
+    ad.ellipse((430, 398, 526, 494), fill=(238, 255, 245))
+    ad.ellipse((464, 428, 492, 456), fill=TEAL)
+    ad.rounded_rectangle((452, 482, 504, 520), radius=12, fill=(238, 255, 245))
+    ad.text((430, 538), "Location", font=F_SMALL, fill=(255, 255, 255))
     for x in [120, 220, 320, 420, 520]:
         ad.ellipse((x, 900, x + 42, 942), fill=(255, 255, 255, 238))
     ad.rounded_rectangle((168, 214, 544, 294), radius=28, fill=(6, 9, 16, 170))
     ad.text((218, 232), "Sensitive address", font=F_H3, fill=TEXT)
-    mosaic = art.crop((408, 390, 530, 560)).resize((14, 20), Image.Resampling.BILINEAR).resize((122, 170), Image.Resampling.NEAREST)
-    art.paste(mosaic, (408, 390))
-    ad.rounded_rectangle((408, 390, 530, 560), radius=18, outline=AMBER, width=5)
+    sensitive_box = (404, 390, 538, 548)
+    mosaic = art.crop(sensitive_box).resize((12, 14), Image.Resampling.BILINEAR)
+    md = ImageDraw.Draw(mosaic)
+    for x in range(0, mosaic.width, 2):
+        for y in range(0, mosaic.height, 2):
+            if (x + y) % 4 == 0:
+                md.rectangle((x, y, x + 1, y + 1), fill=(255, 255, 255, 90))
+    mosaic = mosaic.resize((sensitive_box[2] - sensitive_box[0], sensitive_box[3] - sensitive_box[1]), Image.Resampling.NEAREST)
+    art.paste(mosaic, sensitive_box)
+    ad.rounded_rectangle(sensitive_box, radius=18, outline=AMBER, width=5)
+    for x in range(sensitive_box[0] + 8, sensitive_box[2] - 8, 18):
+        ad.line((x, sensitive_box[1] + 4, x, sensitive_box[3] - 4), fill=(255, 255, 255, 36), width=1)
+    for y in range(sensitive_box[1] + 8, sensitive_box[3] - 8, 18):
+        ad.line((sensitive_box[0] + 4, y, sensitive_box[2] - 4, y), fill=(0, 0, 0, 42), width=1)
     img.paste(art, (preview[0], preview[1]), rounded_mask(art.size, 28))
 
     d.rounded_rectangle((38, 1330, 748, 1460), radius=28, fill=SECTION, outline=STROKE)
