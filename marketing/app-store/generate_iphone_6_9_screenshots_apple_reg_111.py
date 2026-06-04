@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate 6.9-inch iPhone App Store screenshots from apple-reg/111 captures."""
+"""Generate App Store accepted iPhone screenshots from apple-reg/111 captures."""
 from __future__ import annotations
 
 import os
@@ -8,7 +8,7 @@ from typing import Iterable
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-OUT_W, OUT_H = 1320, 2868
+OUT_W, OUT_H = 1242, 2688
 SOURCE_DIR = Path(os.environ.get("LUMANOX_SCREENSHOT_SOURCE_DIR", "/Users/wanhongbo/workspace/apple-reg/111"))
 SCRIPT_DIR = Path(__file__).resolve().parent
 OUT_DIR = SCRIPT_DIR / "iphone_6_9_screenshots_en_apple_reg_111"
@@ -202,7 +202,7 @@ def sanitize_capture(path: Path) -> Image.Image:
 
 
 def device_frame(screen: Image.Image) -> Image.Image:
-    screen_w, screen_h = 980, 2119
+    screen_w, screen_h = 900, 1946
     outer_w, outer_h = screen_w + 64, screen_h + 64
     shell = Image.new("RGBA", (outer_w + 96, outer_h + 96), (0, 0, 0, 0))
     shadow = Image.new("RGBA", shell.size, (0, 0, 0, 0))
@@ -252,7 +252,7 @@ def build_slide(spec: tuple[str, str, str, str, str, tuple[int, int, int]]) -> I
 
     capture = sanitize_capture(SOURCE_DIR / source_name)
     framed = device_frame(capture)
-    canvas.alpha_composite(framed, ((OUT_W - framed.width) // 2, 640))
+    canvas.alpha_composite(framed, ((OUT_W - framed.width) // 2, 560))
     return canvas.convert("RGB")
 
 
