@@ -37,11 +37,6 @@ final class AppRouter: ObservableObject {
     }
 
     func present(_ route: AppRoute) {
-        #if DEBUG
-        if case .paywall = route {
-            return
-        }
-        #endif
         presentedRoute = route
     }
 
