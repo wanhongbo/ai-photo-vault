@@ -18,7 +18,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.9"
-    TARGETED_DEVICE_FAMILY: "1,2"
+    TARGETED_DEVICE_FAMILY: "1"
     DEVELOPMENT_TEAM: J9A96K6YJ2
     CODE_SIGN_STYLE: Automatic
 targets:
