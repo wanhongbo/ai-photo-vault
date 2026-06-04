@@ -170,26 +170,31 @@ def sanitize_capture(path: Path) -> Image.Image:
     elif name == "IMG_7492.PNG.JPG":
         tiles = thumbnail_tiles()
         boxes = [
-            (26, 628, 97, 697),
-            (26, 775, 97, 844),
-            (26, 921, 97, 991),
-            (26, 1067, 97, 1137),
+            (48, 550, 160, 665),
+            (48, 741, 160, 856),
+            (48, 932, 160, 1047),
+            (48, 1118, 160, 1234),
         ]
+        d = ImageDraw.Draw(img)
         for index, box in enumerate(boxes):
-            paste_rounded(img, tiles[index % len(tiles)], box, 12)
+            paste_rounded(img, tiles[index % len(tiles)], box, 16)
+            badge = (box[0] + 8, box[1] + 8, box[0] + 78, box[1] + 42)
+            d.rounded_rectangle(badge, radius=11, fill=(26, 28, 31, 232))
+            d.text((badge[0] + 36, badge[1] + 7), "66" if index < 3 else "58", font=font(16, True), fill=TEXT)
+            d.rounded_rectangle((badge[0] + 10, badge[1] + 9, badge[0] + 27, badge[1] + 26), radius=5, outline=AMBER, width=2)
     elif name == "IMG_7493.PNG.JPG":
-        photo_box = (96, 407, 499, 754)
+        photo_box = (62, 303, 530, 654)
         group = Image.open(GROUP_PHOTO).convert("RGBA")
         paste_rounded(img, fit_cover(group, (photo_box[2] - photo_box[0], photo_box[3] - photo_box[1])), photo_box, 16)
         face_boxes = [
-            (116, 565, 154, 620),
-            (166, 530, 212, 590),
-            (226, 596, 274, 654),
-            (286, 590, 336, 652),
-            (340, 526, 388, 590),
-            (392, 588, 442, 650),
-            (448, 568, 492, 632),
-            (310, 548, 350, 600),
+            (82, 458, 121, 516),
+            (137, 423, 184, 486),
+            (202, 490, 250, 550),
+            (262, 484, 314, 548),
+            (320, 421, 370, 488),
+            (374, 482, 426, 548),
+            (435, 462, 482, 528),
+            (288, 444, 330, 498),
         ]
         for box in face_boxes:
             apply_mosaic(img, box, 7)
