@@ -141,18 +141,15 @@ def thumbnail_tiles() -> list[Image.Image]:
     return [sheet.crop(box) for box in boxes]
 
 
-def apply_mosaic(img: Image.Image, box: tuple[int, int, int, int], blocks: int = 8) -> None:
+def apply_mosaic(img: Image.Image, box: tuple[int, int, int, int], blocks: int = 7) -> None:
     x0, y0, x1, y1 = box
     region = img.crop(box).convert("RGBA")
-    small_w = max(3, blocks)
-    small_h = max(3, int(blocks * region.height / max(region.width, 1)))
-    mosaic = region.resize((small_w, small_h), Image.Resampling.BILINEAR).resize(region.size, Image.Resampling.NEAREST)
-    md = ImageDraw.Draw(mosaic)
-    for x in range(0, mosaic.width, max(6, mosaic.width // 7)):
-        md.line((x, 0, x, mosaic.height), fill=(255, 255, 255, 36), width=1)
-    for y in range(0, mosaic.height, max(6, mosaic.height // 7)):
-        md.line((0, y, mosaic.width, y), fill=(0, 0, 0, 34), width=1)
-    img.paste(mosaic, (x0, y0))
+    small_w = max(4, blocks)
+    small_h = max(4, int(blocks * region.height / max(region.width, 1)))
+    mosaic = region.resize((small_w, small_h), Image.Resampling.BOX).resize(region.size, Image.Resampling.NEAREST)
+    mosaic = mosaic.filter(ImageFilter.GaussianBlur(0.35))
+    mask = rounded_mask(region.size, max(8, min(region.size) // 4)).filter(ImageFilter.GaussianBlur(1.0))
+    img.paste(mosaic, (x0, y0), mask)
 
 
 def sanitize_capture(path: Path) -> Image.Image:
@@ -187,20 +184,20 @@ def sanitize_capture(path: Path) -> Image.Image:
         group = Image.open(GROUP_PHOTO).convert("RGBA")
         paste_rounded(img, fit_cover(group, (photo_box[2] - photo_box[0], photo_box[3] - photo_box[1])), photo_box, 16)
         face_boxes = [
-            (82, 458, 121, 516),
-            (137, 423, 184, 486),
-            (202, 490, 250, 550),
-            (262, 484, 314, 548),
-            (320, 421, 370, 488),
-            (374, 482, 426, 548),
-            (435, 462, 482, 528),
-            (288, 444, 330, 498),
+            (108, 435, 158, 493),
+            (181, 394, 238, 459),
+            (263, 358, 329, 432),
+            (349, 369, 401, 436),
+            (241, 454, 301, 520),
+            (304, 453, 362, 520),
+            (359, 460, 423, 529),
+            (414, 431, 482, 505),
         ]
         for box in face_boxes:
-            apply_mosaic(img, box, 7)
+            apply_mosaic(img, box, 6)
         d = ImageDraw.Draw(img)
         for box in face_boxes:
-            d.rounded_rectangle(box, radius=6, outline=(232, 197, 71, 210), width=2)
+            d.rounded_rectangle(box, radius=10, outline=(232, 197, 71, 210), width=2)
     return img
 
 
