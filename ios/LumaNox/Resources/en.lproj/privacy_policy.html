@@ -174,11 +174,11 @@
       <p class="lede">LumaNox is a zero-cloud, fully offline photo safe. Your photos never leave your device — and neither does our respect for your privacy.</p>
       <dl class="meta">
         <dt>App</dt><dd>LumaNox: Private Photo Safe</dd>
-        <dt>Package</dt><dd><code>com.xpx.vault</code></dd>
+        <dt>Identifier</dt><dd><code>com.xpx.vault</code></dd>
         <dt>Controller</dt><dd>LumaNox Team</dd>
         <dt>Contact</dt><dd><a href="mailto:service@xipengxin.com">service@xipengxin.com</a></dd>
-        <dt>Effective date</dt><dd>2026-05-12</dd>
-        <dt>Last updated</dt><dd>2026-05-12</dd>
+        <dt>Effective date</dt><dd>2026-06-05</dd>
+        <dt>Last updated</dt><dd>2026-06-05</dd>
         <dt>Version</dt><dd>1.0</dd>
       </dl>
     </header>
@@ -223,17 +223,17 @@
         </thead>
         <tbody>
           <tr><td>Photos &amp; videos</td><td>Media you import or capture in-app</td><td>Encrypted (AES-256) in the app's private storage on your device</td></tr>
-          <tr><td>Albums &amp; metadata</td><td>Album names, covers, photo counts, timestamps</td><td>Local Room database, device-only</td></tr>
-          <tr><td>Lock credentials</td><td>6-digit PIN</td><td>Stored <strong>only</strong> as a SHA-256 hash on device; master key sealed inside Android Keystore</td></tr>
-          <tr><td>Biometric templates</td><td>Fingerprint / face</td><td><strong>Never accessed or stored by us</strong> — handled entirely by Android's <code>BiometricPrompt</code></td></tr>
-          <tr><td>AI inference inputs/outputs</td><td>On-device face detection, blur masks</td><td>Processed in-memory by TensorFlow Lite; never uploaded</td></tr>
-          <tr><td>Backup archives</td><td>Encrypted ZIP files you create</td><td>Saved to a location <strong>you</strong> pick (e.g., Google Drive, SD card) via Android's Storage Access Framework. We never see the file</td></tr>
+          <tr><td>Albums &amp; metadata</td><td>Album names, covers, photo counts, timestamps, encrypted file references</td><td>Local app database and app container, device-only</td></tr>
+          <tr><td>Lock credentials</td><td>6-digit PIN</td><td>Stored <strong>only</strong> as a SHA-256 hash on your device; the vault data key is generated on device and protected by platform secure storage</td></tr>
+          <tr><td>Biometric templates</td><td>Face / fingerprint unlock</td><td><strong>Never accessed or stored by us</strong> — handled entirely by your device's operating system</td></tr>
+          <tr><td>AI inference inputs/outputs</td><td>On-device face, barcode, text, duplicate, blur, and classification analysis</td><td>Processed locally with on-device system or bundled models and local indexes; never uploaded</td></tr>
+          <tr><td>Backup archives</td><td>Encrypted backup files you create or schedule</td><td>Saved to a location <strong>you</strong> choose through the system file/document picker. We never see the file</td></tr>
         </tbody>
       </table>
       <p>We do <strong>not</strong> transmit any of the above over the network.</p>
 
       <h3>3.2 Data we genuinely collect</h3>
-      <p><strong>Only low-sensitivity diagnostics and subscription status</strong>: if you choose to purchase Premium, our payment processor (Google Play via RevenueCat, see §6) processes a minimal set of subscription-related identifiers. We receive only <strong>aggregate entitlement status</strong> ("premium: active / inactive") — never your payment details, name, email, or address. The app may also use Firebase Analytics / Crashlytics to receive crash breadcrumbs and low-sensitivity events such as app start, import result, backup result, AI scan result, and subscription action result for stability and critical-flow analysis.</p>
+      <p><strong>Only low-sensitivity diagnostics and subscription status</strong>: if you choose to purchase Premium, the relevant app store and RevenueCat (see §6) process a minimal set of subscription-related identifiers. We receive only <strong>aggregate entitlement status</strong> ("premium: active / inactive") — never your payment details, name, email, or address. The app may also use Firebase Analytics / Crashlytics to receive crash breadcrumbs and low-sensitivity events such as app start, lock result, import result, camera capture result, backup result, AI scan result, and subscription action result for stability and critical-flow analysis.</p>
     </section>
 
     <section id="s4">
@@ -258,39 +258,48 @@
           <tr><th>Permission</th><th>Purpose</th><th>Triggered by</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>CAMERA</code></td><td>Shoot photos/videos directly into your encrypted vault</td><td>Opening the in-app camera</td></tr>
-          <tr><td><code>READ_MEDIA_IMAGES</code> / <code>READ_MEDIA_VIDEO</code></td><td>Import from your system gallery into the vault (API 33+)</td><td>Tapping "Import from gallery"</td></tr>
-          <tr><td><code>READ_EXTERNAL_STORAGE</code> (maxSdkVersion=32)</td><td>Legacy equivalent of the above on Android ≤ 12</td><td>Same as above, legacy devices</td></tr>
-          <tr><td>Biometric <em>(runtime)</em></td><td>Unlock the vault with fingerprint/face</td><td>You enable biometrics in Settings</td></tr>
-          <tr><td>SAF document picker <em>(per-use)</em></td><td>Save/read encrypted backup archives to a location you choose</td><td>Tapping Backup or Restore</td></tr>
+          <tr><td>Camera</td><td>Shoot photos/videos directly into your encrypted vault; optionally capture an intruder-alert photo after failed PIN attempts if you enable that feature</td><td>Opening the in-app camera or enabling intruder alerts</td></tr>
+          <tr><td>Microphone</td><td>Record audio when you intentionally capture video in the in-app camera</td><td>Starting video capture</td></tr>
+          <tr><td>System photo/media library access</td><td>Import selected photos/videos into the vault</td><td>Tapping an import action for your system library</td></tr>
+          <tr><td>System photo/media library add access</td><td>Export photos/videos or redacted copies back to a LumaNox album in your system library</td><td>Tapping Export or Save to gallery/photos</td></tr>
+          <tr><td>Biometric unlock</td><td>Unlock the vault with face or fingerprint authentication</td><td>You enable biometrics in Settings or during setup</td></tr>
+          <tr><td>System file/document picker <em>(per-use)</em></td><td>Save/read encrypted backup archives to a location you choose</td><td>Tapping Backup, Restore, or choosing an auto-backup folder</td></tr>
         </tbody>
       </table>
-      <p>We do <strong>not</strong> request: internet-always permissions beyond what the payment SDK needs, location, contacts, SMS, or microphone.</p>
+      <p>We do <strong>not</strong> request: location, contacts, calendars, reminders, Bluetooth, health data, advertising tracking permission, SMS, call logs, or unrestricted access to all files on your device.</p>
     </section>
 
     <section id="s6">
       <h2>6. Third-Party Services</h2>
 
-      <h3>6.1 Google Play Billing</h3>
-      <p>If you purchase a subscription or lifetime upgrade, Google Play processes the payment under <strong>Google's</strong> privacy policy (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">https://policies.google.com/privacy</a>). We never receive your credit card, bank account, or identity details.</p>
+      <h3>6.1 Store Billing</h3>
+      <p>If you purchase a subscription or lifetime upgrade, the app store that provides your copy of LumaNox processes the payment under its own privacy policy and payment terms. This may include Apple's privacy policy (<a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">https://www.apple.com/legal/privacy/</a>) or Google's privacy policy (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">https://policies.google.com/privacy</a>). We never receive your credit card, bank account, account password, or billing address.</p>
 
       <h3>6.2 RevenueCat</h3>
       <p>We use <strong>RevenueCat, Inc.</strong> ("RevenueCat") to reconcile subscription status and support "Restore purchases" across reinstalls. RevenueCat acts as our data processor under a signed Data Processing Addendum.</p>
       <ul>
-        <li><strong>Data shared with RevenueCat</strong>: an anonymous App User ID (generated on your device), the product ID you purchased, and Google Play's subscription receipt</li>
+        <li><strong>Data shared with RevenueCat</strong>: an anonymous App User ID (generated on your device), the product ID you purchased, and app store receipt / transaction metadata</li>
         <li><strong>Not shared</strong>: your photos, videos, name, email, precise location, or any vault content</li>
         <li><strong>Purpose</strong>: deliver, validate, and restore your Premium entitlement</li>
         <li><strong>Retention</strong>: as long as your entitlement is active, plus audit periods required by law</li>
         <li><strong>RevenueCat's privacy policy</strong>: <a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">https://www.revenuecat.com/privacy</a></li>
       </ul>
-      <p>Other than RevenueCat and Firebase, no third-party SDKs, trackers, or ad networks are embedded in v1.</p>
+
+      <h3>6.3 Firebase Analytics / Crashlytics</h3>
+      <p>In release builds, we may use <strong>Firebase Analytics</strong> and <strong>Firebase Crashlytics</strong> to understand app stability and critical feature reliability. Events are intentionally limited to sanitized operational signals, such as whether an import, backup, lock, AI scan, camera capture, purchase, or restore action succeeded or failed.</p>
+      <ul>
+        <li><strong>Data sent to Firebase</strong>: event names, coarse app/build information, sanitized status values, crash diagnostics, and breadcrumbs needed to debug stability issues</li>
+        <li><strong>Not sent</strong>: photo/video content, thumbnails, filenames, album names, file paths, PINs, encryption keys, OCR text, face data, precise location, contacts, or payment details</li>
+        <li><strong>Firebase privacy information</strong>: <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">https://firebase.google.com/support/privacy</a></li>
+      </ul>
+      <p>Other than app store billing, RevenueCat, and Firebase, no third-party SDKs, trackers, or ad networks are embedded in v1.</p>
     </section>
 
     <section id="s7">
       <h2>7. Data Security</h2>
       <ul>
-        <li><strong>AES-256-CBC</strong> encryption for every photo and video, applied at import time</li>
-        <li>Master encryption key generated and sealed inside <strong>Android Keystore</strong> (hardware-backed on devices that support StrongBox) — the key is not exportable by LumaNox or by us</li>
+        <li><strong>AES-256</strong> encryption for every photo and video, applied at import time</li>
+        <li>Master encryption key generated on your device and protected by platform secure storage — the key is not exportable by LumaNox or by us</li>
         <li>PIN stored as a <strong>SHA-256</strong> hash; plaintext never persisted</li>
         <li>Auto-lock when the app is backgrounded; app icon hidden from recent-task thumbnails where supported</li>
         <li>No plaintext photos are written outside the app's private directory; temporary files created for sharing are deleted immediately after the share completes</li>
@@ -304,7 +313,7 @@
       <p>Because your vault lives on your device, <strong>you</strong> control retention:</p>
       <ul>
         <li><strong>Delete a photo</strong>: move to Trash → permanent delete (or auto-purge after 30 days)</li>
-        <li><strong>Delete all local data</strong>: uninstall LumaNox — Android removes the app's private directory in full</li>
+        <li><strong>Delete all local data</strong>: uninstall LumaNox — the operating system removes the app's private storage according to platform rules</li>
         <li><strong>Subscription records at RevenueCat</strong>: email <a href="mailto:service@xipengxin.com">service@xipengxin.com</a> referencing your anonymous App User ID (visible in Settings → About) and we will forward your deletion request to RevenueCat</li>
       </ul>
     </section>
@@ -316,14 +325,14 @@
 
     <section id="s10">
       <h2>10. International Data Transfers</h2>
-      <p>The only data that crosses borders in the course of using LumaNox is the subscription metadata handled by Google and RevenueCat. Both rely on <strong>Standard Contractual Clauses</strong> and comparable safeguards for transfers out of the EEA/UK/Switzerland. We ourselves do not transfer any personal data internationally because we do not collect any.</p>
+      <p>The only data that may cross borders in the course of using LumaNox is subscription metadata and low-sensitivity diagnostics handled by app store providers, RevenueCat, and Firebase. These providers rely on <strong>Standard Contractual Clauses</strong> and comparable safeguards for transfers out of the EEA/UK/Switzerland. We ourselves do not transfer your vault content internationally because we do not collect or receive it.</p>
     </section>
 
     <section id="s11">
       <h2>11. Your Rights</h2>
 
       <h3>11.1 EEA / UK / Swiss residents (GDPR / UK GDPR)</h3>
-      <p>You have the right to <strong>access</strong>, <strong>rectify</strong>, <strong>erase</strong>, <strong>restrict</strong>, <strong>port</strong>, and <strong>object to</strong> processing of your personal data, and to lodge a complaint with a supervisory authority. Since the data we hold is limited to anonymous purchase metadata, most requests will be forwarded to our processors (RevenueCat, Google).</p>
+      <p>You have the right to <strong>access</strong>, <strong>rectify</strong>, <strong>erase</strong>, <strong>restrict</strong>, <strong>port</strong>, and <strong>object to</strong> processing of your personal data, and to lodge a complaint with a supervisory authority. Since the data we hold is limited to anonymous purchase metadata and low-sensitivity diagnostics, most requests will be forwarded to our processors or the relevant app store provider.</p>
 
       <h3>11.2 California residents (CCPA / CPRA)</h3>
       <p>You may request to <strong>know</strong>, <strong>delete</strong>, or <strong>correct</strong> the limited personal information we process, and to <strong>opt-out of the sale or sharing</strong> of personal information. <span class="badge">We do not sell or share personal information.</span> We will not discriminate against you for exercising these rights.</p>
