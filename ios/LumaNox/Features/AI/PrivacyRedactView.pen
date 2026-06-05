@@ -336,6 +336,40 @@
             },
             {
               "type": "frame",
+              "id": "preview_processing_hint",
+              "layout": "horizontal",
+              "x": 86,
+              "y": 326,
+              "width": "fit_content",
+              "height": "fit_content",
+              "padding": [6, 10],
+              "gap": 8,
+              "cornerRadius": 10,
+              "fill": "#101722E6",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "preview_processing_spinner",
+                  "width": 14,
+                  "height": 14,
+                  "fill": "transparent",
+                  "stroke": { "thickness": 2, "fill": "#4A9EFF" }
+                },
+                {
+                  "type": "text",
+                  "id": "preview_processing_text",
+                  "content": "正在生成打码预览…",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "letterSpacing": 0,
+                  "fontWeight": "600",
+                  "fill": "#EAF1FF"
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "detecting_overlay",
               "layout": "vertical",
               "x": 12,

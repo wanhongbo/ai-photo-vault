@@ -913,6 +913,7 @@ struct PrivacyRedactView: View {
     @State private var redactedPreviewImage: UIImage?
     @State private var previewTask: Task<Void, Never>?
     @State private var previewRequestID = UUID()
+    @State private var isRenderingPreview = false
     let path: String
 
     private var selectableRecords: [VaultMediaRecord] {
@@ -950,6 +951,9 @@ struct PrivacyRedactView: View {
         if redactionService.isDetecting {
             return L10n.tr("privacy_redact_detecting")
         }
+        if isRenderingPreview {
+            return L10n.tr("privacy_redact_preview_processing")
+        }
         return L10n.tr("privacy_redact_detection_status_fmt", autoRegions.count, manualRegions.count)
     }
 
@@ -980,6 +984,7 @@ struct PrivacyRedactView: View {
                     isVideo: activeIsVideo,
                     previewImage: redactedPreviewImage,
                     isDetecting: redactionService.isDetecting,
+                    isRenderingPreview: isRenderingPreview,
                     mode: redactMode,
                     regions: displayedRegions,
                     selectedManualRegionID: selectedManualRegionID,
@@ -1029,10 +1034,11 @@ struct PrivacyRedactView: View {
         .onChange(of: selectedStyle) { applySelectedStyleToRegions($0) }
         .onChange(of: activePath) { _ in scheduleRedactionPreview() }
         .onChange(of: activeIsVideo) { _ in scheduleRedactionPreview() }
-        .onChange(of: displayedRegions) { _ in scheduleRedactionPreview() }
+        .onChange(of: saveRegions) { _ in scheduleRedactionPreview() }
         .onChange(of: redactionService.isDetecting) { _ in scheduleRedactionPreview() }
         .onDisappear {
             previewTask?.cancel()
+            isRenderingPreview = false
         }
         .sheet(isPresented: $showShareSheet) {
             if let shareURL {
@@ -1215,6 +1221,7 @@ struct PrivacyRedactView: View {
         draftRegion = nil
         selectedManualRegionID = nil
         redactedPreviewImage = nil
+        isRenderingPreview = false
         toastMessage = nil
         let detectedRegions = await redactionService.detectRegions(path: path)
         autoRegions = detectedRegions
@@ -1282,21 +1289,24 @@ struct PrivacyRedactView: View {
     private func scheduleRedactionPreview() {
         let requestID = UUID()
         let path = activePath
-        let regions = displayedRegions
+        let regions = saveRegions
         previewRequestID = requestID
         previewTask?.cancel()
 
         guard !path.isEmpty, !activeIsVideo, !regions.isEmpty, !redactionService.isDetecting else {
             redactedPreviewImage = nil
+            isRenderingPreview = false
             return
         }
 
+        isRenderingPreview = true
         previewTask = Task {
             let image = await redactionService.renderPreviewImage(path: path, regions: regions)
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 guard previewRequestID == requestID else { return }
                 redactedPreviewImage = image
+                isRenderingPreview = false
             }
         }
     }
@@ -1491,6 +1501,7 @@ private struct PrivacyRedactCanvas: View {
     let isVideo: Bool
     let previewImage: UIImage?
     let isDetecting: Bool
+    let isRenderingPreview: Bool
     let mode: PrivacyRedactView.RedactMode
     let regions: [PrivacyRedactionRegion]
     let selectedManualRegionID: UUID?
@@ -1579,6 +1590,27 @@ private struct PrivacyRedactCanvas: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .padding(.leading, 72)
                         .padding(.top, 34)
+
+                    if isRenderingPreview {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(LNColor.brandBlue)
+                            Text(L10n.tr("privacy_redact_preview_processing"))
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(LNColor.title)
+                                .lineLimit(1)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(Color(hex: 0x101722, alpha: 0.90))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(LNColor.stroke, lineWidth: 1))
+                        .position(x: imageRect.midX, y: imageRect.maxY - 28)
+                        .allowsHitTesting(false)
+                        .accessibilityLabel(L10n.tr("privacy_redact_preview_processing"))
+                        .accessibilityIdentifier("privacy_redact_preview_processing")
+                    }
                 }
             }
             .contentShape(Rectangle())
