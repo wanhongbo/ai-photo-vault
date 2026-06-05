@@ -245,13 +245,13 @@
 "privacy_redact_detecting" = "Detecting sensitive information…";
 "privacy_redact_no_sensitive_toast" = "No sensitive information detected";
 "privacy_redact_enter_manual" = "Draw";
-"privacy_redact_manual_hint" = "Drag on the image; the style applies to the active manual region";
+"privacy_redact_manual_hint" = "Pinch to zoom · Drag to select";
 "privacy_redact_manual_done" = "Done";
 "privacy_redact_manual_count" = "Manual added 1 region";
 "privacy_redact_manual_count_fmt" = "Manual added %d regions";
 "privacy_redact_undo" = "Undo";
 "privacy_redact_clear" = "Clear";
-"privacy_redact_auto_hint" = "Faces, text, and codes are masked automatically";
+"privacy_redact_auto_hint" = "Pinch to zoom · Auto masks sensitive areas";
 "privacy_redact_style_title" = "Redaction style";
 "privacy_redact_style_black_bar" = "Black";
 "privacy_redact_style_white_bar" = "White";

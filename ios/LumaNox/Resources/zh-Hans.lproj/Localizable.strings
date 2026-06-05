@@ -245,13 +245,13 @@
 "privacy_redact_detecting" = "正在识别敏感信息…";
 "privacy_redact_no_sensitive_toast" = "未检测到敏感信息";
 "privacy_redact_enter_manual" = "手动框选";
-"privacy_redact_manual_hint" = "拖动框选区域，样式作用于当前手动区域";
+"privacy_redact_manual_hint" = "捏合缩放 · 拖动框选区域";
 "privacy_redact_manual_done" = "完成";
 "privacy_redact_manual_count" = "手动已加 1处";
 "privacy_redact_manual_count_fmt" = "手动已加 %d处";
 "privacy_redact_undo" = "撤销";
 "privacy_redact_clear" = "清空";
-"privacy_redact_auto_hint" = "自动遮盖人脸、文字和码";
+"privacy_redact_auto_hint" = "捏合缩放 · 自动遮盖敏感区域";
 "privacy_redact_style_title" = "打码样式";
 "privacy_redact_style_black_bar" = "黑条";
 "privacy_redact_style_white_bar" = "白条";

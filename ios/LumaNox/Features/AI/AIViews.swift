@@ -986,9 +986,10 @@ struct PrivacyRedactView: View {
                     onDraftChanged: updateDraftRegion,
                     onDraftCommitted: commitDraftRegion
                 )
-                .frame(height: min(400, max(360, proxy.size.height * 0.46)))
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
+                .id(activePath)
+                .frame(height: min(392, max(372, proxy.size.height * 0.45)))
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
 
                 VStack(spacing: 8) {
                     privacyRedactStatusLine
@@ -1002,11 +1003,11 @@ struct PrivacyRedactView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18))
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(LNColor.stroke, lineWidth: 1))
                 .padding(.horizontal, 20)
-                .padding(.top, 12)
+                .padding(.top, 10)
 
                 privacyRedactBottomActions
                     .padding(.horizontal, 20)
-                    .padding(.top, 12)
+                    .padding(.top, 10)
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
         }
@@ -1495,11 +1496,18 @@ private struct PrivacyRedactCanvas: View {
     let selectedManualRegionID: UUID?
     let onDraftChanged: (CGRect?) -> Void
     let onDraftCommitted: (CGRect?) -> Void
+    @State private var committedZoom: CGFloat = 1
+    @GestureState private var gestureZoom: CGFloat = 1
+
+    private var zoomScale: CGFloat {
+        Self.clampedZoom(committedZoom * gestureZoom)
+    }
 
     var body: some View {
         GeometryReader { proxy in
-            let imageRect = CGRect(x: 21, y: 18, width: max(1, proxy.size.width - 42), height: max(1, proxy.size.height - 36))
+            let imageRect = CGRect(x: 12, y: 12, width: max(1, proxy.size.width - 24), height: max(1, proxy.size.height - 24))
             let contentRect = fittedImageRect(in: imageRect, imageSize: previewImage?.size)
+            let displayedContentRect = scaledRect(contentRect, scale: zoomScale)
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: 18)
                     .fill(Color(hex: 0x020409))
@@ -1543,8 +1551,8 @@ private struct PrivacyRedactCanvas: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0x344761), lineWidth: 1))
-                    .frame(width: imageRect.width, height: imageRect.height)
-                    .position(x: imageRect.midX, y: imageRect.midY)
+                    .frame(width: displayedContentRect.width, height: displayedContentRect.height)
+                    .position(x: displayedContentRect.midX, y: displayedContentRect.midY)
 
                     ForEach(regions) { region in
                         PrivacyRedactRegionView(
@@ -1553,12 +1561,12 @@ private struct PrivacyRedactCanvas: View {
                             drawsEffect: false
                         )
                         .frame(
-                            width: max(1, region.normalizedRect.width * contentRect.width),
-                            height: max(1, region.normalizedRect.height * contentRect.height)
+                            width: max(1, region.normalizedRect.width * displayedContentRect.width),
+                            height: max(1, region.normalizedRect.height * displayedContentRect.height)
                         )
                         .position(
-                            x: contentRect.minX + region.normalizedRect.midX * contentRect.width,
-                            y: contentRect.minY + region.normalizedRect.midY * contentRect.height
+                            x: displayedContentRect.minX + region.normalizedRect.midX * displayedContentRect.width,
+                            y: displayedContentRect.minY + region.normalizedRect.midY * displayedContentRect.height
                         )
                     }
 
@@ -1578,11 +1586,20 @@ private struct PrivacyRedactCanvas: View {
                 DragGesture(minimumDistance: 6)
                     .onChanged { value in
                         guard mode == .manual, !isVideo, !isDetecting else { return }
-                        onDraftChanged(normalizedRect(from: value.startLocation, to: value.location, in: contentRect))
+                        onDraftChanged(normalizedRect(from: value.startLocation, to: value.location, in: displayedContentRect))
                     }
                     .onEnded { value in
                         guard mode == .manual, !isVideo, !isDetecting else { return }
-                        onDraftCommitted(normalizedRect(from: value.startLocation, to: value.location, in: contentRect))
+                        onDraftCommitted(normalizedRect(from: value.startLocation, to: value.location, in: displayedContentRect))
+                    }
+            )
+            .simultaneousGesture(
+                MagnificationGesture()
+                    .updating($gestureZoom) { value, state, _ in
+                        state = value
+                    }
+                    .onEnded { value in
+                        committedZoom = Self.clampedZoom(committedZoom * value)
                     }
             )
         }
@@ -1630,6 +1647,16 @@ private struct PrivacyRedactCanvas: View {
             let height = width / imageRatio
             return CGRect(x: container.minX, y: container.midY - height / 2, width: width, height: height)
         }
+    }
+
+    private func scaledRect(_ rect: CGRect, scale: CGFloat) -> CGRect {
+        let width = rect.width * scale
+        let height = rect.height * scale
+        return CGRect(x: rect.midX - width / 2, y: rect.midY - height / 2, width: width, height: height)
+    }
+
+    private static func clampedZoom(_ value: CGFloat) -> CGFloat {
+        min(max(value, 1), 3)
     }
 }
 
