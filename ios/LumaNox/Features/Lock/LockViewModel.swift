@@ -92,10 +92,12 @@ final class LockViewModel: ObservableObject {
     func onBiometricUnlockSuccess() {
         appLock.onUnlockSucceeded()
         state.unlockSuccess = true
+        LumaTelemetry.trackLock(event: "unlock", method: "biometric", result: "success")
     }
 
     func onBiometricUnlockFailed(_ message: String) {
         state.error = message
+        LumaTelemetry.trackLock(event: "unlock", method: "biometric", result: "failed")
     }
 
     func confirmBiometricSetup(enable: Bool) {
@@ -168,8 +170,10 @@ final class LockViewModel: ObservableObject {
                     if !canBio {
                         finishUnlockAfterSetup()
                     }
+                    LumaTelemetry.trackLock(event: "setup", method: "pin", result: "success")
                 } catch {
                     state.error = error.localizedDescription
+                    LumaTelemetry.trackLock(event: "setup", method: "pin", result: "failed")
                 }
             } else {
                 state = LockUiState(
@@ -178,6 +182,7 @@ final class LockViewModel: ObservableObject {
                     subtitle: L10n.tr("lock_error_mismatch_subtitle"),
                     error: L10n.tr("lock_error_mismatch")
                 )
+                LumaTelemetry.trackLock(event: "setup", method: "pin", result: "mismatch")
             }
         case .restoreLogin:
             Task { await attemptRestoreLogin(pin: pin) }
@@ -187,6 +192,7 @@ final class LockViewModel: ObservableObject {
                 BackupKeyRefresh.refresh(pin: pin, force: false, triggerAutoBackup: false)
                 appLock.onUnlockSucceeded()
                 state.unlockSuccess = true
+                LumaTelemetry.trackLock(event: "unlock", method: "pin", result: "success")
             } else {
                 let fails = (try? securityStore.recordFailedAttempt()) ?? 1
                 IntruderAlertStore.shared.recordFailedPinAttempt(pin)
@@ -197,6 +203,7 @@ final class LockViewModel: ObservableObject {
                     error: L10n.tr("lock_error_wrong_pin", fails),
                     biometricEnabled: securityStore.biometricEnabled
                 )
+                LumaTelemetry.trackLock(event: "unlock", method: "pin", result: "failed")
             }
         default:
             break
@@ -227,6 +234,7 @@ final class LockViewModel: ObservableObject {
                     unlockSuccess: true,
                     restoreFailCount: 0
                 )
+                LumaTelemetry.trackLock(event: "restore_login", method: "pin", result: "success")
             } catch {
                 state = LockUiState(
                     stage: .restoreLogin,
@@ -235,6 +243,7 @@ final class LockViewModel: ObservableObject {
                     error: error.localizedDescription,
                     isLoading: false
                 )
+                LumaTelemetry.trackLock(event: "restore_login", method: "pin", result: "failed")
             }
         } else {
             let nextFail = state.restoreFailCount + 1
@@ -248,6 +257,7 @@ final class LockViewModel: ObservableObject {
                 restoreFailCount: nextFail,
                 showAbandonBackupEntry: nextFail >= 3
             )
+            LumaTelemetry.trackLock(event: "restore_login", method: "pin", result: "failed")
         }
     }
 

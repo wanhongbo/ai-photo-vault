@@ -233,7 +233,7 @@
       <p>We do <strong>not</strong> transmit any of the above over the network.</p>
 
       <h3>3.2 Data we genuinely collect</h3>
-      <p><strong>None, with one narrow exception</strong>: if you choose to purchase Premium, our payment processor (Google Play via RevenueCat, see §6) processes a minimal set of subscription-related identifiers. We receive only <strong>aggregate entitlement status</strong> ("premium: active / inactive") — never your payment details, name, email, or address.</p>
+      <p><strong>Only low-sensitivity diagnostics and subscription status</strong>: if you choose to purchase Premium, our payment processor (Google Play via RevenueCat, see §6) processes a minimal set of subscription-related identifiers. We receive only <strong>aggregate entitlement status</strong> ("premium: active / inactive") — never your payment details, name, email, or address. The app may also use Firebase Analytics / Crashlytics to receive crash breadcrumbs and low-sensitivity events such as app start, import result, backup result, AI scan result, and subscription action result for stability and critical-flow analysis.</p>
     </section>
 
     <section id="s4">
@@ -244,7 +244,8 @@
         <li><span class="no">✕</span> We do not collect precise or coarse location</li>
         <li><span class="no">✕</span> We do not collect your name, email, phone number, or mailing address</li>
         <li><span class="no">✕</span> We do not use advertising identifiers, nor serve ads</li>
-        <li><span class="no">✕</span> We do not integrate Firebase Analytics, Google Analytics, Meta SDK, AppsFlyer, or comparable trackers (v1.x)</li>
+        <li><span class="no">✕</span> Firebase events do not include photo/video content, thumbnails, filenames, album names, file paths, PINs, keys, or OCR text</li>
+        <li><span class="no">✕</span> We do not integrate advertising trackers, Meta SDK, AppsFlyer, or comparable ad-attribution tools</li>
         <li><span class="no">✕</span> We do not build profiles, infer demographics, or engage in behavioral advertising</li>
       </ul>
     </section>
@@ -282,7 +283,7 @@
         <li><strong>Retention</strong>: as long as your entitlement is active, plus audit periods required by law</li>
         <li><strong>RevenueCat's privacy policy</strong>: <a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">https://www.revenuecat.com/privacy</a></li>
       </ul>
-      <p>No other third-party SDKs, trackers, or ad networks are embedded in v1.</p>
+      <p>Other than RevenueCat and Firebase, no third-party SDKs, trackers, or ad networks are embedded in v1.</p>
     </section>
 
     <section id="s7">

@@ -22,14 +22,17 @@ extension VaultStore {
 
     /// Encrypt camera temp file into vault (Android [finalizeCameraCapture]).
     func finalizeCameraCapture(tempURL: URL) async -> String? {
+        let mediaType = vaultTelemetryMediaType(tempURL.pathExtension)
         guard fileManager.fileExists(atPath: tempURL.path) else {
             try? fileManager.removeItem(at: tempURL)
+            LumaTelemetry.trackCameraCapture(mediaType: mediaType, result: "failed")
             return nil
         }
         let attrs = try? fileManager.attributesOfItem(atPath: tempURL.path)
         let size = (attrs?[.size] as? NSNumber)?.int64Value ?? 0
         guard size > 0 else {
             try? fileManager.removeItem(at: tempURL)
+            LumaTelemetry.trackCameraCapture(mediaType: mediaType, result: "failed")
             return nil
         }
 
@@ -40,6 +43,7 @@ extension VaultStore {
             albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
         } catch {
             PlaintextTempFileManager.shared.removeItem(tempURL)
+            LumaTelemetry.trackCameraCapture(mediaType: mediaType, result: "failed")
             return nil
         }
         let ext = tempURL.pathExtension.isEmpty ? "bin" : tempURL.pathExtension
@@ -50,6 +54,7 @@ extension VaultStore {
         }).value else {
             PlaintextTempFileManager.shared.removeItem(tempURL)
             try? self.fileManager.removeItem(at: dest)
+            LumaTelemetry.trackCameraCapture(mediaType: mediaType, result: "failed")
             return nil
         }
 
@@ -66,10 +71,12 @@ extension VaultStore {
             )
             PlaintextTempFileManager.shared.removeItem(tempURL)
             refreshSnapshotFromMetadata()
+            LumaTelemetry.trackCameraCapture(mediaType: mediaType, result: "success")
             return work.encryptedPath
         } catch {
             PlaintextTempFileManager.shared.removeItem(tempURL)
             try? fileManager.removeItem(at: dest)
+            LumaTelemetry.trackCameraCapture(mediaType: mediaType, result: "failed")
             return nil
         }
     }

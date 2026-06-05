@@ -233,7 +233,7 @@
       <p>以上内容<strong>不会</strong>经由我们传输到网络上。</p>
 
       <h3>3.2 我们真正会收到的数据</h3>
-      <p><strong>基本没有，除一个狭窄例外</strong>：若你选择购买 Premium，我们的付费处理方（Google Play，经由 RevenueCat，见第 6 节）会处理与订阅相关的最小标识符集合。我们接收到的仅是<strong>聚合权益状态</strong>（例如仅表示「Premium 已生效 / 未生效」的匿名标记），<strong>不会</strong>接收你的付款信息、姓名、邮箱或地址。</p>
+      <p><strong>仅限低敏诊断与订阅状态</strong>：若你选择购买 Premium，我们的付费处理方（Google Play，经由 RevenueCat，见第 6 节）会处理与订阅相关的最小标识符集合。我们接收到的仅是<strong>聚合权益状态</strong>（例如仅表示「Premium 已生效 / 未生效」的匿名标记），<strong>不会</strong>接收你的付款信息、姓名、邮箱或地址。应用还可能通过 Firebase Analytics / Crashlytics 接收崩溃线索和低敏事件（例如启动、导入结果、备份结果、AI 扫描结果、订阅操作结果），用于稳定性与关键流程分析。</p>
     </section>
 
     <section id="s4">
@@ -244,7 +244,8 @@
         <li><span class="no">✕</span> 不收集精确或粗略位置</li>
         <li><span class="no">✕</span> 不收集你的姓名、邮箱、电话或邮寄地址</li>
         <li><span class="no">✕</span> 不使用广告标识符，也不投放广告</li>
-        <li><span class="no">✕</span> 不集成 Firebase Analytics、Google Analytics、Meta SDK、AppsFlyer 等追踪 SDK（v1.x 阶段）</li>
+        <li><span class="no">✕</span> Firebase 事件不包含照片/视频内容、缩略图、文件名、相册名、文件路径、PIN、密钥或 OCR 文本</li>
+        <li><span class="no">✕</span> 不集成广告追踪 SDK，不使用 Meta SDK、AppsFlyer 等广告归因工具</li>
         <li><span class="no">✕</span> 不构建用户画像，不做人群推断，不进行行为广告</li>
       </ul>
     </section>
@@ -282,7 +283,7 @@
         <li><strong>留存期</strong>：权益有效期间，加上法律要求的审计期</li>
         <li><strong>RevenueCat 隐私政策</strong>：<a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">https://www.revenuecat.com/privacy</a></li>
       </ul>
-      <p>v1 版本中不嵌入任何其他第三方 SDK、追踪器或广告网络。</p>
+      <p>除 RevenueCat 与 Firebase 外，v1 版本中不嵌入任何其他第三方 SDK、追踪器或广告网络。</p>
     </section>
 
     <section id="s7">

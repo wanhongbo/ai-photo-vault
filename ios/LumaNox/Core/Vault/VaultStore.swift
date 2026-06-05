@@ -166,6 +166,7 @@ final class VaultStore: ObservableObject {
         originalFileName: String? = nil
     ) async -> VaultImportResult {
         vaultDebugLog("importPlainData begin bytes=\(data.count) ext=\(fileExtension) album=\(albumName) original=\(originalFileName ?? "nil")")
+        let mediaType = vaultTelemetryMediaType(fileExtension)
         if data.count >= importDataStreamThresholdBytes {
             let ext = fileExtension.lowercased()
             let tempURL: URL
@@ -179,6 +180,7 @@ final class VaultStore: ObservableObject {
                 vaultDebugLog("importPlainData stagedLarge temp=\(tempURL.path) size=\(debugFileSize(tempURL))")
             } catch {
                 vaultDebugLog("importPlainData stageLarge failed error=\(error.localizedDescription)")
+                LumaTelemetry.trackVaultImport(source: "picker", mediaType: mediaType, result: "failed")
                 return .failed
             }
             defer { PlaintextTempFileManager.shared.removeItem(tempURL) }
@@ -200,6 +202,7 @@ final class VaultStore: ObservableObject {
             vaultDebugLog("importPlainData target albumDir=\(albumDir.path) dest=\(dest.path) destExists=\(fileManager.fileExists(atPath: dest.path))")
             if fileManager.fileExists(atPath: dest.path), canReadExistingVaultMedia(at: dest) {
                 vaultDebugLog("importPlainData duplicate dest=\(dest.path) size=\(debugFileSize(dest)) cipherVersion=\(cipher.cipherVersion(of: dest).map(String.init) ?? "nil")")
+                LumaTelemetry.trackVaultImport(source: "picker", mediaType: mediaType, result: "duplicate")
                 return .duplicate
             }
 
@@ -222,9 +225,11 @@ final class VaultStore: ObservableObject {
                 originalFileName: originalFileName
             )
             vaultDebugLog("importPlainData metadataRecorded dest=\(dest.lastPathComponent)")
+            LumaTelemetry.trackVaultImport(source: "picker", mediaType: mediaType, result: "added")
             return .added
         } catch {
             vaultDebugLog("importPlainData failed error=\(error.localizedDescription)")
+            LumaTelemetry.trackVaultImport(source: "picker", mediaType: mediaType, result: "failed")
             return .failed
         }
     }
@@ -237,6 +242,8 @@ final class VaultStore: ObservableObject {
         source: VaultMediaSource = .picker
     ) async -> VaultImportResult {
         vaultDebugLog("importPlainFile begin source=\(sourceURL.path) exists=\(fileManager.fileExists(atPath: sourceURL.path)) size=\(debugFileSize(sourceURL)) ext=\(fileExtension) album=\(albumName) original=\(originalFileName ?? "nil")")
+        let mediaType = vaultTelemetryMediaType(fileExtension)
+        let sourceName = source == .camera ? "camera" : "picker"
         do {
             let safeAlbum = (try? createAlbum(named: albumName)) ?? vaultDefaultAlbumName
             let albumDir = try rootDirectory().appendingPathComponent(safeAlbum, isDirectory: true)
@@ -246,6 +253,7 @@ final class VaultStore: ObservableObject {
             vaultDebugLog("importPlainFile target albumDir=\(albumDir.path) dest=\(dest.path) destExists=\(fileManager.fileExists(atPath: dest.path))")
             if fileManager.fileExists(atPath: dest.path), canReadExistingVaultMedia(at: dest) {
                 vaultDebugLog("importPlainFile duplicate dest=\(dest.path) size=\(debugFileSize(dest)) cipherVersion=\(cipher.cipherVersion(of: dest).map(String.init) ?? "nil")")
+                LumaTelemetry.trackVaultImport(source: sourceName, mediaType: mediaType, result: "duplicate")
                 return .duplicate
             }
 
@@ -267,9 +275,11 @@ final class VaultStore: ObservableObject {
             )
             vaultDebugLog("importPlainFile metadataRecorded dest=\(dest.lastPathComponent)")
             invalidateCache()
+            LumaTelemetry.trackVaultImport(source: sourceName, mediaType: mediaType, result: "added")
             return .added
         } catch {
             vaultDebugLog("importPlainFile failed source=\(sourceURL.path) error=\(error.localizedDescription)")
+            LumaTelemetry.trackVaultImport(source: sourceName, mediaType: mediaType, result: "failed")
             return .failed
         }
     }
@@ -382,3 +392,14 @@ private func vaultDebugLog(_ message: @autoclosure () -> String) {
 #else
 private func vaultDebugLog(_ message: @autoclosure () -> String) {}
 #endif
+
+func vaultTelemetryMediaType(_ fileExtension: String) -> String {
+    switch fileExtension.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+    case "jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "bmp":
+        return "image"
+    case "mp4", "mov", "mkv", "webm", "avi", "3gp", "m4v", "flv":
+        return "video"
+    default:
+        return "other"
+    }
+}

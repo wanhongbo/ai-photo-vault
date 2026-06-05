@@ -8,6 +8,7 @@ import com.xpx.vault.R
 import com.xpx.vault.billing.QuotaManagerProvider
 import com.xpx.vault.data.crypto.BackupKeyManager
 import com.xpx.vault.data.crypto.VaultCipher
+import com.xpx.vault.telemetry.LumaTelemetry
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
@@ -51,17 +52,28 @@ object LocalBackupMvpService {
     ): BackupExecutionResult = withContext(Dispatchers.IO) {
         if (!mutex.tryLock()) {
             AppLogger.w(TAG, "createBackup rejected: already running")
-            return@withContext BackupExecutionResult.alreadyRunning(context)
+            return@withContext BackupExecutionResult.alreadyRunning(context).also { result ->
+                LumaTelemetry.trackBackup(trigger.name, result.backupKind.name, "already_running", result.assetCount)
+            }
         }
         try {
-            when (trigger) {
+            val result = when (trigger) {
                 BackupTrigger.AUTO -> doAutoBackup(context)
                 BackupTrigger.MANUAL -> {
                     val uri = targetUri
-                        ?: return@withContext BackupExecutionResult.failure(context.getString(R.string.backup_error_no_target))
+                        ?: return@withContext BackupExecutionResult.failure(context.getString(R.string.backup_error_no_target)).also {
+                            LumaTelemetry.trackBackup(trigger.name, it.backupKind.name, backupTelemetryResult(it), it.assetCount)
+                        }
                     doManualBackup(context, uri)
                 }
             }
+            LumaTelemetry.trackBackup(
+                trigger = trigger.name,
+                kind = result.backupKind.name,
+                result = backupTelemetryResult(result),
+                assetCount = result.assetCount,
+            )
+            result
         } finally {
             mutex.unlock()
         }
@@ -294,15 +306,19 @@ object LocalBackupMvpService {
     ): RestoreExecutionResult = withContext(Dispatchers.IO) {
         val autoFile = ExternalBackupLocation.findAuto(context)
             ?: return@withContext RestoreExecutionResult.failure(context.getString(R.string.restore_error_no_auto_backup)).also {
+                LumaTelemetry.trackRestore("auto", restoreTelemetryResult(it), it.restored, it.skipped, it.failed)
                 pin.fill(0.toChar())
             }
         val input = runCatching { context.contentResolver.openInputStream(autoFile.uri) }
             .getOrNull()
             ?: return@withContext RestoreExecutionResult.failure(context.getString(R.string.restore_error_cannot_open_auto)).also {
+                LumaTelemetry.trackRestore("auto", restoreTelemetryResult(it), it.restored, it.skipped, it.failed)
                 pin.fill(0.toChar())
             }
         input.use { stream ->
-            restoreFromStream(context, stream, pin)
+            restoreFromStream(context, stream, pin).also {
+                LumaTelemetry.trackRestore("auto", restoreTelemetryResult(it), it.restored, it.skipped, it.failed)
+            }
         }
     }
 
@@ -314,10 +330,13 @@ object LocalBackupMvpService {
         val input = runCatching { context.contentResolver.openInputStream(fileUri) }
             .getOrNull()
             ?: return@withContext RestoreExecutionResult.failure(context.getString(R.string.restore_error_cannot_read_file)).also {
+                LumaTelemetry.trackRestore("manual", restoreTelemetryResult(it), it.restored, it.skipped, it.failed)
                 pin.fill(0.toChar())
             }
         input.use { stream ->
-            restoreFromStream(context, stream, pin)
+            restoreFromStream(context, stream, pin).also {
+                LumaTelemetry.trackRestore("manual", restoreTelemetryResult(it), it.restored, it.skipped, it.failed)
+            }
         }
     }
 
@@ -661,6 +680,15 @@ object LocalBackupMvpService {
             if (tmp.exists()) tmp.listFiles()?.forEach { it.delete() }
         }
     }
+
+    private fun backupTelemetryResult(result: BackupExecutionResult): String = when {
+        result.success -> "success"
+        result.alreadyRunning -> "already_running"
+        else -> "failed"
+    }
+
+    private fun restoreTelemetryResult(result: RestoreExecutionResult): String =
+        if (result.success) "success" else "failed"
 }
 
 // ---------- 结果数据类 ----------

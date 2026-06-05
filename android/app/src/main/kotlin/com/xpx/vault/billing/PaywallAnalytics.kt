@@ -1,22 +1,20 @@
 package com.xpx.vault.billing
 
-import com.xpx.vault.AppLogger
 import com.xpx.vault.domain.quota.PaywallTrigger
+import com.xpx.vault.telemetry.LumaTelemetry
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * 支付墙埋点事件追踪器。
  *
- * 当前使用日志输出，后续接入 Firebase Analytics 或其他 SDK 时只需替换内部实现。
+ * 当前通过统一 Telemetry 低敏上报；所有事件集中落在 [logEvent]。
  * 所有事件通过 [logEvent] 统一落盘，便于 debug 和 CI 截取日志验证。
  */
 @Singleton
 class PaywallAnalytics @Inject constructor() {
 
     companion object {
-        private const val TAG = "PaywallAnalytics"
-
         // 事件名常量
         const val EVENT_PAYWALL_SHOWN = "paywall_shown"
         const val EVENT_PAYWALL_DISMISSED = "paywall_dismissed"
@@ -69,9 +67,6 @@ class PaywallAnalytics @Inject constructor() {
     }
 
     private fun logEvent(event: String, params: Map<String, String>) {
-        val paramStr = params.entries.joinToString(", ") { "${it.key}=${it.value}" }
-        AppLogger.d(TAG, "[$event] $paramStr")
-        // TODO: 接入 Firebase Analytics
-        // FirebaseAnalytics.getInstance(context).logEvent(event, bundleOf(*params.map { it.key to it.value }.toTypedArray()))
+        LumaTelemetry.logEvent(event, params)
     }
 }

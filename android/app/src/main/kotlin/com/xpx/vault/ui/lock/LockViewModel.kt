@@ -14,6 +14,7 @@ import com.xpx.vault.ui.backup.BackupTriggerReason
 import com.xpx.vault.ui.backup.LocalBackupMvpService
 import com.xpx.vault.AppLockManager
 import com.xpx.vault.R
+import com.xpx.vault.telemetry.LumaTelemetry
 import com.xpx.vault.ui.setup.FirstLaunchRouter
 import com.xpx.vault.ui.settings.IntruderAlertStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -110,6 +111,7 @@ class LockViewModel @Inject constructor(
                             error = null,
                             biometricPromptAfterSetup = true,
                         )
+                        LumaTelemetry.trackLock("setup", "pin", "success")
                     })
                 } else {
                     _state.value = s.copy(
@@ -119,6 +121,7 @@ class LockViewModel @Inject constructor(
                         title = appContext.getString(R.string.lock_error_mismatch_title),
                         subtitle = appContext.getString(R.string.lock_error_mismatch_subtitle),
                     )
+                    LumaTelemetry.trackLock("setup", "pin", "mismatch")
                 }
             } else if (s.stage == LockStage.UNLOCK) {
                 verifyUnlockPin(next)
@@ -166,12 +169,14 @@ class LockViewModel @Inject constructor(
                 enteredPin = "",
                 error = null,
             )
+            LumaTelemetry.trackLock("unlock", "biometric", "success")
         }
     }
 
     fun onBiometricUnlockFailed(errorMessage: String) {
         val s = _state.value
         _state.value = s.copy(error = errorMessage)
+        LumaTelemetry.trackLock("unlock", "biometric", "failed")
     }
 
     fun setBiometricEnabled(enabled: Boolean) {
@@ -219,6 +224,7 @@ class LockViewModel @Inject constructor(
                 // PIN 校验通过立即解锁 UI；Argon2id 派生放后台，已有缓存则直接跳过。
                 _state.value = _state.value.copy(unlockSuccess = true, enteredPin = "", error = null)
                 launchRefreshBackupKey(pin, triggerAutoBackup = false, force = false)
+                LumaTelemetry.trackLock("unlock", "pin", "success")
             } else {
                 val nextFail = setting.failCount + 1
                 dao.upsert(setting.copy(failCount = nextFail))
@@ -227,6 +233,7 @@ class LockViewModel @Inject constructor(
                     enteredPin = "",
                     error = appContext.getString(R.string.lock_error_wrong_pin, nextFail),
                 )
+                LumaTelemetry.trackLock("unlock", "pin", "failed")
             }
         }
     }
@@ -307,6 +314,7 @@ class LockViewModel @Inject constructor(
                     error = null,
                     restoreFailCount = 0,
                 )
+                LumaTelemetry.trackLock("restore_login", "pin", "success")
             } else {
                 val nextFail = s.restoreFailCount + 1
                 _state.value = _state.value.copy(
@@ -316,6 +324,7 @@ class LockViewModel @Inject constructor(
                     restoreFailCount = nextFail,
                     showAbandonBackupEntry = nextFail >= 3,
                 )
+                LumaTelemetry.trackLock("restore_login", "pin", "failed")
             }
         }
     }

@@ -3,6 +3,11 @@ import SwiftUI
 @main
 struct LumaNoxApp: App {
     init() {
+        FirebaseTelemetry.configure()
+        LumaTelemetry.trackAppStart(
+            version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
+            build: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
+        )
         BillingBootstrap.configure()
         AutoBackupScheduler.registerBackgroundTasks()
         ExternalBackupLocation.sanitizeOnStartup()

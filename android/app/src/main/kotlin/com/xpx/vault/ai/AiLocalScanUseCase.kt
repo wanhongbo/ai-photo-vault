@@ -20,6 +20,7 @@ import com.xpx.vault.domain.model.AiQualityRecord
 import com.xpx.vault.domain.model.AiSensitiveRecord
 import com.xpx.vault.domain.model.AiTag
 import com.xpx.vault.domain.repo.AiAnalysisRepository
+import com.xpx.vault.telemetry.LumaTelemetry
 import com.xpx.vault.ui.components.VaultThumbnailCache
 import com.xpx.vault.ui.vault.VaultStore
 import com.xpx.vault.ui.vault.isVaultImage
@@ -128,7 +129,13 @@ class AiLocalScanUseCase @Inject constructor(
         try {
             do {
                 rescanRequested = false
-                runOnePass(force)
+                runCatching {
+                    runOnePass(force)
+                }.onFailure {
+                    val p = _progress.value
+                    LumaTelemetry.trackAiScan("failed", p.total, p.done)
+                    throw it
+                }
             } while (rescanRequested)
         } finally {
             mutex.unlock()
@@ -147,6 +154,7 @@ class AiLocalScanUseCase @Inject constructor(
         _progress.value = AiScanProgress(running = true, total = photos.size, done = 0)
         if (photos.isEmpty()) {
             _progress.value = AiScanProgress(running = false, total = 0, done = 0)
+            LumaTelemetry.trackAiScan(if (allPhotos.isEmpty()) "empty" else "no_new_items", allPhotos.size, 0)
             return
         }
 
@@ -178,6 +186,7 @@ class AiLocalScanUseCase @Inject constructor(
         if (cancelRequested) {
             cancelRequested = false
             _progress.value = _progress.value.copy(running = false)
+            LumaTelemetry.trackAiScan("cancelled", photos.size, doneCounter.get())
             return
         }
 
@@ -206,6 +215,7 @@ class AiLocalScanUseCase @Inject constructor(
         if (cleanHashes.size >= 2) markDuplicates(cleanHashes)
 
         _progress.value = _progress.value.copy(running = false)
+        LumaTelemetry.trackAiScan("success", photos.size, doneCounter.get())
     }
 
     /** 单张照片的扫描逻辑（解密 → analyze → 截图判定 / 置信度过滤 → persist → 收集 phash）。 */

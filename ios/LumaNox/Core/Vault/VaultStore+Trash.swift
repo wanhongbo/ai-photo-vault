@@ -17,7 +17,10 @@ extension VaultStore {
     @discardableResult
     func moveToTrash(path: String) async -> Bool {
         let source = URL(fileURLWithPath: path)
-        guard fileManager.fileExists(atPath: path) else { return false }
+        guard fileManager.fileExists(atPath: path) else {
+            LumaTelemetry.trackVaultItem(action: "trash", result: "failed")
+            return false
+        }
         do {
             let trashRoot = try trashDirectory()
             let albumName = source.deletingLastPathComponent().lastPathComponent
@@ -39,10 +42,12 @@ extension VaultStore {
             ThumbnailService.shared.invalidate(encryptedPath: dest.path)
             invalidateCache()
             await loadSnapshot()
+            LumaTelemetry.trackVaultItem(action: "trash", result: "success")
             return true
         } catch {
             lastImportMessage = error.localizedDescription
             lastImportIsError = true
+            LumaTelemetry.trackVaultItem(action: "trash", result: "failed")
             return false
         }
     }
@@ -137,7 +142,10 @@ extension VaultStore {
     /// 从回收站恢复到原相册目录。
     func restoreFromTrash(path: String) async -> String? {
         let file = URL(fileURLWithPath: path)
-        guard fileManager.fileExists(atPath: path) else { return nil }
+        guard fileManager.fileExists(atPath: path) else {
+            LumaTelemetry.trackVaultItem(action: "restore", result: "failed")
+            return nil
+        }
         do {
             let trashRoot = try trashDirectory()
             let parent = file.deletingLastPathComponent()
@@ -168,10 +176,12 @@ extension VaultStore {
             }
             invalidateCache()
             await loadSnapshot()
+            LumaTelemetry.trackVaultItem(action: "restore", result: "success")
             return safeAlbum
         } catch {
             lastImportMessage = error.localizedDescription
             lastImportIsError = true
+            LumaTelemetry.trackVaultItem(action: "restore", result: "failed")
             return nil
         }
     }
@@ -180,7 +190,10 @@ extension VaultStore {
     @discardableResult
     func purgeFromTrash(path: String) async -> Bool {
         let file = URL(fileURLWithPath: path)
-        guard fileManager.fileExists(atPath: path) else { return false }
+        guard fileManager.fileExists(atPath: path) else {
+            LumaTelemetry.trackVaultItem(action: "purge", result: "failed")
+            return false
+        }
         do {
             let parent = file.deletingLastPathComponent()
             let trashRoot = try trashDirectory()
@@ -194,8 +207,10 @@ extension VaultStore {
             }
             invalidateCache()
             await loadSnapshot()
+            LumaTelemetry.trackVaultItem(action: "purge", result: "success")
             return true
         } catch {
+            LumaTelemetry.trackVaultItem(action: "purge", result: "failed")
             return false
         }
     }

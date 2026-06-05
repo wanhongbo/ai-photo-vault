@@ -114,7 +114,10 @@ final class VaultAIAnalysisService: ObservableObject {
         guard !progress.running else { return }
         refreshSummary()
         let targets = records
-        guard !targets.isEmpty else { return }
+        guard !targets.isEmpty else {
+            LumaTelemetry.trackAiScan(result: "empty", total: 0, processed: 0)
+            return
+        }
 
         progress = VaultAIProgress(running: true, done: 0, total: targets.count)
         cancellationPending = false
@@ -181,6 +184,15 @@ final class VaultAIAnalysisService: ObservableObject {
         } catch {
             lastError = error.localizedDescription
         }
+        let result: String
+        if lastError != nil {
+            result = "failed"
+        } else if cancellationPending || Task.isCancelled {
+            result = "cancelled"
+        } else {
+            result = "success"
+        }
+        LumaTelemetry.trackAiScan(result: result, total: targets.count, processed: completed)
         cancellationPending = false
         progress = VaultAIProgress()
     }

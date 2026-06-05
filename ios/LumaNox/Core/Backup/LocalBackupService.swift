@@ -70,6 +70,18 @@ struct RestoreExecutionResult {
     }
 }
 
+private func backupTelemetryResult(_ result: BackupExecutionResult) -> String {
+    if result.success { return "success" }
+    if result.cancelled { return "cancelled" }
+    return "failed"
+}
+
+private func restoreTelemetryResult(_ result: RestoreExecutionResult) -> String {
+    if result.success { return "success" }
+    if result.cancelled { return "cancelled" }
+    return "failed"
+}
+
 /// Manual backup / restore — mirrors Android [LocalBackupMvpService] (MANUAL path).
 final class LocalBackupService: @unchecked Sendable {
     static let shared = LocalBackupService()
@@ -210,11 +222,18 @@ final class LocalBackupService: @unchecked Sendable {
                 return .failure(L10n.tr("backup_error_failed_fmt", error.localizedDescription))
             }
         }
-        return await withTaskCancellationHandler {
+        let result = await withTaskCancellationHandler {
             await work.value
         } onCancel: {
             work.cancel()
         }
+        LumaTelemetry.trackBackup(
+            trigger: "auto",
+            kind: "auto",
+            result: backupTelemetryResult(result),
+            assetCount: result.assetCount
+        )
+        return result
     }
 
     func createManualBackup(
@@ -331,11 +350,18 @@ final class LocalBackupService: @unchecked Sendable {
                 return .failure(L10n.tr("backup_error_failed_fmt", error.localizedDescription))
             }
         }
-        return await withTaskCancellationHandler {
+        let result = await withTaskCancellationHandler {
             await work.value
         } onCancel: {
             work.cancel()
         }
+        LumaTelemetry.trackBackup(
+            trigger: "manual",
+            kind: "manual",
+            result: backupTelemetryResult(result),
+            assetCount: result.assetCount
+        )
+        return result
     }
 
     /// 从已授权目录的 `backup.dat` 恢复（首启 RestoreLogin）。
@@ -344,21 +370,26 @@ final class LocalBackupService: @unchecked Sendable {
         progress: LongRunningTaskProgressHandler? = nil
     ) async -> RestoreExecutionResult {
         guard ExternalBackupLocation.findAutoBackup() else {
-            return .failure(L10n.tr("restore_error_no_auto_backup"))
+            let result = RestoreExecutionResult.failure(L10n.tr("restore_error_no_auto_backup"))
+            LumaTelemetry.trackRestore(source: "auto", result: restoreTelemetryResult(result))
+            return result
         }
         let tempURL: URL
         do {
             tempURL = try ExternalBackupLocation.copyAutoBackupToTemporary()
         } catch {
-            return .failure(L10n.tr("restore_error_cannot_open_auto"))
+            let result = RestoreExecutionResult.failure(L10n.tr("restore_error_cannot_open_auto"))
+            LumaTelemetry.trackRestore(source: "auto", result: restoreTelemetryResult(result))
+            return result
         }
         defer { PlaintextTempFileManager.shared.removeItem(tempURL) }
-        return await restore(from: tempURL, pin: pin, progress: progress)
+        return await restore(from: tempURL, pin: pin, source: "auto", progress: progress)
     }
 
     func restore(
         from inputURL: URL,
         pin: String,
+        source: String = "manual",
         progress: LongRunningTaskProgressHandler? = nil
     ) async -> RestoreExecutionResult {
         lock.lock()
@@ -538,11 +569,19 @@ final class LocalBackupService: @unchecked Sendable {
                 return .failure(error.localizedDescription)
             }
         }
-        return await withTaskCancellationHandler {
+        let result = await withTaskCancellationHandler {
             await work.value
         } onCancel: {
             work.cancel()
         }
+        LumaTelemetry.trackRestore(
+            source: source,
+            result: restoreTelemetryResult(result),
+            restored: result.restored,
+            skipped: result.skipped,
+            failed: result.failed
+        )
+        return result
     }
 
     // MARK: - Internal

@@ -3,6 +3,8 @@ package com.xpx.vault
 import android.app.Application
 import android.content.Context
 import com.xpx.vault.billing.BillingBootstrap
+import com.xpx.vault.telemetry.FirebaseTelemetry
+import com.xpx.vault.telemetry.LumaTelemetry
 import com.xpx.vault.ui.backup.AutoBackupScheduler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -19,9 +21,15 @@ class LumaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        FirebaseTelemetry.install(this)
         BillingBootstrap.init(this)
         LanguageManager.initialize(this)
         AppLogger.install()
+        LumaTelemetry.trackAppStart(
+            versionName = BuildConfig.VERSION_NAME,
+            versionCode = BuildConfig.VERSION_CODE,
+            isDebug = BuildConfig.DEBUG,
+        )
         installGlobalExceptionBoundary()
         appLockManager.start()
         // 备份启动自检：修复上次可能残留的 .writing / .bak 中间态；清理旧模型的文件。

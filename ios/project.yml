@@ -9,6 +9,9 @@ packages:
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios.git
     from: "5.14.0"
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    from: "11.15.0"
 options:
   bundleIdPrefix: com.xpx
   deploymentTarget:
@@ -50,10 +53,18 @@ targets:
         MARKETING_VERSION: 0.2.0
         DEVELOPMENT_LANGUAGE: zh-Hans
         SWIFT_EMIT_LOC_STRINGS: YES
+        OTHER_LDFLAGS: "$(inherited) -ObjC"
+        DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
     dependencies:
       - package: Argon2Swift
       - package: RevenueCat
         product: RevenueCat
+      - package: Firebase
+        product: FirebaseCore
+      - package: Firebase
+        product: FirebaseAnalyticsCore
+      - package: Firebase
+        product: FirebaseCrashlytics
       - sdk: Photos.framework
       - sdk: PhotosUI.framework
       - sdk: LocalAuthentication.framework
@@ -61,6 +72,43 @@ targets:
       - sdk: Vision.framework
       - sdk: CryptoKit.framework
       - sdk: WebKit.framework
+    postBuildScripts:
+      - name: Bundle Firebase Config
+        basedOnDependencyAnalysis: false
+        script: |
+          set -e
+          CANDIDATES=(
+            "${SRCROOT}/LumaNox/Supporting/GoogleService-Info.plist"
+            "${SRCROOT}/LumaNox/GoogleService-Info.plist"
+          )
+          DESTINATION="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist"
+          for candidate in "${CANDIDATES[@]}"; do
+            if [ -f "${candidate}" ]; then
+              mkdir -p "$(dirname "${DESTINATION}")"
+              cp "${candidate}" "${DESTINATION}"
+              echo "Bundled Firebase config from ${candidate}"
+              exit 0
+            fi
+          done
+          echo "Skipping Firebase config bundle: GoogleService-Info.plist is not available."
+      - name: Upload Firebase Crashlytics dSYMs
+        basedOnDependencyAnalysis: false
+        script: |
+          set -e
+          if [ "${CONFIGURATION}" = "Debug" ]; then
+            echo "Skipping Firebase Crashlytics dSYM upload for Debug builds."
+            exit 0
+          fi
+          GOOGLE_SERVICE_INFO="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist"
+          CRASHLYTICS_RUN="${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+          if [ ! -x "${CRASHLYTICS_RUN}" ]; then
+            CRASHLYTICS_RUN="${SRCROOT}/build/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+          fi
+          if [ -f "${GOOGLE_SERVICE_INFO}" ] && [ -x "${CRASHLYTICS_RUN}" ]; then
+            "${CRASHLYTICS_RUN}"
+          else
+            echo "Skipping Firebase Crashlytics dSYM upload: GoogleService-Info.plist or Crashlytics/run is not available."
+          fi
   LumaNoxTests:
     type: bundle.unit-test
     platform: iOS

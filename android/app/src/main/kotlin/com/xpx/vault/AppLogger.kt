@@ -1,10 +1,11 @@
 package com.xpx.vault
 
 import android.util.Log
+import com.xpx.vault.telemetry.LumaTelemetry
 
 /**
  * 统一日志入口：禁止输出照片内容、密钥、密文、可识别用户路径。
- * 一期不接入 Firebase；仅 Logcat / 后续 Play 控制台崩溃。
+ * Debug 输出 Logcat；Release 通过 Crashlytics breadcrumb 记录低敏诊断线索。
  */
 object AppLogger {
     private const val GLOBAL_TAG = "Luma"
@@ -21,6 +22,7 @@ object AppLogger {
 
     fun e(tag: String, message: String, throwable: Throwable? = null) {
         val line = format(tag, scrub(message))
+        LumaTelemetry.breadcrumb(tag, line)
         if (throwable != null) {
             Log.e(GLOBAL_TAG, line, throwable)
         } else {
@@ -30,6 +32,7 @@ object AppLogger {
 
     fun w(tag: String, message: String, throwable: Throwable? = null) {
         val line = format(tag, scrub(message))
+        LumaTelemetry.breadcrumb(tag, line)
         if (throwable != null) {
             Log.w(GLOBAL_TAG, line, throwable)
         } else {

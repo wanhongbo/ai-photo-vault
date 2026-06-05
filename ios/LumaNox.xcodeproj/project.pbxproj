@@ -28,6 +28,7 @@
 		230AE9BAD70B051C8C01D17C /* LNColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8274D14DD21C2291D7836C /* LNColor.swift */; };
 		2359B8A2914F99510BCFCF1A /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9440102C3F3E10E631E0A72B /* MainTabView.swift */; };
 		237FC14D29AF8213947A012D /* SwipeBackNavigationModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1674AF1625ADE4939F2370 /* SwipeBackNavigationModifier.swift */; };
+		264C8A21BCD65D8099ED6B96 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = BC699204B868827220BFFCA2 /* FirebaseAnalyticsCore */; };
 		264CFE750C4467561E22CCF2 /* VaultImageJPEGEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 251BFD5DD386F0BEA0085C96 /* VaultImageJPEGEncoder.swift */; };
 		266AE2E51755A32226FD9004 /* PrivateCameraViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D434010CE450260448B125E /* PrivateCameraViewModel.swift */; };
 		27767A3D776081E6E7D9173F /* LockView.pen in Resources */ = {isa = PBXBuildFile; fileRef = EF999F58CEA6A27A55F505B4 /* LockView.pen */; };
@@ -76,6 +77,7 @@
 		6111016DB603E2EACA8F5C2A /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6497A795A1127220137BD699 /* LanguageManager.swift */; };
 		633386DC1460112546285D53 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18EF7279A90DDB314CF977D /* AppRoute.swift */; };
 		6693604DAF263C3F3F2A0957 /* BackupRestoreView.pen in Resources */ = {isa = PBXBuildFile; fileRef = DD549E477191C93BEDB3AEB8 /* BackupRestoreView.pen */; };
+		6837EAC2C393E4187E8319F5 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 0EADF76CC585158CC82DC511 /* FirebaseCrashlytics */; };
 		6899DE3305F6F4EFFBC42C0D /* runtime_lock_after_nav_pin_fix.png in Resources */ = {isa = PBXBuildFile; fileRef = 018D70E35D85115A60687CA8 /* runtime_lock_after_nav_pin_fix.png */; };
 		6A803FD648FAE91CCE86E104 /* Argon2Swift in Frameworks */ = {isa = PBXBuildFile; productRef = 3A503BAE4274FB0FE761E137 /* Argon2Swift */; };
 		6B224CDA3D0D3CC06A69F5B0 /* SettingsHomeView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 28233DBC7BB8D878D19D5660 /* SettingsHomeView.pen */; };
@@ -138,6 +140,7 @@
 		B6AD5599CE78A695888F9EE7 /* MockModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D194FC51681BABEC7A70791F /* MockModels.swift */; };
 		B92EAB14DD3FA33A3CCDA45C /* OnboardingPaywallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBF611ED1E9348B1DE66B03 /* OnboardingPaywallManager.swift */; };
 		BAD3DE992F5658677E48E833 /* runtime_lock_after_nav_pin_fix_2.png in Resources */ = {isa = PBXBuildFile; fileRef = 60F6316B9511EE7354BC905E /* runtime_lock_after_nav_pin_fix_2.png */; };
+		BC57AAD602A5A1232ED9147F /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 901CC07BB44CC5C91F8C3667 /* FirebaseCore */; };
 		BE094B5F4A4227D4324EAA22 /* LumaNoxStyleGuide.pen in Resources */ = {isa = PBXBuildFile; fileRef = 5667342175EF5C9780F9C450 /* LumaNoxStyleGuide.pen */; };
 		C0030024ECE6143309D457AB /* SettingsBackupSyncViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C2C718E6E4D2196F57CEAB /* SettingsBackupSyncViewModel.swift */; };
 		C047C48C6D55F8F037D3131D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE2CDC6E6E63906CE9F9814D /* Localizable.strings */; };
@@ -156,9 +159,11 @@
 		D5BD1B304BBCD65491F2A4B3 /* BackupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D6BF66338A668F2039EA68 /* BackupViewModel.swift */; };
 		D683DC8BE9491B0820EB0B3B /* SystemPhotoLibraryExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE00040593CA7BF93D29C8F /* SystemPhotoLibraryExportService.swift */; };
 		D6D3FA80DAFBC686A2B5E510 /* AIClassifyDetailView.pen in Resources */ = {isa = PBXBuildFile; fileRef = BE6AA7F5102C5480C5BB950C /* AIClassifyDetailView.pen */; };
+		D6EF5791BB8BBC2550ECAF1C /* LumaTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 400F37ED01BE1DF803BB8B25 /* LumaTelemetry.swift */; };
 		DA3A58246B11579E05F52408 /* VideoPlayerView.pen in Resources */ = {isa = PBXBuildFile; fileRef = EAB85975DBB8E783CD004684 /* VideoPlayerView.pen */; };
 		DB8AC892BAA7C6A6E7CF08A7 /* AIViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D4F776A7ACB59085A82B3F /* AIViews.swift */; };
 		DBB0204DE74419911B845B9F /* LNSettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE981D8224A4925C036A472 /* LNSettingsComponents.swift */; };
+		DBB696C28A09B5DDD55B3BB0 /* FirebaseTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FAA5BEE888AE03EA81CA1 /* FirebaseTelemetry.swift */; };
 		DBCF6493F396C9CA81EF741C /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B16AD56BCEEDF77339C36A4B /* Vision.framework */; };
 		DC60E148161FD21F6A3E8D63 /* AIViews.pen in Resources */ = {isa = PBXBuildFile; fileRef = 6ECB0E3F2D108BED30E7C031 /* AIViews.pen */; };
 		DCFFDDED81FDA7FF3E08431D /* AICleanupView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 3FB8CFCE0552877BBDAA93D1 /* AICleanupView.pen */; };
@@ -240,11 +245,13 @@
 		3BAB828DB79FA00FEC28F19C /* PrivateCameraView.pen */ = {isa = PBXFileReference; path = PrivateCameraView.pen; sourceTree = "<group>"; };
 		3E02CBE8CBCDD6FEAABB33F3 /* AIHomeView.pen */ = {isa = PBXFileReference; path = AIHomeView.pen; sourceTree = "<group>"; };
 		3FB8CFCE0552877BBDAA93D1 /* AICleanupView.pen */ = {isa = PBXFileReference; path = AICleanupView.pen; sourceTree = "<group>"; };
+		400F37ED01BE1DF803BB8B25 /* LumaTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LumaTelemetry.swift; sourceTree = "<group>"; };
 		407A509AE813C75AE5E073FF /* screen_1j.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_1j.png; sourceTree = "<group>"; };
 		4241EDA5491F0E3F4AF4FAD5 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = "zh-Hans"; path = "zh-Hans.lproj/privacy_policy.html"; sourceTree = "<group>"; };
 		42C5CCDED95D15E599EE79B1 /* VaultFileHasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultFileHasher.swift; sourceTree = "<group>"; };
 		46CFF782A0797B87261A0450 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		4774BDE54BCD166B53833A58 /* VaultMetadataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultMetadataModels.swift; sourceTree = "<group>"; };
+		495FAA5BEE888AE03EA81CA1 /* FirebaseTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseTelemetry.swift; sourceTree = "<group>"; };
 		4BD2F82745DEF4084FBB9CB4 /* PrivacyRiskScanView.pen */ = {isa = PBXFileReference; path = PrivacyRiskScanView.pen; sourceTree = "<group>"; };
 		4D434010CE450260448B125E /* PrivateCameraViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateCameraViewModel.swift; sourceTree = "<group>"; };
 		5324047407C827B2FCD59CC9 /* LNBottomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNBottomTabBar.swift; sourceTree = "<group>"; };
@@ -384,6 +391,9 @@
 			files = (
 				6A803FD648FAE91CCE86E104 /* Argon2Swift in Frameworks */,
 				850CF95F443B9B31A9CEF679 /* RevenueCat in Frameworks */,
+				BC57AAD602A5A1232ED9147F /* FirebaseCore in Frameworks */,
+				264C8A21BCD65D8099ED6B96 /* FirebaseAnalyticsCore in Frameworks */,
+				6837EAC2C393E4187E8319F5 /* FirebaseCrashlytics in Frameworks */,
 				1E1237CDCBA68891BA084FB7 /* Photos.framework in Frameworks */,
 				2117E66387B7EAFA59465ADB /* PhotosUI.framework in Frameworks */,
 				45CFD584AD99A36121C859D9 /* LocalAuthentication.framework in Frameworks */,
@@ -690,6 +700,7 @@
 				063545CFB07FCE16F118AFE2 /* Navigation */,
 				D57FDE202CA43360ABCA14A0 /* Security */,
 				A3DF34D607ED4F6ABBB7E7E2 /* Setup */,
+				E61400585D18A74977B502F1 /* Telemetry */,
 				39D10916D775EAC3EEF33411 /* Vault */,
 			);
 			path = Core;
@@ -831,6 +842,15 @@
 			path = Vault;
 			sourceTree = "<group>";
 		};
+		E61400585D18A74977B502F1 /* Telemetry */ = {
+			isa = PBXGroup;
+			children = (
+				495FAA5BEE888AE03EA81CA1 /* FirebaseTelemetry.swift */,
+				400F37ED01BE1DF803BB8B25 /* LumaTelemetry.swift */,
+			);
+			path = Telemetry;
+			sourceTree = "<group>";
+		};
 		E9046BB25399D2FFA721A691 /* AI */ = {
 			isa = PBXGroup;
 			children = (
@@ -870,6 +890,8 @@
 				C716979EA1398DDA5E6D7564 /* Sources */,
 				F88E759AAA8F677363D02297 /* Resources */,
 				72FC677F8F21D5C4904CAE1F /* Frameworks */,
+				07BF538EC1B515495110C8D6 /* Bundle Firebase Config */,
+				ABC872B1FA35F47AD9238031 /* Upload Firebase Crashlytics dSYMs */,
 			);
 			buildRules = (
 			);
@@ -879,6 +901,9 @@
 			packageProductDependencies = (
 				3A503BAE4274FB0FE761E137 /* Argon2Swift */,
 				E5FDDF8C579C61B9C8511E44 /* RevenueCat */,
+				901CC07BB44CC5C91F8C3667 /* FirebaseCore */,
+				BC699204B868827220BFFCA2 /* FirebaseAnalyticsCore */,
+				0EADF76CC585158CC82DC511 /* FirebaseCrashlytics */,
 			);
 			productName = LumaNox;
 			productReference = 7DBA6BD3F7D19B0BEE46B366 /* LumaNox.app */;
@@ -933,6 +958,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				01EA7372EB2398D775DF0A0A /* XCRemoteSwiftPackageReference "Argon2Swift" */,
+				E533B9CB1DA9518E189A4962 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				0B6351EC0D6D8BB94F432890 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -1024,6 +1050,47 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		07BF538EC1B515495110C8D6 /* Bundle Firebase Config */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle Firebase Config";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nCANDIDATES=(\n  \"${SRCROOT}/LumaNox/Supporting/GoogleService-Info.plist\"\n  \"${SRCROOT}/LumaNox/GoogleService-Info.plist\"\n)\nDESTINATION=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nfor candidate in \"${CANDIDATES[@]}\"; do\n  if [ -f \"${candidate}\" ]; then\n    mkdir -p \"$(dirname \"${DESTINATION}\")\"\n    cp \"${candidate}\" \"${DESTINATION}\"\n    echo \"Bundled Firebase config from ${candidate}\"\n    exit 0\n  fi\ndone\necho \"Skipping Firebase config bundle: GoogleService-Info.plist is not available.\"\n";
+		};
+		ABC872B1FA35F47AD9238031 /* Upload Firebase Crashlytics dSYMs */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Upload Firebase Crashlytics dSYMs";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nif [ \"${CONFIGURATION}\" = \"Debug\" ]; then\n  echo \"Skipping Firebase Crashlytics dSYM upload for Debug builds.\"\n  exit 0\nfi\nGOOGLE_SERVICE_INFO=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nCRASHLYTICS_RUN=\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nif [ ! -x \"${CRASHLYTICS_RUN}\" ]; then\n  CRASHLYTICS_RUN=\"${SRCROOT}/build/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nfi\nif [ -f \"${GOOGLE_SERVICE_INFO}\" ] && [ -x \"${CRASHLYTICS_RUN}\" ]; then\n  \"${CRASHLYTICS_RUN}\"\nelse\n  echo \"Skipping Firebase Crashlytics dSYM upload: GoogleService-Info.plist or Crashlytics/run is not available.\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A0A5A4C45E677332FD667963 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -1065,6 +1132,7 @@
 				0D19D7B834FCD4B56DB53277 /* CameraViews.swift in Sources */,
 				A2F0A6BD255106E0287A405B /* ExportViews.swift in Sources */,
 				98FFF0BE9492604AA3322BE3 /* ExternalBackupLocation.swift in Sources */,
+				DBB696C28A09B5DDD55B3BB0 /* FirebaseTelemetry.swift in Sources */,
 				51CD6649210725CD16A20DF5 /* FirstLaunchRouter.swift in Sources */,
 				FFE86F917CEE8658DCF86C96 /* ImportOriginalsPreferenceStore.swift in Sources */,
 				EBC54E8CB2C77C6E8003774F /* IntruderAlertStore.swift in Sources */,
@@ -1086,6 +1154,7 @@
 				51D0EBC062A88C141EF68C14 /* LongRunningTaskProgress.swift in Sources */,
 				43E5E062B31524F9DE0975FD /* LumaNoxApp.swift in Sources */,
 				CC82FF4B1BB35290DD6872BF /* LumaNoxBillingIds.swift in Sources */,
+				D6EF5791BB8BBC2550ECAF1C /* LumaTelemetry.swift in Sources */,
 				2359B8A2914F99510BCFCF1A /* MainTabView.swift in Sources */,
 				9742D13DB7F40BAD4A601440 /* MediaExportService.swift in Sources */,
 				4DC9510F80581CE56E40FDF9 /* MediaInfoItems.swift in Sources */,
@@ -1261,6 +1330,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_LANGUAGE = "zh-Hans";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LumaNox/Supporting/Info.plist;
@@ -1278,6 +1348,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.2.0;
+				OTHER_LDFLAGS = "$(inherited) -ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.xpx.vault;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1291,6 +1362,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_LANGUAGE = "zh-Hans";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LumaNox/Supporting/Info.plist;
@@ -1308,6 +1380,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.2.0;
+				OTHER_LDFLAGS = "$(inherited) -ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.xpx.vault;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1448,13 +1521,36 @@
 				minimumVersion = 5.14.0;
 			};
 		};
+		E533B9CB1DA9518E189A4962 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.15.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0EADF76CC585158CC82DC511 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E533B9CB1DA9518E189A4962 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
 		3A503BAE4274FB0FE761E137 /* Argon2Swift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 01EA7372EB2398D775DF0A0A /* XCRemoteSwiftPackageReference "Argon2Swift" */;
 			productName = Argon2Swift;
+		};
+		901CC07BB44CC5C91F8C3667 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E533B9CB1DA9518E189A4962 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		BC699204B868827220BFFCA2 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E533B9CB1DA9518E189A4962 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
 		};
 		E5FDDF8C579C61B9C8511E44 /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;

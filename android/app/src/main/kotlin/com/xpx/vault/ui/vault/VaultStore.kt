@@ -14,6 +14,7 @@ import com.xpx.vault.billing.SubscriptionRepoProvider
 import com.xpx.vault.data.crypto.VaultCipher
 import com.xpx.vault.AppLogger
 import com.xpx.vault.domain.quota.FreeQuota
+import com.xpx.vault.telemetry.LumaTelemetry
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -70,6 +71,15 @@ fun isVaultVideo(path: String): Boolean {
 fun isVaultImage(path: String): Boolean {
     val ext = path.substringAfterLast('.', "").lowercase()
     return ext in IMAGE_EXTENSIONS
+}
+
+private fun mediaTypeForExtension(extension: String): String {
+    val ext = extension.trim().removePrefix(".").lowercase()
+    return when {
+        ext in IMAGE_EXTENSIONS -> "image"
+        ext in VIDEO_EXTENSIONS -> "video"
+        else -> "other"
+    }
 }
 
 enum class VaultImportResult {
@@ -210,7 +220,10 @@ object VaultStore {
         quality: Int = 95,
     ): String? = withContext(Dispatchers.IO) {
         ensureInit(context)
-        if (!canAddNewItemInternal(context)) return@withContext null
+        if (!canAddNewItemInternal(context)) {
+            LumaTelemetry.trackVaultImport("redact", "image", VaultImportResult.QUOTA_EXCEEDED.name.lowercase())
+            return@withContext null
+        }
         val album = File(rootDir(context), sanitizeAlbumName(albumName)).apply { mkdirs() }
         val safeBase = baseName.filter { it.isLetterOrDigit() || it == '_' || it == '-' }
             .ifBlank { "redacted" }
@@ -226,9 +239,11 @@ object VaultStore {
             }
             invalidateCaches()
             syncQuotaUsage(context)
+            LumaTelemetry.trackVaultImport("redact", "image", VaultImportResult.ADDED.name.lowercase())
             finalFile.absolutePath
         }.getOrElse {
             if (finalFile.exists()) finalFile.delete()
+            LumaTelemetry.trackVaultImport("redact", "image", VaultImportResult.FAILED.name.lowercase())
             null
         }
     }
@@ -242,7 +257,10 @@ object VaultStore {
         quality: Int = 95,
     ): String? = withContext(Dispatchers.IO) {
         ensureInit(context)
-        if (!canAddNewItemInternal(context)) return@withContext null
+        if (!canAddNewItemInternal(context)) {
+            LumaTelemetry.trackVaultImport("metadata_safe", "image", VaultImportResult.QUOTA_EXCEEDED.name.lowercase())
+            return@withContext null
+        }
         val source = File(sourcePath)
         if (!source.exists() || !source.isFile) return@withContext null
         val albumName = source.parentFile?.name?.ifBlank { DEFAULT_ALBUM_NAME } ?: DEFAULT_ALBUM_NAME
@@ -268,9 +286,11 @@ object VaultStore {
             }
             invalidateCaches()
             syncQuotaUsage(context)
+            LumaTelemetry.trackVaultImport("metadata_safe", "image", VaultImportResult.ADDED.name.lowercase())
             finalFile.absolutePath
         }.getOrElse {
             if (finalFile.exists()) finalFile.delete()
+            LumaTelemetry.trackVaultImport("metadata_safe", "image", VaultImportResult.FAILED.name.lowercase())
             null
         }
     }
@@ -281,14 +301,21 @@ object VaultStore {
         albumName: String = DEFAULT_ALBUM_NAME,
     ): VaultImportResult = withContext(Dispatchers.IO) {
         ensureInit(context)
-        if (!canAddNewItemInternal(context)) return@withContext VaultImportResult.QUOTA_EXCEEDED
+        if (!canAddNewItemInternal(context)) {
+            LumaTelemetry.trackVaultImport("picker", "unknown", VaultImportResult.QUOTA_EXCEEDED.name.lowercase())
+            return@withContext VaultImportResult.QUOTA_EXCEEDED
+        }
         val album = File(rootDir(context), sanitizeAlbumName(albumName))
         if (!album.exists()) album.mkdirs()
         val extension = resolveExtension(context, uri)
+        val mediaType = mediaTypeForExtension(extension)
         // 1) 先把源 URI 拉到明文 temp 文件；同时流式算 sha256 供 dedupe 使用。
         val tempPlain = File(album, "tmp_plain_${System.currentTimeMillis()}.$extension")
         val digest = MessageDigest.getInstance("SHA-256")
-        val input = context.contentResolver.openInputStream(uri) ?: return@withContext VaultImportResult.FAILED
+        val input = context.contentResolver.openInputStream(uri) ?: run {
+            LumaTelemetry.trackVaultImport("picker", mediaType, VaultImportResult.FAILED.name.lowercase())
+            return@withContext VaultImportResult.FAILED
+        }
         input.use { stream ->
             tempPlain.outputStream().use { output ->
                 val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
@@ -304,6 +331,7 @@ object VaultStore {
         val finalFile = File(album, "asset_$hash.$extension")
         if (finalFile.exists()) {
             tempPlain.delete()
+            LumaTelemetry.trackVaultImport("picker", mediaType, VaultImportResult.DUPLICATE.name.lowercase())
             return@withContext VaultImportResult.DUPLICATE
         }
         // 2) 把明文 temp 加密到 finalFile，再删除 temp；整个流程保证 vault_albums/ 下只会出现密文。
@@ -314,11 +342,13 @@ object VaultStore {
         }.onFailure {
             tempPlain.delete()
             if (finalFile.exists()) finalFile.delete()
+            LumaTelemetry.trackVaultImport("picker", mediaType, VaultImportResult.FAILED.name.lowercase())
             return@withContext VaultImportResult.FAILED
         }
         tempPlain.delete()
         invalidateCaches()
         syncQuotaUsage(context)
+        LumaTelemetry.trackVaultImport("picker", mediaType, VaultImportResult.ADDED.name.lowercase())
         VaultImportResult.ADDED
     }
 
@@ -353,12 +383,15 @@ object VaultStore {
         context: Context,
         tempFile: File,
     ): String? = withContext(Dispatchers.IO) {
+        val mediaType = mediaTypeForExtension(tempFile.extension)
         if (!tempFile.exists() || tempFile.length() == 0L) {
             tempFile.delete()
+            LumaTelemetry.trackCameraCapture(mediaType, "failed")
             return@withContext null
         }
         if (!canAddNewItemInternal(context)) {
             tempFile.delete()
+            LumaTelemetry.trackCameraCapture(mediaType, "quota_exceeded")
             return@withContext null
         }
         val album = parseAlbumFromCameraTempName(tempFile.name) ?: DEFAULT_ALBUM_NAME
@@ -375,8 +408,10 @@ object VaultStore {
         if (ok) {
             invalidateCaches()
             syncQuotaUsage(context)
+            LumaTelemetry.trackCameraCapture(mediaType, "success")
             finalFile.absolutePath
         } else {
+            LumaTelemetry.trackCameraCapture(mediaType, "failed")
             null
         }
     }
@@ -426,7 +461,9 @@ object VaultStore {
             }.onFailure { AppLogger.w("VaultStore", "purgePhoto on delete failed: ${it.message}") }
             invalidateCaches()
             syncQuotaUsage(context)
+            LumaTelemetry.trackVaultItem("trash", "success")
         }
+        if (!ok) LumaTelemetry.trackVaultItem("trash", "failed")
         ok
     }
 
@@ -502,7 +539,9 @@ object VaultStore {
             }
             invalidateCaches()
             syncQuotaUsage(context)
+            LumaTelemetry.trackVaultItem("restore", "success")
         }
+        if (!ok) LumaTelemetry.trackVaultItem("restore", "failed")
         if (ok) safeAlbum else null
     }
 
@@ -519,6 +558,7 @@ object VaultStore {
         if (deleted && parent != null && parent.name != TRASH_DIR) {
             if (parent.listFiles()?.isEmpty() == true) parent.delete()
         }
+        LumaTelemetry.trackVaultItem("purge", if (deleted) "success" else "failed")
         deleted
     }
 
