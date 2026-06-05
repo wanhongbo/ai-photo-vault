@@ -51,14 +51,17 @@ struct RootView: View {
     @StateObject private var privateCameraViewModel = PrivateCameraViewModel()
 
     var body: some View {
-        Group {
-            switch router.phase {
-            case .splash:
-                SplashView()
-            case .lock:
-                LockView()
-            case .main:
-                MainTabView(privateCameraViewModel: privateCameraViewModel)
+        ZStack {
+            LNColor.bgBottom.ignoresSafeArea()
+            Group {
+                switch router.phase {
+                case .splash:
+                    SplashView()
+                case .lock:
+                    LockView()
+                case .main:
+                    MainTabView(privateCameraViewModel: privateCameraViewModel)
+                }
             }
         }
         .animation(.easeInOut(duration: 0.25), value: router.phase)

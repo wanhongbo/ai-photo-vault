@@ -38,6 +38,7 @@
 		2B7D644A9AB8494B306E77C6 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EDEEE53B1D9BE4F3642CCA /* PaywallView.swift */; };
 		2E1F88B970C3A51B0214990F /* SettingsAboutView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 24988E0D2A96262B88EEA6D1 /* SettingsAboutView.pen */; };
 		2E34541BB9BA6B36520524B1 /* PlaintextTempFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B224DC7450B7689747A1F9E /* PlaintextTempFileManager.swift */; };
+		2F0112769A511245F5239CCF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C603A614A1E113205B397B63 /* LaunchScreen.storyboard */; };
 		2F45BE4EC6F8D06CD9CB30BD /* AIHomeView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 3E02CBE8CBCDD6FEAABB33F3 /* AIHomeView.pen */; };
 		2FBFB90C6D4866359C5BD5A7 /* SettingsDataStorageView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 371D91BB63D60ABCD7FAA36F /* SettingsDataStorageView.pen */; };
 		2FE45563535591870091EC65 /* BackupMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086918DA1D5BF1214B8545AA /* BackupMeta.swift */; };
@@ -333,6 +334,7 @@
 		C18EF7279A90DDB314CF977D /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
 		C3AC7B62556E04140F3A58B6 /* screen_2a.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_2a.png; sourceTree = "<group>"; };
 		C4C2C718E6E4D2196F57CEAB /* SettingsBackupSyncViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackupSyncViewModel.swift; sourceTree = "<group>"; };
+		C603A614A1E113205B397B63 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		CADC1AC15B57B9A56B8BB8D2 /* PhotoViewerSource+MediaItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PhotoViewerSource+MediaItems.swift"; sourceTree = "<group>"; };
 		CC2B240AAE981FCB70074771 /* LNSharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LNSharedViews.swift; sourceTree = "<group>"; };
 		CD2828BB1A11E50AB9D5DCD1 /* LocalAuthentication.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LocalAuthentication.framework; path = System/Library/Frameworks/LocalAuthentication.framework; sourceTree = SDKROOT; };
@@ -515,6 +517,7 @@
 			isa = PBXGroup;
 			children = (
 				04C49C975FBAB746829D6E4F /* Info.plist */,
+				C603A614A1E113205B397B63 /* LaunchScreen.storyboard */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -998,6 +1001,7 @@
 				6B5F3FE07F760E96172F1E64 /* ImportOriginalsPreferenceView.pen in Resources */,
 				A16ADC6541CC2DFB1C0F0EFA /* IntruderAlertView.pen in Resources */,
 				E5EF0BA8506C919D2DE953D7 /* LanguageSettingsView.pen in Resources */,
+				2F0112769A511245F5239CCF /* LaunchScreen.storyboard in Resources */,
 				B5F395DE73A5DD84D7AA2483 /* LegalWebView.pen in Resources */,
 				C047C48C6D55F8F037D3131D /* Localizable.strings in Resources */,
 				27767A3D776081E6E7D9173F /* LockView.pen in Resources */,
@@ -1342,7 +1346,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LumaNox needs permission to export photos and videos to the LumaNox album in Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "LumaNox needs photo library access to import media into your vault.";
 				INFOPLIST_KEY_REVENUECAT_API_KEY = "$(REVENUECAT_API_KEY)";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1375,7 +1379,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LumaNox needs permission to export photos and videos to the LumaNox album in Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "LumaNox needs photo library access to import media into your vault.";
 				INFOPLIST_KEY_REVENUECAT_API_KEY = "$(REVENUECAT_API_KEY)";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
