@@ -3,6 +3,7 @@
 **状态**：已接入 Firebase Analytics / Crashlytics（低敏事件 + 崩溃线索）。
 **平台**：Android（Kotlin）  
 **关联总览**：[原生双端架构设计方案.md](../私密相册%20App（一期）原生双端架构设计方案.md)（第七节）· [iOS 对应文档](../ios/11-Firebase监控.md)  
+**事件清单**：[Firebase 埋点事件列表](../Firebase埋点事件列表.md)
 **推荐库**：见总表《[成熟三方库推荐（Android-iOS）.md](../成熟三方库推荐（Android-iOS）.md)》**第 11 节**。
 
 ---
