@@ -223,17 +223,17 @@
         </thead>
         <tbody>
           <tr><td>照片与视频</td><td>你导入或在应用内拍摄的媒体</td><td>使用 AES-256 加密，保存在本应用的私有目录内</td></tr>
-          <tr><td>相册与元数据</td><td>相册名、封面、照片计数、时间戳</td><td>本地 Room 数据库，仅设备可见</td></tr>
-          <tr><td>解锁凭据</td><td>6 位 PIN</td><td><strong>仅以 SHA-256 哈希</strong>形式存储；主密钥封存于 Android Keystore</td></tr>
-          <tr><td>生物识别模板</td><td>指纹 / 面容</td><td><strong>我们从不访问或存储</strong> —— 完全由 Android 的 <code>BiometricPrompt</code> 系统接管</td></tr>
-          <tr><td>AI 推理输入/输出</td><td>本地人脸检测、打码遮罩</td><td>仅由 TensorFlow Lite 在内存中处理，绝不上传</td></tr>
-          <tr><td>备份归档</td><td>你创建的加密 ZIP 文件</td><td>通过 Android 存储访问框架保存到<strong>你选择的位置</strong>（如 Google Drive、SD 卡）。我们从未看到这些文件</td></tr>
+          <tr><td>相册与元数据</td><td>相册名、封面、照片计数、时间戳、密文文件引用</td><td>本地应用数据库与应用容器内，仅设备可见</td></tr>
+          <tr><td>解锁凭据</td><td>6 位 PIN</td><td><strong>仅以 SHA-256 哈希</strong>形式存储；保险箱数据密钥由设备生成并通过平台安全存储保护</td></tr>
+          <tr><td>生物识别模板</td><td>Face ID / Touch ID</td><td><strong>我们从不访问或存储</strong> —— 完全由设备操作系统接管</td></tr>
+          <tr><td>AI 推理输入/输出</td><td>本地人脸、条码、文字、重复、模糊与分类分析</td><td>仅由设备端系统能力或本地模型与本地索引处理，绝不上传</td></tr>
+          <tr><td>备份归档</td><td>你创建或计划生成的加密备份文件</td><td>通过系统文件选择器保存到<strong>你选择的位置</strong>（如“文件”App 或 iCloud Drive）。我们从未看到这些文件</td></tr>
         </tbody>
       </table>
       <p>以上内容<strong>不会</strong>经由我们传输到网络上。</p>
 
       <h3>3.2 我们真正会收到的数据</h3>
-      <p><strong>仅限低敏诊断与订阅状态</strong>：若你选择购买 Premium，我们的付费处理方（Google Play，经由 RevenueCat，见第 6 节）会处理与订阅相关的最小标识符集合。我们接收到的仅是<strong>聚合权益状态</strong>（例如仅表示「Premium 已生效 / 未生效」的匿名标记），<strong>不会</strong>接收你的付款信息、姓名、邮箱或地址。应用还可能通过 Firebase Analytics / Crashlytics 接收崩溃线索和低敏事件（例如启动、导入结果、备份结果、AI 扫描结果、订阅操作结果），用于稳定性与关键流程分析。</p>
+      <p><strong>仅限低敏诊断与订阅状态</strong>：若你选择购买 Premium，Apple App Store 与 RevenueCat（见第 6 节）会处理与订阅相关的最小标识符集合。我们接收到的仅是<strong>聚合权益状态</strong>（例如仅表示「Premium 已生效 / 未生效」的匿名标记），<strong>不会</strong>接收你的付款信息、姓名、邮箱或地址。应用还可能通过 Firebase Analytics / Crashlytics 接收崩溃线索和低敏事件（例如启动、导入结果、备份结果、AI 扫描结果、订阅操作结果），用于稳定性与关键流程分析。</p>
     </section>
 
     <section id="s4">
@@ -272,12 +272,12 @@
       <h2>6. 第三方服务</h2>
 
       <h3>6.1 谷歌 Play 应用内结算</h3>
-      <p>当你购买订阅或终身买断时，Google Play 会按 <strong>Google 自身的隐私政策</strong>（<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">https://policies.google.com/privacy</a>）处理付款。我们绝不会收到你的银行卡、银行账户或身份信息。</p>
+      <p>当你购买订阅或终身买断时，Apple App Store 会按 <strong>Apple 自身的隐私政策</strong>（<a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">https://www.apple.com/legal/privacy/</a>）处理付款。我们绝不会收到你的银行卡、银行账户或身份信息。</p>
 
       <h3>6.2 RevenueCat</h3>
       <p>我们使用 <strong>RevenueCat, Inc.</strong>（以下简称"RevenueCat"）核对订阅状态、支持用户在重装应用后"恢复购买"。RevenueCat 作为我们的数据处理方，依据已签署的《数据处理附录》履行义务。</p>
       <ul>
-        <li><strong>与 RevenueCat 共享</strong>：设备生成的匿名 App User ID、你购买的商品 ID、Google Play 的订阅收据</li>
+        <li><strong>与 RevenueCat 共享</strong>：设备生成的匿名 App User ID、你购买的商品 ID、App Store 收据或交易元数据</li>
         <li><strong>不共享</strong>：你的照片、视频、姓名、邮箱、精确位置以及保险箱内的任何内容</li>
         <li><strong>目的</strong>：交付、校验并恢复你的 Premium 权益</li>
         <li><strong>留存期</strong>：权益有效期间，加上法律要求的审计期</li>
@@ -290,7 +290,7 @@
       <h2>7. 数据安全措施</h2>
       <ul>
         <li>每一张照片和视频在导入时即以 <strong>AES-256-CBC</strong> 加密</li>
-        <li>主加密密钥由 <strong>Android Keystore</strong> 生成并托管（在支持 StrongBox 的设备上有硬件级支撑）—— LumaNox 与我们本人均无法导出该密钥</li>
+        <li>主加密密钥由设备生成，并通过 iOS 平台安全存储保护 —— LumaNox 与我们本人均无法导出该密钥</li>
         <li>PIN 仅以 <strong>SHA-256</strong> 哈希形式存储，明文永不落盘</li>
         <li>应用退至后台即自动上锁；在系统支持的设备上，应用图标会在最近任务缩略图中被隐藏</li>
         <li>明文照片不会写出到应用私有目录以外；为分享而临时解密的文件，会在分享完成后立即擦除</li>
@@ -323,7 +323,7 @@
       <h2>11. 你的权利</h2>
 
       <h3>11.1 欧盟 / 英国 / 瑞士用户（适用 GDPR）</h3>
-      <p>你享有对个人数据的<strong>访问、更正、删除、限制处理、可携带、反对处理</strong>的权利，以及向监管机构<strong>投诉</strong>的权利。由于我们实际持有的数据仅限匿名的购买元数据，大多数请求将被转发至我们的处理方（RevenueCat、Google）。</p>
+      <p>你享有对个人数据的<strong>访问、更正、删除、限制处理、可携带、反对处理</strong>的权利，以及向监管机构<strong>投诉</strong>的权利。由于我们实际持有的数据仅限匿名的购买元数据，大多数请求将被转发至我们的处理方（RevenueCat、Apple）。</p>
 
       <h3>11.2 美国加州用户（CCPA / CPRA）</h3>
       <p>你可以请求<strong>知晓、删除、更正</strong>我们处理的有限个人信息，并<strong>选择退出出售或共享</strong>个人信息。<span class="badge">我们不出售、不共享你的个人信息。</span>我们不会因为你行使权利而对你进行任何歧视性对待。</p>

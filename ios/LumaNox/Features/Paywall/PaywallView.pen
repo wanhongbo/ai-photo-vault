@@ -126,7 +126,10 @@
               "gap": 5,
               "children": [
                 { "type": "text", "content": "Annual Pro", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "600", "fill": "#F5F8FF", "width": "fill_container" },
-                { "type": "frame", "name": "Best Value Badge", "width": "fit_content", "height": 22, "fill": "#2563EB", "cornerRadius": 11, "padding": [4, 8, 4, 8], "children": [{ "type": "text", "content": "BEST VALUE -50%", "fontFamily": "Inter", "fontSize": 10, "fontWeight": "700", "fill": "#FFFFFF" }] },
+                { "type": "frame", "name": "Offer Badges", "layout": "horizontal", "width": "fit_content", "height": "fit_content", "gap": 6, "children": [
+                  { "type": "frame", "name": "Best Value Badge", "width": "fit_content", "height": 22, "fill": "#2563EB", "cornerRadius": 11, "padding": [4, 8, 4, 8], "children": [{ "type": "text", "content": "BEST VALUE -50%", "fontFamily": "Inter", "fontSize": 10, "fontWeight": "700", "fill": "#FFFFFF" }] },
+                  { "type": "text", "content": "14-day free trial", "fontFamily": "Inter", "fontSize": 11, "fontWeight": "600", "fill": "#E8C547" }
+                ] },
                 { "type": "text", "content": "Full vault privacy suite", "fontFamily": "Inter", "fontSize": 12, "fill": "#7E8AA0", "width": "fill_container" }
               ]
             },
@@ -159,7 +162,10 @@
           "padding": [14, 16, 14, 16],
           "alignItems": "center",
           "children": [
-            { "type": "text", "content": "Monthly Pro", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "600", "fill": "#F5F8FF", "width": "fill_container" },
+            { "type": "frame", "name": "Monthly Copy", "layout": "vertical", "width": "fill_container", "height": "fit_content", "gap": 5, "children": [
+              { "type": "text", "content": "Monthly Pro", "fontFamily": "Inter", "fontSize": 17, "fontWeight": "600", "fill": "#F5F8FF", "width": "fill_container" },
+              { "type": "text", "content": "7-day free trial", "fontFamily": "Inter", "fontSize": 11, "fontWeight": "600", "fill": "#E8C547", "width": "fill_container" }
+            ] },
             { "type": "text", "content": "$4.99\nper month", "fontFamily": "Inter", "fontSize": 15, "fontWeight": "700", "fill": "#F5F8FF", "textAlignHorizontal": "right", "width": 104 }
           ]
         },
@@ -215,11 +221,11 @@
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
-                { "type": "text", "content": "Continue", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#FFFFFF" }
+                { "type": "text", "content": "Start 14-day free trial", "fontFamily": "Inter", "fontSize": 16, "fontWeight": "600", "fill": "#FFFFFF" }
               ]
             },
             { "type": "text", "content": "Restore purchases", "fontFamily": "Inter", "fontSize": 14, "fill": "#8A94A8", "textAlignHorizontal": "center", "width": "fill_container" },
-            { "type": "text", "content": "Cancel anytime · GDPR compliant · No account required", "fontFamily": "Inter", "fontSize": 11, "fill": "#5C6578", "textAlignHorizontal": "center", "width": "fill_container", "textGrowth": "fixed-width" }
+            { "type": "text", "content": "After the free trial, this plan renews automatically at $29.99 yearly. Cancel anytime in Apple ID subscription settings.", "fontFamily": "Inter", "fontSize": 11, "fill": "#5C6578", "textAlignHorizontal": "center", "width": "fill_container", "textGrowth": "fixed-width" }
           ]
         }
       ]

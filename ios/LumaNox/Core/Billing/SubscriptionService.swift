@@ -33,8 +33,8 @@ final class SubscriptionService: ObservableObject {
 
     func refreshCatalog() async {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-uiTestPaywall"),
-           !BillingBootstrap.isConfigured {
+        if ProcessInfo.processInfo.arguments.contains("-uiTestPaywallPreview")
+            || (ProcessInfo.processInfo.arguments.contains("-uiTestPaywall") && !BillingBootstrap.isConfigured) {
             offeringsState = .ready(
                 packages: Self.debugPreviewPackages,
                 defaultSelectedIndex: 1,
@@ -63,7 +63,15 @@ final class SubscriptionService: ObservableObject {
                 packageCache[pkg.identifier] = pkg
             }
             let sorted = current.availablePackages.sorted { sortOrder($0) < sortOrder($1) }
-            let mapped = sorted.map { mapPackage($0) }
+            let eligibility = await Purchases.shared.checkTrialOrIntroDiscountEligibility(
+                productIdentifiers: sorted.map(\.storeProduct.productIdentifier)
+            )
+            let mapped = sorted.map { pkg in
+                mapPackage(
+                    pkg,
+                    introEligibility: eligibility[pkg.storeProduct.productIdentifier]?.status
+                )
+            }
             let enriched = applySavingsIfPossible(packages: mapped, current: current)
             let defaultIdx = enriched.firstIndex { $0.kind == .annual } ?? 0
             offeringsState = .ready(
@@ -163,9 +171,9 @@ final class SubscriptionService: ObservableObject {
         }
     }
 
-    private func mapPackage(_ pkg: Package) -> PaywallPackageOffer {
+    private func mapPackage(_ pkg: Package, introEligibility: IntroEligibilityStatus?) -> PaywallPackageOffer {
         let product = pkg.storeProduct
-        let trialLabel: String? = nil
+        let trialLabel = freeTrialLabel(for: product, introEligibility: introEligibility)
         return PaywallPackageOffer(
             kind: planKind(pkg.packageType),
             packageIdentifier: pkg.identifier,
@@ -178,6 +186,29 @@ final class SubscriptionService: ObservableObject {
             freeTrialLabel: trialLabel,
             savingsPercent: nil
         )
+    }
+
+    private func freeTrialLabel(for product: StoreProduct, introEligibility: IntroEligibilityStatus?) -> String? {
+        guard introEligibility?.isEligible == true,
+              let discount = product.introductoryDiscount,
+              discount.paymentMode == .freeTrial
+        else { return nil }
+        return localizedTrialLabel(for: discount.subscriptionPeriod)
+    }
+
+    private func localizedTrialLabel(for period: SubscriptionPeriod) -> String? {
+        switch period.unit {
+        case .year:
+            return L10n.tr("paywall_trial_year", period.value)
+        case .month:
+            return L10n.tr("paywall_trial_month", period.value)
+        case .week:
+            return L10n.tr("paywall_trial_week", period.value)
+        case .day:
+            return L10n.tr("paywall_trial_day", period.value)
+        @unknown default:
+            return nil
+        }
     }
 
     private static func catalogErrorCode(from error: Error) -> String {
@@ -229,7 +260,7 @@ final class SubscriptionService: ObservableObject {
             priceSecondary: nil,
             periodShortLabel: nil,
             showBestValueBadge: false,
-            freeTrialLabel: nil,
+            freeTrialLabel: L10n.tr("paywall_trial_week", 1),
             savingsPercent: nil
         ),
         PaywallPackageOffer(
@@ -241,7 +272,7 @@ final class SubscriptionService: ObservableObject {
             priceSecondary: nil,
             periodShortLabel: nil,
             showBestValueBadge: true,
-            freeTrialLabel: nil,
+            freeTrialLabel: L10n.tr("paywall_trial_week", 2),
             savingsPercent: 50
         )
         ]

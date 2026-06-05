@@ -341,10 +341,11 @@ struct PaywallView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.bottom, 2)
                 }
+                let selected = selectedOffer(from: packages)
                 LNButton(
-                    title: L10n.tr("paywall_cta_continue"),
+                    title: ctaText(for: selected),
                     variant: .primary,
-                    enabled: selectedOffer(from: packages) != nil && !viewModel.purchasing,
+                    enabled: selected != nil && !viewModel.purchasing,
                     loading: viewModel.purchasing
                 ) {
                     Task { await viewModel.purchaseSelected() }
@@ -361,12 +362,12 @@ struct PaywallView: View {
                 }
                 .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
                 .disabled(viewModel.purchasing)
-                Text(L10n.tr("paywall_footer"))
+                Text(disclosureText(for: selected))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(paywallFooter)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.88)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.82)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.top, 28)
@@ -406,6 +407,40 @@ struct PaywallView: View {
         guard !packages.isEmpty else { return nil }
         let index = min(max(viewModel.selectedIndex, 0), packages.count - 1)
         return packages[index]
+    }
+
+    private func ctaText(for offer: PaywallPackageOffer?) -> String {
+        guard let trial = offer?.freeTrialLabel else {
+            return L10n.tr("paywall_cta_continue")
+        }
+        return L10n.tr("paywall_cta_start_trial", trial)
+    }
+
+    private func disclosureText(for offer: PaywallPackageOffer?) -> String {
+        guard let offer else {
+            return L10n.tr("paywall_footer")
+        }
+        if offer.kind == .lifetime {
+            return L10n.tr("paywall_footer_lifetime", offer.pricePrimary.trimmedStoreText())
+        }
+        let period = disclosurePeriodLabel(for: offer.kind)
+        if let trial = offer.freeTrialLabel {
+            return L10n.tr("paywall_footer_trial", trial, offer.pricePrimary.trimmedStoreText(), period)
+        }
+        return L10n.tr("paywall_footer_standard", offer.pricePrimary.trimmedStoreText(), period)
+    }
+
+    private func disclosurePeriodLabel(for kind: PaywallPlanKind) -> String {
+        switch kind {
+        case .monthly:
+            return L10n.tr("paywall_period_monthly_inline")
+        case .annual:
+            return L10n.tr("paywall_period_yearly_inline")
+        case .lifetime:
+            return L10n.tr("paywall_period_lifetime")
+        case .other:
+            return L10n.tr("paywall_period_other")
+        }
     }
 
     private var sourceText: String {
