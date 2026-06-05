@@ -33,6 +33,7 @@
 - Mobile page edge: `14px`; desktop edge: `20px`.
 - Cards and controls use an 8px base radius, with 14-16px only for large preview/CTA containers.
 - Repeated cards keep stable min heights so hover and copy changes do not shift the grid.
+- Product Hunt pages should include a launch kit structure: concise tagline, 240px+ logo, gallery order, short video plan, warmup channels, and maker comment.
 
 ## Interaction
 
@@ -47,3 +48,4 @@
 - Generic centered SaaS hero cards.
 - Decorative emoji icons.
 - Claims like “unhackable” or “military-grade”.
+- Generic Product Hunt taglines such as “Private Photo Vault” when a sharper privacy + offline AI line is available.
