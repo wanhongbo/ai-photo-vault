@@ -62,6 +62,7 @@ struct VaultHomeView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { viewModel.onAppear() }
         .onDisappear {
             importToastDismissTask?.cancel()

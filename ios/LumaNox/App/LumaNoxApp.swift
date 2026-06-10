@@ -2,17 +2,7 @@ import SwiftUI
 
 @main
 struct LumaNoxApp: App {
-    init() {
-        FirebaseTelemetry.configure()
-        LumaTelemetry.trackAppStart(
-            version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
-            build: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
-        )
-        BillingBootstrap.configure()
-        AutoBackupScheduler.registerBackgroundTasks()
-        ExternalBackupLocation.sanitizeOnStartup()
-        VaultMaintenanceService.performStartupCleanup()
-    }
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     @StateObject private var router = AppRouter()
     @StateObject private var appLock = AppLockManager.shared
@@ -51,20 +41,17 @@ struct RootView: View {
     @StateObject private var privateCameraViewModel = PrivateCameraViewModel()
 
     var body: some View {
-        ZStack {
-            LNColor.bgBottom.ignoresSafeArea()
-            Group {
-                switch router.phase {
-                case .splash:
-                    SplashView()
-                case .lock:
-                    LockView()
-                case .main:
-                    MainTabView(privateCameraViewModel: privateCameraViewModel)
-                }
+        Group {
+            switch router.phase {
+            case .splash:
+                SplashView()
+            case .lock:
+                LockView()
+            case .main:
+                MainTabView(privateCameraViewModel: privateCameraViewModel)
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: router.phase)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .fullScreenCover(isPresented: Binding(
             get: { router.presentedRoute != nil },
             set: { if !$0 { router.dismissPresented() } }

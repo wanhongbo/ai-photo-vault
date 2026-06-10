@@ -22,7 +22,11 @@ final class AppRouter: ObservableObject {
     }
 
     func finishSplash(goToLock: Bool) {
-        phase = goToLock ? .lock : .main
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            phase = goToLock ? .lock : .main
+        }
     }
 
     func unlock() {

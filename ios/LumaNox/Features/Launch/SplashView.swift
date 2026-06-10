@@ -5,32 +5,49 @@ struct SplashView: View {
     @State private var progress: Double = 0
 
     private let securityStore = SecuritySettingsStore.shared
+    private let contentWidth: CGFloat = 446
 
     var body: some View {
-        ZStack {
-            LNGradientBackground(top: LNColor.splashLeft, bottom: LNColor.splashRight)
-            VStack(spacing: 16) {
-                Image("AppLogo")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 88, height: 88)
-                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(LNColor.brandBlue.opacity(0.36), lineWidth: 1)
-                    )
-                    .shadow(color: LNColor.brandBlue.opacity(0.32), radius: 24, x: 0, y: 12)
-                    .accessibilityHidden(true)
-                Text(L10n.appName)
-                    .font(LNTypography.displayLarge())
-                    .foregroundStyle(LNColor.title)
-                Text(L10n.splashTagline)
-                    .font(LNTypography.bodyMedium())
-                    .foregroundStyle(LNColor.subtitle)
-                ProgressView(value: progress)
-                    .tint(LNColor.brandBlue)
-                    .padding(.horizontal, 48)
-                    .padding(.top, 24)
+        GeometryReader { proxy in
+            ZStack {
+                LNGradientBackground(top: LNColor.splashLeft, bottom: LNColor.splashRight)
+
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+
+                    VStack(spacing: 0) {
+                        Image("AppLogo")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 104, height: 104)
+                            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                                    .stroke(LNColor.brandBlue.opacity(0.34), lineWidth: 1)
+                            )
+                            .shadow(color: LNColor.brandBlue.opacity(0.30), radius: 34, x: 0, y: 0)
+                            .accessibilityHidden(true)
+
+                        Text(L10n.appName)
+                            .font(.system(size: 42, weight: .heavy))
+                            .foregroundStyle(LNColor.title)
+                            .padding(.top, 30)
+
+                        Text(L10n.splashTagline)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(LNColor.subtitle)
+                            .padding(.top, 12)
+
+                        ProgressView(value: progress)
+                            .tint(LNColor.brandBlue)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 58)
+                    }
+                    .frame(width: min(contentWidth, proxy.size.width - 48))
+                    .offset(y: -proxy.safeAreaInsets.bottom * 0.3)
+
+                    Spacer(minLength: 0)
+                }
             }
         }
         .onAppear {

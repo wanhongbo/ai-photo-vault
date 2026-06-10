@@ -4,7 +4,7 @@
     {
       "type": "frame",
       "id": "splash_view",
-      "name": "SplashView - App icon logo",
+      "name": "SplashView - centered launch stack",
       "layout": "none",
       "width": 393,
       "height": 852,
@@ -24,21 +24,21 @@
           "id": "splash_content",
           "name": "Centered launch content",
           "layout": "vertical",
-          "x": 48,
-          "y": 279,
-          "width": 297,
-          "height": 294,
-          "gap": 16,
+          "x": 49,
+          "y": 278,
+          "width": 295,
+          "height": "fit_content",
+          "gap": 0,
           "alignItems": "center",
           "children": [
             {
               "type": "frame",
               "id": "splash_app_logo",
               "name": "App icon logo",
-              "width": 88,
-              "height": 88,
+              "width": 104,
+              "height": 104,
               "clip": true,
-              "cornerRadius": 24,
+              "cornerRadius": 28,
               "fill": {
                 "type": "image",
                 "enabled": true,
@@ -47,14 +47,14 @@
               },
               "stroke": {
                 "thickness": 1,
-                "fill": "#4A9EFF5C"
+                "fill": "#4A9EFF57"
               },
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
-                "color": "#4A9EFF52",
-                "offset": { "x": 0, "y": 12 },
-                "blur": 24
+                "color": "#4A9EFF4D",
+                "offset": { "x": 0, "y": 0 },
+                "blur": 34
               }
             },
             {
@@ -62,32 +62,35 @@
               "id": "splash_app_name",
               "content": "LumaNox",
               "fontFamily": "Inter",
-              "fontSize": 32,
-              "fontWeight": "700",
+              "fontSize": 42,
+              "fontWeight": "800",
               "letterSpacing": 0,
               "fill": "#EAF1FF",
-              "height": 38
+              "height": 51,
+              "margin": [30, 0, 0, 0]
             },
             {
               "type": "text",
               "id": "splash_tagline",
-              "content": "Local encrypted photo vault",
+              "content": "私密 · 加密 · 只属于你",
               "fontFamily": "Inter",
-              "fontSize": 15,
-              "fontWeight": "400",
+              "fontSize": 18,
+              "fontWeight": "500",
               "letterSpacing": 0,
               "fill": "#8EA2C0",
-              "height": 21
+              "height": 25,
+              "margin": [12, 0, 0, 0]
             },
             {
               "type": "frame",
               "id": "splash_progress_track",
               "name": "Progress track",
               "layout": "none",
-              "width": 201,
+              "width": 446,
               "height": 4,
               "fill": "#223247",
               "cornerRadius": 2,
+              "margin": [58, 0, 0, 0],
               "children": [
                 {
                   "type": "rectangle",
@@ -95,7 +98,7 @@
                   "name": "Progress fill",
                   "x": 0,
                   "y": 0,
-                  "width": 201,
+                  "width": 446,
                   "height": 4,
                   "fill": "#4A9EFF",
                   "cornerRadius": 2
