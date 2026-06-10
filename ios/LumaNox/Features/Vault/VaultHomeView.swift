@@ -42,6 +42,8 @@ struct VaultHomeView: View {
                     .padding(.horizontal, LNSpacing.screenHorizontal)
                     .padding(.top, VaultHomeLayout.topContentSafePadding)
                     .padding(.bottom, 28)
+                    .frame(maxWidth: LNLayout.vaultHomeMaxWidth, alignment: .topLeading)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
 
                 VStack(spacing: 0) {
@@ -501,7 +503,7 @@ private struct ImportOriginalsDecisionSheet: View {
                     )
                 }
             }
-            .frame(maxWidth: 361)
+            .frame(maxWidth: LNLayout.modalCardMaxWidth)
             .padding(.top, 22)
             .padding(.horizontal, 20)
             .padding(.bottom, 24)

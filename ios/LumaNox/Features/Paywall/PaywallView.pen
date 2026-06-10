@@ -5,8 +5,8 @@
       "type": "frame",
       "name": "PaywallView",
       "layout": "vertical",
-      "width": 393,
-      "height": 852,
+      "width": 834,
+      "height": 1194,
       "clip": true,
       "fill": {
         "type": "gradient",
@@ -17,7 +17,7 @@
           { "color": "#000000", "position": 1 }
         ]
       },
-      "padding": [54, 22, 0, 22],
+      "padding": [54, 110, 0, 110],
       "gap": 18,
       "children": [
         {
@@ -205,11 +205,11 @@
           "type": "frame",
           "name": "Sticky Purchase Bar",
           "layout": "vertical",
-          "width": 393,
+          "width": 834,
           "height": 190,
           "gap": 8,
           "fill": "#000000",
-          "padding": [24, 22, 8, 22],
+          "padding": [24, 110, 8, 110],
           "children": [
             {
               "type": "frame",

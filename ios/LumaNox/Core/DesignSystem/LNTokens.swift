@@ -32,6 +32,18 @@ enum LNSpacing {
     static let homeNavBarHeight: CGFloat = 88
 }
 
+enum LNLayout {
+    static let readableContentMaxWidth: CGFloat = 720
+    static let vaultHomeMaxWidth: CGFloat = 760
+    static let paywallContentMaxWidth: CGFloat = 760
+    static let bottomTabBarMaxWidth: CGFloat = 560
+    static let modalCardMaxWidth: CGFloat = 420
+
+    static func clampedWidth(available: CGFloat, maxWidth: CGFloat) -> CGFloat {
+        min(maxWidth, max(0, available))
+    }
+}
+
 enum LNTypography {
     static func displayLarge() -> Font { .system(size: 32, weight: .bold) }
     static func displaySmall() -> Font { .system(size: 24, weight: .bold) }

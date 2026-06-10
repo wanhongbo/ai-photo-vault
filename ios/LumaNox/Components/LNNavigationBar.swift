@@ -45,13 +45,26 @@ struct LNScreenScaffold<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(spacing: 0) {
-            LNNavigationBar(title: title, onBack: onBack)
-            ScrollView {
-                content()
-                    .padding(LNSpacing.screenHorizontal)
-                    .padding(.bottom, 24)
+        GeometryReader { proxy in
+            let contentWidth = LNLayout.clampedWidth(
+                available: proxy.size.width,
+                maxWidth: LNLayout.readableContentMaxWidth
+            )
+
+            VStack(spacing: 0) {
+                LNNavigationBar(title: title, onBack: onBack)
+                    .frame(maxWidth: contentWidth)
+                    .frame(maxWidth: .infinity)
+
+                ScrollView {
+                    content()
+                        .padding(LNSpacing.screenHorizontal)
+                        .padding(.bottom, 24)
+                        .frame(maxWidth: contentWidth, alignment: .topLeading)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .lnScreenBackground()
         .edgeSwipeBack(action: onBack)

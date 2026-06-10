@@ -160,11 +160,19 @@ struct VaultListScreenChrome<Content: View>: View {
 
     var body: some View {
         GeometryReader { proxy in
+            let contentWidth = LNLayout.clampedWidth(
+                available: proxy.size.width,
+                maxWidth: LNLayout.readableContentMaxWidth
+            )
+
             VStack(spacing: 0) {
                 header
+                    .frame(maxWidth: contentWidth)
+                    .frame(maxWidth: .infinity)
                 ScrollView(showsIndicators: false) {
-                    content(proxy.size.width)
-                        .frame(width: proxy.size.width, alignment: .topLeading)
+                    content(contentWidth)
+                        .frame(width: contentWidth, alignment: .topLeading)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
             .background(LNColor.bgBottom.ignoresSafeArea())

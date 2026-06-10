@@ -8,6 +8,7 @@ struct PaywallView: View {
 
     let dismissable: Bool
     private let horizontalPadding: CGFloat = 22
+    private let maxContentWidth: CGFloat = LNLayout.paywallContentMaxWidth
 
     init(dismissable: Bool, source: String) {
         self.dismissable = dismissable
@@ -101,6 +102,8 @@ struct PaywallView: View {
             .padding(.horizontal, horizontalPadding)
             .padding(.top, 12)
             .padding(.bottom, 224)
+            .frame(maxWidth: maxContentWidth)
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -128,6 +131,8 @@ struct PaywallView: View {
             .padding(.horizontal, horizontalPadding)
             .padding(.top, 12)
             .padding(.bottom, 48)
+            .frame(maxWidth: maxContentWidth)
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -372,6 +377,8 @@ struct PaywallView: View {
             .padding(.horizontal, horizontalPadding)
             .padding(.top, 28)
             .padding(.bottom, 8)
+            .frame(maxWidth: maxContentWidth)
+            .frame(maxWidth: .infinity)
             .background(
                 LinearGradient(
                     colors: [

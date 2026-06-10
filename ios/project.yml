@@ -21,7 +21,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.9"
-    TARGETED_DEVICE_FAMILY: "1"
+    TARGETED_DEVICE_FAMILY: "1,2"
     DEVELOPMENT_TEAM: J9A96K6YJ2
     CODE_SIGN_STYLE: Automatic
 targets:
@@ -36,7 +36,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xpx.vault
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         INFOPLIST_KEY_CFBundleDisplayName: LumaNox
         INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
@@ -118,7 +118,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.xpx.vault.tests
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: LumaNox

@@ -23,6 +23,8 @@ struct MainTabView: View {
                         router.openPrivateCamera()
                     }
                 )
+                .frame(maxWidth: LNLayout.bottomTabBarMaxWidth)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
