@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         AppStartup.configureWindowAppearance()
         AppStartup.performBootstrapIfNeeded()
+        _ = NetworkReachability.shared
         return true
     }
 }

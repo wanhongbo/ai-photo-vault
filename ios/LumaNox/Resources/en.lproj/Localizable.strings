@@ -500,6 +500,10 @@
 "paywall_footer_lifetime" = "One-time purchase at %@. No subscription renewal.";
 "paywall_not_configured" = "No RevenueCat key. Set REVENUECAT_API_KEY in ios/Config/Local.xcconfig and rebuild.";
 "paywall_retry" = "Retry";
+"paywall_loading_plans" = "Loading plans…";
+"paywall_error_offline" = "No network connection. Connect to the internet and try again.";
+"paywall_offline_banner" = "You're offline. Prices shown are from your last session and purchases require an internet connection.";
+"paywall_purchase_timeout" = "The App Store request timed out. Check your connection and try again.";
 "paywall_error_generic" = "Unable to load subscription plans";
 "paywall_offering_missing" = "No current subscription offering was found. Set an offering as Current in RevenueCat, or create an offering with identifier default.";
 "paywall_offering_empty" = "Subscription products are not available yet. Confirm App Store Connect or the local StoreKit configuration contains luma_vault_premium_monthly, luma_vault_premium_annual, and luma_vault_premium_lifetime, and that they are attached to the RevenueCat Premium entitlement.";

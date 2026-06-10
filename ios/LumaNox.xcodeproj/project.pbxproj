@@ -172,6 +172,7 @@
 		DCFFDDED81FDA7FF3E08431D /* AICleanupView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 3FB8CFCE0552877BBDAA93D1 /* AICleanupView.pen */; };
 		DD0E0C3AF21EFD9D879D7149 /* BackupResultView.pen in Resources */ = {isa = PBXBuildFile; fileRef = B961D164F157FCE70CE5CBC6 /* BackupResultView.pen */; };
 		DE5E1DD8859752E46109681D /* SubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9644AD884D86508FA10EC6 /* SubscriptionService.swift */; };
+		F7A8B9C0D1E2F3041526374 /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B9C0D1E2F30415263748 /* NetworkReachability.swift */; };
 		E2E4068C1A1AD14A40EB983E /* SettingsSecurityView.pen in Resources */ = {isa = PBXBuildFile; fileRef = DEDD0ED9EC7F20ACE3E2AF92 /* SettingsSecurityView.pen */; };
 		E46605FC4D554B7EEFA28064 /* AlbumView.pen in Resources */ = {isa = PBXBuildFile; fileRef = 98B565F3A27E7022FDFF239A /* AlbumView.pen */; };
 		E5EF0BA8506C919D2DE953D7 /* LanguageSettingsView.pen in Resources */ = {isa = PBXBuildFile; fileRef = DEDD1F18244EC60A00AF3AB8 /* LanguageSettingsView.pen */; };
@@ -362,6 +363,7 @@
 		DC4DB07AF115C84357EA6639 /* ImportOriginalsDecisionSheet.pen */ = {isa = PBXFileReference; lastKnownFileType = text; path = ImportOriginalsDecisionSheet.pen; sourceTree = "<group>"; };
 		DD549E477191C93BEDB3AEB8 /* BackupRestoreView.pen */ = {isa = PBXFileReference; lastKnownFileType = text; path = BackupRestoreView.pen; sourceTree = "<group>"; };
 		DD9644AD884D86508FA10EC6 /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
+		E8B9C0D1E2F30415263748 /* NetworkReachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReachability.swift; sourceTree = "<group>"; };
 		DEDD0ED9EC7F20ACE3E2AF92 /* SettingsSecurityView.pen */ = {isa = PBXFileReference; lastKnownFileType = text; path = SettingsSecurityView.pen; sourceTree = "<group>"; };
 		DEDD1F18244EC60A00AF3AB8 /* LanguageSettingsView.pen */ = {isa = PBXFileReference; lastKnownFileType = text; path = LanguageSettingsView.pen; sourceTree = "<group>"; };
 		DEE1A4782F64EDCC50A50E9B /* screen_1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screen_1x.png; sourceTree = "<group>"; };
@@ -725,6 +727,7 @@
 				E8BA57850FD7756DA83C995F /* PaywallModels.swift */,
 				201DCA4E25932076994F40AC /* PaywallNavigation.swift */,
 				727B91FB477025D1B3A19427 /* QuotaManager.swift */,
+				E8B9C0D1E2F30415263748 /* NetworkReachability.swift */,
 				DD9644AD884D86508FA10EC6 /* SubscriptionService.swift */,
 			);
 			path = Billing;
@@ -1191,6 +1194,7 @@
 				C0030024ECE6143309D457AB /* SettingsBackupSyncViewModel.swift in Sources */,
 				CE8D914F5B2A3B015F982488 /* SettingsViews.swift in Sources */,
 				C99A12AC265413E4875E4C0D /* SplashView.swift in Sources */,
+				F7A8B9C0D1E2F3041526374 /* NetworkReachability.swift in Sources */,
 				DE5E1DD8859752E46109681D /* SubscriptionService.swift in Sources */,
 				237FC14D29AF8213947A012D /* SwipeBackNavigationModifier.swift in Sources */,
 				D683DC8BE9491B0820EB0B3B /* SystemPhotoLibraryExportService.swift in Sources */,
@@ -1361,7 +1365,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1398,7 +1402,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

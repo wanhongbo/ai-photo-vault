@@ -20,10 +20,6 @@ struct PaywallView: View {
             LNGradientBackground(top: LNColor.paywallTop, bottom: LNColor.paywallBottom)
             content
             stickyPurchaseBar
-            if viewModel.purchasing {
-                Color.black.opacity(0.35).ignoresSafeArea()
-                ProgressView(L10n.commonLoading).tint(LNColor.brandBlue)
-            }
         }
         .onAppear { viewModel.onAppear() }
         .onChange(of: viewModel.shouldDismissAfterSuccess) { ok in
@@ -45,12 +41,7 @@ struct PaywallView: View {
     private var content: some View {
         switch viewModel.offeringsState {
         case .loading:
-            stateScroll {
-                ProgressView(L10n.commonLoading)
-                    .tint(paywallPriceSelected)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 220)
-            }
+            loadingBody
         case .error(let message):
             errorBody(message: message)
         case .ready(let packages, _, _):
@@ -85,12 +76,75 @@ struct PaywallView: View {
         }
     }
 
+    private var loadingBody: some View {
+        stateScroll {
+            VStack(spacing: 12) {
+                HStack(spacing: 10) {
+                    ProgressView()
+                        .tint(paywallPriceSelected)
+                    Text(L10n.tr("paywall_loading_plans"))
+                        .font(LNTypography.bodyMedium())
+                        .foregroundStyle(paywallSubtitle)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                packageSkeletonCard
+                packageSkeletonCard
+            }
+            featureList
+            comparisonTable
+        }
+    }
+
+    private var offlineBanner: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(paywallError)
+                .padding(.top, 2)
+            Text(L10n.tr("paywall_offline_banner"))
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(paywallSubtitle)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(paywallCardBg)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(paywallError.opacity(0.45), lineWidth: 1)
+        )
+    }
+
+    private var packageSkeletonCard: some View {
+        RoundedRectangle(cornerRadius: LNRadius.paywallCard)
+            .fill(paywallCardBg)
+            .frame(height: 88)
+            .overlay(
+                RoundedRectangle(cornerRadius: LNRadius.paywallCard)
+                    .stroke(paywallCardStroke, lineWidth: 1)
+            )
+    }
+
     private func catalogBody(packages: [PaywallPackageOffer]) -> some View {
         ScrollView {
             VStack(spacing: 16) {
                 header(showClose: dismissable)
                 hero
                 sourceContext
+                if !viewModel.isNetworkAvailable {
+                    offlineBanner
+                } else if viewModel.isRefreshingCatalog {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .tint(paywallPriceSelected)
+                            .scaleEffect(0.85)
+                        Text(L10n.tr("paywall_loading_plans"))
+                            .font(LNTypography.labelMedium())
+                            .foregroundStyle(paywallSubtitle)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 featureList
                 ForEach(Array(packages.enumerated()), id: \.element.id) { index, offer in
                     packageCard(offer: offer, selected: viewModel.selectedIndex == index) {
@@ -109,14 +163,26 @@ struct PaywallView: View {
 
     private func errorBody(message: String?) -> some View {
         stateScroll {
-            Text(displayError(message))
-                .font(LNTypography.bodyMedium())
-                .foregroundStyle(message == SubscriptionService.errorCodeRcKeyMissing ? paywallSubtitle : paywallError)
-                .multilineTextAlignment(.center)
-                .padding(.top, 8)
-            LNButton(title: L10n.tr("paywall_retry"), variant: .secondary) {
-                Task { await viewModel.refresh() }
+            VStack(spacing: 14) {
+                Image(systemName: message == SubscriptionService.errorCodeNetworkOffline ? "wifi.slash" : "exclamationmark.triangle")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(paywallError)
+                Text(displayError(message))
+                    .font(LNTypography.bodyMedium())
+                    .foregroundStyle(message == SubscriptionService.errorCodeRcKeyMissing ? paywallSubtitle : paywallError)
+                    .multilineTextAlignment(.center)
+                LNButton(
+                    title: L10n.tr("paywall_retry"),
+                    variant: .secondary,
+                    loading: viewModel.isRefreshingCatalog
+                ) {
+                    Task { await viewModel.refresh() }
+                }
             }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 8)
+            featureList
+            comparisonTable
         }
     }
 
@@ -326,7 +392,17 @@ struct PaywallView: View {
 
     @ViewBuilder
     private var stickyPurchaseBar: some View {
-        if case .ready(let packages, _, let isPremium) = viewModel.offeringsState,
+        if case .error = viewModel.offeringsState, dismissable {
+            VStack(spacing: 8) {
+                LNButton(title: L10n.commonBack, variant: .secondary) { closePaywall() }
+            }
+            .padding(.horizontal, horizontalPadding)
+            .padding(.top, 20)
+            .padding(.bottom, 8)
+            .frame(maxWidth: maxContentWidth)
+            .frame(maxWidth: .infinity)
+            .background(stickyBarBackground)
+        } else if case .ready(let packages, _, let isPremium) = viewModel.offeringsState,
            !isPremium,
            !packages.isEmpty {
             VStack(spacing: 8) {
@@ -350,7 +426,7 @@ struct PaywallView: View {
                 LNButton(
                     title: ctaText(for: selected),
                     variant: .primary,
-                    enabled: selected != nil && !viewModel.purchasing,
+                    enabled: selected != nil && !viewModel.purchasing && viewModel.isNetworkAvailable,
                     loading: viewModel.purchasing
                 ) {
                     Task { await viewModel.purchaseSelected() }
@@ -366,7 +442,7 @@ struct PaywallView: View {
                         .frame(height: 34)
                 }
                 .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
-                .disabled(viewModel.purchasing)
+                .disabled(viewModel.purchasing || !viewModel.isNetworkAvailable)
                 Text(disclosureText(for: selected))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(paywallFooter)
@@ -379,19 +455,21 @@ struct PaywallView: View {
             .padding(.bottom, 8)
             .frame(maxWidth: maxContentWidth)
             .frame(maxWidth: .infinity)
-            .background(
-                LinearGradient(
-                    colors: [
-                        LNColor.paywallBottom,
-                        LNColor.paywallBottom,
-                        LNColor.paywallBottom
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea(edges: .bottom)
-            )
+            .background(stickyBarBackground)
         }
+    }
+
+    private var stickyBarBackground: some View {
+        LinearGradient(
+            colors: [
+                LNColor.paywallBottom,
+                LNColor.paywallBottom,
+                LNColor.paywallBottom
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea(edges: .bottom)
     }
 
     private func periodLabel(for kind: PaywallPlanKind) -> String {
@@ -485,6 +563,8 @@ struct PaywallView: View {
             return L10n.tr("paywall_offering_empty")
         case SubscriptionService.errorCodeCatalogTimeout:
             return L10n.tr("paywall_catalog_timeout")
+        case SubscriptionService.errorCodeNetworkOffline:
+            return L10n.tr("paywall_error_offline")
         default:
             return message ?? L10n.tr("paywall_error_generic")
         }

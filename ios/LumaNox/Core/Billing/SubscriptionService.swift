@@ -2,6 +2,7 @@ import Foundation
 import RevenueCat
 
 struct PurchaseCancelledError: Error {}
+struct PurchaseTimeoutError: Error {}
 private struct CatalogTimeoutError: Error {}
 
 /// RevenueCat 订阅仓库 — 对齐 Android [RevenueCatSubscriptionRepository]。
@@ -13,8 +14,13 @@ final class SubscriptionService: ObservableObject {
     static let errorCodeOfferingMissing = "RC_OFFERING_MISSING"
     static let errorCodeOfferingEmpty = "RC_OFFERING_EMPTY"
     static let errorCodeCatalogTimeout = "RC_CATALOG_TIMEOUT"
+    static let errorCodeNetworkOffline = "RC_NETWORK_OFFLINE"
+
+    private static let catalogFetchTimeoutSeconds: UInt64 = 8
+    private static let purchaseTimeoutSeconds: UInt64 = 45
 
     @Published private(set) var offeringsState: PaywallOfferingsState = .loading
+    @Published private(set) var isRefreshingCatalog = false
     @Published private(set) var isPremium = false
 
     private var packageCache: [String: Package] = [:]
@@ -30,6 +36,8 @@ final class SubscriptionService: ObservableObject {
     }
 
     var isSdkConfigured: Bool { BillingBootstrap.isConfigured }
+
+    var isNetworkAvailable: Bool { NetworkReachability.shared.isOnline }
 
     func refreshCatalog() async {
         #if DEBUG
@@ -47,15 +55,34 @@ final class SubscriptionService: ObservableObject {
             offeringsState = .error(Self.errorCodeRcKeyMissing)
             return
         }
-        offeringsState = .loading
+
+        let hasCachedCatalog = if case .ready = offeringsState { true } else { false }
+        if hasCachedCatalog {
+            isRefreshingCatalog = true
+        } else {
+            offeringsState = .loading
+        }
+        defer { isRefreshingCatalog = false }
+
+        guard await NetworkReachability.isReachable() else {
+            if !hasCachedCatalog {
+                offeringsState = .error(Self.errorCodeNetworkOffline)
+            }
+            return
+        }
+
         do {
             let offerings = try await Self.fetchOfferingsWithTimeout()
             guard let current = offerings.current ?? offerings.offering(identifier: LumaNoxBillingIds.offeringDefault) else {
-                offeringsState = .error(Self.errorCodeOfferingMissing)
+                if !hasCachedCatalog {
+                    offeringsState = .error(Self.errorCodeOfferingMissing)
+                }
                 return
             }
             guard !current.availablePackages.isEmpty else {
-                offeringsState = .error(Self.errorCodeOfferingEmpty)
+                if !hasCachedCatalog {
+                    offeringsState = .error(Self.errorCodeOfferingEmpty)
+                }
                 return
             }
             packageCache.removeAll()
@@ -80,7 +107,9 @@ final class SubscriptionService: ObservableObject {
                 isPremium: isPremium
             )
         } catch {
-            offeringsState = .error(Self.catalogErrorCode(from: error))
+            if !hasCachedCatalog {
+                offeringsState = .error(Self.catalogErrorCode(from: error))
+            }
         }
     }
 
@@ -88,10 +117,17 @@ final class SubscriptionService: ObservableObject {
         guard BillingBootstrap.isConfigured else {
             return .failure(NSError(domain: "billing", code: 1, userInfo: [NSLocalizedDescriptionKey: "Billing not configured"]))
         }
+        guard await NetworkReachability.isReachable() else {
+            return .failure(SubscriptionService.offlineError())
+        }
         do {
-            let info = try await Purchases.shared.restorePurchases()
+            let info = try await Self.withTimeout(seconds: Self.purchaseTimeoutSeconds) {
+                try await Purchases.shared.restorePurchases()
+            }
             applyCustomerInfo(info)
             return .success(())
+        } catch is PurchaseTimeoutError {
+            return .failure(SubscriptionService.timeoutError())
         } catch {
             return .failure(error)
         }
@@ -101,16 +137,23 @@ final class SubscriptionService: ObservableObject {
         guard BillingBootstrap.isConfigured else {
             return .failure(NSError(domain: "billing", code: 1, userInfo: [NSLocalizedDescriptionKey: "Billing not configured"]))
         }
+        guard await NetworkReachability.isReachable() else {
+            return .failure(SubscriptionService.offlineError())
+        }
         guard let pkg = packageCache[packageIdentifier] else {
             return .failure(NSError(domain: "billing", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unknown package"]))
         }
         do {
-            let result = try await Purchases.shared.purchase(package: pkg)
+            let result = try await Self.withTimeout(seconds: Self.purchaseTimeoutSeconds) {
+                try await Purchases.shared.purchase(package: pkg)
+            }
             if result.userCancelled {
                 return .failure(PurchaseCancelledError())
             }
             applyCustomerInfo(result.customerInfo)
             return .success(())
+        } catch is PurchaseTimeoutError {
+            return .failure(SubscriptionService.timeoutError())
         } catch {
             if let code = error as? ErrorCode, code == .purchaseCancelledError {
                 return .failure(PurchaseCancelledError())
@@ -126,6 +169,40 @@ final class SubscriptionService: ObservableObject {
             applyCustomerInfo(info)
         } catch {
             // 首次拉取失败可忽略
+        }
+    }
+
+    private static func offlineError() -> NSError {
+        NSError(
+            domain: "billing",
+            code: 3,
+            userInfo: [NSLocalizedDescriptionKey: errorCodeNetworkOffline]
+        )
+    }
+
+    private static func timeoutError() -> NSError {
+        NSError(
+            domain: "billing",
+            code: 4,
+            userInfo: [NSLocalizedDescriptionKey: "PURCHASE_TIMEOUT"]
+        )
+    }
+
+    private static func withTimeout<T>(
+        seconds: UInt64,
+        operation: @escaping () async throws -> T
+    ) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask { try await operation() }
+            group.addTask {
+                try await Task.sleep(nanoseconds: seconds * 1_000_000_000)
+                throw PurchaseTimeoutError()
+            }
+            guard let result = try await group.next() else {
+                throw PurchaseTimeoutError()
+            }
+            group.cancelAll()
+            return result
         }
     }
 
@@ -215,27 +292,53 @@ final class SubscriptionService: ObservableObject {
         if error is CatalogTimeoutError {
             return errorCodeCatalogTimeout
         }
+        if error is PurchaseTimeoutError {
+            return errorCodeCatalogTimeout
+        }
+        if isNetworkError(error) {
+            return errorCodeNetworkOffline
+        }
         let message = error.localizedDescription.lowercased()
+        if message.contains("network")
+            || message.contains("internet")
+            || message.contains("offline")
+            || message.contains("connection")
+            || message.contains("timed out")
+            || message.contains("timeout") {
+            return errorCodeNetworkOffline
+        }
         if message.contains("offering") || message.contains("product") || message.contains("storekit") || message.contains("app store connect") {
             return errorCodeOfferingEmpty
         }
         return error.localizedDescription
     }
 
+    private static func isNetworkError(_ error: Error) -> Bool {
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed, .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed, .internationalRoamingOff:
+                return true
+            default:
+                return false
+            }
+        }
+        let ns = error as NSError
+        if ns.domain == NSURLErrorDomain {
+            return [
+                NSURLErrorNotConnectedToInternet,
+                NSURLErrorNetworkConnectionLost,
+                NSURLErrorCannotFindHost,
+                NSURLErrorCannotConnectToHost,
+                NSURLErrorDNSLookupFailed,
+                NSURLErrorDataNotAllowed,
+            ].contains(ns.code)
+        }
+        return false
+    }
+
     private static func fetchOfferingsWithTimeout() async throws -> Offerings {
-        try await withThrowingTaskGroup(of: Offerings.self) { group in
-            group.addTask {
-                try await Purchases.shared.offerings()
-            }
-            group.addTask {
-                try await Task.sleep(nanoseconds: 12_000_000_000)
-                throw CatalogTimeoutError()
-            }
-            guard let result = try await group.next() else {
-                throw CatalogTimeoutError()
-            }
-            group.cancelAll()
-            return result
+        try await withTimeout(seconds: catalogFetchTimeoutSeconds) {
+            try await Purchases.shared.offerings()
         }
     }
 
