@@ -8,11 +8,7 @@ enum BillingBootstrap {
     static func configure() {
         guard !isConfigured else { return }
         guard let key = apiKey, !key.isEmpty else { return }
-        #if DEBUG
         Purchases.logLevel = .debug
-        #else
-        Purchases.logLevel = .error
-        #endif
         Purchases.configure(withAPIKey: key)
         isConfigured = true
     }
