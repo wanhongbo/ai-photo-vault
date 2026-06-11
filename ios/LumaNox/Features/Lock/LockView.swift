@@ -122,7 +122,7 @@ struct LockView: View {
                             .frame(width: keyPadWidth)
 
                         lockActionButtons
-                            .frame(maxWidth: .infinity)
+                            .frame(width: keyPadWidth)
                     }
                 }
                 .padding(.horizontal, horizontalInset)
@@ -227,15 +227,18 @@ struct LockView: View {
             LNButton(title: L10n.tr("lock_retry_setup"), variant: .secondary) {
                 viewModel.resetSetup()
             }
+            .frame(maxWidth: .infinity, alignment: .center)
         } else if viewModel.state.stage == .setupEnter {
             LNButton(title: L10n.tr("lock_restore_pick_folder"), variant: .secondary) {
                 restoreFolderPickerLockToken = AppLockManager.shared.beginSystemInteraction(timeout: 300)
                 showRestoreFolderPicker = true
             }
+            .frame(maxWidth: .infinity, alignment: .center)
         } else if viewModel.state.stage == .restoreLogin, viewModel.state.showAbandonBackupEntry {
             LNButton(title: L10n.tr("lock_abandon_backup_action"), variant: .secondary) {
                 showAbandonDialog = true
             }
+            .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 
