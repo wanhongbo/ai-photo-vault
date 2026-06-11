@@ -832,36 +832,35 @@ struct ChangePinView: View {
 
     private let pinLength = 6
     private let securityStore = SecuritySettingsStore.shared
-    private let keypadButtonSize: CGFloat = 78
-    private let keypadColumnGap: CGFloat = 16
-    private let keypadRowGap: CGFloat = 12
-    private let keypadWidth: CGFloat = 305
 
     var body: some View {
         LNScreenScaffold(title: L10n.changePinTitle, onBack: { dismiss() }) {
-            VStack(spacing: 18) {
-                VStack(spacing: 18) {
-                    Text(step.progressText)
-                        .font(LNTypography.titleLarge())
-                        .foregroundStyle(LNColor.subtitle)
-                        .frame(maxWidth: .infinity, alignment: .center)
+            GeometryReader { proxy in
+                let horizontalInset = LNSpacing.screenHorizontal
+                let contentWidth = LNLayout.insetClampedWidth(
+                    available: proxy.size.width,
+                    horizontalInset: horizontalInset,
+                    maxWidth: LNLayout.lockContentMaxWidth
+                )
+                let keySpacing: CGFloat = 16
+                let keyDiameter = min(96, max(78, floor((contentWidth - keySpacing * 2) / 3)))
+                let keyPadWidth = keyDiameter * 3 + keySpacing * 2
+                let verticalSpacing: CGFloat = proxy.size.height < 780 ? 18 : 24
 
-                    HStack(spacing: 12) {
-                        ForEach(0..<pinLength, id: \.self) { i in
-                            Circle()
-                                .fill(i < activeInput.count ? LNColor.brandBlue : Color.clear)
-                                .frame(width: 12, height: 12)
-                                .overlay(Circle().stroke(LNColor.brandBlue, lineWidth: 1.5))
-                        }
-                    }
+                VStack(spacing: verticalSpacing) {
+                    topContent(contentWidth: contentWidth)
+
+                    keypad(keyDiameter: keyDiameter)
+                        .frame(width: keyPadWidth)
+                        .disabled(isSaving)
                 }
-                .offset(y: -16)
-
-                keypad
-                    .disabled(isSaving)
-                    .padding(.top, 4)
+                .padding(.top, 48)
+                .frame(maxWidth: .infinity)
+                .frame(
+                    minHeight: max(0, proxy.size.height - 24),
+                    alignment: .top
+                )
             }
-            .padding(.top, 64)
         }
         .overlay { pinDialogs }
     }
@@ -874,26 +873,60 @@ struct ChangePinView: View {
         }
     }
 
-    private var keypad: some View {
-        VStack(spacing: keypadRowGap) {
+    private func topContent(contentWidth: CGFloat) -> some View {
+        VStack(spacing: 14) {
+            Image(systemName: "lock")
+                .font(.system(size: 30, weight: .semibold))
+                .foregroundStyle(LNColor.brandBlue)
+                .frame(width: 86, height: 86)
+                .background(LNColor.brandBlue.opacity(0.18))
+                .clipShape(RoundedRectangle(cornerRadius: 26))
+                .overlay(RoundedRectangle(cornerRadius: 26).stroke(LNColor.brandBlue.opacity(0.85), lineWidth: 1))
+
+            Text(step.progressText)
+                .font(LNTypography.pinTitle())
+                .foregroundStyle(LNColor.title)
+                .multilineTextAlignment(.center)
+
+            Text(step.subtitle)
+                .font(LNTypography.bodyMedium())
+                .foregroundStyle(LNColor.subtitle)
+                .multilineTextAlignment(.center)
+                .lineSpacing(2)
+                .frame(maxWidth: min(contentWidth - 24, 320))
+
+            HStack(spacing: 12) {
+                ForEach(0..<pinLength, id: \.self) { i in
+                    Circle()
+                        .fill(i < activeInput.count ? LNColor.brandBlue : Color.clear)
+                        .frame(width: 12, height: 12)
+                        .overlay(Circle().stroke(LNColor.brandBlue, lineWidth: 1.5))
+                }
+            }
+        }
+        .frame(maxWidth: min(contentWidth, LNLayout.lockContentMaxWidth))
+        .frame(maxWidth: .infinity)
+    }
+
+    private func keypad(keyDiameter: CGFloat) -> some View {
+        VStack(spacing: 12) {
             ForEach([["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], id: \.self) { row in
-                HStack(spacing: keypadColumnGap) {
+                HStack(spacing: 16) {
                     ForEach(row, id: \.self) { key in
-                        keypadButton(key)
+                        keypadButton(key, diameter: keyDiameter)
                     }
                 }
             }
-            HStack(spacing: keypadColumnGap) {
-                Color.clear.frame(width: keypadButtonSize, height: keypadButtonSize)
-                keypadButton("0")
-                keypadButton("delete")
+            HStack(spacing: 16) {
+                Color.clear.frame(width: keyDiameter, height: keyDiameter)
+                keypadButton("0", diameter: keyDiameter)
+                keypadButton("delete", diameter: keyDiameter)
             }
         }
-        .frame(width: keypadWidth)
         .frame(maxWidth: .infinity, alignment: .center)
     }
 
-    private func keypadButton(_ key: String) -> some View {
+    private func keypadButton(_ key: String, diameter: CGFloat) -> some View {
         Button {
             if key == "delete" {
                 deleteLast()
@@ -915,7 +948,7 @@ struct ChangePinView: View {
                         .foregroundStyle(LNColor.title)
                 }
             }
-            .frame(width: keypadButtonSize, height: keypadButtonSize)
+            .frame(width: diameter, height: diameter)
         }
         .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
     }
