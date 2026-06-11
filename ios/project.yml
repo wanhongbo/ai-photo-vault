@@ -40,7 +40,8 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: LumaNox
         INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
         INFOPLIST_KEY_UIUserInterfaceStyle: Dark
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
         INFOPLIST_KEY_NSCameraUsageDescription: "LumaNox needs camera access for private capture and optional intruder alert photos."
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "LumaNox needs microphone access to record private videos."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "LumaNox needs photo library access to import media into your vault."
