@@ -5,21 +5,31 @@ struct CameraHomeView: View {
     @EnvironmentObject private var router: AppRouter
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(L10n.tr("camera_mode_photo"))
-                .font(LNTypography.displaySmall())
-                .foregroundStyle(LNColor.title)
-                .padding(.horizontal, LNSpacing.screenHorizontal)
-                .padding(.top, 8)
+        GeometryReader { proxy in
+            let contentWidth = LNLayout.insetClampedWidth(
+                available: proxy.size.width,
+                horizontalInset: 20,
+                maxWidth: LNLayout.rootPageMaxWidth
+            )
 
-            Button { router.openPrivateCamera() } label: {
-                CameraPreviewCard()
+            VStack(alignment: .leading, spacing: 16) {
+                Text(L10n.tr("camera_mode_photo"))
+                    .font(LNTypography.displaySmall())
+                    .foregroundStyle(LNColor.title)
+                    .padding(.horizontal, LNSpacing.screenHorizontal)
+                    .padding(.top, 8)
+
+                Button { router.openPrivateCamera() } label: {
+                    CameraPreviewCard()
+                }
+                .buttonStyle(.lnPressable())
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .padding(.horizontal, 20)
+                .padding(.bottom, LNSpacing.homeNavBarHeight + 20)
             }
-            .buttonStyle(.lnPressable())
-            .padding(.horizontal, 20)
-            .padding(.bottom, LNSpacing.homeNavBarHeight + 20)
+            .frame(maxWidth: contentWidth, maxHeight: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityIdentifier("camera_home_view")
     }
 }

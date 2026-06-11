@@ -5,10 +5,15 @@ struct SplashView: View {
     @State private var progress: Double = 0
 
     private let securityStore = SecuritySettingsStore.shared
-    private let contentWidth: CGFloat = 446
 
     var body: some View {
         GeometryReader { proxy in
+            let centeredWidth = LNLayout.insetClampedWidth(
+                available: proxy.size.width,
+                horizontalInset: 24,
+                maxWidth: LNLayout.splashContentMaxWidth
+            )
+
             ZStack {
                 LNGradientBackground(top: LNColor.splashLeft, bottom: LNColor.splashRight)
 
@@ -43,7 +48,7 @@ struct SplashView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.top, 58)
                     }
-                    .frame(width: min(contentWidth, proxy.size.width - 48))
+                    .frame(width: centeredWidth)
                     .offset(y: -proxy.safeAreaInsets.bottom * 0.3)
 
                     Spacer(minLength: 0)

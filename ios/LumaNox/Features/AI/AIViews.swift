@@ -7,36 +7,50 @@ struct AIHomeView: View {
     @State private var summarySnoozeVersion = 0
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(L10n.aiTitle)
-                .font(LNTypography.displaySmall())
-                .foregroundStyle(LNColor.title)
-                .padding(.horizontal, LNSpacing.screenHorizontal)
-                .padding(.top, 8)
+        GeometryReader { proxy in
+            let contentWidth = LNLayout.insetClampedWidth(
+                available: proxy.size.width,
+                horizontalInset: LNSpacing.screenHorizontal,
+                maxWidth: LNLayout.rootPageMaxWidth
+            )
 
-            Text(L10n.tr("ai_home_subtitle"))
-                .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(LNColor.subtitle)
-                .padding(.horizontal, LNSpacing.screenHorizontal)
-                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(L10n.aiTitle)
+                    .font(LNTypography.displaySmall())
+                    .foregroundStyle(LNColor.title)
+                    .padding(.horizontal, LNSpacing.screenHorizontal)
+                    .padding(.top, 8)
+                    .frame(maxWidth: contentWidth, alignment: .leading)
+                    .frame(maxWidth: .infinity)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    aiScanSummaryCard
-                    HStack {
-                        Text(L10n.tr("ai_tools_title"))
-                            .font(LNTypography.titleLarge())
-                            .foregroundStyle(LNColor.title)
-                        Spacer()
-                        Text(L10n.tr("ai_tools_count_fmt", aiToolRows.count))
-                            .font(LNTypography.labelMedium())
-                            .foregroundStyle(LNColor.subtitle)
+                Text(L10n.tr("ai_home_subtitle"))
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(LNColor.subtitle)
+                    .padding(.horizontal, LNSpacing.screenHorizontal)
+                    .padding(.top, 2)
+                    .frame(maxWidth: contentWidth, alignment: .leading)
+                    .frame(maxWidth: .infinity)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        aiScanSummaryCard
+                        HStack {
+                            Text(L10n.tr("ai_tools_title"))
+                                .font(LNTypography.titleLarge())
+                                .foregroundStyle(LNColor.title)
+                            Spacer()
+                            Text(L10n.tr("ai_tools_count_fmt", aiToolRows.count))
+                                .font(LNTypography.labelMedium())
+                                .foregroundStyle(LNColor.subtitle)
+                        }
+                        aiToolList
                     }
-                    aiToolList
+                    .padding(LNSpacing.screenHorizontal)
+                    .padding(.top, 14)
+                    .padding(.bottom, bottomTabScrollInset)
+                    .frame(maxWidth: contentWidth, alignment: .topLeading)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(LNSpacing.screenHorizontal)
-                .padding(.top, 14)
-                .padding(.bottom, bottomTabScrollInset)
             }
         }
         .task {

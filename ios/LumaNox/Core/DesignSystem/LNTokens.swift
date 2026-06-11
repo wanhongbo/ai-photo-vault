@@ -34,13 +34,27 @@ enum LNSpacing {
 
 enum LNLayout {
     static let readableContentMaxWidth: CGFloat = 720
+    static let rootPageMaxWidth: CGFloat = 760
     static let vaultHomeMaxWidth: CGFloat = 760
     static let paywallContentMaxWidth: CGFloat = 760
     static let bottomTabBarMaxWidth: CGFloat = 560
     static let modalCardMaxWidth: CGFloat = 420
+    static let splashContentMaxWidth: CGFloat = 446
+    static let lockContentMaxWidth: CGFloat = 420
 
     static func clampedWidth(available: CGFloat, maxWidth: CGFloat) -> CGFloat {
         min(maxWidth, max(0, available))
+    }
+
+    static func insetClampedWidth(
+        available: CGFloat,
+        horizontalInset: CGFloat,
+        maxWidth: CGFloat
+    ) -> CGFloat {
+        clampedWidth(
+            available: max(0, available - horizontalInset * 2),
+            maxWidth: maxWidth
+        )
     }
 }
 

@@ -102,32 +102,46 @@ struct LockView: View {
 
     private var lockContent: some View {
         GeometryReader { proxy in
-            let width = proxy.size.width
-            let height = proxy.size.height
-            let keypadWidth: CGFloat = 305
-            let keyTop = min(max(height * 0.45, 382), height - 470)
+            let horizontalInset = LNSpacing.screenHorizontal
+            let contentWidth = LNLayout.insetClampedWidth(
+                available: proxy.size.width,
+                horizontalInset: horizontalInset,
+                maxWidth: LNLayout.lockContentMaxWidth
+            )
+            let keySpacing: CGFloat = 16
+            let keyDiameter = min(96, max(78, floor((contentWidth - keySpacing * 2) / 3)))
+            let keyPadWidth = keyDiameter * 3 + keySpacing * 2
+            let verticalSpacing: CGFloat = proxy.size.height < 780 ? 18 : 24
 
-            ZStack(alignment: .top) {
-                topContent
-                    .frame(width: width)
-                    .position(x: width / 2, y: min(248, height * 0.30))
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: verticalSpacing) {
+                    topContent(contentWidth: contentWidth)
 
-                if !viewModel.state.success {
-                    keypad
-                        .frame(width: keypadWidth)
-                        .position(x: width / 2, y: keyTop + 174)
+                    if !viewModel.state.success {
+                        keypad(keyDiameter: keyDiameter)
+                            .frame(width: keyPadWidth)
 
-                    lockActionButtons
-                        .frame(width: width - 32)
-                        .position(x: width / 2, y: min(keyTop + 394, height - 58))
+                        lockActionButtons
+                            .frame(maxWidth: .infinity)
+                    }
                 }
+                .padding(.horizontal, horizontalInset)
+                .padding(.top, proxy.safeAreaInsets.top + 32)
+                .padding(.bottom, proxy.safeAreaInsets.bottom + 20)
+                .frame(maxWidth: .infinity)
+                .frame(
+                    minHeight: max(
+                        0,
+                        proxy.size.height - proxy.safeAreaInsets.top - proxy.safeAreaInsets.bottom
+                    ),
+                    alignment: .center
+                )
             }
-            .frame(width: width, height: height)
         }
         .ignoresSafeArea()
     }
 
-    private var topContent: some View {
+    private func topContent(contentWidth: CGFloat) -> some View {
         VStack(spacing: 14) {
             Image(systemName: stateIconName)
                 .font(.system(size: 30, weight: .semibold))
@@ -150,7 +164,7 @@ struct LockView: View {
                 .foregroundStyle(LNColor.subtitle)
                 .multilineTextAlignment(.center)
                 .lineSpacing(2)
-                .frame(width: 300)
+                .frame(maxWidth: min(contentWidth - 24, 320))
 
             if !viewModel.state.success {
                 pinDots
@@ -159,7 +173,7 @@ struct LockView: View {
                         .font(LNTypography.bodyMedium())
                         .foregroundStyle(LNColor.error)
                         .multilineTextAlignment(.center)
-                        .frame(width: 320)
+                        .frame(maxWidth: min(contentWidth, 340))
                 }
                 if !SecuritySettingsStore.shared.hasPinConfigured,
                    viewModel.state.stage != .loading,
@@ -168,10 +182,12 @@ struct LockView: View {
                         .font(LNTypography.labelMedium())
                         .foregroundStyle(LNColor.amberWarning)
                         .multilineTextAlignment(.center)
-                        .frame(width: 320)
+                        .frame(maxWidth: min(contentWidth, 340))
                 }
             }
         }
+        .frame(maxWidth: min(contentWidth, LNLayout.lockContentMaxWidth))
+        .frame(maxWidth: .infinity)
     }
 
     private var pinDots: some View {
@@ -185,19 +201,19 @@ struct LockView: View {
         }
     }
 
-    private var keypad: some View {
+    private func keypad(keyDiameter: CGFloat) -> some View {
         VStack(spacing: 12) {
             ForEach([[ "1", "2", "3" ], [ "4", "5", "6" ], [ "7", "8", "9" ]], id: \.self) { row in
                 HStack(spacing: 16) {
                     ForEach(row, id: \.self) { key in
-                        keypadButton(key)
+                        keypadButton(key, diameter: keyDiameter)
                     }
                 }
             }
             HStack(spacing: 16) {
-                keypadButton("camera")
-                keypadButton("0")
-                keypadButton("delete")
+                keypadButton("camera", diameter: keyDiameter)
+                keypadButton("0", diameter: keyDiameter)
+                keypadButton("delete", diameter: keyDiameter)
             }
             if viewModel.state.stage == .unlock && viewModel.state.biometricEnabled {
                 biometricButton
@@ -223,7 +239,7 @@ struct LockView: View {
         }
     }
 
-    private func keypadButton(_ key: String) -> some View {
+    private func keypadButton(_ key: String, diameter: CGFloat) -> some View {
         Button {
             switch key {
             case "delete": viewModel.onDeleteLast()
@@ -249,7 +265,7 @@ struct LockView: View {
                         .foregroundStyle(LNColor.title)
                 }
             }
-            .frame(width: 78, height: 78)
+            .frame(width: diameter, height: diameter)
         }
         .buttonStyle(.lnPressable(scale: 0.94, pressedOpacity: 0.78))
         .disabled(viewModel.state.success || viewModel.state.isLoading)

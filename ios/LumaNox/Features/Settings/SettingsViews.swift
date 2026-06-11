@@ -7,45 +7,57 @@ struct SettingsHomeView: View {
     @EnvironmentObject private var subscription: SubscriptionService
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(L10n.homeNavSettings)
-                .font(LNTypography.displaySmall())
-                .foregroundStyle(LNColor.title)
-                .padding(.horizontal, LNSpacing.screenHorizontal)
-                .padding(.top, 8)
+        GeometryReader { proxy in
+            let contentWidth = LNLayout.insetClampedWidth(
+                available: proxy.size.width,
+                horizontalInset: LNSpacing.screenHorizontal,
+                maxWidth: LNLayout.rootPageMaxWidth
+            )
 
-            ScrollView {
-                VStack(spacing: 12) {
-                    subscriptionCard
-                    backupBanner
-                    settingsHubRow(
-                        title: L10n.settingsSecurity,
-                        systemImage: "shield",
-                        route: .settingsSecurity
-                    )
-                    settingsHubRow(
-                        title: L10n.settingsBackup,
-                        systemImage: "externaldrive.badge.timemachine",
-                        route: .settingsBackupSync
-                    )
-                    settingsHubRow(
-                        title: L10n.settingsData,
-                        systemImage: "internaldrive",
-                        route: .settingsDataStorage
-                    )
-                    settingsHubRow(
-                        title: L10n.settingsGeneral,
-                        systemImage: "slider.horizontal.3",
-                        route: .settingsGeneral
-                    )
-                    settingsHubRow(
-                        title: L10n.settingsAbout,
-                        systemImage: "questionmark.circle",
-                        route: .settingsAbout
-                    )
+            VStack(alignment: .leading, spacing: 0) {
+                Text(L10n.homeNavSettings)
+                    .font(LNTypography.displaySmall())
+                    .foregroundStyle(LNColor.title)
+                    .padding(.horizontal, LNSpacing.screenHorizontal)
+                    .padding(.top, 8)
+                    .frame(maxWidth: contentWidth, alignment: .leading)
+                    .frame(maxWidth: .infinity)
+
+                ScrollView {
+                    VStack(spacing: 12) {
+                        subscriptionCard
+                        backupBanner
+                        settingsHubRow(
+                            title: L10n.settingsSecurity,
+                            systemImage: "shield",
+                            route: .settingsSecurity
+                        )
+                        settingsHubRow(
+                            title: L10n.settingsBackup,
+                            systemImage: "externaldrive.badge.timemachine",
+                            route: .settingsBackupSync
+                        )
+                        settingsHubRow(
+                            title: L10n.settingsData,
+                            systemImage: "internaldrive",
+                            route: .settingsDataStorage
+                        )
+                        settingsHubRow(
+                            title: L10n.settingsGeneral,
+                            systemImage: "slider.horizontal.3",
+                            route: .settingsGeneral
+                        )
+                        settingsHubRow(
+                            title: L10n.settingsAbout,
+                            systemImage: "questionmark.circle",
+                            route: .settingsAbout
+                        )
+                    }
+                    .padding(LNSpacing.screenHorizontal)
+                    .padding(.bottom, LNSpacing.homeNavBarHeight + 16)
+                    .frame(maxWidth: contentWidth)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(LNSpacing.screenHorizontal)
-                .padding(.bottom, LNSpacing.homeNavBarHeight + 16)
             }
         }
         .accessibilityIdentifier("settings_home_view")
