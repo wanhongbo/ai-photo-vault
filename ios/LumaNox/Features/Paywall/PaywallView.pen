@@ -206,7 +206,7 @@
           "name": "Sticky Purchase Bar",
           "layout": "vertical",
           "width": 834,
-          "height": 190,
+          "height": 222,
           "gap": 8,
           "fill": "#000000",
           "padding": [24, 110, 8, 110],
@@ -225,6 +225,21 @@
               ]
             },
             { "type": "text", "content": "Restore purchases", "fontFamily": "Inter", "fontSize": 14, "fill": "#8A94A8", "textAlignHorizontal": "center", "width": "fill_container" },
+            {
+              "type": "frame",
+              "name": "Legal Links",
+              "layout": "horizontal",
+              "width": "fill_container",
+              "height": "fit_content",
+              "gap": 10,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                { "type": "text", "content": "Privacy Policy", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "500", "fill": "#4A9EFF" },
+                { "type": "text", "content": "·", "fontFamily": "Inter", "fontSize": 12, "fill": "#5C6578" },
+                { "type": "text", "content": "Terms of Service", "fontFamily": "Inter", "fontSize": 12, "fontWeight": "500", "fill": "#4A9EFF" }
+              ]
+            },
             { "type": "text", "content": "After the free trial, this plan renews automatically at $29.99 yearly. Cancel anytime in Apple ID subscription settings.", "fontFamily": "Inter", "fontSize": 11, "fill": "#5C6578", "textAlignHorizontal": "center", "width": "fill_container", "textGrowth": "fixed-width" }
           ]
         }

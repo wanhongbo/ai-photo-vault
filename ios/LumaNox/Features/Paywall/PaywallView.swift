@@ -443,6 +443,14 @@ struct PaywallView: View {
                 }
                 .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
                 .disabled(viewModel.purchasing || !viewModel.isNetworkAvailable)
+                HStack(spacing: 10) {
+                    legalLinkButton(title: L10n.privacyPolicyTitle, route: .privacyPolicy)
+                    Text("·")
+                        .font(LNTypography.labelMedium())
+                        .foregroundStyle(paywallFooter)
+                    legalLinkButton(title: L10n.termsTitle, route: .termsOfService)
+                }
+                .frame(maxWidth: .infinity)
                 Text(disclosureText(for: selected))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(paywallFooter)
@@ -567,6 +575,36 @@ struct PaywallView: View {
             return L10n.tr("paywall_error_offline")
         default:
             return message ?? L10n.tr("paywall_error_generic")
+        }
+    }
+
+    private func legalLinkButton(title: String, route: AppRoute) -> some View {
+        Button {
+            openLegal(route)
+        } label: {
+            Text(title)
+                .font(LNTypography.labelMedium())
+                .foregroundStyle(paywallPriceSelected)
+                .underline()
+        }
+        .buttonStyle(.lnPressable(scale: 0.98, pressedOpacity: 0.78))
+        .accessibilityIdentifier("paywall_legal_\(legalRouteKey(route))")
+    }
+
+    private func openLegal(_ route: AppRoute) {
+        router.dismissPresented()
+        router.selectedTab = .settings
+        router.pushSettings(route)
+    }
+
+    private func legalRouteKey(_ route: AppRoute) -> String {
+        switch route {
+        case .privacyPolicy:
+            return "privacy"
+        case .termsOfService:
+            return "terms"
+        default:
+            return "legal"
         }
     }
 
